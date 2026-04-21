@@ -172,15 +172,15 @@ export default function App() {
     if (dmg > 0) {
       wild.currentHp = Math.max(0, wild.currentHp - dmg);
       setShakeE(true); setTimeout(() => setShakeE(false), 350);
-      logs.push([`${pMon.name} used ${move}! (${dmg} dmg)`, "#81D4FA"]);
+      logs.push([`⚔️ ${pMon.name} used ${move}! (${dmg} dmg)`, "#81D4FA"]);
     } else {
-      logs.push([`${pMon.name} used ${move}!`, "#aaa"]);
+      logs.push([`✨ ${pMon.name} used ${move}!`, "#aaa"]);
     }
 
     if (wild.currentHp <= 0) {
       const expGain = Math.floor(wild.level * (wild.atk + wild.def) / 8);
       pMon.exp += expGain;
-      logs.push([`Wild ${wild.name} fainted! +${expGain} EXP`, "#F44336"]);
+      logs.push([`⭐ Wild ${wild.name} fainted! +${expGain} EXP`, "#F44336"]);
       logs.forEach(([m, c]) => addLog(m, c));
       setPlayer((p) => ({ ...p, wins: p.wins + 1 }));
       finishBattle(pMon, true, expGain);
@@ -193,7 +193,7 @@ export default function App() {
     if (eDmg > 0) {
       pMon.currentHp = Math.max(0, pMon.currentHp - eDmg);
       setShakeP(true); setTimeout(() => setShakeP(false), 350);
-      logs.push([`${wild.name} used ${eMove}! (${eDmg} dmg)`, "#FF7043"]);
+      logs.push([`💢 ${wild.name} used ${eMove}! (${eDmg} dmg)`, "#FF7043"]);
     } else {
       logs.push([`${wild.name} used ${eMove}!`, "#aaa"]);
     }
@@ -201,7 +201,7 @@ export default function App() {
     logs.forEach(([m, c]) => addLog(m, c));
 
     if (pMon.currentHp <= 0) {
-      addLog(`${pMon.name} fainted! You blacked out...`, "#F44336");
+      addLog(`💀 ${pMon.name} fainted! You blacked out...`, "#F44336");
       setPlayer((p) => ({ ...p, losses: p.losses + 1 }));
       setTeam((prev) => {
         const newTeam = [...prev];
@@ -221,7 +221,7 @@ export default function App() {
     const { wild } = battle;
     const catchRate = 0.2 + (1 - wild.currentHp / wild.maxHp) * 0.6;
     if (Math.random() < catchRate) {
-      addLog(`Gotcha! ${wild.name} was caught!`, "#4CAF50");
+      addLog(`🎉 Gotcha! ${wild.name} was caught!`, "#4CAF50");
       const caughtMon = { ...wild, currentHp: wild.maxHp };
       setCaught((prev) => new Set([...prev, wild.id]));
       setTeam((prev) => [...prev, caughtMon]);
@@ -244,7 +244,7 @@ export default function App() {
       mon.atk += Math.floor(mon.atk / 20) + 1;
       mon.def += Math.floor(mon.def / 20) + 1;
       mon.spe += Math.floor(mon.spe / 25) + 1;
-      addLog(`${mon.name} leveled up to Lv${mon.level}!`, "#FFD700");
+      addLog(`🆙 ${mon.name} leveled up to Lv${mon.level}!`, "#FFD700");
 
       if (mon.canEvolve && mon.evolveAt && mon.level >= mon.evolveAt) {
         const evo = ALL_POKEMON.find((p) => p.id === mon.canEvolve);
@@ -259,7 +259,7 @@ export default function App() {
         p.level += 1;
         p.exp -= p.expNeeded;
         p.expNeeded = Math.floor(p.level * p.level * 15);
-        addLog(`You leveled up to Trainer Lv${p.level}!`, "#FF9800");
+        addLog(`🆙 You leveled up to Trainer Rank ${p.level}!`, "#FF9800");
       }
       return p;
     });
@@ -283,7 +283,7 @@ export default function App() {
         setTeam((prev) => [evolved, ...prev.slice(1)]);
         setCaught((prev) => new Set([...prev, ev.to.id]));
         setEvolving({ from: ev.from.name, to: ev.to.name, sprite: ev.to.sprite });
-        addLog(`${ev.from.name} evolved into ${ev.to.name}!`, "#CE93D8");
+        addLog(`✨ ${ev.from.name} evolved into ${ev.to.name}!`, "#CE93D8");
         setTimeout(() => setEvolving(null), 3000);
         setScreen("world");
       }, 500);
@@ -465,18 +465,48 @@ export default function App() {
             </div>
           </div>
 
-          <div style={{ margin: "12px 12px 8px", background: "#0f0f24", border: `2px solid #E91E6366`, borderRadius: 12, padding: "12px 14px", display: "flex", gap: 14, alignItems: "center" }}>
-            <div style={{ width: 72, height: 72, borderRadius: "50%", background: "#F44336", display: "flex", alignItems: "flex-end", justifyContent: "center", overflow: "hidden", border: "3px solid #fff", flexShrink: 0 }}>
-              <img src={TRAINER_SPRITE(player.sprite)} style={{ width: 80, height: 80, objectFit: "contain", marginBottom: -10 }} />
+          <div style={{
+            margin: "12px", background: "#0d0d1a", border: "2px solid #5e2c73", borderRadius: 12,
+            padding: 14, boxShadow: "0 4px 10px rgba(0,0,0,0.5)", position: "relative"
+          }}>
+            <div style={{ textAlign: "right", fontSize: 7, color: "#888", marginBottom: 6, letterSpacing: 1 }}>
+              IDNo. {player.id}
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                <span style={{ fontSize: 9, color: "#fff" }}>{player.name}</span>
-                <span style={{ fontSize: 7, color: "#888" }}>Lv{player.level}</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "1px solid #5e2c73", paddingBottom: 8, marginBottom: 10 }}>
+              <div style={{ fontSize: 14, color: "#fff", textShadow: "1px 1px #000" }}>TRAINER CARD</div>
+              <div style={{ fontSize: 10, color: "#ddd" }}>Rank {player.level}</div>
+            </div>
+            <div style={{ fontSize: 8, color: "#aaa", marginBottom: 12, letterSpacing: 0.5 }}>
+              {player.hometown} • {player.name}
+            </div>
+            <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+              <div style={{ width: 80, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <img src={TRAINER_SPRITE(player.sprite)} alt="Trainer" style={{ width: "100%", imageRendering: "pixelated" }} />
               </div>
-              <div style={{ fontSize: 6, color: "#aaa", marginBottom: 8 }}>{player.hometown}</div>
-              <ExpBar exp={player.exp} needed={player.expNeeded} />
-              <div style={{ fontSize: 5, color: "#444", marginTop: 3 }}>EXP {player.exp}/{player.expNeeded}</div>
+              <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                {[
+                  { label: "EXP. POINTS", val: player.exp.toLocaleString(), col: "#fff" },
+                  { label: "TO NEXT RANK", val: Math.max(0, player.expNeeded - player.exp).toLocaleString(), col: "#fff" },
+                  { label: "WINS", val: player.wins, col: "#4CAF50" },
+                  { label: "LOSSES", val: player.losses, col: "#F44336" },
+                ].map((stat, i) => (
+                  <div key={i} style={{ background: "#171022", border: "1px solid #312440", padding: 8, borderRadius: 4 }}>
+                    <div style={{ fontSize: 5, color: "#888", marginBottom: 6 }}>{stat.label}</div>
+                    <div style={{ fontSize: 8, color: stat.col }}>{stat.val}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 6, color: "#aaa", marginBottom: 6 }}>
+                EXP PROGRESS ({player.exp} / {player.expNeeded})
+              </div>
+              <div style={{ background: "#222", height: 10, border: "1px solid #5e2c73", borderRadius: 2, overflow: "hidden" }}>
+                <div style={{ width: `${Math.min(100, (player.exp / player.expNeeded) * 100)}%`, background: "#9c27b0", height: "100%", transition: "width 0.3s" }} />
+              </div>
+            </div>
+            <div style={{ borderTop: "1px solid #312440", paddingTop: 8, textAlign: "right", fontSize: 6, color: "#777" }}>
+              Adventure started: {player.adventureStarted}
             </div>
           </div>
 
@@ -517,102 +547,84 @@ export default function App() {
     );
   }
 
-  if (screen === "card") {
-    const rank = Math.max(1, Math.floor(player.level / 1));
-    const expPoints = player.exp + (player.level - 1) * 100;
-    const toNext = Math.max(0, player.expNeeded - player.exp);
-    const expPct = Math.min(100, (player.exp / player.expNeeded) * 100);
-    const PURPLE = "#9c27b0";
-    const BORDER = "#4a1d52";
-    const STAT_BG = "#22132e";
-    const CARD_BG = "#150a1d";
-    const DIM = "#a0a0a0";
-    return (
-      <div style={{ ...S.root, background: "#0b0114" }}>
-        <style>{css}</style>
-        <div style={{ ...S.wrap, background: "#0b0114" }}>
-          <div style={{ ...S.header, background: "#0b0114", borderBottom: `2px solid ${BORDER}` }}>
-            <span style={{ fontSize: 9, color: PURPLE, fontFamily: "'VT323',monospace", letterSpacing: 2 }}>🪪 TRAINER CARD</span>
-            <button className="btn" style={{ border: `1px solid ${BORDER}`, color: DIM, padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
+  if (screen === "card") return (
+    <div style={S.root}><style>{css}</style>
+      <div style={S.wrap}>
+        <div style={S.header}>
+          <span style={{ fontSize: 9, color: "#E91E63" }}>🪪 EDIT CARD</span>
+          <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
+        </div>
+
+        {/* Full-size preview */}
+        <div style={{ margin: 16, background: "#0d0d1a", border: "3px solid #5e2c73", borderRadius: 12, padding: 18, boxShadow: "0 4px 15px rgba(0,0,0,0.5)" }}>
+          <div style={{ textAlign: "right", fontSize: 8, color: "#888", marginBottom: 6, letterSpacing: 1 }}>
+            IDNo. {player.id}
           </div>
-
-          <div style={{ flex: 1, overflowY: "auto", padding: 14, display: "flex", flexDirection: "column", gap: 14 }}>
-            {/* Trainer Card display */}
-            <div style={{
-              background: CARD_BG, border: `3px solid ${BORDER}`, borderRadius: 12,
-              padding: 16, fontFamily: "'VT323',monospace", letterSpacing: 1,
-              boxShadow: "0 0 25px rgba(0,0,0,0.7)",
-            }}>
-              <div style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: 12 }}>
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 14 }}>
-                  <img src={TRAINER_SPRITE(player.sprite)} alt={player.sprite}
-                    style={{ width: 88, height: "auto", imageRendering: "pixelated", animation: "float 3s ease-in-out infinite" }} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 11, color: DIM, textAlign: "right" }}>IDNo. {player.id}</div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: `2px solid ${BORDER}`, paddingBottom: 4, marginBottom: 8, marginTop: 2 }}>
-                    <div style={{ fontSize: 17, color: "#fff", fontWeight: "bold", textTransform: "uppercase" }}>TRAINER CARD</div>
-                    <div style={{ fontSize: 14, color: "#fff" }}>Rank {rank}</div>
-                  </div>
-                  <div style={{ fontSize: 12, color: DIM, marginBottom: 10 }}>{player.hometown} · TRAINER</div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                    {[
-                      { label: "EXP. POINTS", value: expPoints.toLocaleString(), color: "#fff" },
-                      { label: "TO NEXT RANK", value: toNext.toLocaleString(), color: "#fff" },
-                      { label: "WINS", value: player.wins, color: "#4caf50" },
-                      { label: "LOSSES", value: player.losses, color: "#ff5252" },
-                    ].map((s) => (
-                      <div key={s.label} style={{ background: STAT_BG, padding: "6px 10px", border: "2px solid rgba(255,255,255,0.05)", borderRadius: 2 }}>
-                        <div style={{ fontSize: 9, color: DIM, textTransform: "uppercase" }}>{s.label}</div>
-                        <div style={{ fontSize: 14, color: s.color, marginTop: 2 }}>{s.value}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div style={{ marginTop: 10 }}>
-                    <div style={{ fontSize: 9, color: DIM, textTransform: "uppercase" }}>Exp Progress ({player.exp} / {player.expNeeded})</div>
-                    <div style={{ height: 10, background: "#111", border: `2px solid ${BORDER}`, marginTop: 4 }}>
-                      <div style={{ width: `${expPct}%`, height: "100%", background: "linear-gradient(90deg,#6a1b9a,#9c27b0)" }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div style={{ borderTop: `2px solid ${BORDER}`, marginTop: 14, paddingTop: 8, textAlign: "right", fontSize: 10, color: DIM }}>
-                Adventure started: {player.adventureStarted}
-              </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "2px solid #5e2c73", paddingBottom: 10, marginBottom: 14 }}>
+            <div style={{ fontSize: 16, color: "#fff", textShadow: "1px 1px #000" }}>TRAINER CARD</div>
+            <div style={{ fontSize: 12, color: "#ddd" }}>Rank {player.level}</div>
+          </div>
+          <div style={{ fontSize: 9, color: "#aaa", marginBottom: 16, letterSpacing: 0.5 }}>
+            {player.hometown} • {player.name}
+          </div>
+          <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
+            <div style={{ width: 90, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <img src={TRAINER_SPRITE(player.sprite)} alt="Trainer" style={{ width: "100%", imageRendering: "pixelated" }} />
             </div>
-
-            {/* Edit panel */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <div>
-                <div style={{ fontSize: 7, color: PURPLE, marginBottom: 6 }}>TRAINER NAME</div>
-                <input value={player.name} onChange={(e) => setPlayer({ ...player, name: e.target.value })} maxLength={12}
-                  style={{ background: CARD_BG, border: `1px solid ${BORDER}`, color: "#fff", fontFamily: "'Press Start 2P',monospace", fontSize: 8, padding: "8px", borderRadius: 4, width: "100%" }} />
-              </div>
-              <div>
-                <div style={{ fontSize: 7, color: PURPLE, marginBottom: 6 }}>HOMETOWN</div>
-                <input value={player.hometown} onChange={(e) => setPlayer({ ...player, hometown: e.target.value })} maxLength={20}
-                  style={{ background: CARD_BG, border: `1px solid ${BORDER}`, color: "#fff", fontFamily: "'Press Start 2P',monospace", fontSize: 8, padding: "8px", borderRadius: 4, width: "100%" }} />
-              </div>
-              <div>
-                <div style={{ fontSize: 7, color: PURPLE, marginBottom: 6 }}>CHOOSE AVATAR</div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
-                  {GEN_V_TRAINERS.map((ts) => (
-                    <button key={ts} className="btn"
-                      style={{ border: `2px solid ${player.sprite === ts ? PURPLE : BORDER}`, background: player.sprite === ts ? `${PURPLE}22` : CARD_BG, padding: "6px", borderRadius: 6 }}
-                      onClick={() => setPlayer({ ...player, sprite: ts })}>
-                      <img src={TRAINER_SPRITE(ts)} style={{ height: 50, objectFit: "contain" }} />
-                    </button>
-                  ))}
+            <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {[
+                { label: "EXP. POINTS", val: player.exp.toLocaleString(), col: "#fff" },
+                { label: "TO NEXT RANK", val: Math.max(0, player.expNeeded - player.exp).toLocaleString(), col: "#fff" },
+                { label: "WINS", val: player.wins, col: "#4CAF50" },
+                { label: "LOSSES", val: player.losses, col: "#F44336" },
+              ].map((stat, i) => (
+                <div key={i} style={{ background: "#171022", border: "1px solid #312440", padding: 10, borderRadius: 4 }}>
+                  <div style={{ fontSize: 6, color: "#888", marginBottom: 8 }}>{stat.label}</div>
+                  <div style={{ fontSize: 9, color: stat.col }}>{stat.val}</div>
                 </div>
-              </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 7, color: "#aaa", marginBottom: 8 }}>
+              EXP PROGRESS ({player.exp} / {player.expNeeded})
+            </div>
+            <div style={{ background: "#222", height: 12, border: "1px solid #5e2c73", borderRadius: 2, overflow: "hidden" }}>
+              <div style={{ width: `${Math.min(100, (player.exp / player.expNeeded) * 100)}%`, background: "#9c27b0", height: "100%" }} />
+            </div>
+          </div>
+          <div style={{ borderTop: "1px solid #312440", paddingTop: 10, textAlign: "right", fontSize: 7, color: "#777" }}>
+            Adventure started: {player.adventureStarted}
+          </div>
+        </div>
+
+        <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
+          <div>
+            <div style={{ fontSize: 7, color: "#E91E63", marginBottom: 8 }}>TRAINER NAME</div>
+            <input value={player.name} onChange={(e) => setPlayer({ ...player, name: e.target.value })} maxLength={12}
+              style={{ background: "#111", border: "1px solid #333", color: "#fff", fontFamily: "'Press Start 2P',monospace", fontSize: 8, padding: "8px", borderRadius: 4, width: "100%" }} />
+          </div>
+          <div>
+            <div style={{ fontSize: 7, color: "#E91E63", marginBottom: 8 }}>HOMETOWN</div>
+            <input value={player.hometown} onChange={(e) => setPlayer({ ...player, hometown: e.target.value })} maxLength={20}
+              style={{ background: "#111", border: "1px solid #333", color: "#fff", fontFamily: "'Press Start 2P',monospace", fontSize: 8, padding: "8px", borderRadius: 4, width: "100%" }} />
+          </div>
+          <div>
+            <div style={{ fontSize: 7, color: "#E91E63", marginBottom: 8 }}>CHOOSE AVATAR (GEN V)</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+              {GEN_V_TRAINERS.map((ts) => (
+                <button key={ts} className="btn"
+                  style={{ border: `2px solid ${player.sprite === ts ? "#E91E63" : "#333"}`, background: player.sprite === ts ? "#E91E6322" : "transparent", padding: "8px", borderRadius: 8 }}
+                  onClick={() => setPlayer({ ...player, sprite: ts })}>
+                  <img src={TRAINER_SPRITE(ts)} style={{ height: 60, objectFit: "contain" }} />
+                </button>
+              ))}
             </div>
           </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
   if (screen === "battle" && battle) {
     const { wild, pMon } = battle;
