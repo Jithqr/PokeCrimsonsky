@@ -138,7 +138,8 @@ export default function App() {
     adventureStarted: todayStr(),
   });
   const [team, setTeam] = useState<Mon[]>([]);
-  const [inventory] = useState<unknown[]>([]);
+  const [inventory, setInventory] = useState<{ name: string; qty: number }[]>([]);
+  const [storeCat, setStoreCat] = useState<string | null>(null);
   const [caught, setCaught] = useState<Set<number>>(new Set());
   const [log, setLog] = useState<LogEntry[]>([]);
   const [battle, setBattle] = useState<Battle | null>(null);
@@ -551,6 +552,7 @@ export default function App() {
               { label: "🗺️ REGION", color: "#795548", action: () => setScreen("regionSelect") },
               { label: "🌴 SAFARI", color: "#00BCD4", action: () => setScreen("regionSelect") },
               { label: "👜 BAG", color: "#607D8B", action: () => setScreen("inventory") },
+              { label: "🏪 STORE", color: "#FFC107", action: () => setScreen("store") },
             ].map((b) => (
               <button key={b.label} className="btn"
                 style={{ border: `2px solid ${b.color}`, color: b.color, padding: "10px 4px", borderRadius: 8, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}
@@ -762,12 +764,113 @@ export default function App() {
           <span style={{ fontSize: 9, color: "#607D8B" }}>👜 BAG</span>
           <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
         </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: 10 }}>
-          {inventory.length === 0 && <div style={{ textAlign: "center", color: "#333", fontSize: 8, marginTop: 40 }}>Your inventory is empty</div>}
+        <div style={{ flex: 1, overflowY: "auto", padding: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+          {inventory.length === 0 && <div style={{ textAlign: "center", color: "#333", fontSize: 8, marginTop: 40 }}>Your bag is empty</div>}
+          {inventory.map((it) => (
+            <div key={it.name} style={{ border: "2px solid #222", borderRadius: 8, padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 7, color: "#ddd" }}>{it.name}</span>
+              <span style={{ fontSize: 7, color: "#FFC107" }}>×{it.qty}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
+
+  if (screen === "store") {
+    const categories = [
+      { key: "balls", label: "POKÉ BALLS", emoji: "🔴", color: "#F44336", desc: "Catch wild Pokémon",
+        items: [
+          { name: "Poké Ball", price: 200, info: "Standard ball" },
+          { name: "Great Ball", price: 600, info: "1.5× catch rate" },
+          { name: "Ultra Ball", price: 1200, info: "2× catch rate" },
+          { name: "Master Ball", price: 9999, info: "Always catches" },
+        ] },
+      { key: "boost", label: "BOOST ITEMS", emoji: "💊", color: "#4CAF50", desc: "Heal & power up",
+        items: [
+          { name: "Potion", price: 300, info: "Restore 20 HP" },
+          { name: "Super Potion", price: 700, info: "Restore 50 HP" },
+          { name: "Hyper Potion", price: 1500, info: "Restore 200 HP" },
+          { name: "Revive", price: 1500, info: "Revive fainted" },
+          { name: "X Attack", price: 500, info: "+ATK in battle" },
+          { name: "Rare Candy", price: 4800, info: "+1 Level" },
+        ] },
+      { key: "tms", label: "TMs", emoji: "💿", color: "#9C27B0", desc: "Teach new moves",
+        items: [
+          { name: "TM01 Mega Punch", price: 3000, info: "Normal · 80 pwr" },
+          { name: "TM05 Mega Kick", price: 3000, info: "Normal · 120 pwr" },
+          { name: "TM13 Ice Beam", price: 4000, info: "Ice · 90 pwr" },
+          { name: "TM24 Thunderbolt", price: 4000, info: "Electric · 90 pwr" },
+          { name: "TM35 Flamethrower", price: 4000, info: "Fire · 90 pwr" },
+          { name: "TM50 Substitute", price: 2000, info: "Status" },
+        ] },
+    ];
+    const cat = categories.find((c) => c.key === storeCat) ?? null;
+    return (
+      <div style={S.root}><style>{css}</style>
+        <div style={S.wrap}>
+          <div style={S.header}>
+            <span style={{ fontSize: 9, color: "#FFC107" }}>🏪 STORE</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 8, color: "#FFD700" }}>₽{player.money}</span>
+              <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }}
+                onClick={() => cat ? setStoreCat(null) : setScreen("world")}>◀ BACK</button>
+            </div>
+          </div>
+
+          {!cat && (
+            <div style={{ flex: 1, overflowY: "auto", padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ fontSize: 7, color: "#888", letterSpacing: 1, marginBottom: 4 }}>SELECT A CATEGORY</div>
+              {categories.map((c) => (
+                <button key={c.key} className="btn"
+                  style={{ border: `2px solid ${c.color}`, color: c.color, padding: "14px 12px", borderRadius: 8, display: "flex", alignItems: "center", gap: 12, background: "transparent" }}
+                  onClick={() => setStoreCat(c.key)}>
+                  <span style={{ fontSize: 22 }}>{c.emoji}</span>
+                  <div style={{ textAlign: "left", flex: 1 }}>
+                    <div style={{ fontSize: 9 }}>{c.label}</div>
+                    <div style={{ fontSize: 6, color: "#666", marginTop: 3 }}>{c.desc}</div>
+                  </div>
+                  <span style={{ fontSize: 12 }}>▶</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {cat && (
+            <div style={{ flex: 1, overflowY: "auto", padding: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ fontSize: 8, color: cat.color, marginBottom: 4 }}>{cat.emoji} {cat.label}</div>
+              {cat.items.map((it) => {
+                const canAfford = player.money >= it.price;
+                return (
+                  <div key={it.name} style={{ border: "2px solid #222", borderRadius: 8, padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                    <div style={{ textAlign: "left", flex: 1 }}>
+                      <div style={{ fontSize: 7, color: "#ddd" }}>{it.name}</div>
+                      <div style={{ fontSize: 6, color: "#555", marginTop: 2 }}>{it.info}</div>
+                    </div>
+                    <div style={{ fontSize: 7, color: "#FFD700", minWidth: 50, textAlign: "right" }}>₽{it.price}</div>
+                    <button className="btn"
+                      disabled={!canAfford}
+                      style={{ border: `2px solid ${canAfford ? cat.color : "#333"}`, color: canAfford ? cat.color : "#444", padding: "6px 10px", borderRadius: 6, fontSize: 7, opacity: canAfford ? 1 : 0.5, cursor: canAfford ? "pointer" : "not-allowed" }}
+                      onClick={() => {
+                        if (!canAfford) return;
+                        setPlayer((p) => ({ ...p, money: p.money - it.price }));
+                        setInventory((inv) => {
+                          const found = inv.find((x) => x.name === it.name);
+                          return found
+                            ? inv.map((x) => x.name === it.name ? { ...x, qty: x.qty + 1 } : x)
+                            : [...inv, { name: it.name, qty: 1 }];
+                        });
+                        addLog(`Bought ${it.name}!`, "#FFD700");
+                      }}>BUY</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (screen === "regionSelect") {
     const viewMacro = MACRO_REGIONS[pickedMacro];
