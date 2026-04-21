@@ -392,7 +392,9 @@ export default function App() {
           </div>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 16, color: "#ff6b35", letterSpacing: 3, textShadow: "0 0 30px #ff6b35cc" }}>POKÉMON</div>
-            <div style={{ fontSize: 20, color: "#ff3b6b", letterSpacing: 3, textShadow: "0 0 30px #ff3b6bcc", marginTop: 6 }}>CRIMSON SKY</div>
+            <div style={{ fontSize: 20, color: "#ff3b6b", letterSpacing: 2, textShadow: "0 0 30px #ff3b6bcc", marginTop: 6 }}>
+              <span>CRIMSON</span><span style={{ display: "inline-block", width: 10 }} /><span>SKY</span>
+            </div>
             <div style={{ fontSize: 7, color: "#555", marginTop: 8, letterSpacing: 3 }}>GEN I · KANTO REGION</div>
           </div>
           <div style={{ fontSize: 7, color: "#444", textAlign: "center", lineHeight: 2.2 }}>
