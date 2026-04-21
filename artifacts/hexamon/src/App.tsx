@@ -140,6 +140,7 @@ export default function App() {
   const [team, setTeam] = useState<Mon[]>([]);
   const [inventory, setInventory] = useState<{ name: string; qty: number }[]>([]);
   const [storeCat, setStoreCat] = useState<string | null>(null);
+  const [bagCat, setBagCat] = useState<string>("balls");
   const [caught, setCaught] = useState<Set<number>>(new Set());
   const [log, setLog] = useState<LogEntry[]>([]);
   const [battle, setBattle] = useState<Battle | null>(null);
@@ -764,15 +765,48 @@ export default function App() {
           <span style={{ fontSize: 9, color: "#607D8B" }}>👜 BAG</span>
           <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
         </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: 10, display: "flex", flexDirection: "column", gap: 6 }}>
-          {inventory.length === 0 && <div style={{ textAlign: "center", color: "#333", fontSize: 8, marginTop: 40 }}>Your bag is empty</div>}
-          {inventory.map((it) => (
-            <div key={it.name} style={{ border: "2px solid #222", borderRadius: 8, padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 7, color: "#ddd" }}>{it.name}</span>
-              <span style={{ fontSize: 7, color: "#FFC107" }}>×{it.qty}</span>
-            </div>
-          ))}
-        </div>
+        {(() => {
+          const bagCats = [
+            { key: "balls", label: "BALLS", emoji: "🔴", color: "#F44336", match: (n: string) => /ball/i.test(n) },
+            { key: "tms", label: "TMs", emoji: "💿", color: "#9C27B0", match: (n: string) => /^TM/i.test(n) || /^HM/i.test(n) },
+            { key: "eggs", label: "EGGS", emoji: "🥚", color: "#FFEB3B", match: (n: string) => /egg/i.test(n) },
+            { key: "key", label: "KEY ITEMS", emoji: "🔑", color: "#FF9800", match: (n: string) => /(bike|rod|key|pass|map|card|ticket|flute|stone tablet)/i.test(n) },
+            { key: "stones", label: "STONES", emoji: "💎", color: "#03A9F4", match: (n: string) => /stone|shard/i.test(n) && !/stone tablet/i.test(n) },
+          ];
+          const active = bagCats.find((c) => c.key === bagCat)!;
+          const filtered = inventory.filter((it) => active.match(it.name));
+          return (
+            <>
+              <div style={{ padding: "8px 10px 4px", display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4 }}>
+                {bagCats.map((c) => {
+                  const sel = bagCat === c.key;
+                  return (
+                    <button key={c.key} className="btn"
+                      style={{ border: `2px solid ${sel ? c.color : "#222"}`, background: sel ? `${c.color}11` : "transparent", color: sel ? c.color : "#666", padding: "6px 2px", borderRadius: 6, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}
+                      onClick={() => setBagCat(c.key)}>
+                      <span style={{ fontSize: 12 }}>{c.emoji}</span>
+                      <span style={{ fontSize: 5 }}>{c.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ flex: 1, overflowY: "auto", padding: "4px 10px 10px", display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ fontSize: 7, color: active.color, marginBottom: 2 }}>{active.emoji} {active.label}</div>
+                {filtered.length === 0 && (
+                  <div style={{ textAlign: "center", color: "#333", fontSize: 8, marginTop: 30 }}>
+                    No {active.label.toLowerCase()} in your bag
+                  </div>
+                )}
+                {filtered.map((it) => (
+                  <div key={it.name} style={{ border: "2px solid #222", borderRadius: 8, padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: 7, color: "#ddd" }}>{it.name}</span>
+                    <span style={{ fontSize: 7, color: "#FFC107" }}>×{it.qty}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          );
+        })()}
       </div>
     </div>
   );
