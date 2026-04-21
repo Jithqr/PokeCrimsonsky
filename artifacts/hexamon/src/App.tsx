@@ -141,6 +141,7 @@ export default function App() {
   const [inventory, setInventory] = useState<{ name: string; qty: number }[]>([]);
   const [storeCat, setStoreCat] = useState<string | null>(null);
   const [bagCat, setBagCat] = useState<string>("balls");
+  const [scoutedWild, setScoutedWild] = useState<Mon | null>(null);
   const [caught, setCaught] = useState<Set<number>>(new Set());
   const [log, setLog] = useState<LogEntry[]>([]);
   const [battle, setBattle] = useState<Battle | null>(null);
@@ -159,27 +160,44 @@ export default function App() {
 
   function getPokemon(id: number) { return ALL_POKEMON.find((p) => p.id === id)!; }
 
-  function startWildBattle() {
+  function spawnWild(): Mon | null {
     const macro = MACRO_REGIONS[player.macroRegion];
     const region = macro.areas[player.region];
     if (!region) {
       addLog(`No areas to explore in ${macro.name} yet!`, "#F44336");
-      return;
+      return null;
     }
     const poolId = region.pool[Math.floor(Math.random() * region.pool.length)];
     const template = getPokemon(poolId);
     const lv = region.minLv + Math.floor(Math.random() * (region.maxLv - region.minLv + 1));
-    const wild = makeMon(template, lv);
+    return makeMon(template, lv);
+  }
 
+  function openHunt() {
+    const w = spawnWild();
+    if (!w) return;
+    setScoutedWild(w);
+    setScreen("hunt");
+  }
+
+  function rescout() {
+    const w = spawnWild();
+    if (w) setScoutedWild(w);
+  }
+
+  function captureScouted() {
+    if (!scoutedWild) return;
     const validTeam = team.filter((m) => m.currentHp > 0);
     if (validTeam.length === 0) {
       addLog("Your team is too exhausted to battle!", "#F44336");
       return;
     }
-
+    const macro = MACRO_REGIONS[player.macroRegion];
+    const region = macro.areas[player.region];
     const pMon = { ...validTeam[0] };
-    addLog(`A wild ${wild.name} (Lv${lv}) appeared in ${region.name}!`, "#FFD700");
-    setBattle({ wild, pMon, phase: "choose", turnCount: 0, canCatch: true });
+    addLog(`A wild ${scoutedWild.name} (Lv${scoutedWild.level}) appeared in ${region?.name ?? "the wild"}!`, "#FFD700");
+    setBattle({ wild: scoutedWild, pMon, phase: "choose", turnCount: 0, canCatch: true });
+    setScoutedWild(null);
     setScreen("battle");
   }
 
@@ -549,7 +567,7 @@ export default function App() {
 
           <div style={{ padding: "0 12px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>
             {[
-              { label: "🌲 HUNT", color: "#4CAF50", action: startWildBattle },
+              { label: "🌲 HUNT", color: "#4CAF50", action: openHunt },
               { label: "🎒 TEAM", color: "#FF9800", action: () => setScreen("team") },
               { label: "🪪 CARD", color: "#E91E63", action: () => setScreen("card") },
               { label: "📖 DEX", color: "#9C27B0", action: () => setScreen("dex") },
@@ -813,6 +831,69 @@ export default function App() {
       </div>
     </div>
   );
+
+  if (screen === "hunt") {
+    const macro = MACRO_REGIONS[player.macroRegion];
+    const region = macro.areas[player.region];
+    return (
+      <div style={S.root}><style>{css}</style>
+        <div style={S.wrap}>
+          <div style={S.header}>
+            <span style={{ fontSize: 9, color: "#4CAF50" }}>🌲 WILD HUNT</span>
+            <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }}
+              onClick={() => { setScoutedWild(null); setScreen("world"); }}>◀ BACK</button>
+          </div>
+          <div style={{ padding: "8px 12px 0", fontSize: 6, color: "#666" }}>
+            {macro.emoji} {macro.name} · {region?.name ?? "—"}
+          </div>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 16, gap: 14 }}>
+            <div style={{
+              width: 220, height: 180,
+              border: "2px solid #1a4d1a",
+              borderRadius: 12,
+              background: "radial-gradient(ellipse at center, #0d2818 0%, #050d08 100%)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              position: "relative", overflow: "hidden",
+            }}>
+              {scoutedWild ? (
+                <div style={{ textAlign: "center" }}>
+                  <MonSprite sprite={scoutedWild.sprite} size={96} />
+                  <div style={{ fontSize: 9, color: "#FFD700", marginTop: 8 }}>{scoutedWild.name}</div>
+                  <div style={{ fontSize: 7, color: "#888", marginTop: 3 }}>Lv {scoutedWild.level}</div>
+                </div>
+              ) : (
+                <div style={{ fontSize: 8, color: "#444", textAlign: "center", lineHeight: 2 }}>
+                  Tap HUNT to search<br />the tall grass...
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: 280 }}>
+              <button className="btn"
+                style={{ flex: 1, border: "2px solid #4CAF50", color: "#4CAF50", padding: "12px 8px", borderRadius: 8, background: "transparent", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}
+                onClick={rescout}>
+                <span style={{ fontSize: 16 }}>🌲</span>
+                <span style={{ fontSize: 8 }}>HUNT</span>
+                <span style={{ fontSize: 5, color: "#666" }}>find another</span>
+              </button>
+              <button className="btn"
+                disabled={!scoutedWild}
+                style={{ flex: 1, border: `2px solid ${scoutedWild ? "#F44336" : "#333"}`, color: scoutedWild ? "#F44336" : "#444", padding: "12px 8px", borderRadius: 8, background: "transparent", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, opacity: scoutedWild ? 1 : 0.5, cursor: scoutedWild ? "pointer" : "not-allowed" }}
+                onClick={captureScouted}>
+                <span style={{ fontSize: 16 }}>🔴</span>
+                <span style={{ fontSize: 8 }}>CAPTURE</span>
+                <span style={{ fontSize: 5, color: "#666" }}>start battle</span>
+              </button>
+            </div>
+
+            <div style={{ fontSize: 6, color: "#444", textAlign: "center", maxWidth: 240, lineHeight: 1.8 }}>
+              Keep tapping HUNT until you spot the Pokémon you want, then CAPTURE to engage in battle.
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (screen === "store") {
     const categories = [
