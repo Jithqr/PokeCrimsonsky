@@ -88,14 +88,27 @@ function makeMon(template: Template, level: number): Mon {
   };
 }
 
-const REGIONS = [
-  { name: "Pallet Town",     minLv: 2, maxLv: 6,  pool: [16, 19, 10, 13, 4, 1, 7] },
-  { name: "Viridian Forest", minLv: 5, maxLv: 12, pool: [10, 11, 12, 13, 14, 15, 16, 25] },
-  { name: "Mt. Moon",        minLv: 8, maxLv: 18, pool: [16, 19, 10] },
+type Area = { name: string; minLv: number; maxLv: number; pool: number[] };
+type MacroRegion = { name: string; emoji: string; available: boolean; areas: Area[] };
+
+const MACRO_REGIONS: MacroRegion[] = [
+  { name: "Kanto",  emoji: "🔴", available: true, areas: [
+    { name: "Pallet Town",     minLv: 2, maxLv: 6,  pool: [16, 19, 10, 13, 4, 1, 7] },
+    { name: "Viridian Forest", minLv: 5, maxLv: 12, pool: [10, 11, 12, 13, 14, 15, 16, 25] },
+    { name: "Mt. Moon",        minLv: 8, maxLv: 18, pool: [16, 19, 10] },
+  ]},
+  { name: "Johto",   emoji: "⚪", available: false, areas: [] },
+  { name: "Hoenn",   emoji: "🟢", available: false, areas: [] },
+  { name: "Sinnoh",  emoji: "🔵", available: false, areas: [] },
+  { name: "Unova",   emoji: "⚫", available: false, areas: [] },
+  { name: "Kalos",   emoji: "🟡", available: false, areas: [] },
+  { name: "Alola",   emoji: "🌺", available: false, areas: [] },
+  { name: "Galar",   emoji: "🟣", available: false, areas: [] },
+  { name: "Paldea",  emoji: "🟠", available: false, areas: [] },
 ];
 
 type LogEntry = { msg: string; color: string; id: number };
-type Player = { name: string; hometown: string; money: number; region: number; level: number; exp: number; expNeeded: number; sprite: string; id: number; rank: number; wins: number; losses: number; adventureStarted: string };
+type Player = { name: string; hometown: string; money: number; macroRegion: number; region: number; level: number; exp: number; expNeeded: number; sprite: string; id: number; rank: number; wins: number; losses: number; adventureStarted: string };
 
 function makePlayerId() {
   return Math.floor(1_000_000_000 + Math.random() * 9_000_000_000);
@@ -112,6 +125,7 @@ export default function App() {
     name: "Trainer",
     hometown: "Nuvema Town",
     money: 3000,
+    macroRegion: 0,
     region: 0,
     level: 1,
     exp: 0,
@@ -132,6 +146,7 @@ export default function App() {
   const [shakeP, setShakeP] = useState(false);
   const [evolving, setEvolving] = useState<{ from: string; to: string; sprite: string } | null>(null);
   const [dexFilter, setDexFilter] = useState("all");
+  const [pickedMacro, setPickedMacro] = useState(0);
   const logRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { if (logRef.current) logRef.current.scrollTop = 99999; }, [log]);
@@ -143,7 +158,12 @@ export default function App() {
   function getPokemon(id: number) { return ALL_POKEMON.find((p) => p.id === id)!; }
 
   function startWildBattle() {
-    const region = REGIONS[player.region];
+    const macro = MACRO_REGIONS[player.macroRegion];
+    const region = macro.areas[player.region];
+    if (!region) {
+      addLog(`No areas to explore in ${macro.name} yet!`, "#F44336");
+      return;
+    }
     const poolId = region.pool[Math.floor(Math.random() * region.pool.length)];
     const template = getPokemon(poolId);
     const lv = region.minLv + Math.floor(Math.random() * (region.maxLv - region.minLv + 1));
@@ -442,7 +462,8 @@ export default function App() {
   }
 
   if (screen === "world") {
-    const region = REGIONS[player.region];
+    const macro = MACRO_REGIONS[player.macroRegion];
+    const region = macro.areas[player.region] ?? { name: "—", minLv: 0, maxLv: 0, pool: [] };
     return (
       <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
@@ -458,7 +479,7 @@ export default function App() {
           <div style={S.header}>
             <div>
               <div style={{ fontSize: 9, color: "#ff6b35" }}>HEXAMON</div>
-              <div style={{ fontSize: 6, color: "#666", marginTop: 2 }}>{region.name}</div>
+              <div style={{ fontSize: 6, color: "#666", marginTop: 2 }}>{macro.emoji} {macro.name} · {region.name}</div>
             </div>
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: 6, color: "#555", marginTop: 2 }}>Caught: {caught.size}/151</div>
@@ -528,7 +549,8 @@ export default function App() {
               { label: "🪪 CARD", color: "#E91E63", action: () => setScreen("card") },
               { label: "📖 DEX", color: "#9C27B0", action: () => setScreen("dex") },
               { label: "🗺️ REGION", color: "#795548", action: () => setScreen("regionSelect") },
-              { label: "👜 INV", color: "#607D8B", action: () => setScreen("inventory") },
+              { label: "🌴 SAFARI", color: "#00BCD4", action: () => setScreen("regionSelect") },
+              { label: "👜 BAG", color: "#607D8B", action: () => setScreen("inventory") },
             ].map((b) => (
               <button key={b.label} className="btn"
                 style={{ border: `2px solid ${b.color}`, color: b.color, padding: "10px 4px", borderRadius: 8, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}
@@ -737,7 +759,7 @@ export default function App() {
     <div style={S.root}><style>{css}</style>
       <div style={S.wrap}>
         <div style={S.header}>
-          <span style={{ fontSize: 9, color: "#607D8B" }}>👜 INVENTORY</span>
+          <span style={{ fontSize: 9, color: "#607D8B" }}>👜 BAG</span>
           <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: 10 }}>
@@ -747,34 +769,83 @@ export default function App() {
     </div>
   );
 
-  if (screen === "regionSelect") return (
-    <div style={S.root}><style>{css}</style>
-      <div style={S.wrap}>
-        <div style={S.header}>
-          <span style={{ fontSize: 9, color: "#795548" }}>🗺️ KANTO REGIONS</span>
-          <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
-        </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: 10, display: "flex", flexDirection: "column", gap: 6 }}>
-          {REGIONS.map((a, i) => {
-            const myLv = team[0]?.level ?? 5;
-            const recMin = a.minLv; const recMax = a.maxLv;
-            const danger = myLv < recMin - 5 ? "⚠️ DANGER" : myLv > recMax + 10 ? "✅ EASY" : "⚔️ GOOD";
-            return (
-              <button key={i} className="btn"
-                style={{ border: `2px solid ${player.region === i ? "#ff6b35" : "#222"}`, background: player.region === i ? "#ff6b3511" : "transparent", borderRadius: 8, padding: "10px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", color: player.region === i ? "#ff6b35" : "#aaa" }}
-                onClick={() => { setPlayer((p) => ({ ...p, region: i })); addLog(`Traveled to ${a.name}!`, "#FFD700"); setScreen("world"); }}>
-                <div style={{ textAlign: "left" }}>
-                  <div style={{ fontSize: 8 }}>{a.name}</div>
-                  <div style={{ fontSize: 6, color: "#555", marginTop: 2 }}>Lv{a.minLv}–{a.maxLv}</div>
-                </div>
-                <div style={{ fontSize: 7 }}>{danger}</div>
-              </button>
-            );
-          })}
+  if (screen === "regionSelect") {
+    const viewMacro = MACRO_REGIONS[pickedMacro];
+    return (
+      <div style={S.root}><style>{css}</style>
+        <div style={S.wrap}>
+          <div style={S.header}>
+            <span style={{ fontSize: 9, color: "#795548" }}>🗺️ SELECT REGION</span>
+            <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
+          </div>
+
+          <div style={{ padding: "10px 10px 4px" }}>
+            <div style={{ fontSize: 7, color: "#888", marginBottom: 6, letterSpacing: 1 }}>WORLD MAP</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+              {MACRO_REGIONS.map((m, i) => {
+                const selected = pickedMacro === i;
+                const current = player.macroRegion === i;
+                return (
+                  <button key={m.name} className="btn"
+                    disabled={!m.available}
+                    style={{
+                      border: `2px solid ${selected ? "#ff6b35" : current ? "#4CAF50" : m.available ? "#555" : "#222"}`,
+                      background: selected ? "#ff6b3511" : "transparent",
+                      color: m.available ? (selected ? "#ff6b35" : "#ddd") : "#444",
+                      padding: "10px 4px", borderRadius: 8,
+                      display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                      cursor: m.available ? "pointer" : "not-allowed",
+                      opacity: m.available ? 1 : 0.5,
+                    }}
+                    onClick={() => m.available && setPickedMacro(i)}>
+                    <span style={{ fontSize: 14 }}>{m.emoji}</span>
+                    <span style={{ fontSize: 7 }}>{m.name}</span>
+                    {!m.available && <span style={{ fontSize: 5, color: "#666" }}>SOON</span>}
+                    {current && m.available && <span style={{ fontSize: 5, color: "#4CAF50" }}>HERE</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ borderTop: "1px solid #1a1a3a", margin: "10px 10px 0", paddingTop: 8 }}>
+            <div style={{ fontSize: 7, color: "#888", marginBottom: 6, letterSpacing: 1 }}>
+              {viewMacro.emoji} {viewMacro.name.toUpperCase()} AREAS
+            </div>
+          </div>
+
+          <div style={{ flex: 1, overflowY: "auto", padding: "0 10px 10px", display: "flex", flexDirection: "column", gap: 6 }}>
+            {viewMacro.areas.length === 0 && (
+              <div style={{ textAlign: "center", color: "#444", fontSize: 8, marginTop: 30, lineHeight: 2 }}>
+                No areas available yet<br />
+                <span style={{ fontSize: 6, color: "#333" }}>Coming soon!</span>
+              </div>
+            )}
+            {viewMacro.areas.map((a, i) => {
+              const myLv = team[0]?.level ?? 5;
+              const danger = myLv < a.minLv - 5 ? "⚠️ DANGER" : myLv > a.maxLv + 10 ? "✅ EASY" : "⚔️ GOOD";
+              const isCurrent = player.macroRegion === pickedMacro && player.region === i;
+              return (
+                <button key={i} className="btn"
+                  style={{ border: `2px solid ${isCurrent ? "#ff6b35" : "#222"}`, background: isCurrent ? "#ff6b3511" : "transparent", borderRadius: 8, padding: "10px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", color: isCurrent ? "#ff6b35" : "#aaa" }}
+                  onClick={() => {
+                    setPlayer((p) => ({ ...p, macroRegion: pickedMacro, region: i }));
+                    addLog(`Traveled to ${a.name}, ${viewMacro.name}!`, "#FFD700");
+                    setScreen("world");
+                  }}>
+                  <div style={{ textAlign: "left" }}>
+                    <div style={{ fontSize: 8 }}>{a.name}</div>
+                    <div style={{ fontSize: 6, color: "#555", marginTop: 2 }}>Lv{a.minLv}–{a.maxLv}</div>
+                  </div>
+                  <div style={{ fontSize: 7 }}>{danger}</div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   if (screen === "dex") {
     const types = ["all", ...Array.from(new Set(ALL_POKEMON.map((p) => p.type1)))].sort();
