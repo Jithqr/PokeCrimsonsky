@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { sfx, playMoveSfx, moveTypeOf, TYPE_COLOR as MOVE_TYPE_COLOR } from "./sfx";
 
 const SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/ani/${name.replace(/[^a-z0-9]/g, "")}.gif`;
 const SPRITE_BACK = (name: string) => `https://play.pokemonshowdown.com/sprites/ani-back/${name.replace(/[^a-z0-9]/g, "")}.gif`;
@@ -142,6 +143,8 @@ export default function App() {
   const [storeCat, setStoreCat] = useState<string | null>(null);
   const [bagCat, setBagCat] = useState<string>("balls");
   const [scoutedWild, setScoutedWild] = useState<Mon | null>(null);
+  const [moveAnim, setMoveAnim] = useState<{ target: "enemy" | "player"; type: string; key: number } | null>(null);
+  const [muted, setMuted] = useState(false);
   const [caught, setCaught] = useState<Set<number>>(new Set());
   const [log, setLog] = useState<LogEntry[]>([]);
   const [battle, setBattle] = useState<Battle | null>(null);
@@ -181,6 +184,7 @@ export default function App() {
   }
 
   function rescout() {
+    sfx.click();
     const w = spawnWild();
     if (w) setScoutedWild(w);
   }
@@ -209,9 +213,13 @@ export default function App() {
 
     const pwr = MOVE_POWER[move] ?? 40;
     const dmg = calcDmg(pMon.atk, wild.def, pwr);
+    playMoveSfx(move);
+    setMoveAnim({ target: "enemy", type: moveTypeOf(move), key: Date.now() });
+    setTimeout(() => setMoveAnim(null), 600);
     if (dmg > 0) {
       wild.currentHp = Math.max(0, wild.currentHp - dmg);
       setShakeE(true); setTimeout(() => setShakeE(false), 350);
+      setTimeout(() => sfx.hit(), 250);
       logs.push([`⚔️ ${pMon.name} used ${move}! (${dmg} dmg)`, "#81D4FA"]);
     } else {
       logs.push([`✨ ${pMon.name} used ${move}!`, "#aaa"]);
@@ -223,6 +231,8 @@ export default function App() {
       logs.push([`⭐ Wild ${wild.name} fainted! +${expGain} EXP`, "#F44336"]);
       logs.forEach(([m, c]) => addLog(m, c));
       setPlayer((p) => ({ ...p, wins: p.wins + 1 }));
+      setTimeout(() => sfx.faint(), 400);
+      setTimeout(() => sfx.victory(), 1100);
       finishBattle(pMon, true, expGain);
       return;
     }
@@ -230,9 +240,15 @@ export default function App() {
     const eMove = wild.moves[Math.floor(Math.random() * wild.moves.length)];
     const ePwr = MOVE_POWER[eMove] ?? 30;
     const eDmg = calcDmg(wild.atk, pMon.def, ePwr);
+    setTimeout(() => {
+      playMoveSfx(eMove);
+      setMoveAnim({ target: "player", type: moveTypeOf(eMove), key: Date.now() });
+      setTimeout(() => setMoveAnim(null), 600);
+    }, 700);
     if (eDmg > 0) {
       pMon.currentHp = Math.max(0, pMon.currentHp - eDmg);
       setShakeP(true); setTimeout(() => setShakeP(false), 350);
+      setTimeout(() => sfx.hurt(), 950);
       logs.push([`💢 ${wild.name} used ${eMove}! (${eDmg} dmg)`, "#FF7043"]);
     } else {
       logs.push([`${wild.name} used ${eMove}!`, "#aaa"]);
@@ -241,6 +257,7 @@ export default function App() {
     logs.forEach(([m, c]) => addLog(m, c));
 
     if (pMon.currentHp <= 0) {
+      setTimeout(() => sfx.faint(), 1000);
       addLog(`💀 ${pMon.name} fainted! You blacked out...`, "#F44336");
       setPlayer((p) => ({ ...p, losses: p.losses + 1 }));
       setTeam((prev) => {
@@ -259,8 +276,13 @@ export default function App() {
   function doThrowBall() {
     if (!battle) return;
     const { wild } = battle;
+    sfx.ballThrow();
+    setTimeout(() => sfx.ballWobble(), 350);
+    setTimeout(() => sfx.ballWobble(), 600);
+    setTimeout(() => sfx.ballWobble(), 850);
     const catchRate = 0.2 + (1 - wild.currentHp / wild.maxHp) * 0.6;
     if (Math.random() < catchRate) {
+      setTimeout(() => sfx.catchSuccess(), 1100);
       addLog(`🎉 Gotcha! ${wild.name} was caught!`, "#4CAF50");
       const caughtMon = { ...wild, currentHp: wild.maxHp };
       setCaught((prev) => new Set([...prev, wild.id]));
@@ -268,6 +290,7 @@ export default function App() {
       setBattle(null);
       setScreen("world");
     } else {
+      setTimeout(() => sfx.catchFail(), 1100);
       addLog(`${wild.name} broke free!`, "#F44336");
     }
   }
@@ -284,6 +307,7 @@ export default function App() {
       mon.atk += Math.floor(mon.atk / 20) + 1;
       mon.def += Math.floor(mon.def / 20) + 1;
       mon.spe += Math.floor(mon.spe / 25) + 1;
+      sfx.levelUp();
       addLog(`🆙 ${mon.name} leveled up to Lv${mon.level}!`, "#FFD700");
 
       if (mon.canEvolve && mon.evolveAt && mon.level >= mon.evolveAt) {
@@ -322,6 +346,7 @@ export default function App() {
         evolved.expNeeded = mon.expNeeded;
         setTeam((prev) => [evolved, ...prev.slice(1)]);
         setCaught((prev) => new Set([...prev, ev.to.id]));
+        sfx.evolve();
         setEvolving({ from: ev.from.name, to: ev.to.name, sprite: ev.to.sprite });
         addLog(`✨ ${ev.from.name} evolved into ${ev.to.name}!`, "#CE93D8");
         setTimeout(() => setEvolving(null), 3000);
@@ -343,6 +368,12 @@ export default function App() {
     @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
     @keyframes evoFlash { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0;transform:scale(1.5)} }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+    @keyframes mvFlash { 0%{opacity:0;transform:scale(0.4)} 30%{opacity:1;transform:scale(1.4)} 100%{opacity:0;transform:scale(1.8)} }
+    @keyframes mvSlash { 0%{opacity:0;transform:translate(-40px,-40px) rotate(-45deg) scale(0.5)} 40%{opacity:1} 100%{opacity:0;transform:translate(40px,40px) rotate(-45deg) scale(1.4)} }
+    @keyframes mvBeam { 0%{opacity:0;transform:scaleX(0)} 20%{opacity:1;transform:scaleX(1)} 80%{opacity:1;transform:scaleX(1)} 100%{opacity:0;transform:scaleX(1)} }
+    @keyframes mvSpark { 0%{opacity:0;transform:scale(0.2) rotate(0deg)} 50%{opacity:1;transform:scale(1.2) rotate(180deg)} 100%{opacity:0;transform:scale(1.6) rotate(360deg)} }
+    @keyframes mvBurst { 0%{opacity:0;box-shadow:0 0 0 0 currentColor} 50%{opacity:1;box-shadow:0 0 60px 20px currentColor} 100%{opacity:0;box-shadow:0 0 100px 40px transparent} }
+    @keyframes mvSwirl { 0%{opacity:0;transform:rotate(0deg) scale(0.4)} 50%{opacity:1;transform:rotate(360deg) scale(1.2)} 100%{opacity:0;transform:rotate(720deg) scale(1.6)} }
     .mon-float { animation: float 2s ease-in-out infinite; }
     .mon-shake { animation: shake 0.35s; }
     .btn {
@@ -383,6 +414,74 @@ export default function App() {
     return (
       <div style={{ background: "#111", borderRadius: 2, height: 4, overflow: "hidden" }}>
         <div style={{ width: `${pct}%`, height: "100%", background: "#3F51B5" }} />
+      </div>
+    );
+  }
+
+  function MoveFx({ type }: { type: string }) {
+    const c = MOVE_TYPE_COLOR[type] ?? "#fff";
+    const base: React.CSSProperties = {
+      position: "absolute", top: 0, left: 0, width: 90, height: 90,
+      pointerEvents: "none", color: c, zIndex: 5,
+    };
+    if (type === "fire" || type === "water" || type === "ice" || type === "psychic" || type === "dragon" || type === "electric") {
+      return (
+        <div style={{ ...base, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{
+            width: 90, height: 8, background: `linear-gradient(90deg, transparent, ${c}, transparent)`,
+            boxShadow: `0 0 20px ${c}, 0 0 40px ${c}`,
+            transformOrigin: "left center", animation: "mvBeam 0.55s ease-out forwards",
+          }} />
+        </div>
+      );
+    }
+    if (type === "grass" || type === "bug" || type === "poison") {
+      return (
+        <div style={{ ...base, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{
+            width: 60, height: 60, borderRadius: "50%",
+            background: `radial-gradient(circle, ${c}cc 0%, ${c}44 60%, transparent 100%)`,
+            animation: "mvSwirl 0.55s ease-out forwards",
+          }} />
+        </div>
+      );
+    }
+    if (type === "flying") {
+      return (
+        <div style={{ ...base }}>
+          <div style={{
+            position: "absolute", top: "30%", left: "10%", width: 70, height: 4,
+            background: c, borderRadius: 2, boxShadow: `0 0 12px ${c}`,
+            animation: "mvSlash 0.5s ease-out forwards",
+          }} />
+        </div>
+      );
+    }
+    if (type === "ground") {
+      return (
+        <div style={{ ...base, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          <div style={{
+            width: 70, height: 14,
+            background: `linear-gradient(180deg, transparent, ${c})`,
+            borderRadius: "50%",
+            animation: "mvFlash 0.5s ease-out forwards",
+          }} />
+        </div>
+      );
+    }
+    // normal: slash + spark
+    return (
+      <div style={{ ...base }}>
+        <div style={{
+          position: "absolute", top: "20%", left: "10%", width: 60, height: 4,
+          background: c, boxShadow: `0 0 8px ${c}`, borderRadius: 2,
+          animation: "mvSlash 0.45s ease-out forwards",
+        }} />
+        <div style={{
+          position: "absolute", top: "40%", left: "40%", width: 18, height: 18,
+          border: `3px solid ${c}`, borderRadius: 2,
+          animation: "mvSpark 0.5s ease-out forwards",
+        }} />
       </div>
     );
   }
@@ -504,8 +603,14 @@ export default function App() {
               <div style={{ fontSize: 8, color: "#ff6b35" }}>POKÉMON — <span style={{ color: "#ff3b6b" }}>CRIMSON SKY</span></div>
               <div style={{ fontSize: 6, color: "#666", marginTop: 2 }}>{macro.emoji} {macro.name} · {region.name}</div>
             </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 6, color: "#555", marginTop: 2 }}>Caught: {caught.size}/151</div>
+            <div style={{ textAlign: "right", display: "flex", alignItems: "center", gap: 8 }}>
+              <button className="btn"
+                title={muted ? "Sound off" : "Sound on"}
+                style={{ border: `1px solid ${muted ? "#555" : "#FFC107"}`, color: muted ? "#555" : "#FFC107", padding: "4px 7px", borderRadius: 4, fontSize: 10 }}
+                onClick={() => { const m = !muted; setMuted(m); sfx.setMuted(m); if (!m) sfx.click(); }}>
+                {muted ? "🔇" : "🔊"}
+              </button>
+              <div style={{ fontSize: 6, color: "#555" }}>Caught: {caught.size}/151</div>
             </div>
           </div>
 
@@ -688,9 +793,11 @@ export default function App() {
 
             <div style={{ position: "absolute", top: 10, right: 30 }}>
               <MonSprite sprite={wild.sprite} size={90} className={shakeE ? "mon-shake" : "mon-float"} />
+              {moveAnim?.target === "enemy" && <MoveFx key={moveAnim.key} type={moveAnim.type} />}
             </div>
             <div style={{ position: "absolute", bottom: 18, left: 20 }}>
               <MonSprite sprite={pMon.sprite} size={90} back className={shakeP ? "mon-shake" : "mon-float"} />
+              {moveAnim?.target === "player" && <MoveFx key={moveAnim.key} type={moveAnim.type} />}
             </div>
 
             <div style={{ position: "absolute", top: 8, left: 8, background: "rgba(0,0,0,0.8)", border: `1px solid ${TYPE_COLORS[wild.type1]}88`, borderRadius: 8, padding: "6px 10px", minWidth: 140 }}>
