@@ -391,8 +391,9 @@ export default function App() {
             {[25, 4, 7, 1].map((id) => <MonSprite key={id} sprite={getPokemon(id).sprite} size={56} style={{ animation: "none" }} />)}
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 26, color: "#ff6b35", letterSpacing: 4, textShadow: "0 0 30px #ff6b35cc" }}>HEXAMON</div>
-            <div style={{ fontSize: 7, color: "#555", marginTop: 6, letterSpacing: 3 }}>GEN I · KANTO REGION</div>
+            <div style={{ fontSize: 16, color: "#ff6b35", letterSpacing: 3, textShadow: "0 0 30px #ff6b35cc" }}>POKÉMON</div>
+            <div style={{ fontSize: 20, color: "#ff3b6b", letterSpacing: 3, textShadow: "0 0 30px #ff3b6bcc", marginTop: 6 }}>CRIMSON SKY</div>
+            <div style={{ fontSize: 7, color: "#555", marginTop: 8, letterSpacing: 3 }}>GEN I · KANTO REGION</div>
           </div>
           <div style={{ fontSize: 7, color: "#444", textAlign: "center", lineHeight: 2.2 }}>
             151 Pokémon · Hunt · Catch · Battle · Evolve
@@ -480,7 +481,7 @@ export default function App() {
 
           <div style={S.header}>
             <div>
-              <div style={{ fontSize: 9, color: "#ff6b35" }}>HEXAMON</div>
+              <div style={{ fontSize: 8, color: "#ff6b35" }}>POKÉMON: <span style={{ color: "#ff3b6b" }}>CRIMSON SKY</span></div>
               <div style={{ fontSize: 6, color: "#666", marginTop: 2 }}>{macro.emoji} {macro.name} · {region.name}</div>
             </div>
             <div style={{ textAlign: "right" }}>
