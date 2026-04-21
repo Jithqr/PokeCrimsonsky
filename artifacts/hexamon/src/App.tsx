@@ -483,7 +483,7 @@ export default function App() {
 
           <div style={S.header}>
             <div>
-              <div style={{ fontSize: 8, color: "#ff6b35" }}>POKÉMON: <span style={{ color: "#ff3b6b" }}>CRIMSON SKY</span></div>
+              <div style={{ fontSize: 8, color: "#ff6b35" }}>POKÉMON — <span style={{ color: "#ff3b6b" }}>CRIMSON SKY</span></div>
               <div style={{ fontSize: 6, color: "#666", marginTop: 2 }}>{macro.emoji} {macro.name} · {region.name}</div>
             </div>
             <div style={{ textAlign: "right" }}>
