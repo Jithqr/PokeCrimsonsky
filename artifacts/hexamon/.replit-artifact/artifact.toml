@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "HexaMon"
+version = "1.0.0"
+id = "artifacts/hexamon"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20373
+
+[services.development]
+run = "pnpm --filter @workspace/hexamon run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/hexamon", "run", "build" ]
+publicDir = "artifacts/hexamon/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20373"
+BASE_PATH = "/"
