@@ -95,7 +95,15 @@ const REGIONS = [
 ];
 
 type LogEntry = { msg: string; color: string; id: number };
-type Player = { name: string; hometown: string; money: number; region: number; level: number; exp: number; expNeeded: number; sprite: string };
+type Player = { name: string; hometown: string; money: number; region: number; level: number; exp: number; expNeeded: number; sprite: string; id: number; rank: number; wins: number; losses: number; adventureStarted: string };
+
+function makePlayerId() {
+  return Math.floor(1_000_000_000 + Math.random() * 9_000_000_000);
+}
+function todayStr() {
+  const d = new Date();
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
 type Battle = { wild: Mon; pMon: Mon; phase: string; turnCount: number; canCatch: boolean };
 
 export default function App() {
@@ -109,6 +117,11 @@ export default function App() {
     exp: 0,
     expNeeded: 100,
     sprite: "hilbert",
+    id: makePlayerId(),
+    rank: 1,
+    wins: 0,
+    losses: 0,
+    adventureStarted: todayStr(),
   });
   const [team, setTeam] = useState<Mon[]>([]);
   const [inventory] = useState<unknown[]>([]);
@@ -169,6 +182,7 @@ export default function App() {
       pMon.exp += expGain;
       logs.push([`Wild ${wild.name} fainted! +${expGain} EXP`, "#F44336"]);
       logs.forEach(([m, c]) => addLog(m, c));
+      setPlayer((p) => ({ ...p, wins: p.wins + 1 }));
       finishBattle(pMon, true, expGain);
       return;
     }
@@ -188,6 +202,7 @@ export default function App() {
 
     if (pMon.currentHp <= 0) {
       addLog(`${pMon.name} fainted! You blacked out...`, "#F44336");
+      setPlayer((p) => ({ ...p, losses: p.losses + 1 }));
       setTeam((prev) => {
         const newTeam = [...prev];
         const idx = newTeam.findIndex((m) => m.id === pMon.id && m.level === pMon.level);
@@ -278,7 +293,7 @@ export default function App() {
   }
 
   const css = `
-    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
     * { box-sizing: border-box; }
     body { margin: 0; background: #05050f; }
     ::-webkit-scrollbar { width: 4px; }
@@ -502,40 +517,102 @@ export default function App() {
     );
   }
 
-  if (screen === "card") return (
-    <div style={S.root}><style>{css}</style>
-      <div style={S.wrap}>
-        <div style={S.header}>
-          <span style={{ fontSize: 9, color: "#E91E63" }}>🪪 PLAYER CARD</span>
-          <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
-        </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
-          <div>
-            <div style={{ fontSize: 7, color: "#E91E63", marginBottom: 8 }}>TRAINER NAME</div>
-            <input value={player.name} onChange={(e) => setPlayer({ ...player, name: e.target.value })} maxLength={12}
-              style={{ background: "#111", border: "1px solid #333", color: "#fff", fontFamily: "'Press Start 2P',monospace", fontSize: 8, padding: "8px", borderRadius: 4, width: "100%" }} />
+  if (screen === "card") {
+    const rank = Math.max(1, Math.floor(player.level / 1));
+    const expPoints = player.exp + (player.level - 1) * 100;
+    const toNext = Math.max(0, player.expNeeded - player.exp);
+    const expPct = Math.min(100, (player.exp / player.expNeeded) * 100);
+    const PURPLE = "#9c27b0";
+    const BORDER = "#4a1d52";
+    const STAT_BG = "#22132e";
+    const CARD_BG = "#150a1d";
+    const DIM = "#a0a0a0";
+    return (
+      <div style={{ ...S.root, background: "#0b0114" }}>
+        <style>{css}</style>
+        <div style={{ ...S.wrap, background: "#0b0114" }}>
+          <div style={{ ...S.header, background: "#0b0114", borderBottom: `2px solid ${BORDER}` }}>
+            <span style={{ fontSize: 9, color: PURPLE, fontFamily: "'VT323',monospace", letterSpacing: 2 }}>🪪 TRAINER CARD</span>
+            <button className="btn" style={{ border: `1px solid ${BORDER}`, color: DIM, padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
           </div>
-          <div>
-            <div style={{ fontSize: 7, color: "#E91E63", marginBottom: 8 }}>HOMETOWN</div>
-            <input value={player.hometown} onChange={(e) => setPlayer({ ...player, hometown: e.target.value })} maxLength={20}
-              style={{ background: "#111", border: "1px solid #333", color: "#fff", fontFamily: "'Press Start 2P',monospace", fontSize: 8, padding: "8px", borderRadius: 4, width: "100%" }} />
-          </div>
-          <div>
-            <div style={{ fontSize: 7, color: "#E91E63", marginBottom: 8 }}>CHOOSE AVATAR (GEN V)</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-              {GEN_V_TRAINERS.map((ts) => (
-                <button key={ts} className="btn"
-                  style={{ border: `2px solid ${player.sprite === ts ? "#E91E63" : "#333"}`, background: player.sprite === ts ? "#E91E6322" : "transparent", padding: "8px", borderRadius: 8 }}
-                  onClick={() => setPlayer({ ...player, sprite: ts })}>
-                  <img src={TRAINER_SPRITE(ts)} style={{ height: 60, objectFit: "contain" }} />
-                </button>
-              ))}
+
+          <div style={{ flex: 1, overflowY: "auto", padding: 14, display: "flex", flexDirection: "column", gap: 14 }}>
+            {/* Trainer Card display */}
+            <div style={{
+              background: CARD_BG, border: `3px solid ${BORDER}`, borderRadius: 12,
+              padding: 16, fontFamily: "'VT323',monospace", letterSpacing: 1,
+              boxShadow: "0 0 25px rgba(0,0,0,0.7)",
+            }}>
+              <div style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 14 }}>
+                  <img src={TRAINER_SPRITE(player.sprite)} alt={player.sprite}
+                    style={{ width: 88, height: "auto", imageRendering: "pixelated", animation: "float 3s ease-in-out infinite" }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: DIM, textAlign: "right" }}>IDNo. {player.id}</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: `2px solid ${BORDER}`, paddingBottom: 4, marginBottom: 8, marginTop: 2 }}>
+                    <div style={{ fontSize: 17, color: "#fff", fontWeight: "bold", textTransform: "uppercase" }}>TRAINER CARD</div>
+                    <div style={{ fontSize: 14, color: "#fff" }}>Rank {rank}</div>
+                  </div>
+                  <div style={{ fontSize: 12, color: DIM, marginBottom: 10 }}>{player.hometown} · TRAINER</div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                    {[
+                      { label: "EXP. POINTS", value: expPoints.toLocaleString(), color: "#fff" },
+                      { label: "TO NEXT RANK", value: toNext.toLocaleString(), color: "#fff" },
+                      { label: "WINS", value: player.wins, color: "#4caf50" },
+                      { label: "LOSSES", value: player.losses, color: "#ff5252" },
+                    ].map((s) => (
+                      <div key={s.label} style={{ background: STAT_BG, padding: "6px 10px", border: "2px solid rgba(255,255,255,0.05)", borderRadius: 2 }}>
+                        <div style={{ fontSize: 9, color: DIM, textTransform: "uppercase" }}>{s.label}</div>
+                        <div style={{ fontSize: 14, color: s.color, marginTop: 2 }}>{s.value}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ marginTop: 10 }}>
+                    <div style={{ fontSize: 9, color: DIM, textTransform: "uppercase" }}>Exp Progress ({player.exp} / {player.expNeeded})</div>
+                    <div style={{ height: 10, background: "#111", border: `2px solid ${BORDER}`, marginTop: 4 }}>
+                      <div style={{ width: `${expPct}%`, height: "100%", background: "linear-gradient(90deg,#6a1b9a,#9c27b0)" }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style={{ borderTop: `2px solid ${BORDER}`, marginTop: 14, paddingTop: 8, textAlign: "right", fontSize: 10, color: DIM }}>
+                Adventure started: {player.adventureStarted}
+              </div>
+            </div>
+
+            {/* Edit panel */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div>
+                <div style={{ fontSize: 7, color: PURPLE, marginBottom: 6 }}>TRAINER NAME</div>
+                <input value={player.name} onChange={(e) => setPlayer({ ...player, name: e.target.value })} maxLength={12}
+                  style={{ background: CARD_BG, border: `1px solid ${BORDER}`, color: "#fff", fontFamily: "'Press Start 2P',monospace", fontSize: 8, padding: "8px", borderRadius: 4, width: "100%" }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 7, color: PURPLE, marginBottom: 6 }}>HOMETOWN</div>
+                <input value={player.hometown} onChange={(e) => setPlayer({ ...player, hometown: e.target.value })} maxLength={20}
+                  style={{ background: CARD_BG, border: `1px solid ${BORDER}`, color: "#fff", fontFamily: "'Press Start 2P',monospace", fontSize: 8, padding: "8px", borderRadius: 4, width: "100%" }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 7, color: PURPLE, marginBottom: 6 }}>CHOOSE AVATAR</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+                  {GEN_V_TRAINERS.map((ts) => (
+                    <button key={ts} className="btn"
+                      style={{ border: `2px solid ${player.sprite === ts ? PURPLE : BORDER}`, background: player.sprite === ts ? `${PURPLE}22` : CARD_BG, padding: "6px", borderRadius: 6 }}
+                      onClick={() => setPlayer({ ...player, sprite: ts })}>
+                      <img src={TRAINER_SPRITE(ts)} style={{ height: 50, objectFit: "contain" }} />
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   if (screen === "battle" && battle) {
     const { wild, pMon } = battle;
