@@ -297,12 +297,8 @@ export default function App() {
       setTimeout(() => sfx.faint(), 1000);
       addLog(`💀 ${pMon.name} fainted! You blacked out...`, "#F44336");
       setPlayer((p) => ({ ...p, losses: p.losses + 1 }));
-      setTeam((prev) => {
-        const newTeam = [...prev];
-        const idx = newTeam.findIndex((m) => m.id === pMon.id && m.level === pMon.level);
-        if (idx !== -1) newTeam[idx] = pMon;
-        return newTeam;
-      });
+      setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })));
+      addLog("Your team was fully healed!", "#4CAF50");
       setBattle(null);
       setScreen("world");
       return;
@@ -345,7 +341,8 @@ export default function App() {
       addLog(`🎉 Gotcha! ${wild.name} was caught!`, "#4CAF50");
       const caughtMon = { ...wild, currentHp: wild.maxHp };
       setCaught((prev) => new Set([...prev, wild.id]));
-      setTeam((prev) => [...prev, caughtMon]);
+      setTeam((prev) => [...prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })), caughtMon]);
+      addLog("Your team was fully healed!", "#4CAF50");
       setBattle(null);
       setScreen("world");
     } else {
@@ -388,11 +385,10 @@ export default function App() {
     });
 
     setTeam((prev) => {
-      const newTeam = [...prev];
-      const idx = newTeam.findIndex((m) => m.id === mon.id);
-      if (idx !== -1) newTeam[idx] = mon;
-      return newTeam;
+      const newTeam = prev.map((m) => m.id === mon.id ? mon : m);
+      return newTeam.map((m) => ({ ...m, currentHp: m.maxHp, status: null }));
     });
+    addLog("Your team was fully healed!", "#4CAF50");
     setCaught((prev) => new Set([...prev, mon.id]));
     setBattle(null);
 
@@ -400,7 +396,7 @@ export default function App() {
       const ev = didEvolve;
       setTimeout(() => {
         const evolved = makeMon(ev.to, mon.level);
-        evolved.currentHp = Math.min(evolved.maxHp, mon.currentHp + 20);
+        evolved.currentHp = evolved.maxHp;
         evolved.exp = mon.exp;
         evolved.expNeeded = mon.expNeeded;
         setTeam((prev) => [evolved, ...prev.slice(1)]);
@@ -1135,7 +1131,7 @@ export default function App() {
           <div style={{ padding: "6px 10px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
             {[
               { label: "Switch", action: doSwitchPokemon },
-              { label: "Run", action: () => { sfx.menuBack(); addLog("Got away safely!", "#aaa"); setBattle(null); setScreen("world"); } },
+              { label: "Run", action: () => { sfx.menuBack(); addLog("Got away safely!", "#aaa"); setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null }))); addLog("Your team was fully healed!", "#4CAF50"); setBattle(null); setScreen("world"); } },
               { label: "Pokeballs", action: doThrowBall },
             ].map((b) => (
               <button key={b.label} className="btn"
