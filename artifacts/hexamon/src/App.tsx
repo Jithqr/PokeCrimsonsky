@@ -273,6 +273,28 @@ export default function App() {
     setBattle((prev) => prev && ({ ...prev, wild, pMon, turnCount: prev.turnCount + 1 }));
   }
 
+  function doSwitchPokemon() {
+    if (!battle) return;
+    const { pMon } = battle;
+    const aliveOthers = team.filter((m) => m.currentHp > 0 && !(m.id === pMon.id && m.level === pMon.level));
+    if (aliveOthers.length === 0) {
+      addLog("No other Pokémon able to fight!", "#F44336");
+      return;
+    }
+    const next = { ...aliveOthers[0] };
+    sfx.menuOpen();
+    setTeam((prev) => {
+      const newTeam = [...prev];
+      const idx = newTeam.findIndex((m) => m.id === pMon.id && m.level === pMon.level);
+      if (idx !== -1) newTeam[idx] = pMon;
+      const nIdx = newTeam.findIndex((m) => m.id === next.id && m.level === next.level);
+      if (nIdx > 0) { const tmp = newTeam[0]; newTeam[0] = newTeam[nIdx]; newTeam[nIdx] = tmp; }
+      return newTeam;
+    });
+    setBattle((prev) => prev && ({ ...prev, pMon: next }));
+    addLog(`Go, ${next.name}!`, "#FFD700");
+  }
+
   function doThrowBall() {
     if (!battle) return;
     const { wild } = battle;
@@ -680,6 +702,7 @@ export default function App() {
               { label: "🌴 SAFARI", color: "#00BCD4", action: () => setScreen("regionSelect") },
               { label: "👜 BAG", color: "#607D8B", action: () => setScreen("inventory") },
               { label: "🏪 STORE", color: "#FFC107", action: () => setScreen("store") },
+              { label: "🏆 CAUGHT", color: "#26A69A", action: () => setScreen("caughtList") },
             ].map((b) => (
               <button key={b.label} className="btn"
                 style={{ border: `2px solid ${b.color}`, color: b.color, padding: "10px 4px", borderRadius: 8, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}
@@ -784,7 +807,7 @@ export default function App() {
         <div style={S.wrap}>
           <div style={S.header}>
             <span style={{ fontSize: 8, color: "#ff6b35" }}>⚔️ WILD BATTLE</span>
-            <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "4px 8px", fontSize: 7 }} onClick={() => { addLog("Got away safely!", "#aaa"); setBattle(null); setScreen("world"); }}>RUN🏃</button>
+            <span style={{ fontSize: 6, color: "#555" }}>Turn {battle.turnCount + 1}</span>
           </div>
 
           <div style={{ position: "relative", height: 210, background: "linear-gradient(180deg,#0f0f2a,#05050f)", margin: "10px 10px 0", borderRadius: 12, border: "1px solid #1a1a3a", overflow: "hidden" }}>
@@ -844,9 +867,27 @@ export default function App() {
             </div>
           </div>
 
-          <div style={{ padding: "6px 10px 14px", display: "flex", gap: 6 }}>
-            <button className="btn" style={{ flex: 1, border: "2px solid #FFD700", color: "#FFD700", padding: "10px 6px", borderRadius: 6, fontSize: 8 }}
-              onClick={doThrowBall}>🎯 THROW BALL</button>
+          <div style={{ padding: "6px 10px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+            {[
+              { label: "Switch", action: doSwitchPokemon },
+              { label: "Run", action: () => { sfx.menuBack(); addLog("Got away safely!", "#aaa"); setBattle(null); setScreen("world"); } },
+              { label: "Pokeballs", action: doThrowBall },
+            ].map((b) => (
+              <button key={b.label} className="btn"
+                style={{
+                  background: "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  color: "#fff",
+                  padding: "14px 8px",
+                  borderRadius: 14,
+                  fontFamily: "'Inter', system-ui, sans-serif",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  letterSpacing: 0.3,
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
+                }}
+                onClick={b.action}>{b.label}</button>
+            ))}
           </div>
         </div>
       </div>
@@ -953,48 +994,93 @@ export default function App() {
           <div style={{ padding: "8px 12px 0", fontSize: 6, color: "#666" }}>
             {macro.emoji} {macro.name} · {region?.name ?? "—"}
           </div>
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 16, gap: 14 }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "12px 14px 14px", gap: 14 }}>
             <div style={{
-              width: 220, height: 180,
-              border: "2px solid #1a4d1a",
-              borderRadius: 12,
-              background: "radial-gradient(ellipse at center, #0d2818 0%, #050d08 100%)",
+              width: "100%", aspectRatio: "4/3",
+              border: "3px solid #4CAF50",
+              borderRadius: 14,
+              background: "radial-gradient(ellipse at center, #1a4020 0%, #08180c 100%)",
+              boxShadow: "0 0 18px #4CAF5044, inset 0 0 30px #00000088",
               display: "flex", alignItems: "center", justifyContent: "center",
               position: "relative", overflow: "hidden",
             }}>
               {scoutedWild ? (
-                <div style={{ textAlign: "center" }}>
-                  <MonSprite sprite={scoutedWild.sprite} size={96} />
-                  <div style={{ fontSize: 9, color: "#FFD700", marginTop: 8 }}>{scoutedWild.name}</div>
-                  <div style={{ fontSize: 7, color: "#888", marginTop: 3 }}>Lv {scoutedWild.level}</div>
-                </div>
+                <>
+                  <MonSprite sprite={scoutedWild.sprite} size={140} className="mon-float" />
+                  <div style={{
+                    position: "absolute", left: 0, right: 0, bottom: 14, textAlign: "center",
+                    fontSize: 9, color: "#FFD700", padding: "0 14px", lineHeight: 1.6,
+                    textShadow: "1px 1px 0 #000, 0 0 6px #00000088",
+                  }}>
+                    A wild {scoutedWild.name} (Lv. {scoutedWild.level}) has appeared!
+                  </div>
+                </>
               ) : (
-                <div style={{ fontSize: 8, color: "#444", textAlign: "center", lineHeight: 2 }}>
+                <div style={{ fontSize: 8, color: "#5a8a5a", textAlign: "center", lineHeight: 2 }}>
                   Tap HUNT to search<br />the tall grass...
                 </div>
               )}
             </div>
 
-            <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: 280 }}>
+            <div style={{ display: "flex", gap: 10, width: "100%" }}>
               <button className="btn"
-                style={{ flex: 1, border: "2px solid #4CAF50", color: "#4CAF50", padding: "12px 8px", borderRadius: 8, background: "transparent", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}
+                style={{ flex: 1, border: "2px solid #4CAF50", color: "#4CAF50", padding: "14px 8px", borderRadius: 10, background: "rgba(76,175,80,0.05)", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}
                 onClick={rescout}>
-                <span style={{ fontSize: 16 }}>🌲</span>
-                <span style={{ fontSize: 8 }}>HUNT</span>
-                <span style={{ fontSize: 5, color: "#666" }}>find another</span>
+                <span style={{ fontSize: 18 }}>🌲</span>
+                <span style={{ fontSize: 9 }}>HUNT</span>
+                <span style={{ fontSize: 5, color: "#5a8a5a" }}>find another</span>
               </button>
               <button className="btn"
                 disabled={!scoutedWild}
-                style={{ flex: 1, border: `2px solid ${scoutedWild ? "#F44336" : "#333"}`, color: scoutedWild ? "#F44336" : "#444", padding: "12px 8px", borderRadius: 8, background: "transparent", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, opacity: scoutedWild ? 1 : 0.5, cursor: scoutedWild ? "pointer" : "not-allowed" }}
+                style={{ flex: 1, border: `2px solid ${scoutedWild ? "#F44336" : "#333"}`, color: scoutedWild ? "#F44336" : "#444", padding: "14px 8px", borderRadius: 10, background: scoutedWild ? "rgba(244,67,54,0.05)" : "transparent", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, opacity: scoutedWild ? 1 : 0.5, cursor: scoutedWild ? "pointer" : "not-allowed" }}
                 onClick={captureScouted}>
-                <span style={{ fontSize: 16 }}>🔴</span>
-                <span style={{ fontSize: 8 }}>CAPTURE</span>
-                <span style={{ fontSize: 5, color: "#666" }}>start battle</span>
+                <span style={{ fontSize: 18 }}>🔴</span>
+                <span style={{ fontSize: 9 }}>CAPTURE</span>
+                <span style={{ fontSize: 5, color: "#8a4a4a" }}>start battle</span>
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-            <div style={{ fontSize: 6, color: "#444", textAlign: "center", maxWidth: 240, lineHeight: 1.8 }}>
-              Keep tapping HUNT until you spot the Pokémon you want, then CAPTURE to engage in battle.
+  if (screen === "caughtList") {
+    const caughtMons = ALL_POKEMON.filter((p) => caught.has(p.id)).sort((a, b) => a.id - b.id);
+    return (
+      <div style={S.root}><style>{css}</style>
+        <div style={S.wrap}>
+          <div style={S.header}>
+            <span style={{ fontSize: 9, color: "#26A69A" }}>🏆 CAUGHT LIST</span>
+            <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
+          </div>
+          <div style={{ padding: "10px 12px 4px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 7, color: "#aaa" }}>Pokémon Caught</span>
+            <span style={{ fontSize: 8, color: "#26A69A" }}>{caughtMons.length} / 151</span>
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: "4px 10px 10px" }}>
+            {caughtMons.length === 0 && (
+              <div style={{ textAlign: "center", color: "#333", fontSize: 8, marginTop: 50, lineHeight: 2 }}>
+                No Pokémon caught yet<br />
+                <span style={{ fontSize: 6, color: "#444" }}>Go hunt and catch some!</span>
+              </div>
+            )}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+              {caughtMons.map((p) => (
+                <div key={p.id} style={{
+                  background: `${TYPE_COLORS[p.type1]}15`,
+                  border: `2px solid ${TYPE_COLORS[p.type1]}66`,
+                  borderRadius: 8,
+                  padding: "8px 4px",
+                  textAlign: "center",
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                }}>
+                  <div style={{ fontSize: 5, color: "#888" }}>#{String(p.id).padStart(3, "0")}</div>
+                  <MonSprite sprite={p.sprite} size={48} className="" />
+                  <div style={{ fontSize: 6, color: "#fff" }}>{p.name}</div>
+                  <div style={{ display: "flex", gap: 2, justifyContent: "center" }}>{typeTag(p.type1)}{p.type2 && typeTag(p.type2)}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
