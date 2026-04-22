@@ -120,9 +120,29 @@ function todayStr() {
 }
 type Battle = { wild: Mon; pMon: Mon; phase: string; turnCount: number; canCatch: boolean };
 
+const SAVE_KEY = "hexamon:save:v1";
+type SaveData = {
+  screen: string;
+  player: Player;
+  team: Mon[];
+  inventory: { name: string; qty: number }[];
+  caught: number[];
+  muted: boolean;
+};
+function loadSave(): SaveData | null {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || !data.player) return null;
+    return data as SaveData;
+  } catch { return null; }
+}
+
 export default function App() {
-  const [screen, setScreen] = useState("title");
-  const [player, setPlayer] = useState<Player>({
+  const initial = typeof window !== "undefined" ? loadSave() : null;
+  const [screen, setScreen] = useState<string>(initial ? (initial.screen === "battle" || initial.screen === "hunt" ? "world" : initial.screen) : "title");
+  const [player, setPlayer] = useState<Player>(initial?.player ?? {
     name: "Trainer",
     hometown: "Nuvema Town",
     money: 3000,
@@ -138,14 +158,14 @@ export default function App() {
     losses: 0,
     adventureStarted: todayStr(),
   });
-  const [team, setTeam] = useState<Mon[]>([]);
-  const [inventory, setInventory] = useState<{ name: string; qty: number }[]>([]);
+  const [team, setTeam] = useState<Mon[]>(initial?.team ?? []);
+  const [inventory, setInventory] = useState<{ name: string; qty: number }[]>(initial?.inventory ?? []);
   const [storeCat, setStoreCat] = useState<string | null>(null);
   const [bagCat, setBagCat] = useState<string>("balls");
   const [scoutedWild, setScoutedWild] = useState<Mon | null>(null);
   const [moveAnim, setMoveAnim] = useState<{ target: "enemy" | "player"; type: string; key: number } | null>(null);
-  const [muted, setMuted] = useState(false);
-  const [caught, setCaught] = useState<Set<number>>(new Set());
+  const [muted, setMuted] = useState<boolean>(initial?.muted ?? false);
+  const [caught, setCaught] = useState<Set<number>>(new Set(initial?.caught ?? []));
   const [log, setLog] = useState<LogEntry[]>([]);
   const [battle, setBattle] = useState<Battle | null>(null);
   const [shakeE, setShakeE] = useState(false);
@@ -156,6 +176,23 @@ export default function App() {
   const logRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { if (logRef.current) logRef.current.scrollTop = 99999; }, [log]);
+
+  useEffect(() => {
+    if (screen === "title" || screen === "nameInput" || screen === "starter") return;
+    try {
+      const data: SaveData = {
+        screen, player, team, inventory,
+        caught: Array.from(caught), muted,
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    } catch { /* ignore quota errors */ }
+  }, [screen, player, team, inventory, caught, muted]);
+
+  function resetSave() {
+    if (!window.confirm("Erase your save and start a new adventure?")) return;
+    try { localStorage.removeItem(SAVE_KEY); } catch {}
+    window.location.reload();
+  }
 
   const addLog = useCallback((msg: string, color = "#ddd") => {
     setLog((p) => [...p.slice(-40), { msg, color, id: Date.now() + Math.random() }]);
@@ -920,6 +957,10 @@ export default function App() {
             <div className="m-li" onClick={() => { sfx.click(); setScreen("card"); }}>
               <span className="m-li-tt">Edit Trainer Card</span>
               <i className="fa-solid fa-caret-right m-arrow" />
+            </div>
+            <div className="m-li" onClick={resetSave} style={{ borderColor: "#7f1d1d" }}>
+              <span className="m-li-tt" style={{ color: "#f87171" }}>Reset Save</span>
+              <i className="fa-solid fa-trash m-arrow" style={{ color: "#f87171" }} />
             </div>
           </div>
           <BottomNav active="profile" go={setScreen} />
