@@ -820,33 +820,50 @@ export default function App() {
             </div>
           </div>
 
-          <div className="m-trainer m-card">
-            <div className="m-trainer-head">
-              <h1 className="m-trainer-title">Trainer Card</h1>
-              <div className="m-trainer-meta">
-                <span className="m-id">IDNo. {player.id}</span>
-                <span className="m-rank">Rank {player.level}</span>
+          <div style={{
+            margin: "14px 16px 12px", background: "#0d0d1a", border: "2px solid #5e2c73", borderRadius: 12,
+            padding: 14, boxShadow: "0 4px 10px rgba(0,0,0,0.5)", position: "relative",
+            fontFamily: "'Press Start 2P', monospace",
+          }}>
+            <div style={{ textAlign: "right", fontSize: 8, color: "#aaa", marginBottom: 8, letterSpacing: 1 }}>
+              IDNo. {player.id}
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "1px solid #5e2c73", paddingBottom: 10, marginBottom: 12 }}>
+              <div style={{ fontSize: 14, color: "#fff", textShadow: "1px 1px #000", letterSpacing: 1 }}>TRAINER CARD</div>
+              <div style={{ fontSize: 11, color: "#ddd" }}>Rank {player.level}</div>
+            </div>
+            <div style={{ fontSize: 9, color: "#bbb", marginBottom: 14, letterSpacing: 0.5 }}>
+              {player.hometown} • {player.name}
+            </div>
+            <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
+              <div style={{ width: 80, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <img src={TRAINER_SPRITE(player.sprite)} alt="Trainer" style={{ width: "100%", imageRendering: "pixelated" }} />
+              </div>
+              <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                {[
+                  { label: "EXP. POINTS", val: player.exp.toLocaleString(), col: "#fff" },
+                  { label: "TO NEXT RANK", val: Math.max(0, player.expNeeded - player.exp).toLocaleString(), col: "#fff" },
+                  { label: "WINS", val: player.wins, col: "#4CAF50" },
+                  { label: "LOSSES", val: player.losses, col: "#F44336" },
+                ].map((stat, i) => (
+                  <div key={i} style={{ background: "#171022", border: "1px solid #312440", padding: 8, borderRadius: 4 }}>
+                    <div style={{ fontSize: 6, color: "#aaa", marginBottom: 6, letterSpacing: 0.5 }}>{stat.label}</div>
+                    <div style={{ fontSize: 9, color: stat.col }}>{stat.val}</div>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="m-sub">
-              {player.hometown} <i className="fa-solid fa-diamond" /> {player.name}
-            </div>
-            <div className="m-tbody">
-              <div className="m-sprite-box">
-                <img src={TRAINER_SPRITE(player.sprite)} alt="trainer" />
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 7, color: "#bbb", marginBottom: 6, letterSpacing: 0.5 }}>
+                EXP PROGRESS ({player.exp} / {player.expNeeded})
               </div>
-              <div className="m-stats2">
-                <div className="m-stat-sm"><span className="lab">Exp. Points</span><span className="val">{player.exp.toLocaleString()}</span></div>
-                <div className="m-stat-sm"><span className="lab">To Next Rank</span><span className="val">{Math.max(0, player.expNeeded - player.exp).toLocaleString()}</span></div>
-                <div className="m-stat-sm"><span className="lab">Wins</span><span className="val" style={{ color: "var(--m-green)" }}>{player.wins}</span></div>
-                <div className="m-stat-sm"><span className="lab">Losses</span><span className="val" style={{ color: "var(--m-pink)" }}>{player.losses}</span></div>
+              <div style={{ background: "#222", height: 10, border: "1px solid #5e2c73", borderRadius: 2, overflow: "hidden" }}>
+                <div style={{ width: `${expPct}%`, background: "#9c27b0", height: "100%", transition: "width 0.3s" }} />
               </div>
             </div>
-            <div>
-              <div className="m-prog-labels"><span>Exp Progress</span><span>({player.exp} / {player.expNeeded})</span></div>
-              <div className="m-prog"><div style={{ width: `${expPct}%` }} /></div>
+            <div style={{ borderTop: "1px solid #312440", paddingTop: 8, textAlign: "right", fontSize: 7, color: "#aaa" }}>
+              Adventure started: {player.adventureStarted}
             </div>
-            <div className="m-foot">Adventure started: {player.adventureStarted}</div>
           </div>
 
           <div className="m-team-row">
