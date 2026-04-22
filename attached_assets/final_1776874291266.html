@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Crimson Sky - App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* Base Colors */
+            --bg-base: #09090b;
+            --bg-card: #18181b;
+            --bg-input: #27272a;
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --accent-blue: #3b82f6;
+            --accent-blue-bg: #1d4ed8;
+            --border-color: #27272a;
+            --icon-bg-dark: #121214;
+            
+            /* Custom Colors for Menu & Highlights */
+            --c-green: #22c55e;
+            --c-orange: #f97316;
+            --c-pink: #ec4899;
+            --c-purple: #a855f7;
+            --c-blue: #3b82f6;
+            --c-teal: #14b8a6;
+            --c-brown: #d97706; 
+            --c-yellow: #eab308;
+            --c-cyan: #06b6d4;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--bg-base);
+            position: relative;
+            padding-bottom: 80px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .view-section {
+            display: none;
+            width: 100%;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* =========================================
+           HOME VIEW (hmm.html) STYLES
+           ========================================= */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .top-bar-info { display: flex; flex-direction: column; gap: 4px; }
+        .game-title { color: var(--c-pink); font-size: 14px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+        .location { color: var(--text-muted); font-size: 12px; display: flex; align-items: center; gap: 6px; }
+        .location i { color: var(--c-pink); font-size: 8px; }
+        .caught-pill { background-color: var(--bg-card); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 16px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
+        .caught-pill i { color: var(--c-blue); }
+
+        .trainer-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 24px; margin: 20px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .card-title { font-size: 20px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+        .card-meta { text-align: right; display: flex; flex-direction: column; gap: 4px; }
+        .id-no { color: var(--text-muted); font-size: 12px; font-family: monospace; }
+        .rank { font-size: 14px; font-weight: 600; }
+        .trainer-subheading { font-size: 13px; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        .trainer-subheading i { font-size: 6px; color: var(--text-muted); }
+        .card-body { display: flex; gap: 16px; align-items: stretch; }
+        
+        .sprite-container { width: 80px; height: 100px; background-color: var(--bg-base); border: 1px solid var(--border-color); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+        .sprite-container i { font-size: 40px; color: var(--text-muted); }
+        .stats-grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1; }
+        .small-stat-card { background-color: var(--bg-base); border: 1px solid var(--border-color); border-radius: 12px; padding: 8px 12px; display: flex; flex-direction: column; justify-content: center; }
+        .small-stat-label { color: var(--text-muted); font-size: 10px; margin-bottom: 4px; text-transform: uppercase; }
+        .small-stat-value { font-size: 14px; font-weight: 600; }
+        .text-green { color: var(--c-green); }
+        .text-pink { color: var(--c-pink); }
+        
+        .progress-section { display: flex; flex-direction: column; gap: 6px; }
+        .progress-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+        .progress-track { height: 12px; background-color: var(--bg-base); border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 0%; background-color: var(--accent-blue-bg); border-radius: 6px; }
+        .card-footer { text-align: right; font-size: 10px; color: var(--text-muted); font-family: monospace; }
+
+        .team-section { padding: 0 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        .team-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .team-sprite { width: 32px; height: 32px; background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--c-green); }
+
+        .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 20px; margin-bottom: 20px; }
+        .menu-btn { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px 8px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 600; text-transform: uppercase; cursor: pointer; transition: background-color 0.2s; }
+        .menu-btn:hover { background-color: var(--bg-base); }
+
+        .log-box { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; margin: 0 20px; padding: 20px; min-height: 120px; }
+        .log-text { color: var(--c-yellow); font-family: monospace; font-size: 13px; line-height: 1.5; display: flex; gap: 8px; }
+        .log-text::before { content: ">"; }
+
+
+        /* =========================================
+           MARKETPLACE VIEW (mp.html) STYLES
+           ========================================= */
+        .marketplace-header { text-align: center; padding: 20px 20px 10px 20px; }
+        .header-title { color: var(--c-pink); font-size: 16px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin: 0; }
+        
+        .toggle-wrapper { padding: 10px 40px; }
+        .toggle-container { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; display: flex; padding: 4px; }
+        .toggle-btn { flex: 1; padding: 10px 0; text-align: center; font-size: 14px; font-weight: 500; color: var(--text-muted); border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .toggle-btn.active { background-color: var(--bg-input); color: var(--text-main); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+
+        .search-section { display: flex; gap: 12px; padding: 10px 20px 20px 20px; align-items: center; }
+        .search-bar { flex: 1; background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 10px 16px; display: flex; align-items: center; gap: 10px; }
+        .search-bar i { color: var(--text-muted); font-size: 14px; }
+        .search-bar input { background: transparent; border: none; color: var(--text-main); width: 100%; outline: none; font-size: 14px; }
+        .search-bar input::placeholder { color: var(--text-muted); }
+        .icon-btn { width: 38px; height: 38px; border-radius: 50%; background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; }
+
+        .pokemon-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; padding: 0 20px 20px 20px; }
+        .pokemon-card { background: radial-gradient(circle at center, #2a2a35 0%, var(--bg-card) 100%); border: 1px solid var(--border-color); border-radius: 16px; position: relative; overflow: hidden; aspect-ratio: 3/4; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .pokemon-image { width: auto; height: 45%; max-height: 100px; object-fit: contain; z-index: 1; margin-bottom: 40px; filter: drop-shadow(0 10px 5px rgba(0,0,0,0.4)); transition: transform 0.3s ease; }
+        .pokemon-card:hover .pokemon-image { transform: scale(1.15); }
+        
+        .card-overlay { position: absolute; bottom: 0; left: 0; width: 100%; padding: 30px 0 12px 0; background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 60%, transparent 100%); z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .pokemon-nature { font-size: 9px; color: var(--text-muted); background-color: rgba(255, 255, 255, 0.1); padding: 2px 6px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .pokemon-name { font-size: 15px; font-weight: 600; color: var(--text-main); letter-spacing: 0.5px; }
+        .pokemon-price { font-size: 13px; color: var(--c-yellow); display: flex; align-items: center; gap: 4px; font-weight: 500; }
+        .pokedollar { font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-weight: 600; }
+        
+        .card-rare { box-shadow: 0 0 15px rgba(236, 72, 153, 0.15); border-color: rgba(236, 72, 153, 0.3); }
+        .card-legendary { box-shadow: 0 0 15px rgba(234, 179, 8, 0.15); border-color: rgba(234, 179, 8, 0.3); }
+
+
+        /* =========================================
+           PROFILE VIEW (temp.html) STYLES
+           ========================================= */
+        .header-cover { height: 140px; background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url('https://img.freepik.com/free-photo/anime-style-character-space_23-2151134155.jpg?semt=ais_hybrid&w=740&q=80') center/cover; width: 100%; }
+        .profile-section { text-align: center; margin-top: -50px; padding: 0 20px; }
+        .avatar { width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--bg-base); background-color: var(--bg-card); background-image: url('https://share.google/oU9WuKnpgmDu6h3Ar'); background-size: cover; background-position: center; margin: 0 auto 10px auto; position: relative; z-index: 2; }
+        .profile-name { font-size: 22px; font-weight: 600; margin: 0 0 4px 0; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .profile-handle { color: var(--text-muted); font-size: 14px; margin: 0; }
+        
+        .wallet-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 24px; margin: 24px 20px; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .balance-pill { background-color: var(--accent-blue-bg); color: white; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 6px; }
+        .wallet-actions .level-badge { color: var(--text-main); font-size: 16px; font-weight: 600; background-color: rgba(255, 255, 255, 0.1); padding: 6px 14px; border-radius: 16px; }
+        
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 0 20px 24px 20px; }
+        .stat-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 12px; }
+        .stat-icon { width: 32px; height: 32px; background-color: rgba(255, 255, 255, 0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 14px; }
+        .stat-info { display: flex; flex-direction: column; }
+        .stat-label { color: var(--text-muted); font-size: 12px; margin-bottom: 4px; }
+        .stat-value { font-size: 16px; font-weight: 600; }
+        
+        .highlight-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0 20px 30px 20px; }
+        .highlight-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 20px 12px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .highlight-icon-wrapper { width: 44px; height: 44px; background-color: var(--icon-bg-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 20px; color: var(--text-muted); }
+        .highlight-label { color: var(--text-muted); font-size: 11px; font-weight: 500; margin-bottom: 8px; }
+        .highlight-value { font-size: 22px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .highlight-value i { font-size: 18px; color: var(--text-muted); }
+        
+        .section-heading { font-size: 18px; font-weight: 500; margin: 0 20px 12px 20px; }
+        .list-container { margin: 0 20px 30px 20px; display: flex; flex-direction: column; gap: 12px; }
+        .list-item { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 24px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: var(--text-main); }
+        .list-item-left { display: flex; align-items: center; gap: 16px; }
+        .list-item-text { display: flex; flex-direction: column; }
+        .list-item-title { font-size: 16px; font-weight: 500; }
+        .list-item-subtitle { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+        .arrow-icon { color: var(--text-muted); }
+        .dropdown-pill { background-color: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 16px; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-muted); }
+
+
+        /* =========================================
+           BOTTOM NAVIGATION
+           ========================================= */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background-color: var(--bg-base);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 16px 0;
+            z-index: 100;
+        }
+
+        .nav-item {
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+            transition: color 0.2s, border-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-item.active {
+            color: var(--c-blue);
+        }
+
+        .nav-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background-color: var(--bg-card);
+            border: 2px solid transparent; /* default transparent border */
+            font-size: 12px;
+            color: var(--c-pink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Optional: Add image URL here if you want it to show an image */
+            background-image: url('https://share.google/oU9WuKnpgmDu6h3Ar'); 
+            background-size: cover;
+        }
+        
+        /* Special active state for the avatar */
+        .nav-avatar.active {
+            border-color: var(--c-blue);
+            color: var(--c-blue);
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <div id="view-home" class="view-section" style="display: block;">
+        <div class="top-bar">
+            <div class="top-bar-info">
+                <span class="game-title">Pokémon &mdash; Crimson Sky</span>
+                <span class="location"><i class="fa-solid fa-circle"></i> Kanto &bull; Pallet Town</span>
+            </div>
+            <div class="caught-pill">
+                <i class="fa-solid fa-bullhorn"></i> Caught: 1/151
+            </div>
+        </div>
+
+        <div class="trainer-card">
+            <div class="card-header">
+                <h1 class="card-title">Trainer Card</h1>
+                <div class="card-meta">
+                    <span class="id-no">IDNo. SS00093609</span>
+                    <span class="rank">Rank 1</span>
+                </div>
+            </div>
+            
+            <div class="trainer-subheading">
+                Nuvema Town <i class="fa-solid fa-diamond"></i> Trainer
+            </div>
+
+            <div class="card-body">
+                <div class="sprite-container">
+                    <i class="fa-solid fa-user-astronaut"></i>
+                </div>
+                <div class="stats-grid-2x2">
+                    <div class="small-stat-card">
+                        <span class="small-stat-label">Exp. Points</span>
+                        <span class="small-stat-value">0</span>
+                    </div>
+                    <div class="small-stat-card">
+                        <span class="small-stat-label">To Next Rank</span>
+                        <span class="small-stat-value">100</span>
+                    </div>
+                    <div class="small-stat-card">
+                        <span class="small-stat-label">Wins</span>
+                        <span class="small-stat-value text-green">0</span>
+                    </div>
+                    <div class="small-stat-card">
+                        <span class="small-stat-label">Losses</span>
+                        <span class="small-stat-value text-pink">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-labels">
+                    <span>Exp Progress</span>
+                    <span>(0 / 100)</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                Adventure started: Apr 22, 2026
+            </div>
+        </div>
+
+        <div class="team-section">
+            <span class="team-label">Teams:</span>
+            <div class="team-sprite">
+                <i class="fa-brands fa-envira"></i>
+            </div>
+        </div>
+
+        <div class="menu-grid">
+            <div class="menu-btn" style="color: var(--c-green); border-color: rgba(34, 197, 94, 0.3);">
+                <i class="fa-solid fa-dragon"></i> Hunt
+            </div>
+            <div class="menu-btn" style="color: var(--c-orange); border-color: rgba(249, 115, 22, 0.3);">
+                <i class="fa-solid fa-users"></i> Teams
+            </div>
+            <div class="menu-btn" style="color: var(--c-pink); border-color: rgba(236, 72, 153, 0.3);">
+                <i class="fa-solid fa-id-card"></i> Card
+            </div>
+            <div class="menu-btn" style="color: var(--c-purple); border-color: rgba(168, 85, 247, 0.3);">
+                <i class="fa-solid fa-book"></i> Dex
+            </div>
+            <div class="menu-btn" style="color: var(--c-blue); border-color: rgba(59, 130, 246, 0.3);">
+                <i class="fa-solid fa-map"></i> Region
+            </div>
+            <div class="menu-btn" style="color: var(--c-teal); border-color: rgba(20, 184, 166, 0.3);">
+                <i class="fa-solid fa-umbrella-beach"></i> Safari
+            </div>
+            <div class="menu-btn" style="color: var(--c-brown); border-color: rgba(217, 119, 6, 0.3);">
+                <i class="fa-solid fa-suitcase"></i> Bag
+            </div>
+            <div class="menu-btn" style="color: var(--c-yellow); border-color: rgba(234, 179, 8, 0.3);">
+                <i class="fa-solid fa-store"></i> Store
+            </div>
+            <div class="menu-btn" style="color: var(--c-cyan); border-color: rgba(6, 182, 212, 0.3);">
+                <i class="fa-solid fa-trophy"></i> Caught
+            </div>
+        </div>
+
+        <div class="log-box">
+            <div class="log-text">
+                You chose Bulbasaur! Your adventure begins!
+            </div>
+        </div>
+    </div>
+
+    <div id="view-market" class="view-section" style="display: none;">
+        <div class="marketplace-header">
+            <h1 class="header-title">Crimson Sky Marketplace</h1>
+        </div>
+
+        <div class="toggle-wrapper">
+            <div class="toggle-container">
+                <div class="toggle-btn active">Pokémons</div>
+                <div class="toggle-btn">Items</div>
+            </div>
+        </div>
+
+        <div class="search-section">
+            <div class="search-bar">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" placeholder="Search">
+            </div>
+            <button class="icon-btn"><i class="fa-solid fa-filter"></i></button>
+            <button class="icon-btn"><i class="fa-solid fa-bars-staggered"></i></button>
+        </div>
+
+        <div class="pokemon-grid">
+            <div class="pokemon-card">
+                <img src="https://projectpokemon.org/images/normal-sprite/charizard.gif" alt="Charizard" class="pokemon-image">
+                <div class="card-overlay">
+                    <span class="pokemon-nature">Jolly</span>
+                    <span class="pokemon-name">Charizard</span>
+                    <span class="pokemon-price"><span class="pokedollar">₽</span> 15,000</span>
+                </div>
+            </div>
+
+            <div class="pokemon-card card-rare">
+                <img src="https://projectpokemon.org/images/shiny-sprite/gengar.gif" alt="Gengar" class="pokemon-image">
+                <div class="card-overlay">
+                    <span class="pokemon-nature">Timid</span>
+                    <span class="pokemon-name">Gengar [Shiny]</span>
+                    <span class="pokemon-price"><span class="pokedollar">₽</span> 45,500</span>
+                </div>
+            </div>
+
+            <div class="pokemon-card">
+                <img src="https://projectpokemon.org/images/normal-sprite/lapras.gif" alt="Lapras" class="pokemon-image">
+                <div class="card-overlay">
+                    <span class="pokemon-nature">Modest</span>
+                    <span class="pokemon-name">Lapras</span>
+                    <span class="pokemon-price"><span class="pokedollar">₽</span> 12,200</span>
+                </div>
+            </div>
+
+            <div class="pokemon-card card-legendary">
+                <img src="https://projectpokemon.org/images/normal-sprite/mewtwo.gif" alt="Mewtwo" class="pokemon-image">
+                <div class="card-overlay">
+                    <span class="pokemon-nature">Adamant</span>
+                    <span class="pokemon-name">Mewtwo</span>
+                    <span class="pokemon-price"><span class="pokedollar">₽</span> 999,999</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-profile" class="view-section" style="display: none;">
+        <div class="header-cover"></div>
+
+        <div class="profile-section">
+            <div class="avatar"></div>
+            <h1 class="profile-name">Trainer Name</h1>
+            <p class="profile-handle">@username</p>
+        </div>
+
+        <div class="wallet-card">
+            <div class="balance-pill">
+                <i class="fa-solid fa-ruble-sign" style="font-size: 12px;"></i> 2,246
+            </div>
+            <div class="wallet-actions">
+                <span class="level-badge">Lvl 100</span>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-gavel"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">Banned</span>
+                    <span class="stat-value">No</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-shield"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">Rank</span>
+                    <span class="stat-value">Bronze</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-book-open"></i></div> <div class="stat-info">
+                    <span class="stat-label">Pokémon Seen</span>
+                    <span class="stat-value">17</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-circle-dot"></i></div> <div class="stat-info">
+                    <span class="stat-label">Pokemon Caught</span>
+                    <span class="stat-value">8</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="highlight-stats">
+            <div class="highlight-card">
+                <div class="highlight-icon-wrapper"><i class="fa-solid fa-address-book"></i></div>
+                <span class="highlight-label">Pokédex</span>
+                <span class="highlight-value"><i class="fa-solid fa-address-book"></i> 75%</span>
+            </div>
+            <div class="highlight-card">
+                <div class="highlight-icon-wrapper"><i class="fa-solid fa-certificate"></i></div>
+                <span class="highlight-label">Gym Badges</span>
+                <span class="highlight-value"><i class="fa-solid fa-sun"></i> 5</span>
+            </div>
+            <div class="highlight-card">
+                <div class="highlight-icon-wrapper"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <span class="highlight-label">Shiny Collection</span>
+                <span class="highlight-value"><i class="fa-regular fa-star"></i> 12</span>
+            </div>
+        </div>
+
+        <h2 class="section-heading">Dex Stats </h2>
+        <div class="list-container">
+            <a href="#" class="list-item">
+                <div class="list-item-left">
+                    <div class="stat-icon"><i class="fa-solid fa-book-open"></i></div>
+                    <div class="list-item-text">
+                        <span class="list-item-title">17 Pokémon Seen</span>
+                        <span class="list-item-subtitle">Browse</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-caret-right arrow-icon"></i>
+            </a>
+            <a href="#" class="list-item">
+                <div class="list-item-left">
+                    <div class="stat-icon"><i class="fa-solid fa-circle-dot"></i></div>
+                    <div class="list-item-text">
+                        <span class="list-item-title">8 Pokemon Caught</span>
+                        <span class="list-item-subtitle">Browse</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-caret-right arrow-icon"></i>
+            </a>
+        </div>
+
+        <h2 class="section-heading">Preferences</h2>
+        <div class="list-container">
+            <div class="list-item">
+                <span class="list-item-title">Theme</span>
+                <div class="dropdown-pill">
+                    dark <i class="fa-solid fa-chevron-down" style="font-size: 10px;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <i class="fa-solid fa-house nav-item active" onclick="switchView('home', this)"></i>
+        <i class="fa-solid fa-magnifying-glass nav-item" onclick="switchView('market', this)"></i>
+        <div class="nav-avatar nav-item" onclick="switchView('profile', this)">
+             </div>
+    </div>
+
+</div>
+
+<script>
+    function switchView(viewName, element) {
+        // 1. Hide all views
+        document.querySelectorAll('.view-section').forEach(view => {
+            view.style.display = 'none';
+        });
+
+        // 2. Remove 'active' class from all nav items
+        document.querySelectorAll('.nav-item').forEach(nav => {
+            nav.classList.remove('active');
+        });
+
+        // 3. Show the selected view
+        document.getElementById('view-' + viewName).style.display = 'block';
+
+        // 4. Add 'active' class to the clicked nav icon
+        element.classList.add('active');
+
+        // 5. Scroll smoothly back to the top of the container
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>

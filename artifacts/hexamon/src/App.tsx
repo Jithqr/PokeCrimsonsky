@@ -408,7 +408,144 @@ export default function App() {
     }
     .btn:hover { transform: scale(1.04); }
     .btn:active { transform: scale(0.97); }
+
+    /* ================ Modern UI (mockup-inspired) ================ */
+    :root {
+      --m-bg: #09090b;
+      --m-card: #18181b;
+      --m-input: #27272a;
+      --m-text: #f4f4f5;
+      --m-muted: #a1a1aa;
+      --m-border: #27272a;
+      --m-blue: #3b82f6;
+      --m-bluebg: #1d4ed8;
+      --m-pink: #ec4899;
+      --m-green: #22c55e;
+      --m-orange: #f97316;
+      --m-purple: #a855f7;
+      --m-teal: #14b8a6;
+      --m-brown: #d97706;
+      --m-yellow: #eab308;
+      --m-cyan: #06b6d4;
+    }
+    .m-app { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; color: var(--m-text); background: var(--m-bg); padding-bottom: 80px; min-height: 100vh; display:flex; flex-direction:column; position:relative; }
+    .m-topbar { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--m-border); }
+    .m-game-title { color: var(--m-pink); font-size:13px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; }
+    .m-location { color: var(--m-muted); font-size:11px; display:flex; align-items:center; gap:6px; margin-top:4px; }
+    .m-location i { color: var(--m-pink); font-size:7px; }
+    .m-pill { background: var(--m-card); border:1px solid var(--m-border); padding:6px 12px; border-radius:16px; display:inline-flex; align-items:center; gap:8px; font-size:11px; color:var(--m-muted); }
+    .m-pill i { color: var(--m-blue); font-size:11px; }
+    .m-card { background: var(--m-card); border:1px solid var(--m-border); border-radius:24px; padding:18px; }
+    .m-trainer { margin:16px 16px 12px; display:flex; flex-direction:column; gap:14px; }
+    .m-trainer-head { display:flex; justify-content:space-between; align-items:flex-start; }
+    .m-trainer-title { font-size:18px; font-weight:700; margin:0; text-transform:uppercase; letter-spacing:1px; }
+    .m-trainer-meta { text-align:right; display:flex; flex-direction:column; gap:4px; }
+    .m-id { color:var(--m-muted); font-size:11px; font-family:'JetBrains Mono', ui-monospace, monospace; }
+    .m-rank { font-size:13px; font-weight:600; color: var(--m-text); }
+    .m-sub { font-size:12px; color:var(--m-text); display:flex; align-items:center; gap:8px; }
+    .m-sub i { font-size:6px; color:var(--m-muted); }
+    .m-tbody { display:flex; gap:14px; align-items:stretch; }
+    .m-sprite-box { width:84px; height:104px; background: var(--m-bg); border:1px solid var(--m-border); border-radius:12px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .m-sprite-box img { width:80%; image-rendering:pixelated; }
+    .m-stats2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; flex:1; }
+    .m-stat-sm { background: var(--m-bg); border:1px solid var(--m-border); border-radius:12px; padding:8px 12px; display:flex; flex-direction:column; justify-content:center; }
+    .m-stat-sm .lab { color:var(--m-muted); font-size:9px; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.4px; }
+    .m-stat-sm .val { font-size:13px; font-weight:600; }
+    .m-prog-labels { display:flex; justify-content:space-between; font-size:9px; color:var(--m-muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.4px; }
+    .m-prog { height:12px; background: var(--m-bg); border:1px solid var(--m-border); border-radius:6px; overflow:hidden; }
+    .m-prog > div { height:100%; background: var(--m-bluebg); border-radius:6px; transition: width .4s; }
+    .m-foot { text-align:right; font-size:10px; color:var(--m-muted); font-family:'JetBrains Mono', ui-monospace, monospace; }
+
+    .m-team-row { padding: 0 20px; display:flex; align-items:center; gap:10px; margin-bottom:14px; overflow-x:auto; }
+    .m-team-label { font-size:11px; color:var(--m-muted); text-transform:uppercase; letter-spacing:1px; }
+    .m-team-sprite { width:36px; height:36px; background: var(--m-card); border:1px solid var(--m-border); border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; }
+    .m-team-sprite img { width:30px; image-rendering:pixelated; }
+
+    .m-menu { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding: 0 16px; margin-bottom: 16px; }
+    .m-menu-btn { background: var(--m-card); border:1px solid var(--m-border); border-radius:16px; padding:14px 6px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; font-size:12px; font-weight:600; text-transform:uppercase; cursor:pointer; transition: background-color .2s, transform .15s; letter-spacing: 0.5px; color: var(--m-text); }
+    .m-menu-btn i { font-size: 18px; }
+    .m-menu-btn:hover { background: #1f1f24; }
+    .m-menu-btn:active { transform: scale(0.97); }
+
+    .m-log { background: var(--m-card); border:1px solid var(--m-border); border-radius:16px; margin: 0 16px 16px; padding:16px; min-height: 100px; max-height: 160px; overflow-y:auto; }
+    .m-log .ln { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size:11px; line-height:1.6; display:flex; gap:6px; }
+    .m-log .ln::before { content:">"; opacity:.7; }
+
+    /* Marketplace */
+    .m-mkt-head { text-align:center; padding: 18px 20px 8px; }
+    .m-mkt-title { color: var(--m-pink); font-size:15px; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin:0; }
+    .m-toggle-wrap { padding: 8px 32px; }
+    .m-toggle { background: var(--m-card); border:1px solid var(--m-border); border-radius:12px; display:flex; padding:4px; }
+    .m-toggle-btn { flex:1; padding:9px 0; text-align:center; font-size:13px; font-weight:500; color: var(--m-muted); border-radius:8px; cursor:pointer; transition: all .2s; }
+    .m-toggle-btn.active { background: var(--m-input); color: var(--m-text); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .m-search-row { display:flex; gap:10px; padding:8px 16px 16px; align-items:center; }
+    .m-search { flex:1; background: var(--m-card); border:1px solid var(--m-border); border-radius:20px; padding:9px 14px; display:flex; align-items:center; gap:10px; }
+    .m-search i { color: var(--m-muted); font-size:12px; }
+    .m-search input { background:transparent; border:none; color: var(--m-text); width:100%; outline:none; font-size:13px; font-family:inherit; }
+    .m-search input::placeholder { color: var(--m-muted); }
+    .m-icon-btn { width:36px; height:36px; border-radius:50%; background: var(--m-card); border:1px solid var(--m-border); color: var(--m-muted); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; }
+    .m-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; padding: 0 16px 16px; }
+    .m-pcard { background: radial-gradient(circle at center, #2a2a35 0%, var(--m-card) 100%); border:1px solid var(--m-border); border-radius:16px; position:relative; overflow:hidden; aspect-ratio:3/4; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; transition: transform .2s; }
+    .m-pcard:hover { transform: translateY(-2px); }
+    .m-pcard img { width:auto; height:48%; max-height:96px; object-fit:contain; z-index:1; margin-bottom:36px; filter: drop-shadow(0 8px 6px rgba(0,0,0,0.5)); image-rendering: pixelated; transition: transform .3s; }
+    .m-pcard:hover img { transform: scale(1.12); }
+    .m-pcard .ovr { position:absolute; bottom:0; left:0; width:100%; padding:28px 0 12px; background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 60%, transparent 100%); z-index:2; display:flex; flex-direction:column; align-items:center; gap:3px; }
+    .m-nature { font-size:9px; color: var(--m-muted); background: rgba(255,255,255,0.08); padding:2px 6px; border-radius:6px; text-transform:uppercase; letter-spacing:.5px; }
+    .m-pname { font-size:14px; font-weight:600; color: var(--m-text); }
+    .m-price { font-size:12px; color: var(--m-yellow); font-weight:500; }
+    .m-rare { box-shadow: 0 0 15px rgba(236,72,153,0.18); border-color: rgba(236,72,153,0.35); }
+    .m-legend { box-shadow: 0 0 15px rgba(234,179,8,0.18); border-color: rgba(234,179,8,0.35); }
+
+    /* Profile */
+    .m-cover { height:140px; background: linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.75)), linear-gradient(135deg, #5e2c73 0%, #1d4ed8 50%, #ec4899 100%); width:100%; }
+    .m-prof { text-align:center; margin-top:-50px; padding: 0 20px; }
+    .m-avatar { width:100px; height:100px; border-radius:50%; border:4px solid var(--m-bg); background: var(--m-card); margin: 0 auto 10px; position:relative; z-index:2; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .m-avatar img { width:90px; height:90px; image-rendering:pixelated; }
+    .m-prof-name { font-size:21px; font-weight:600; margin: 0 0 4px; }
+    .m-prof-handle { color: var(--m-muted); font-size:13px; margin:0; }
+    .m-wallet { background: var(--m-card); border:1px solid var(--m-border); border-radius:24px; margin: 22px 16px; padding: 12px 18px; display:flex; justify-content:space-between; align-items:center; }
+    .m-balance { background: var(--m-bluebg); color:#fff; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 15px; display:flex; align-items:center; gap:6px; }
+    .m-level-badge { color: var(--m-text); font-size:14px; font-weight:600; background: rgba(255,255,255,0.08); padding: 6px 14px; border-radius: 16px; }
+    .m-stats { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin: 0 16px 18px; }
+    .m-statc { background: var(--m-card); border:1px solid var(--m-border); border-radius:18px; padding: 14px; display:flex; align-items:center; gap:12px; }
+    .m-stat-ic { width:32px; height:32px; background: rgba(255,255,255,0.05); border-radius:50%; display:flex; align-items:center; justify-content:center; color: var(--m-muted); font-size:13px; flex-shrink:0; }
+    .m-stat-lab { color: var(--m-muted); font-size:11px; margin-bottom: 3px; }
+    .m-stat-val { font-size: 15px; font-weight:600; }
+    .m-hl { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin: 0 16px 24px; }
+    .m-hlc { background: var(--m-card); border:1px solid var(--m-border); border-radius:18px; padding: 16px 8px; display:flex; flex-direction:column; align-items:center; text-align:center; }
+    .m-hl-iw { width:42px; height:42px; background: #121214; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:12px; font-size:16px; color: var(--m-muted); }
+    .m-hl-lab { color: var(--m-muted); font-size:10px; font-weight:500; margin-bottom:6px; }
+    .m-hl-val { font-size:18px; font-weight:600; display:flex; align-items:center; gap:5px; }
+    .m-section-h { font-size:16px; font-weight:500; margin: 0 16px 10px; }
+    .m-list { margin: 0 16px 22px; display:flex; flex-direction:column; gap:10px; }
+    .m-li { background: var(--m-card); border:1px solid var(--m-border); border-radius:20px; padding: 14px 18px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+    .m-li-l { display:flex; align-items:center; gap:14px; }
+    .m-li-t { display:flex; flex-direction:column; }
+    .m-li-tt { font-size:14px; font-weight:500; }
+    .m-li-st { color: var(--m-muted); font-size:12px; margin-top:2px; }
+    .m-arrow { color: var(--m-muted); }
+    .m-pill-drop { background: rgba(255,255,255,0.05); border:1px solid var(--m-border); padding:6px 12px; border-radius:16px; display:flex; align-items:center; gap:8px; font-size:13px; color: var(--m-muted); }
+
+    /* Bottom Nav */
+    .m-bnav { position:absolute; bottom:0; left:0; width:100%; background: var(--m-bg); border-top:1px solid var(--m-border); display:flex; justify-content:space-around; align-items:center; padding: 14px 0; z-index: 100; }
+    .m-bnav i { color: var(--m-muted); font-size: 20px; cursor:pointer; transition: color .2s; }
+    .m-bnav i.active { color: var(--m-blue); }
+    .m-bnav .av { width:26px; height:26px; border-radius:50%; background: var(--m-card); border:2px solid transparent; cursor:pointer; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+    .m-bnav .av.active { border-color: var(--m-blue); }
+    .m-bnav .av img { width:100%; height:100%; image-rendering: pixelated; object-fit: cover; }
   `;
+
+  function BottomNav({ active, go }: { active: "home" | "market" | "profile"; go: (s: string) => void }) {
+    return (
+      <div className="m-bnav">
+        <i className={`fa-solid fa-house ${active === "home" ? "active" : ""}`} onClick={() => { sfx.click(); go("world"); }} />
+        <i className={`fa-solid fa-magnifying-glass ${active === "market" ? "active" : ""}`} onClick={() => { sfx.click(); go("store"); }} />
+        <div className={`av ${active === "profile" ? "active" : ""}`} onClick={() => { sfx.click(); go("profile"); }}>
+          <img src={TRAINER_SPRITE(player.sprite)} alt="me" />
+        </div>
+      </div>
+    );
+  }
 
   const S: Record<string, React.CSSProperties> = {
     root: { fontFamily: "'Press Start 2P',monospace", background: "#05050f", minHeight: "100vh", display: "flex", justifyContent: "center" },
@@ -608,114 +745,184 @@ export default function App() {
   if (screen === "world") {
     const macro = MACRO_REGIONS[player.macroRegion];
     const region = macro.areas[player.region] ?? { name: "—", minLv: 0, maxLv: 0, pool: [] };
+    const expPct = Math.min(100, (player.exp / player.expNeeded) * 100);
+    const menu = [
+      { label: "Hunt",   icon: "fa-dragon",          color: "var(--m-green)",  action: openHunt },
+      { label: "Teams",  icon: "fa-users",           color: "var(--m-orange)", action: () => setScreen("team") },
+      { label: "Card",   icon: "fa-id-card",         color: "var(--m-pink)",   action: () => setScreen("card") },
+      { label: "Dex",    icon: "fa-book",            color: "var(--m-purple)", action: () => setScreen("dex") },
+      { label: "Region", icon: "fa-map",             color: "var(--m-blue)",   action: () => setScreen("regionSelect") },
+      { label: "Safari", icon: "fa-umbrella-beach",  color: "var(--m-teal)",   action: () => setScreen("regionSelect") },
+      { label: "Bag",    icon: "fa-suitcase",        color: "var(--m-brown)",  action: () => setScreen("inventory") },
+      { label: "Store",  icon: "fa-store",           color: "var(--m-yellow)", action: () => setScreen("store") },
+      { label: "Caught", icon: "fa-trophy",          color: "var(--m-cyan)",   action: () => setScreen("caughtList") },
+    ];
     return (
       <div style={S.root}><style>{css}</style>
-        <div style={S.wrap}>
+        <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
           {evolving && (
             <div style={{ position: "fixed", inset: 0, background: "#000a", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 99, gap: 16 }}>
-              <div style={{ fontSize: 10, color: "#CE93D8", textAlign: "center", animation: "pulse 0.5s infinite" }}>✨ EVOLVING! ✨</div>
+              <div style={{ fontSize: 14, color: "#CE93D8", textAlign: "center", animation: "pulse 0.5s infinite", fontFamily: "Inter,sans-serif", fontWeight: 700 }}>✨ EVOLVING! ✨</div>
               <div style={{ fontSize: 36, animation: "evoFlash 0.8s infinite" }}>🌟</div>
               <MonSprite sprite={evolving.sprite} size={100} />
-              <div style={{ fontSize: 9, color: "#fff" }}>{evolving.from} → {evolving.to}!</div>
+              <div style={{ fontSize: 14, color: "#fff", fontFamily: "Inter,sans-serif" }}>{evolving.from} → {evolving.to}!</div>
             </div>
           )}
 
-          <div style={S.header}>
+          <div className="m-topbar">
             <div>
-              <div style={{ fontSize: 8, color: "#ff6b35" }}>POKÉMON — <span style={{ color: "#ff3b6b" }}>CRIMSON SKY</span></div>
-              <div style={{ fontSize: 6, color: "#666", marginTop: 2 }}>{macro.emoji} {macro.name} · {region.name}</div>
+              <div className="m-game-title">Pokémon &mdash; Crimson Sky</div>
+              <div className="m-location"><i className="fa-solid fa-circle" /> {macro.name} &bull; {region.name}</div>
             </div>
-            <div style={{ textAlign: "right", display: "flex", alignItems: "center", gap: 8 }}>
-              <button className="btn"
-                title={muted ? "Sound off" : "Sound on"}
-                style={{ border: `1px solid ${muted ? "#555" : "#FFC107"}`, color: muted ? "#555" : "#FFC107", padding: "4px 7px", borderRadius: 4, fontSize: 10 }}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span className="m-pill" style={{ cursor: "pointer" }}
                 onClick={() => { const m = !muted; setMuted(m); sfx.setMuted(m); if (!m) sfx.click(); }}>
-                {muted ? "🔇" : "🔊"}
-              </button>
-              <div style={{ fontSize: 6, color: "#555" }}>Caught: {caught.size}/151</div>
+                <i className={`fa-solid ${muted ? "fa-volume-xmark" : "fa-volume-high"}`} style={{ color: muted ? "var(--m-muted)" : "var(--m-yellow)" }} />
+              </span>
+              <span className="m-pill"><i className="fa-solid fa-bullhorn" /> Caught: {caught.size}/151</span>
             </div>
           </div>
 
-          <div style={{
-            margin: "12px", background: "#0d0d1a", border: "2px solid #5e2c73", borderRadius: 12,
-            padding: 14, boxShadow: "0 4px 10px rgba(0,0,0,0.5)", position: "relative"
-          }}>
-            <div style={{ textAlign: "right", fontSize: 7, color: "#888", marginBottom: 6, letterSpacing: 1 }}>
-              IDNo. {player.id}
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "1px solid #5e2c73", paddingBottom: 8, marginBottom: 10 }}>
-              <div style={{ fontSize: 14, color: "#fff", textShadow: "1px 1px #000" }}>TRAINER CARD</div>
-              <div style={{ fontSize: 10, color: "#ddd" }}>Rank {player.level}</div>
-            </div>
-            <div style={{ fontSize: 8, color: "#aaa", marginBottom: 12, letterSpacing: 0.5 }}>
-              {player.hometown} • {player.name}
-            </div>
-            <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
-              <div style={{ width: 80, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <img src={TRAINER_SPRITE(player.sprite)} alt="Trainer" style={{ width: "100%", imageRendering: "pixelated" }} />
-              </div>
-              <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                {[
-                  { label: "EXP. POINTS", val: player.exp.toLocaleString(), col: "#fff" },
-                  { label: "TO NEXT RANK", val: Math.max(0, player.expNeeded - player.exp).toLocaleString(), col: "#fff" },
-                  { label: "WINS", val: player.wins, col: "#4CAF50" },
-                  { label: "LOSSES", val: player.losses, col: "#F44336" },
-                ].map((stat, i) => (
-                  <div key={i} style={{ background: "#171022", border: "1px solid #312440", padding: 8, borderRadius: 4 }}>
-                    <div style={{ fontSize: 5, color: "#888", marginBottom: 6 }}>{stat.label}</div>
-                    <div style={{ fontSize: 8, color: stat.col }}>{stat.val}</div>
-                  </div>
-                ))}
+          <div className="m-trainer m-card">
+            <div className="m-trainer-head">
+              <h1 className="m-trainer-title">Trainer Card</h1>
+              <div className="m-trainer-meta">
+                <span className="m-id">IDNo. {player.id}</span>
+                <span className="m-rank">Rank {player.level}</span>
               </div>
             </div>
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 6, color: "#aaa", marginBottom: 6 }}>
-                EXP PROGRESS ({player.exp} / {player.expNeeded})
+            <div className="m-sub">
+              {player.hometown} <i className="fa-solid fa-diamond" /> {player.name}
+            </div>
+            <div className="m-tbody">
+              <div className="m-sprite-box">
+                <img src={TRAINER_SPRITE(player.sprite)} alt="trainer" />
               </div>
-              <div style={{ background: "#222", height: 10, border: "1px solid #5e2c73", borderRadius: 2, overflow: "hidden" }}>
-                <div style={{ width: `${Math.min(100, (player.exp / player.expNeeded) * 100)}%`, background: "#9c27b0", height: "100%", transition: "width 0.3s" }} />
+              <div className="m-stats2">
+                <div className="m-stat-sm"><span className="lab">Exp. Points</span><span className="val">{player.exp.toLocaleString()}</span></div>
+                <div className="m-stat-sm"><span className="lab">To Next Rank</span><span className="val">{Math.max(0, player.expNeeded - player.exp).toLocaleString()}</span></div>
+                <div className="m-stat-sm"><span className="lab">Wins</span><span className="val" style={{ color: "var(--m-green)" }}>{player.wins}</span></div>
+                <div className="m-stat-sm"><span className="lab">Losses</span><span className="val" style={{ color: "var(--m-pink)" }}>{player.losses}</span></div>
               </div>
             </div>
-            <div style={{ borderTop: "1px solid #312440", paddingTop: 8, textAlign: "right", fontSize: 6, color: "#777" }}>
-              Adventure started: {player.adventureStarted}
+            <div>
+              <div className="m-prog-labels"><span>Exp Progress</span><span>({player.exp} / {player.expNeeded})</span></div>
+              <div className="m-prog"><div style={{ width: `${expPct}%` }} /></div>
             </div>
+            <div className="m-foot">Adventure started: {player.adventureStarted}</div>
           </div>
 
-          {team.length > 0 && (
-            <div style={{ margin: "0 12px 8px", display: "flex", gap: 6, alignItems: "center", overflowX: "auto", paddingBottom: 4 }}>
-              <span style={{ fontSize: 6, color: "#555" }}>TEAM:</span>
-              {team.map((m, i) => (
-                <div key={i} style={{ position: "relative", flexShrink: 0 }}>
-                  <MonSprite sprite={m.sprite} size={28} style={{ opacity: m.currentHp <= 0 ? 0.3 : 1 }} />
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div style={{ padding: "0 12px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>
-            {[
-              { label: "🌲 HUNT", color: "#4CAF50", action: openHunt },
-              { label: "🎒 TEAM", color: "#FF9800", action: () => setScreen("team") },
-              { label: "🪪 CARD", color: "#E91E63", action: () => setScreen("card") },
-              { label: "📖 DEX", color: "#9C27B0", action: () => setScreen("dex") },
-              { label: "🗺️ REGION", color: "#795548", action: () => setScreen("regionSelect") },
-              { label: "🌴 SAFARI", color: "#00BCD4", action: () => setScreen("regionSelect") },
-              { label: "👜 BAG", color: "#607D8B", action: () => setScreen("inventory") },
-              { label: "🏪 STORE", color: "#FFC107", action: () => setScreen("store") },
-              { label: "🏆 CAUGHT", color: "#26A69A", action: () => setScreen("caughtList") },
-            ].map((b) => (
-              <button key={b.label} className="btn"
-                style={{ border: `2px solid ${b.color}`, color: b.color, padding: "10px 4px", borderRadius: 8, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}
-                onClick={b.action}>
-                <span style={{ fontSize: 9 }}>{b.label}</span>
-              </button>
+          <div className="m-team-row">
+            <span className="m-team-label">Teams:</span>
+            {team.length === 0 && <span style={{ fontSize: 11, color: "var(--m-muted)" }}>—</span>}
+            {team.map((m, i) => (
+              <div key={i} className="m-team-sprite" style={{ opacity: m.currentHp <= 0 ? 0.35 : 1 }}>
+                <img src={SPRITE(m.sprite)} alt={m.name} />
+              </div>
             ))}
           </div>
 
-          <div ref={logRef} style={{ flex: 1, margin: "0 12px 12px", background: "#050510", border: "1px solid #1a1a3a", borderRadius: 8, padding: "8px 10px", overflowY: "auto", minHeight: 100, maxHeight: 160 }}>
-            {log.length === 0 && <div style={{ fontSize: 7, color: "#333" }}>▸ Your adventure awaits...</div>}
-            {log.map((l) => <div key={l.id} style={{ fontSize: 7, color: l.color, marginBottom: 3, lineHeight: 1.8 }}>▸ {l.msg}</div>)}
+          <div className="m-menu">
+            {menu.map((b) => (
+              <div key={b.label} className="m-menu-btn"
+                style={{ color: b.color, borderColor: `${b.color}55` }}
+                onClick={() => { sfx.click(); b.action(); }}>
+                <i className={`fa-solid ${b.icon}`} />
+                <span>{b.label}</span>
+              </div>
+            ))}
           </div>
+
+          <div ref={logRef} className="m-log">
+            {log.length === 0 && <div className="ln" style={{ color: "var(--m-muted)" }}>Your adventure awaits...</div>}
+            {log.map((l) => <div key={l.id} className="ln" style={{ color: l.color === "#ddd" ? "var(--m-yellow)" : l.color }}>{l.msg}</div>)}
+          </div>
+
+          <BottomNav active="home" go={setScreen} />
+        </div>
+      </div>
+    );
+  }
+
+  if (screen === "profile") {
+    const dexPct = Math.round((caught.size / 151) * 100);
+    return (
+      <div style={S.root}><style>{css}</style>
+        <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
+          <div className="m-cover" />
+          <div className="m-prof">
+            <div className="m-avatar"><img src={TRAINER_SPRITE(player.sprite)} alt="me" /></div>
+            <h1 className="m-prof-name">{player.name}</h1>
+            <p className="m-prof-handle">@{player.name.toLowerCase().replace(/\s+/g, "")}</p>
+          </div>
+          <div className="m-wallet">
+            <div className="m-balance"><i className="fa-solid fa-coins" style={{ fontSize: 12 }} /> ₽{player.money.toLocaleString()}</div>
+            <span className="m-level-badge">Lvl {player.level}</span>
+          </div>
+          <div className="m-stats">
+            <div className="m-statc">
+              <div className="m-stat-ic"><i className="fa-solid fa-gavel" /></div>
+              <div><div className="m-stat-lab">Banned</div><div className="m-stat-val">No</div></div>
+            </div>
+            <div className="m-statc">
+              <div className="m-stat-ic"><i className="fa-solid fa-shield" /></div>
+              <div><div className="m-stat-lab">Rank</div><div className="m-stat-val">{player.level >= 30 ? "Gold" : player.level >= 15 ? "Silver" : "Bronze"}</div></div>
+            </div>
+            <div className="m-statc">
+              <div className="m-stat-ic"><i className="fa-solid fa-book-open" /></div>
+              <div><div className="m-stat-lab">Pokémon Seen</div><div className="m-stat-val">{caught.size}</div></div>
+            </div>
+            <div className="m-statc">
+              <div className="m-stat-ic"><i className="fa-solid fa-circle-dot" /></div>
+              <div><div className="m-stat-lab">Pokémon Caught</div><div className="m-stat-val">{caught.size}</div></div>
+            </div>
+          </div>
+          <div className="m-hl">
+            <div className="m-hlc">
+              <div className="m-hl-iw"><i className="fa-solid fa-address-book" /></div>
+              <span className="m-hl-lab">Pokédex</span>
+              <span className="m-hl-val">{dexPct}%</span>
+            </div>
+            <div className="m-hl-c m-hlc">
+              <div className="m-hl-iw"><i className="fa-solid fa-certificate" /></div>
+              <span className="m-hl-lab">Wins</span>
+              <span className="m-hl-val"><i className="fa-solid fa-sun" />{player.wins}</span>
+            </div>
+            <div className="m-hlc">
+              <div className="m-hl-iw"><i className="fa-solid fa-wand-magic-sparkles" /></div>
+              <span className="m-hl-lab">Team</span>
+              <span className="m-hl-val"><i className="fa-regular fa-star" />{team.length}</span>
+            </div>
+          </div>
+          <h2 className="m-section-h">Dex Stats</h2>
+          <div className="m-list">
+            <div className="m-li" onClick={() => { sfx.click(); setScreen("dex"); }}>
+              <div className="m-li-l">
+                <div className="m-stat-ic"><i className="fa-solid fa-book-open" /></div>
+                <div className="m-li-t"><span className="m-li-tt">{caught.size} Pokémon Seen</span><span className="m-li-st">Browse</span></div>
+              </div>
+              <i className="fa-solid fa-caret-right m-arrow" />
+            </div>
+            <div className="m-li" onClick={() => { sfx.click(); setScreen("caughtList"); }}>
+              <div className="m-li-l">
+                <div className="m-stat-ic"><i className="fa-solid fa-circle-dot" /></div>
+                <div className="m-li-t"><span className="m-li-tt">{caught.size} Pokémon Caught</span><span className="m-li-st">Browse</span></div>
+              </div>
+              <i className="fa-solid fa-caret-right m-arrow" />
+            </div>
+          </div>
+          <h2 className="m-section-h">Preferences</h2>
+          <div className="m-list">
+            <div className="m-li" onClick={() => { const m = !muted; setMuted(m); sfx.setMuted(m); if (!m) sfx.click(); }}>
+              <span className="m-li-tt">Sound</span>
+              <div className="m-pill-drop">{muted ? "off" : "on"} <i className="fa-solid fa-chevron-down" style={{ fontSize: 10 }} /></div>
+            </div>
+            <div className="m-li" onClick={() => { sfx.click(); setScreen("card"); }}>
+              <span className="m-li-tt">Edit Trainer Card</span>
+              <i className="fa-solid fa-caret-right m-arrow" />
+            </div>
+          </div>
+          <BottomNav active="profile" go={setScreen} />
         </div>
       </div>
     );
@@ -1089,6 +1296,16 @@ export default function App() {
   }
 
   if (screen === "store") {
+    const NATURES = ["Jolly", "Timid", "Modest", "Adamant", "Bold", "Calm", "Brave"];
+    const RARE_IDS = new Set([6, 9, 12, 15, 18, 25]);
+    const LEGEND_IDS = new Set<number>();
+    function priceFor(p: Template) {
+      const base = (p.hp + p.atk + p.def + p.spa + p.spd + p.spe);
+      const tier = LEGEND_IDS.has(p.id) ? 200 : RARE_IDS.has(p.id) ? 60 : 30;
+      return base * tier;
+    }
+    const marketTab: "pokemons" | "items" = storeCat === "items" || storeCat === "balls" || storeCat === "boost" || storeCat === "tms" ? "items" : "pokemons";
+    const marketMons = ALL_POKEMON.slice(0, 12);
     const categories = [
       { key: "balls", label: "POKÉ BALLS", emoji: "🔴", color: "#F44336", desc: "Catch wild Pokémon",
         items: [
@@ -1119,65 +1336,117 @@ export default function App() {
     const cat = categories.find((c) => c.key === storeCat) ?? null;
     return (
       <div style={S.root}><style>{css}</style>
-        <div style={S.wrap}>
-          <div style={S.header}>
-            <span style={{ fontSize: 9, color: "#FFC107" }}>🏪 STORE</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 8, color: "#FFD700" }}>₽{player.money}</span>
-              <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }}
-                onClick={() => cat ? setStoreCat(null) : setScreen("world")}>◀ BACK</button>
+        <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
+          <div className="m-mkt-head">
+            <h1 className="m-mkt-title">Crimson Sky Marketplace</h1>
+            <div style={{ marginTop: 6, fontSize: 12, color: "var(--m-yellow)", fontWeight: 600 }}>₽{player.money.toLocaleString()}</div>
+          </div>
+
+          <div className="m-toggle-wrap">
+            <div className="m-toggle">
+              <div className={`m-toggle-btn ${marketTab === "pokemons" ? "active" : ""}`}
+                onClick={() => { sfx.click(); setStoreCat(null); }}>Pokémons</div>
+              <div className={`m-toggle-btn ${marketTab === "items" ? "active" : ""}`}
+                onClick={() => { sfx.click(); setStoreCat("balls"); }}>Items</div>
             </div>
           </div>
 
-          {!cat && (
-            <div style={{ flex: 1, overflowY: "auto", padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: 7, color: "#888", letterSpacing: 1, marginBottom: 4 }}>SELECT A CATEGORY</div>
-              {categories.map((c) => (
-                <button key={c.key} className="btn"
-                  style={{ border: `2px solid ${c.color}`, color: c.color, padding: "14px 12px", borderRadius: 8, display: "flex", alignItems: "center", gap: 12, background: "transparent" }}
-                  onClick={() => setStoreCat(c.key)}>
-                  <span style={{ fontSize: 22 }}>{c.emoji}</span>
-                  <div style={{ textAlign: "left", flex: 1 }}>
-                    <div style={{ fontSize: 9 }}>{c.label}</div>
-                    <div style={{ fontSize: 6, color: "#666", marginTop: 3 }}>{c.desc}</div>
-                  </div>
-                  <span style={{ fontSize: 12 }}>▶</span>
-                </button>
-              ))}
-            </div>
+          {marketTab === "pokemons" && (
+            <>
+              <div className="m-search-row">
+                <div className="m-search">
+                  <i className="fa-solid fa-magnifying-glass" />
+                  <input type="text" placeholder="Search" />
+                </div>
+                <button className="m-icon-btn"><i className="fa-solid fa-filter" /></button>
+                <button className="m-icon-btn"><i className="fa-solid fa-bars-staggered" /></button>
+              </div>
+              <div className="m-grid">
+                {marketMons.map((p, i) => {
+                  const price = priceFor(p);
+                  const nature = NATURES[i % NATURES.length];
+                  const cls = LEGEND_IDS.has(p.id) ? "m-legend" : RARE_IDS.has(p.id) ? "m-rare" : "";
+                  const canAfford = player.money >= price;
+                  return (
+                    <div key={p.id} className={`m-pcard ${cls}`}
+                      onClick={() => {
+                        if (!canAfford) { addLog("Not enough Pokédollars!", "#F44336"); return; }
+                        if (team.length >= 6) { addLog("Your team is full!", "#F44336"); return; }
+                        sfx.menuOpen();
+                        const mon = makeMon(p, 5);
+                        setPlayer((pl) => ({ ...pl, money: pl.money - price }));
+                        setTeam((t) => [...t, mon]);
+                        setCaught((c) => new Set([...c, p.id]));
+                        addLog(`Purchased ${p.name}!`, "#FFD700");
+                      }}>
+                      <img src={SPRITE(p.sprite)} alt={p.name} />
+                      <div className="ovr">
+                        <span className="m-nature">{nature}</span>
+                        <span className="m-pname">{p.name}{RARE_IDS.has(p.id) ? " ★" : ""}</span>
+                        <span className="m-price">₽ {price.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
 
-          {cat && (
-            <div style={{ flex: 1, overflowY: "auto", padding: 10, display: "flex", flexDirection: "column", gap: 6 }}>
-              <div style={{ fontSize: 8, color: cat.color, marginBottom: 4 }}>{cat.emoji} {cat.label}</div>
-              {cat.items.map((it) => {
-                const canAfford = player.money >= it.price;
-                return (
-                  <div key={it.name} style={{ border: "2px solid #222", borderRadius: 8, padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                    <div style={{ textAlign: "left", flex: 1 }}>
-                      <div style={{ fontSize: 7, color: "#ddd" }}>{it.name}</div>
-                      <div style={{ fontSize: 6, color: "#555", marginTop: 2 }}>{it.info}</div>
+          {marketTab === "items" && (
+            <>
+              <div style={{ padding: "0 16px 8px", display: "flex", gap: 8, overflowX: "auto" }}>
+                {categories.map((c) => (
+                  <button key={c.key} className="m-icon-btn"
+                    style={{
+                      width: "auto", padding: "8px 14px", borderRadius: 16, fontSize: 12, fontWeight: 600,
+                      color: storeCat === c.key ? c.color : "var(--m-muted)",
+                      borderColor: storeCat === c.key ? c.color : "var(--m-border)",
+                      background: storeCat === c.key ? `${c.color}15` : "var(--m-card)",
+                      flexShrink: 0,
+                    }}
+                    onClick={() => { sfx.click(); setStoreCat(c.key); }}>
+                    {c.emoji} {c.label}
+                  </button>
+                ))}
+              </div>
+              <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+                {(cat?.items ?? []).map((it) => {
+                  const canAfford = player.money >= it.price;
+                  return (
+                    <div key={it.name} className="m-card" style={{ padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, borderRadius: 16 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--m-text)" }}>{it.name}</div>
+                        <div style={{ fontSize: 11, color: "var(--m-muted)", marginTop: 2 }}>{it.info}</div>
+                      </div>
+                      <div style={{ fontSize: 13, color: "var(--m-yellow)", minWidth: 70, textAlign: "right", fontWeight: 600 }}>₽{it.price.toLocaleString()}</div>
+                      <button
+                        disabled={!canAfford}
+                        style={{
+                          background: canAfford ? "var(--m-bluebg)" : "var(--m-input)",
+                          color: canAfford ? "#fff" : "var(--m-muted)",
+                          border: "none", padding: "8px 16px", borderRadius: 16, fontSize: 12, fontWeight: 600,
+                          fontFamily: "inherit", cursor: canAfford ? "pointer" : "not-allowed", opacity: canAfford ? 1 : 0.5,
+                        }}
+                        onClick={() => {
+                          if (!canAfford) return;
+                          sfx.click();
+                          setPlayer((p) => ({ ...p, money: p.money - it.price }));
+                          setInventory((inv) => {
+                            const found = inv.find((x) => x.name === it.name);
+                            return found
+                              ? inv.map((x) => x.name === it.name ? { ...x, qty: x.qty + 1 } : x)
+                              : [...inv, { name: it.name, qty: 1 }];
+                          });
+                          addLog(`Bought ${it.name}!`, "#FFD700");
+                        }}>BUY</button>
                     </div>
-                    <div style={{ fontSize: 7, color: "#FFD700", minWidth: 50, textAlign: "right" }}>₽{it.price}</div>
-                    <button className="btn"
-                      disabled={!canAfford}
-                      style={{ border: `2px solid ${canAfford ? cat.color : "#333"}`, color: canAfford ? cat.color : "#444", padding: "6px 10px", borderRadius: 6, fontSize: 7, opacity: canAfford ? 1 : 0.5, cursor: canAfford ? "pointer" : "not-allowed" }}
-                      onClick={() => {
-                        if (!canAfford) return;
-                        setPlayer((p) => ({ ...p, money: p.money - it.price }));
-                        setInventory((inv) => {
-                          const found = inv.find((x) => x.name === it.name);
-                          return found
-                            ? inv.map((x) => x.name === it.name ? { ...x, qty: x.qty + 1 } : x)
-                            : [...inv, { name: it.name, qty: 1 }];
-                        });
-                        addLog(`Bought ${it.name}!`, "#FFD700");
-                      }}>BUY</button>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            </>
           )}
+
+          <BottomNav active="market" go={setScreen} />
         </div>
       </div>
     );
