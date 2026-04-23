@@ -974,14 +974,36 @@ export default function App() {
   }
 
   function MonSprite({ sprite, size = 80, back = false, className = "mon-float", style = {} }: { sprite: string; size?: number; back?: boolean; className?: string; style?: React.CSSProperties }) {
-    const url = back ? SPRITE_BACK(sprite) : SPRITE(sprite);
+    const clean = sprite.replace(/[^a-z0-9]/g, "");
+    const fallbacks = back
+      ? [
+          `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif`,
+          `https://play.pokemonshowdown.com/sprites/gen5-back/${clean}.png`,
+          `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
+          `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
+        ]
+      : [
+          `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`,
+          `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
+          `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
+        ];
     return (
       <img
-        src={url}
+        src={fallbacks[0]}
+        data-step="0"
         alt={sprite}
         className={className}
         style={{ imageRendering: "pixelated", width: size, height: size, objectFit: "contain", ...style }}
-        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+        onError={(e) => {
+          const img = e.target as HTMLImageElement;
+          const step = Number(img.dataset.step ?? "0") + 1;
+          if (step < fallbacks.length) {
+            img.dataset.step = String(step);
+            img.src = fallbacks[step];
+          } else {
+            img.style.display = "none";
+          }
+        }}
       />
     );
   }
