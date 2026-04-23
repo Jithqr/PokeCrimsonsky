@@ -2107,19 +2107,27 @@ export default function App() {
             ))}
           </div>
 
-          <div style={{ display: "flex", gap: 12, padding: "14px 18px 24px", marginTop: "auto" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "14px 18px 24px", marginTop: "auto" }}>
             <button className="btn"
-              disabled={!safariEnc || safariThrowAnim !== null || safariBalls <= 0}
-              style={{ flex: 1, border: "1.5px solid #2a3a55", color: safariThrowAnim ? "#555" : "#fff", padding: "18px 8px", borderRadius: 16, background: "#10172a", fontSize: 15, fontWeight: 500, opacity: (safariEnc && !safariThrowAnim && safariBalls > 0) ? 1 : 0.5 }}
-              onClick={safariThrow}>
-              Use Safari Ball
+              disabled={safariThrowAnim !== null || safariBalls <= 0}
+              style={{ width: "100%", border: "1.5px solid #2a3a55", color: safariThrowAnim ? "#555" : "#fff", padding: "18px 8px", borderRadius: 16, background: "#10172a", fontSize: 17, fontWeight: 500, opacity: (!safariThrowAnim && safariBalls > 0) ? 1 : 0.5 }}
+              onClick={() => { if (safariBalls > 0) safariNext(safariBalls); }}>
+              Hunt
             </button>
-            <button className="btn"
-              disabled={safariThrowAnim !== null}
-              style={{ flex: 1, border: "1.5px solid #2a3a55", color: safariThrowAnim ? "#444" : "#fff", padding: "18px 8px", borderRadius: 16, background: "#10172a", fontSize: 15, fontWeight: 500 }}
-              onClick={safariRun}>
-              Escape
-            </button>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button className="btn"
+                disabled={!safariEnc || safariThrowAnim !== null || safariBalls <= 0}
+                style={{ flex: 1, border: "1.5px solid #2a3a55", color: safariThrowAnim ? "#555" : "#fff", padding: "18px 8px", borderRadius: 16, background: "#10172a", fontSize: 15, fontWeight: 500, opacity: (safariEnc && !safariThrowAnim && safariBalls > 0) ? 1 : 0.5 }}
+                onClick={safariThrow}>
+                Use Safari Ball
+              </button>
+              <button className="btn"
+                disabled={safariThrowAnim !== null}
+                style={{ flex: 1, border: "1.5px solid #2a3a55", color: safariThrowAnim ? "#444" : "#fff", padding: "18px 8px", borderRadius: 16, background: "#10172a", fontSize: 15, fontWeight: 500 }}
+                onClick={() => { setSafariEnc(null); setSafariBalls(0); setSafariCounter(0); setSafariCaught(0); addLog(`Safari ended. Caught ${safariCaught}.`, "#FFD700"); setScreen("world"); }}>
+                Escape
+              </button>
+            </div>
           </div>
         </div>
       </div>
