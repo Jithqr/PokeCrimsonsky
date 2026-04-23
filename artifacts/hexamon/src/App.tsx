@@ -120,10 +120,13 @@ function todayStr() {
 type Battle = { wild: Mon; pMon: Mon; phase: string; turnCount: number; canCatch: boolean };
 
 const SAVE_KEY = "hexamon:save:v2";
+export type TeamGroup = { id: string; name: string; mons: Mon[] };
 type SaveData = {
   screen: string;
   player: Player;
-  team: Mon[];
+  team?: Mon[];
+  teams?: TeamGroup[];
+  activeTeamIdx?: number;
   inventory: { name: string; qty: number }[];
   caught: number[];
   muted: boolean;
@@ -170,7 +173,18 @@ export default function App() {
     losses: 0,
     adventureStarted: todayStr(),
   });
-  const [team, setTeam] = useState<Mon[]>(initial?.team ?? []);
+  const [teams, setTeams] = useState<TeamGroup[]>(() => {
+    if (initial?.teams && initial.teams.length > 0) return initial.teams;
+    const legacy = initial?.team ?? [];
+    return [{ id: `t-${Date.now()}`, name: "Main", mons: legacy }];
+  });
+  const [activeTeamIdx, setActiveTeamIdx] = useState<number>(initial?.activeTeamIdx ?? 0);
+  const team = teams[activeTeamIdx]?.mons ?? [];
+  const setTeam = (updater: Mon[] | ((prev: Mon[]) => Mon[])) => {
+    setTeams((prev) => prev.map((t, i) => i === activeTeamIdx
+      ? { ...t, mons: typeof updater === "function" ? (updater as (p: Mon[]) => Mon[])(t.mons) : updater }
+      : t));
+  };
   const [inventory, setInventory] = useState<{ name: string; qty: number }[]>(initial?.inventory ?? []);
   const [storeCat, setStoreCat] = useState<string | null>(null);
   const [bagCat, setBagCat] = useState<string>("balls");
@@ -215,7 +229,7 @@ export default function App() {
     if (screen === "title" || screen === "nameInput" || screen === "starter") return;
     try {
       const data: SaveData = {
-        screen, player, team, inventory,
+        screen, player, teams, activeTeamIdx, inventory,
         caught: Array.from(caught), muted,
         candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay,
         safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught,
@@ -223,7 +237,7 @@ export default function App() {
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch { /* ignore quota errors */ }
-  }, [screen, player, team, inventory, caught, muted, candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, lastSpinDay]);
+  }, [screen, player, teams, activeTeamIdx, inventory, caught, muted, candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, lastSpinDay]);
 
   // Buddy walking — buddy earns 1 candy every 30s
   useEffect(() => {
@@ -1627,8 +1641,59 @@ export default function App() {
     <div style={S.root}><style>{css}</style>
       <div style={S.wrap}>
         <div style={S.header}>
-          <span style={{ fontSize: 9, color: "#FF9800" }}>🎒 MY TEAM ({team.length}/6)</span>
+          <span style={{ fontSize: 9, color: "#FF9800" }}>🎒 MY TEAMS ({team.length}/6)</span>
           <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
+        </div>
+        <div style={{ padding: "10px 12px 6px", display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+          {teams.map((t, i) => {
+            const sel = i === activeTeamIdx;
+            return (
+              <button key={t.id} className="btn"
+                onClick={() => { setActiveTeamIdx(i); setBuddyIdx(-1); }}
+                style={{
+                  border: `1.5px solid ${sel ? "#FF9800" : "#333"}`,
+                  background: sel ? "#FF980022" : "transparent",
+                  color: sel ? "#FF9800" : "#888",
+                  padding: "6px 10px", borderRadius: 999, fontSize: 9, fontWeight: 600,
+                  display: "flex", alignItems: "center", gap: 6,
+                }}>
+                <i className="fa-solid fa-users" style={{ fontSize: 8 }} />
+                {t.name} <span style={{ fontSize: 7, color: sel ? "#FFB74D" : "#555" }}>{t.mons.length}/6</span>
+              </button>
+            );
+          })}
+          <button className="btn"
+            onClick={() => {
+              const name = (typeof window !== "undefined" ? window.prompt("Name your new team:", `Team ${teams.length + 1}`) : "")?.trim();
+              if (!name) return;
+              const newTeam: TeamGroup = { id: `t-${Date.now()}`, name, mons: [] };
+              setTeams((prev) => [...prev, newTeam]);
+              setActiveTeamIdx(teams.length);
+              setBuddyIdx(-1);
+              addLog(`Created team "${name}"`, "#FF9800");
+            }}
+            style={{
+              border: "1.5px dashed #4ade80", background: "transparent", color: "#4ade80",
+              padding: "6px 10px", borderRadius: 999, fontSize: 9, fontWeight: 700,
+              display: "flex", alignItems: "center", gap: 6,
+            }}>
+            <i className="fa-solid fa-plus" style={{ fontSize: 9 }} /> ADD TEAM
+          </button>
+          {teams.length > 1 && (
+            <button className="btn"
+              onClick={() => {
+                if (typeof window !== "undefined" && !window.confirm(`Delete team "${teams[activeTeamIdx].name}"? Pokémon will be released back to your dex.`)) return;
+                setTeams((prev) => prev.filter((_, i) => i !== activeTeamIdx));
+                setActiveTeamIdx(0);
+                setBuddyIdx(-1);
+              }}
+              style={{
+                border: "1px solid #444", background: "transparent", color: "#777",
+                padding: "6px 8px", borderRadius: 999, fontSize: 8,
+              }}>
+              <i className="fa-solid fa-trash" />
+            </button>
+          )}
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
           {team.map((m, i) => (
@@ -1778,7 +1843,48 @@ export default function App() {
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 12, padding: "20px 18px 24px" }}>
+          <div style={{ padding: "16px 18px 0" }}>
+            <div style={{ fontSize: 10, color: "#6b7896", letterSpacing: 1, marginBottom: 6, display: "flex", justifyContent: "space-between" }}>
+              <span>YOUR PARTY · {teams[activeTeamIdx]?.name ?? "Team"}</span>
+              <span style={{ color: "#FFD700" }}>tap to set lead</span>
+            </div>
+            <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
+              {team.length === 0 && (
+                <div style={{ fontSize: 10, color: "#6b7896", padding: "8px 4px" }}>No Pokémon in this team yet.</div>
+              )}
+              {team.map((m, i) => {
+                const lead = i === 0;
+                const fainted = m.currentHp <= 0;
+                return (
+                  <button key={`${m.id}-${m.level}-${i}`} className="btn"
+                    onClick={() => {
+                      if (i === 0 || fainted) return;
+                      setTeam((prev) => {
+                        const next = [...prev];
+                        const tmp = next[0];
+                        next[0] = next[i];
+                        next[i] = tmp;
+                        return next;
+                      });
+                      addLog(`${m.name} is now your lead!`, "#FFD700");
+                    }}
+                    style={{
+                      flexShrink: 0, width: 64, padding: 6,
+                      border: `1.5px solid ${lead ? "#FFD700" : fainted ? "#3a1f1f" : "#2a3148"}`,
+                      background: lead ? "#1a1808" : fainted ? "#1a0d0d" : "#10172a",
+                      borderRadius: 10, display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                      opacity: fainted ? 0.5 : 1, cursor: lead || fainted ? "default" : "pointer",
+                    }}>
+                    <MonSprite sprite={m.sprite} size={36} className="" style={{ animation: "none" }} />
+                    <span style={{ fontSize: 8, color: "#cfd6e6", maxWidth: 56, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
+                    <span style={{ fontSize: 7, color: lead ? "#FFD700" : "#6b7896" }}>{lead ? "★ LEAD" : `Lv${m.level}`}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 12, padding: "16px 18px 24px" }}>
             <button className="btn"
               style={{ flex: 1, border: "1.5px solid #4ade80", color: "#4ade80", padding: "16px 8px", borderRadius: 14, background: "#10172a", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, fontFamily: "'Inter', system-ui, sans-serif" }}
               onClick={rescout}>
