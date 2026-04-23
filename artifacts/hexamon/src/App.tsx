@@ -1301,61 +1301,83 @@ export default function App() {
     const macro = MACRO_REGIONS[player.macroRegion];
     const region = macro.areas[player.region];
     return (
-      <div style={S.root}><style>{css}</style>
-        <div style={S.wrap}>
-          <div style={S.header}>
-            <span style={{ fontSize: 9, color: "#4CAF50" }}>🌲 WILD HUNT</span>
-            <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }}
-              onClick={() => { setScoutedWild(null); setScreen("world"); }}>◀ BACK</button>
+      <div style={{ ...S.root, background: "#0a0e1a" }}>
+        <style>{css}</style>
+        <div style={{ ...S.wrap, background: "#0a0e1a", fontFamily: "'Inter', system-ui, sans-serif" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 18px 12px", borderBottom: "1px solid #1a1f33" }}>
+            <div style={{ width: 78 }} />
+            <div style={{ fontSize: 17, fontWeight: 700, color: "#e8efe8", letterSpacing: 3 }}>WILD HUNT</div>
+            <button className="btn"
+              style={{ border: "1.5px solid #4ade80", color: "#4ade80", padding: "6px 14px", borderRadius: 10, background: "transparent", fontSize: 11, fontWeight: 600, letterSpacing: 1, fontFamily: "'Inter', system-ui, sans-serif" }}
+              onClick={() => { setScoutedWild(null); setScreen("world"); }}>
+              <i className="fa-solid fa-chevron-left" style={{ fontSize: 9, marginRight: 5 }} />BACK
+            </button>
           </div>
-          <div style={{ padding: "8px 12px 0", fontSize: 6, color: "#666" }}>
-            {macro.emoji} {macro.name} · {region?.name ?? "—"}
+
+          <div style={{ textAlign: "center", padding: "22px 18px 18px", fontSize: 13, color: "#cfd6e6", letterSpacing: 0.4 }}>
+            {macro.name} <span style={{ color: "#6b7896", margin: "0 6px" }}>•</span> {region?.name ?? "—"}
           </div>
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "12px 14px 14px", gap: 14 }}>
+
+          <div style={{ padding: "0 18px" }}>
             <div style={{
-              width: "100%", aspectRatio: "4/3",
-              border: "3px solid #4CAF50",
+              width: "100%", aspectRatio: "1/1",
+              border: "2px solid #4ade80",
               borderRadius: 14,
-              background: "radial-gradient(ellipse at center, #1a4020 0%, #08180c 100%)",
-              boxShadow: "0 0 18px #4CAF5044, inset 0 0 30px #00000088",
-              display: "flex", alignItems: "center", justifyContent: "center",
+              background: "linear-gradient(180deg,#1a3a2a 0%,#0d2218 60%,#08180e 100%)",
+              boxShadow: "0 0 20px rgba(74,222,128,0.15), inset 0 0 30px rgba(0,0,0,0.6)",
               position: "relative", overflow: "hidden",
             }}>
+              <div style={{ position: "absolute", inset: 0, background:
+                "radial-gradient(ellipse at 20% 30%, rgba(46,90,55,0.55) 0%, transparent 35%)," +
+                "radial-gradient(ellipse at 80% 25%, rgba(34,70,42,0.5) 0%, transparent 38%)," +
+                "radial-gradient(ellipse at 50% 90%, rgba(26,52,32,0.7) 0%, transparent 55%)",
+                pointerEvents: "none",
+              }} />
+              <div style={{ position: "absolute", left: "12%", top: "18%", width: 36, height: "70%", background: "linear-gradient(180deg,#1a2e1f,#0d1a12)", borderRadius: "6px 6px 0 0", opacity: 0.7 }} />
+              <div style={{ position: "absolute", right: "14%", top: "22%", width: 28, height: "65%", background: "linear-gradient(180deg,#162a1c,#0a160f)", borderRadius: "5px 5px 0 0", opacity: 0.65 }} />
+              <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 30,
+                background: "repeating-linear-gradient(90deg,#1f3a26 0 6px,#172e1d 6px 12px)" }} />
+
               {scoutedWild ? (
-                <>
-                  <MonSprite sprite={scoutedWild.sprite} size={140} className="mon-float" />
-                  <div style={{
-                    position: "absolute", left: 0, right: 0, bottom: 14, textAlign: "center",
-                    fontSize: 9, color: "#FFD700", padding: "0 14px", lineHeight: 1.6,
-                    textShadow: "1px 1px 0 #000, 0 0 6px #00000088",
-                  }}>
-                    A wild {scoutedWild.name} (Lv. {scoutedWild.level}) has appeared!
-                  </div>
-                </>
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <MonSprite sprite={scoutedWild.sprite} size={170} className="mon-float" />
+                </div>
               ) : (
-                <div style={{ fontSize: 8, color: "#5a8a5a", textAlign: "center", lineHeight: 2 }}>
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#7a9a82", fontSize: 12, textAlign: "center", lineHeight: 1.8, padding: 20 }}>
                   Tap HUNT to search<br />the tall grass...
                 </div>
               )}
             </div>
 
-            <div style={{ display: "flex", gap: 10, width: "100%" }}>
-              <button className="btn"
-                style={{ flex: 1, border: "2px solid #4CAF50", color: "#4CAF50", padding: "14px 8px", borderRadius: 10, background: "rgba(76,175,80,0.05)", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}
-                onClick={rescout}>
-                <span style={{ fontSize: 18 }}>🌲</span>
-                <span style={{ fontSize: 9 }}>HUNT</span>
-                <span style={{ fontSize: 5, color: "#5a8a5a" }}>find another</span>
-              </button>
-              <button className="btn"
-                disabled={!scoutedWild}
-                style={{ flex: 1, border: `2px solid ${scoutedWild ? "#F44336" : "#333"}`, color: scoutedWild ? "#F44336" : "#444", padding: "14px 8px", borderRadius: 10, background: scoutedWild ? "rgba(244,67,54,0.05)" : "transparent", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, opacity: scoutedWild ? 1 : 0.5, cursor: scoutedWild ? "pointer" : "not-allowed" }}
-                onClick={captureScouted}>
-                <span style={{ fontSize: 18 }}>🔴</span>
-                <span style={{ fontSize: 9 }}>CAPTURE</span>
-                <span style={{ fontSize: 5, color: "#8a4a4a" }}>start battle</span>
-              </button>
+            <div style={{ textAlign: "center", padding: "16px 6px 0", fontSize: 13, color: "#FFD700", letterSpacing: 0.3 }}>
+              {scoutedWild ? (
+                <>A wild <span style={{ color: "#fff" }}>{scoutedWild.name}</span>{" "}
+                  <span style={{
+                    background: "#1a1f33", border: "1px solid #2d3450", color: "#fff",
+                    padding: "2px 9px", borderRadius: 999, fontSize: 11, fontWeight: 600,
+                    margin: "0 4px",
+                  }}>Lv. {scoutedWild.level}</span>
+                  <span style={{ color: "#FFD700" }}>has appeared!</span></>
+              ) : (
+                <span style={{ color: "#6b7896" }}>No Pokémon nearby...</span>
+              )}
             </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 12, padding: "20px 18px 24px" }}>
+            <button className="btn"
+              style={{ flex: 1, border: "1.5px solid #4ade80", color: "#4ade80", padding: "16px 8px", borderRadius: 14, background: "#10172a", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, fontFamily: "'Inter', system-ui, sans-serif" }}
+              onClick={rescout}>
+              <i className="fa-solid fa-shoe-prints" style={{ fontSize: 18 }} />
+              <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2 }}>HUNT</span>
+            </button>
+            <button className="btn"
+              disabled={!scoutedWild}
+              style={{ flex: 1, border: `1.5px solid ${scoutedWild ? "#4ade80" : "#2a3148"}`, color: scoutedWild ? "#4ade80" : "#3d4566", padding: "16px 8px", borderRadius: 14, background: "#10172a", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, opacity: scoutedWild ? 1 : 0.6, cursor: scoutedWild ? "pointer" : "not-allowed", fontFamily: "'Inter', system-ui, sans-serif" }}
+              onClick={captureScouted}>
+              <i className="fa-solid fa-bolt" style={{ fontSize: 18 }} />
+              <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2 }}>BATTLE</span>
+            </button>
           </div>
         </div>
       </div>
