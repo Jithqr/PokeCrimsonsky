@@ -2089,20 +2089,36 @@ export default function App() {
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 12, padding: "8px 18px 24px", marginTop: "auto" }}>
+          <div style={{
+            margin: "4px 18px 0",
+            background: "#0d0d12",
+            border: "1.5px solid #2a2a3a",
+            borderRadius: 10,
+            padding: "10px 12px",
+            height: 110,
+            overflowY: "auto",
+            fontFamily: "'Press Start 2P', ui-monospace, monospace",
+            fontSize: 9,
+            lineHeight: 1.7,
+            color: "#9bd17a",
+          }}>
+            {log.slice(-12).map((l, i) => (
+              <div key={i} style={{ color: l.color || "#9bd17a" }}>&gt; {l.msg}</div>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", gap: 12, padding: "14px 18px 24px", marginTop: "auto" }}>
             <button className="btn"
               disabled={!safariEnc || safariThrowAnim !== null || safariBalls <= 0}
-              style={{ flex: 1, border: "1.5px solid #26A69A", color: safariThrowAnim ? "#555" : "#26A69A", padding: "16px 8px", borderRadius: 14, background: "#10172a", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, opacity: (safariEnc && !safariThrowAnim) ? 1 : 0.5 }}
+              style={{ flex: 1, border: "1.5px solid #2a3a55", color: safariThrowAnim ? "#555" : "#fff", padding: "18px 8px", borderRadius: 16, background: "#10172a", fontSize: 15, fontWeight: 500, opacity: (safariEnc && !safariThrowAnim && safariBalls > 0) ? 1 : 0.5 }}
               onClick={safariThrow}>
-              <i className="fa-solid fa-baseball" style={{ fontSize: 18 }} />
-              <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2 }}>THROW BALL</span>
+              Use Safari Ball
             </button>
             <button className="btn"
               disabled={safariThrowAnim !== null}
-              style={{ flex: 1, border: "1.5px solid #888", color: safariThrowAnim ? "#444" : "#aaa", padding: "16px 8px", borderRadius: 14, background: "#10172a", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}
+              style={{ flex: 1, border: "1.5px solid #2a3a55", color: safariThrowAnim ? "#444" : "#fff", padding: "18px 8px", borderRadius: 16, background: "#10172a", fontSize: 15, fontWeight: 500 }}
               onClick={safariRun}>
-              <i className="fa-solid fa-shoe-prints" style={{ fontSize: 18 }} />
-              <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2 }}>NEXT</span>
+              Escape
             </button>
           </div>
         </div>
