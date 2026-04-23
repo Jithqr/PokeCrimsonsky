@@ -170,6 +170,7 @@ export default function App() {
   const [battle, setBattle] = useState<Battle | null>(null);
   const [shakeE, setShakeE] = useState(false);
   const [shakeP, setShakeP] = useState(false);
+  const [ballAnim, setBallAnim] = useState<null | "throw" | "capture" | "wobble" | "success" | "fail">(null);
   const [evolving, setEvolving] = useState<{ from: string; to: string; sprite: string } | null>(null);
   const [dexFilter, setDexFilter] = useState("all");
   const [pickedMacro, setPickedMacro] = useState(0);
@@ -329,26 +330,39 @@ export default function App() {
   }
 
   function doThrowBall() {
-    if (!battle) return;
+    if (!battle || ballAnim) return;
     const { wild } = battle;
     sfx.ballThrow();
-    setTimeout(() => sfx.ballWobble(), 350);
-    setTimeout(() => sfx.ballWobble(), 600);
-    setTimeout(() => sfx.ballWobble(), 850);
+    setBallAnim("throw");
     const catchRate = 0.2 + (1 - wild.currentHp / wild.maxHp) * 0.6;
-    if (Math.random() < catchRate) {
-      setTimeout(() => sfx.catchSuccess(), 1100);
-      addLog(`🎉 Gotcha! ${wild.name} was caught!`, "#4CAF50");
-      const caughtMon = { ...wild, currentHp: wild.maxHp };
-      setCaught((prev) => new Set([...prev, wild.id]));
-      setTeam((prev) => [...prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })), caughtMon]);
-      addLog("Your team was fully healed!", "#4CAF50");
-      setBattle(null);
-      setScreen("world");
-    } else {
-      setTimeout(() => sfx.catchFail(), 1100);
-      addLog(`${wild.name} broke free!`, "#F44336");
-    }
+    const success = Math.random() < catchRate;
+
+    setTimeout(() => setBallAnim("capture"), 600);
+    setTimeout(() => { sfx.ballWobble(); setBallAnim("wobble"); }, 1100);
+    setTimeout(() => sfx.ballWobble(), 1500);
+    setTimeout(() => sfx.ballWobble(), 1900);
+
+    setTimeout(() => {
+      if (success) {
+        setBallAnim("success");
+        sfx.catchSuccess();
+        addLog(`🎉 Gotcha! ${wild.name} was caught!`, "#4CAF50");
+        const caughtMon = { ...wild, currentHp: wild.maxHp };
+        setCaught((prev) => new Set([...prev, wild.id]));
+        setTeam((prev) => [...prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })), caughtMon]);
+        addLog("Your team was fully healed!", "#4CAF50");
+        setTimeout(() => {
+          setBallAnim(null);
+          setBattle(null);
+          setScreen("hunt");
+        }, 900);
+      } else {
+        setBallAnim("fail");
+        sfx.catchFail();
+        addLog(`${wild.name} broke free!`, "#F44336");
+        setTimeout(() => setBallAnim(null), 500);
+      }
+    }, 2300);
   }
 
   function finishBattle(pMon: Mon, _won: boolean, playerExpGain: number) {
@@ -429,6 +443,19 @@ export default function App() {
     @keyframes mvSpark { 0%{opacity:0;transform:scale(0.2) rotate(0deg)} 50%{opacity:1;transform:scale(1.2) rotate(180deg)} 100%{opacity:0;transform:scale(1.6) rotate(360deg)} }
     @keyframes mvBurst { 0%{opacity:0;box-shadow:0 0 0 0 currentColor} 50%{opacity:1;box-shadow:0 0 60px 20px currentColor} 100%{opacity:0;box-shadow:0 0 100px 40px transparent} }
     @keyframes mvSwirl { 0%{opacity:0;transform:rotate(0deg) scale(0.4)} 50%{opacity:1;transform:rotate(360deg) scale(1.2)} 100%{opacity:0;transform:rotate(720deg) scale(1.6)} }
+    @keyframes ballThrow { 0%{left:40px;bottom:80px;transform:rotate(0deg) scale(0.6);opacity:1} 50%{left:50%;bottom:170px;transform:rotate(540deg) scale(1)} 100%{left:calc(100% - 90px);bottom:90px;transform:rotate(1080deg) scale(1);opacity:1} }
+    @keyframes ballSuck { 0%{transform:scale(1);opacity:1} 100%{transform:scale(0.1);opacity:0} }
+    @keyframes ballWobble { 0%,100%{transform:rotate(0deg)} 25%{transform:rotate(-22deg)} 75%{transform:rotate(22deg)} }
+    @keyframes ballBurst { 0%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:0.8} 100%{transform:scale(2.2);opacity:0} }
+    @keyframes catchStars { 0%{transform:translateY(0) scale(0.4);opacity:0} 30%{opacity:1} 100%{transform:translateY(-30px) scale(1.2);opacity:0} }
+    .ball-throw{position:absolute;width:32px;height:32px;animation:ballThrow 0.6s ease-in forwards;z-index:50;pointer-events:none}
+    .ball-static{position:absolute;width:32px;height:32px;left:calc(100% - 90px);bottom:90px;z-index:50;pointer-events:none}
+    .ball-wobble{animation:ballWobble 0.45s ease-in-out infinite}
+    .ball-burst{animation:ballBurst 0.5s ease-out forwards}
+    .mon-suck{animation:ballSuck 0.5s ease-in forwards}
+    .catch-star{position:absolute;font-size:18px;animation:catchStars 0.9s ease-out forwards}
+    .pokeball{width:100%;height:100%;border-radius:50%;background:linear-gradient(180deg,#ee1515 0%,#ee1515 48%,#222 48%,#222 52%,#fff 52%,#fff 100%);border:2px solid #111;box-shadow:0 2px 4px rgba(0,0,0,0.6),inset -3px -3px 0 rgba(0,0,0,0.25),inset 3px 3px 0 rgba(255,255,255,0.25);position:relative}
+    .pokeball:after{content:"";position:absolute;left:50%;top:50%;width:10px;height:10px;background:#fff;border:2px solid #111;border-radius:50%;transform:translate(-50%,-50%)}
     .mon-float { animation: float 2s ease-in-out infinite; }
     .mon-shake { animation: shake 0.35s; }
     .btn {
@@ -1076,9 +1103,38 @@ export default function App() {
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 50, background: "#0a1a0a" }} />
 
             <div style={{ position: "absolute", top: 10, right: 30 }}>
-              <MonSprite sprite={wild.sprite} size={90} className={shakeE ? "mon-shake" : "mon-float"} />
+              {ballAnim !== "capture" && ballAnim !== "wobble" && ballAnim !== "success" && (
+                <MonSprite sprite={wild.sprite} size={90} className={
+                  shakeE ? "mon-shake" : (ballAnim === "fail" ? "" : "mon-float")
+                } />
+              )}
+              {ballAnim === "capture" && (
+                <MonSprite sprite={wild.sprite} size={90} className="mon-suck" />
+              )}
               {moveAnim?.target === "enemy" && <MoveFx key={moveAnim.key} type={moveAnim.type} />}
             </div>
+            {ballAnim === "throw" && (
+              <div className="ball-throw"><div className="pokeball" /></div>
+            )}
+            {(ballAnim === "capture" || ballAnim === "wobble") && (
+              <div className="ball-static">
+                <div className={ballAnim === "wobble" ? "pokeball ball-wobble" : "pokeball"} />
+              </div>
+            )}
+            {ballAnim === "success" && (
+              <>
+                <div className="ball-static"><div className="pokeball" /></div>
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="catch-star" style={{
+                    left: `calc(100% - ${60 + i * 14}px)`, bottom: `${110 + (i % 2) * 12}px`,
+                    color: "#FFD700", animationDelay: `${i * 0.08}s`,
+                  }}>✨</div>
+                ))}
+              </>
+            )}
+            {ballAnim === "fail" && (
+              <div className="ball-static"><div className="pokeball ball-burst" /></div>
+            )}
             <div style={{ position: "absolute", bottom: 18, left: 20 }}>
               <MonSprite sprite={pMon.sprite} size={90} back className={shakeP ? "mon-shake" : "mon-float"} />
               {moveAnim?.target === "player" && <MoveFx key={moveAnim.key} type={moveAnim.type} />}
@@ -1131,7 +1187,7 @@ export default function App() {
           <div style={{ padding: "6px 10px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
             {[
               { label: "Switch", action: doSwitchPokemon },
-              { label: "Run", action: () => { sfx.menuBack(); addLog("Got away safely!", "#aaa"); setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null }))); addLog("Your team was fully healed!", "#4CAF50"); setBattle(null); setScreen("world"); } },
+              { label: "Run", action: () => { sfx.menuBack(); addLog("Got away safely!", "#aaa"); setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null }))); addLog("Your team was fully healed!", "#4CAF50"); setBattle(null); setScreen("hunt"); } },
               { label: "Pokeballs", action: doThrowBall },
             ].map((b) => (
               <button key={b.label} className="btn"
