@@ -702,7 +702,7 @@ export default function App() {
     .catch-star{position:absolute;font-size:18px;animation:catchStars 0.9s ease-out forwards}
     .pokeball{width:100%;height:100%;border-radius:50%;background:linear-gradient(180deg,#ee1515 0%,#ee1515 48%,#222 48%,#222 52%,#fff 52%,#fff 100%);border:2px solid #111;box-shadow:0 2px 4px rgba(0,0,0,0.6),inset -3px -3px 0 rgba(0,0,0,0.25),inset 3px 3px 0 rgba(255,255,255,0.25);position:relative}
     .pokeball:after{content:"";position:absolute;left:50%;top:50%;width:10px;height:10px;background:#fff;border:2px solid #111;border-radius:50%;transform:translate(-50%,-50%)}
-    .mon-float { animation: float 2s ease-in-out infinite; }
+    .mon-float { }
     .mon-shake { animation: shake 0.35s; }
     .btn {
       background: transparent;
