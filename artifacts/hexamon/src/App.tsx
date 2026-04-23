@@ -132,6 +132,11 @@ type SaveData = {
   lastSpinTs?: number;
   catchStreak?: number;
   lastStreakDay?: string;
+  safariBalls?: number;
+  safariEnc?: Mon | null;
+  safariCounter?: number;
+  safariNextLegend?: number;
+  safariCaught?: number;
 };
 function loadSave(): SaveData | null {
   try {
@@ -192,11 +197,11 @@ export default function App() {
   const [pickedMacro, setPickedMacro] = useState(0);
   const [huntCount, setHuntCount] = useState(0);
   const [legendThreshold, setLegendThreshold] = useState(() => 20 + Math.floor(Math.random() * 16));
-  const [safariBalls, setSafariBalls] = useState(0);
-  const [safariEnc, setSafariEnc] = useState<Mon | null>(null);
-  const [safariCounter, setSafariCounter] = useState(0);
-  const [safariNextLegend, setSafariNextLegend] = useState(() => 3 + Math.floor(Math.random() * 3));
-  const [safariCaught, setSafariCaught] = useState(0);
+  const [safariBalls, setSafariBalls] = useState(initial?.safariBalls ?? 0);
+  const [safariEnc, setSafariEnc] = useState<Mon | null>(initial?.safariEnc ?? null);
+  const [safariCounter, setSafariCounter] = useState(initial?.safariCounter ?? 0);
+  const [safariNextLegend, setSafariNextLegend] = useState(() => initial?.safariNextLegend ?? (3 + Math.floor(Math.random() * 3)));
+  const [safariCaught, setSafariCaught] = useState(initial?.safariCaught ?? 0);
   const [safariThrowAnim, setSafariThrowAnim] = useState<"throw" | "wobble" | "burst" | "stars" | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
 
@@ -209,10 +214,11 @@ export default function App() {
         screen, player, team, inventory,
         caught: Array.from(caught), muted,
         candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay,
+        safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught,
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch { /* ignore quota errors */ }
-  }, [screen, player, team, inventory, caught, muted, candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay]);
+  }, [screen, player, team, inventory, caught, muted, candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught]);
 
   // Buddy walking — buddy earns 1 candy every 30s
   useEffect(() => {
@@ -2009,8 +2015,8 @@ export default function App() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid #1a1f33" }}>
             <button className="btn"
               style={{ border: "1.5px solid #f87171", color: "#f87171", padding: "5px 12px", borderRadius: 8, background: "transparent", fontSize: 10, fontWeight: 600 }}
-              onClick={() => { setSafariEnc(null); addLog(`Safari ended early. Caught ${safariCaught}.`, "#FFD700"); setScreen("world"); }}>
-              EXIT
+              onClick={() => { setSafariEnc(null); setSafariBalls(0); setSafariCounter(0); setSafariCaught(0); addLog(`Safari ended early. Caught ${safariCaught}.`, "#FFD700"); setScreen("world"); }}>
+              ◀ BACK
             </button>
             <div style={{ fontSize: 13, fontWeight: 700, color: "#26A69A", letterSpacing: 2 }}>SAFARI ZONE</div>
             <div style={{ width: 60 }} />
