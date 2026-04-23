@@ -1165,14 +1165,21 @@ export default function App() {
             </div>
             <div style={{ flex: 1, background: "linear-gradient(135deg,#0891b2,#155e75)", borderRadius: 12, padding: "10px 12px" }}>
               {(() => {
-                const ready = lastSpinDay !== todayStr();
                 void spinTick;
+                const cd = 24 * 60 * 60 * 1000;
+                const elapsed = Date.now() - lastSpinTs;
+                const ready = lastSpinDay !== todayStr() && elapsed >= cd;
+                const remainMs = Math.max(0, cd - elapsed);
+                const h = Math.floor(remainMs / 3_600_000);
+                const m = Math.floor((remainMs % 3_600_000) / 60_000);
+                const s = Math.floor((remainMs % 60_000) / 1000);
+                const fmt = `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
                 return (
                   <div onClick={ready ? spinPokestop : undefined}
-                    style={{ cursor: ready ? "pointer" : "not-allowed", opacity: ready ? 1 : 0.7 }}>
+                    style={{ cursor: ready ? "pointer" : "not-allowed", opacity: ready ? 1 : 0.85 }}>
                     <div style={{ fontSize: 9, color: "#cffafe", letterSpacing: 0.5 }}>POKÉSTOP</div>
                     <div style={{ fontSize: 14, color: "#fff", fontWeight: 700 }}>
-                      {ready ? "📍 Spin!" : "✓ Done today"}
+                      {ready ? "📍 Spin!" : `⏱ ${fmt}`}
                     </div>
                   </div>
                 );
