@@ -69,6 +69,7 @@ function calcDmg(atk: number, def: number, power: number, rand = true) {
 type Mon = Template & {
   level: number; maxHp: number; currentHp: number;
   exp: number; expNeeded: number; status: string | null;
+  ivAtk: number; ivDef: number; ivHp: number;
 };
 
 function makeMon(template: Template, level: number): Mon {
@@ -86,7 +87,20 @@ function makeMon(template: Template, level: number): Mon {
     exp: 0,
     expNeeded: Math.floor(level * level * 1.2),
     status: null,
+    ivAtk: Math.floor(Math.random() * 16),
+    ivDef: Math.floor(Math.random() * 16),
+    ivHp: Math.floor(Math.random() * 16),
   };
+}
+
+function getCP(m: Mon): number {
+  const a = (m.atk + (m.ivAtk ?? 0));
+  const d = Math.sqrt(m.def + (m.ivDef ?? 0));
+  const h = Math.sqrt(m.maxHp + (m.ivHp ?? 0));
+  return Math.max(10, Math.floor((a * d * h * (m.level / 50)) / 10) * 10);
+}
+function ivPercent(m: Mon): number {
+  return Math.round((((m.ivAtk ?? 0) + (m.ivDef ?? 0) + (m.ivHp ?? 0)) / 45) * 100);
 }
 
 type Area = { name: string; minLv: number; maxLv: number; pool: number[] };
@@ -109,7 +123,7 @@ const MACRO_REGIONS: MacroRegion[] = [
 ];
 
 type LogEntry = { msg: string; color: string; id: number };
-type Player = { name: string; hometown: string; money: number; macroRegion: number; region: number; level: number; exp: number; expNeeded: number; sprite: string; id: number; rank: number; wins: number; losses: number; adventureStarted: string };
+type Player = { name: string; hometown: string; money: number; stardust: number; macroRegion: number; region: number; level: number; exp: number; expNeeded: number; sprite: string; id: number; rank: number; wins: number; losses: number; adventureStarted: string };
 
 function makePlayerId() {
   return Math.floor(1_000_000_000 + Math.random() * 9_000_000_000);
@@ -120,7 +134,7 @@ function todayStr() {
 }
 type Battle = { wild: Mon; pMon: Mon; phase: string; turnCount: number; canCatch: boolean };
 
-const SAVE_KEY = "hexamon:save:v1";
+const SAVE_KEY = "hexamon:save:v2";
 type SaveData = {
   screen: string;
   player: Player;
@@ -128,6 +142,11 @@ type SaveData = {
   inventory: { name: string; qty: number }[];
   caught: number[];
   muted: boolean;
+  candies?: Record<number, number>;
+  buddyIdx?: number;
+  lastSpinTs?: number;
+  catchStreak?: number;
+  lastStreakDay?: string;
 };
 function loadSave(): SaveData | null {
   try {
@@ -146,6 +165,7 @@ export default function App() {
     name: "Trainer",
     hometown: "Nuvema Town",
     money: 3000,
+    stardust: 0,
     macroRegion: 0,
     region: 0,
     level: 1,
@@ -166,11 +186,21 @@ export default function App() {
   const [moveAnim, setMoveAnim] = useState<{ target: "enemy" | "player"; type: string; key: number } | null>(null);
   const [muted, setMuted] = useState<boolean>(initial?.muted ?? false);
   const [caught, setCaught] = useState<Set<number>>(new Set(initial?.caught ?? []));
+  const [candies, setCandies] = useState<Record<number, number>>(initial?.candies ?? {});
+  const [buddyIdx, setBuddyIdx] = useState<number>(initial?.buddyIdx ?? -1);
+  const [lastSpinTs, setLastSpinTs] = useState<number>(initial?.lastSpinTs ?? 0);
+  const [catchStreak, setCatchStreak] = useState<number>(initial?.catchStreak ?? 0);
+  const [lastStreakDay, setLastStreakDay] = useState<string>(initial?.lastStreakDay ?? "");
   const [log, setLog] = useState<LogEntry[]>([]);
   const [battle, setBattle] = useState<Battle | null>(null);
   const [shakeE, setShakeE] = useState(false);
   const [shakeP, setShakeP] = useState(false);
   const [ballAnim, setBallAnim] = useState<null | "throw" | "capture" | "wobble" | "success" | "fail">(null);
+  const [ringActive, setRingActive] = useState(false);
+  const [ringRadius, setRingRadius] = useState(110);
+  const ringDirRef = useRef<1 | -1>(-1);
+  const [spinTick, setSpinTick] = useState(0);
+  const [showBuddyPicker, setShowBuddyPicker] = useState(false);
   const [evolving, setEvolving] = useState<{ from: string; to: string; sprite: string } | null>(null);
   const [dexFilter, setDexFilter] = useState("all");
   const [pickedMacro, setPickedMacro] = useState(0);
@@ -184,10 +214,111 @@ export default function App() {
       const data: SaveData = {
         screen, player, team, inventory,
         caught: Array.from(caught), muted,
+        candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay,
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch { /* ignore quota errors */ }
-  }, [screen, player, team, inventory, caught, muted]);
+  }, [screen, player, team, inventory, caught, muted, candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay]);
+
+  // Buddy walking — buddy earns 1 candy every 30s
+  useEffect(() => {
+    if (buddyIdx < 0 || !team[buddyIdx]) return;
+    const buddy = team[buddyIdx];
+    const id = setInterval(() => {
+      setCandies((c) => ({ ...c, [buddy.id]: (c[buddy.id] ?? 0) + 1 }));
+    }, 30000);
+    return () => clearInterval(id);
+  }, [buddyIdx, team]);
+
+  // Pokestop cooldown ticker for live UI
+  useEffect(() => {
+    const id = setInterval(() => setSpinTick((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Catch ring shrinking animation
+  useEffect(() => {
+    if (!ringActive) return;
+    let raf = 0;
+    const step = () => {
+      setRingRadius((r) => {
+        if (r <= 28) ringDirRef.current = 1;
+        else if (r >= 110) ringDirRef.current = -1;
+        return r + ringDirRef.current * 1.6;
+      });
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [ringActive]);
+
+  function ringQuality(r: number): { label: string; mult: number; xp: number; color: string } {
+    if (r < 36)  return { label: "EXCELLENT!", mult: 2.0, xp: 100, color: "#FFD700" };
+    if (r < 56)  return { label: "Great!",     mult: 1.5, xp: 50,  color: "#26C6DA" };
+    if (r < 80)  return { label: "Nice!",      mult: 1.2, xp: 20,  color: "#9CCC65" };
+    return       { label: "OK",                mult: 1.0, xp: 10,  color: "#aaa" };
+  }
+
+  function awardCatchRewards(speciesId: number, mult: number, xpBonus: number) {
+    const today = todayStr();
+    let streak = catchStreak;
+    if (lastStreakDay !== today) {
+      streak = lastStreakDay === "" ? 1 : streak + 1;
+      setLastStreakDay(today);
+      setCatchStreak(streak);
+    }
+    const baseDust = 100;
+    const streakBonus = Math.min(streak, 7) * 20;
+    const dust = Math.floor((baseDust + streakBonus) * mult);
+    const candy = Math.max(1, Math.floor(3 * mult));
+    setPlayer((p) => ({ ...p, money: p.money + Math.floor(50 * mult), exp: p.exp + xpBonus, stardust: p.stardust + dust }));
+    setCandies((c) => ({ ...c, [speciesId]: (c[speciesId] ?? 0) + candy }));
+    addLog(`+${dust} ✨ Stardust, +${candy} 🍬 Candy`, "#FFD700");
+    if (streak > 1 && lastStreakDay !== today) addLog(`🔥 Catch streak: Day ${Math.min(streak, 7)}`, "#FF9800");
+  }
+
+  function powerUp(teamIdx: number) {
+    const m = team[teamIdx];
+    if (!m) return;
+    const cost = 25 + m.level * 5;
+    const candyCost = 1 + Math.floor(m.level / 5);
+    if ((player.stardust ?? 0) < cost) { addLog(`Need ${cost} stardust!`, "#F44336"); return; }
+    if ((candies[m.id] ?? 0) < candyCost) { addLog(`Need ${candyCost} ${m.name} candy!`, "#F44336"); return; }
+    setPlayer((p) => ({ ...p, stardust: p.stardust - cost }));
+    setCandies((c) => ({ ...c, [m.id]: c[m.id] - candyCost }));
+    setTeam((prev) => {
+      const newT = [...prev];
+      const upd = { ...newT[teamIdx] };
+      upd.level += 1;
+      upd.maxHp += Math.floor(upd.hp / 25) + 2;
+      upd.currentHp = upd.maxHp;
+      upd.atk += Math.floor(upd.atk / 20) + 1;
+      upd.def += Math.floor(upd.def / 20) + 1;
+      upd.spe += Math.floor(upd.spe / 25) + 1;
+      newT[teamIdx] = upd;
+      return newT;
+    });
+    sfx.levelUp();
+    addLog(`💪 ${m.name} powered up to Lv${m.level + 1}! CP boosted.`, "#4CAF50");
+  }
+
+  function spinPokestop() {
+    const cd = 60_000;
+    const elapsed = Date.now() - lastSpinTs;
+    if (elapsed < cd) return;
+    setLastSpinTs(Date.now());
+    sfx.menuOpen();
+    const dust = 50 + Math.floor(Math.random() * 100);
+    setPlayer((p) => ({ ...p, stardust: p.stardust + dust, money: p.money + 30 }));
+    const drops = ["Pokeball", "Pokeball", "Great Ball", "Potion", "Berry"];
+    const item = drops[Math.floor(Math.random() * drops.length)];
+    setInventory((inv) => {
+      const i = inv.findIndex((x) => x.name === item);
+      if (i >= 0) { const n = [...inv]; n[i] = { ...n[i], qty: n[i].qty + 1 }; return n; }
+      return [...inv, { name: item, qty: 1 }];
+    });
+    addLog(`📍 Pokéstop spun! +${dust} ✨, +1 ${item}`, "#26C6DA");
+  }
 
   function resetSave() {
     if (!window.confirm("Erase your save and start a new adventure?")) return;
@@ -329,12 +460,23 @@ export default function App() {
     addLog(`Go, ${next.name}!`, "#FFD700");
   }
 
-  function doThrowBall() {
-    if (!battle || ballAnim) return;
+  function startThrowAim() {
+    if (!battle || ballAnim || ringActive) return;
+    setRingRadius(110);
+    ringDirRef.current = -1;
+    setRingActive(true);
+  }
+
+  function releaseThrow() {
+    if (!battle || ballAnim || !ringActive) return;
     const { wild } = battle;
+    const q = ringQuality(ringRadius);
+    setRingActive(false);
     sfx.ballThrow();
     setBallAnim("throw");
-    const catchRate = 0.2 + (1 - wild.currentHp / wild.maxHp) * 0.6;
+    addLog(`${q.label}`, q.color);
+    const baseRate = 0.2 + (1 - wild.currentHp / wild.maxHp) * 0.6;
+    const catchRate = Math.min(0.97, baseRate * q.mult);
     const success = Math.random() < catchRate;
 
     setTimeout(() => setBallAnim("capture"), 600);
@@ -346,10 +488,11 @@ export default function App() {
       if (success) {
         setBallAnim("success");
         sfx.catchSuccess();
-        addLog(`🎉 Gotcha! ${wild.name} was caught!`, "#4CAF50");
+        addLog(`🎉 Gotcha! ${wild.name} (CP ${getCP(wild)}) was caught!`, "#4CAF50");
         const caughtMon = { ...wild, currentHp: wild.maxHp };
         setCaught((prev) => new Set([...prev, wild.id]));
         setTeam((prev) => [...prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })), caughtMon]);
+        awardCatchRewards(wild.id, q.mult, q.xp);
         addLog("Your team was fully healed!", "#4CAF50");
         setTimeout(() => {
           setBallAnim(null);
@@ -889,6 +1032,33 @@ export default function App() {
             </div>
           </div>
 
+          <div style={{ margin: "0 16px 12px", display: "flex", gap: 8 }}>
+            <div style={{ flex: 1, background: "linear-gradient(135deg,#7e3aed,#4c1d95)", borderRadius: 12, padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 9, color: "#e9d5ff", letterSpacing: 0.5 }}>STARDUST</div>
+                <div style={{ fontSize: 16, color: "#fff", fontWeight: 700 }}>✨ {(player.stardust ?? 0).toLocaleString()}</div>
+              </div>
+            </div>
+            <div style={{ flex: 1, background: "linear-gradient(135deg,#0891b2,#155e75)", borderRadius: 12, padding: "10px 12px" }}>
+              {(() => {
+                const elapsed = Date.now() - lastSpinTs;
+                const cd = 60_000;
+                const ready = elapsed >= cd;
+                const remain = Math.max(0, Math.ceil((cd - elapsed) / 1000));
+                void spinTick;
+                return (
+                  <div onClick={ready ? spinPokestop : undefined}
+                    style={{ cursor: ready ? "pointer" : "not-allowed", opacity: ready ? 1 : 0.7 }}>
+                    <div style={{ fontSize: 9, color: "#cffafe", letterSpacing: 0.5 }}>POKÉSTOP</div>
+                    <div style={{ fontSize: 14, color: "#fff", fontWeight: 700 }}>
+                      {ready ? "📍 Spin!" : `⏱ ${remain}s`}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+
           <div className="m-team-row">
             <span className="m-team-label">Teams:</span>
             {team.length === 0 && <span style={{ fontSize: 11, color: "var(--m-muted)" }}>—</span>}
@@ -934,7 +1104,34 @@ export default function App() {
           </div>
           <div className="m-wallet">
             <div className="m-balance"><i className="fa-solid fa-coins" style={{ fontSize: 12 }} /> ₽{player.money.toLocaleString()}</div>
+            <div className="m-balance" style={{ background: "linear-gradient(180deg,#7e3aed,#4c1d95)" }}>
+              <i className="fa-solid fa-wand-sparkles" style={{ fontSize: 12 }} /> {(player.stardust ?? 0).toLocaleString()}
+            </div>
             <span className="m-level-badge">Lvl {player.level}</span>
+          </div>
+          <h2 className="m-section-h">Buddy Pokémon</h2>
+          <div className="m-list">
+            {buddyIdx >= 0 && team[buddyIdx] ? (
+              <div className="m-li" onClick={() => { sfx.click(); setShowBuddyPicker(true); }}>
+                <div className="m-li-l">
+                  <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${team[buddyIdx].id}.png`}
+                    alt={team[buddyIdx].name} style={{ width: 40, height: 40, imageRendering: "pixelated" }} />
+                  <div className="m-li-t">
+                    <span className="m-li-tt">{team[buddyIdx].name}</span>
+                    <span className="m-li-st">CP {getCP(team[buddyIdx])} • Earns 1 🍬 / 30s</span>
+                  </div>
+                </div>
+                <i className="fa-solid fa-pencil m-arrow" />
+              </div>
+            ) : (
+              <div className="m-li" onClick={() => { sfx.click(); setShowBuddyPicker(true); }}>
+                <div className="m-li-l">
+                  <div className="m-stat-ic"><i className="fa-solid fa-paw" /></div>
+                  <div className="m-li-t"><span className="m-li-tt">Set a Buddy</span><span className="m-li-st">Earns candy as you play</span></div>
+                </div>
+                <i className="fa-solid fa-caret-right m-arrow" />
+              </div>
+            )}
           </div>
           <div className="m-stats">
             <div className="m-statc">
@@ -1004,6 +1201,38 @@ export default function App() {
             </div>
           </div>
           <BottomNav active="profile" go={setScreen} />
+          {showBuddyPicker && (
+            <div onClick={() => setShowBuddyPicker(false)}
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+              <div onClick={(e) => e.stopPropagation()}
+                style={{ background: "#0d0d1a", border: "2px solid #5e2c73", borderRadius: 14, padding: 16, width: "100%", maxWidth: 360, maxHeight: "70vh", overflowY: "auto" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <h3 style={{ color: "#fff", margin: 0, fontSize: 16 }}>Choose Buddy</h3>
+                  <button onClick={() => setShowBuddyPicker(false)}
+                    style={{ background: "transparent", border: "1px solid #555", color: "#ccc", padding: "4px 10px", borderRadius: 8, cursor: "pointer", fontSize: 12 }}>Close</button>
+                </div>
+                {team.length === 0 && <div style={{ color: "#888", textAlign: "center", padding: 30 }}>No Pokémon in team</div>}
+                {team.map((m, i) => (
+                  <div key={i}
+                    onClick={() => { setBuddyIdx(i); setShowBuddyPicker(false); sfx.menuOpen(); addLog(`${m.name} is now your buddy!`, "#FFD700"); }}
+                    style={{ display: "flex", alignItems: "center", gap: 10, padding: 10, marginBottom: 6, border: `2px solid ${buddyIdx === i ? "#4ade80" : "#312440"}`, borderRadius: 10, cursor: "pointer", background: buddyIdx === i ? "rgba(74,222,128,0.1)" : "transparent" }}>
+                    <MonSprite sprite={m.sprite} size={48} className="" />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ color: "#fff", fontWeight: 600 }}>{m.name}</div>
+                      <div style={{ color: "#888", fontSize: 11 }}>Lv {m.level} • CP {getCP(m)}</div>
+                    </div>
+                    {buddyIdx === i && <span style={{ color: "#4ade80", fontSize: 18 }}>✓</span>}
+                  </div>
+                ))}
+                {buddyIdx >= 0 && (
+                  <button onClick={() => { setBuddyIdx(-1); setShowBuddyPicker(false); }}
+                    style={{ width: "100%", marginTop: 8, padding: 10, background: "transparent", border: "1px solid #7f1d1d", color: "#f87171", borderRadius: 8, cursor: "pointer" }}>
+                    Remove Buddy
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1135,6 +1364,39 @@ export default function App() {
             {ballAnim === "fail" && (
               <div className="ball-static"><div className="pokeball ball-burst" /></div>
             )}
+
+            {ringActive && (
+              <>
+                <div style={{
+                  position: "absolute", top: 10, right: 30, width: 90, height: 90,
+                  display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none",
+                }}>
+                  <div style={{
+                    width: ringRadius, height: ringRadius, borderRadius: "50%",
+                    border: `3px solid ${ringQuality(ringRadius).color}`,
+                    boxShadow: `0 0 12px ${ringQuality(ringRadius).color}88`,
+                    transition: "border-color 0.1s",
+                  }} />
+                </div>
+                <div style={{
+                  position: "absolute", left: 0, right: 0, top: 6, textAlign: "center",
+                  color: ringQuality(ringRadius).color, fontSize: 11, fontWeight: 700, letterSpacing: 2,
+                  textShadow: "1px 1px 0 #000", fontFamily: "'Inter', system-ui, sans-serif",
+                }}>
+                  {ringQuality(ringRadius).label}
+                </div>
+                <button onClick={releaseThrow}
+                  style={{
+                    position: "absolute", left: "50%", bottom: 8, transform: "translateX(-50%)",
+                    background: "#4ade80", color: "#0a0e1a", border: "none",
+                    padding: "8px 22px", borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: 1,
+                    cursor: "pointer", fontFamily: "'Inter', system-ui, sans-serif",
+                    boxShadow: "0 2px 10px rgba(74,222,128,0.5)", zIndex: 60,
+                  }}>
+                  TAP TO THROW
+                </button>
+              </>
+            )}
             <div style={{ position: "absolute", bottom: 18, left: 20 }}>
               <MonSprite sprite={pMon.sprite} size={90} back className={shakeP ? "mon-shake" : "mon-float"} />
               {moveAnim?.target === "player" && <MoveFx key={moveAnim.key} type={moveAnim.type} />}
@@ -1188,7 +1450,7 @@ export default function App() {
             {[
               { label: "Switch", action: doSwitchPokemon },
               { label: "Run", action: () => { sfx.menuBack(); addLog("Got away safely!", "#aaa"); setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null }))); addLog("Your team was fully healed!", "#4CAF50"); setBattle(null); setScreen("hunt"); } },
-              { label: "Pokeballs", action: doThrowBall },
+              { label: "Pokeballs", action: startThrowAim },
             ].map((b) => (
               <button key={b.label} className="btn"
                 style={{
@@ -1397,6 +1659,11 @@ export default function App() {
             <span style={{ fontSize: 7, color: "#aaa" }}>Pokémon Caught</span>
             <span style={{ fontSize: 8, color: "#26A69A" }}>{caughtMons.length} / 151</span>
           </div>
+          <div style={{ padding: "4px 12px 8px", display: "flex", gap: 8, fontSize: 9, color: "#fff" }}>
+            <div style={{ background: "#7e3aed", padding: "5px 10px", borderRadius: 999 }}>
+              <i className="fa-solid fa-wand-sparkles" /> {(player.stardust ?? 0).toLocaleString()}
+            </div>
+          </div>
           <div style={{ flex: 1, overflowY: "auto", padding: "4px 10px 10px" }}>
             {caughtMons.length === 0 && (
               <div style={{ textAlign: "center", color: "#333", fontSize: 8, marginTop: 50, lineHeight: 2 }}>
@@ -1404,6 +1671,50 @@ export default function App() {
                 <span style={{ fontSize: 6, color: "#444" }}>Go hunt and catch some!</span>
               </div>
             )}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {team.map((m, idx) => {
+                const cp = getCP(m);
+                const iv = ivPercent(m);
+                const candy = candies[m.id] ?? 0;
+                const cost = 25 + m.level * 5;
+                const candyCost = 1 + Math.floor(m.level / 5);
+                const canPower = (player.stardust ?? 0) >= cost && candy >= candyCost;
+                return (
+                  <div key={`team-${idx}`} style={{
+                    background: `${TYPE_COLORS[m.type1]}15`,
+                    border: `2px solid ${TYPE_COLORS[m.type1]}66`,
+                    borderRadius: 10, padding: 10, display: "flex", gap: 10, alignItems: "center",
+                  }}>
+                    <MonSprite sprite={m.sprite} size={56} className="" />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 10, color: "#fff", fontWeight: 700 }}>{m.name}</span>
+                        <span style={{ fontSize: 8, color: "#FFD700" }}>CP {cp}</span>
+                      </div>
+                      <div style={{ display: "flex", gap: 4, marginTop: 3 }}>{typeTag(m.type1)}{m.type2 && typeTag(m.type2)}</div>
+                      <div style={{ fontSize: 7, color: "#aaa", marginTop: 4 }}>
+                        Lv {m.level} • IV {iv}% • 🍬 {candy}{buddyIdx === idx ? " • 👣 Buddy" : ""}
+                      </div>
+                    </div>
+                    <button className="btn"
+                      disabled={!canPower}
+                      onClick={() => powerUp(idx)}
+                      style={{
+                        border: `1.5px solid ${canPower ? "#4ade80" : "#333"}`,
+                        color: canPower ? "#4ade80" : "#555",
+                        background: canPower ? "#0d2218" : "transparent",
+                        padding: "8px 10px", borderRadius: 8, fontSize: 7, fontWeight: 700,
+                        opacity: canPower ? 1 : 0.5, cursor: canPower ? "pointer" : "not-allowed",
+                        display: "flex", flexDirection: "column", alignItems: "center", gap: 2, minWidth: 64,
+                      }}>
+                      <span style={{ fontSize: 9 }}>POWER UP</span>
+                      <span style={{ fontSize: 6 }}>✨{cost} 🍬{candyCost}</span>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            <h3 style={{ fontSize: 8, color: "#aaa", margin: "16px 4px 8px", letterSpacing: 1 }}>POKÉDEX</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
               {caughtMons.map((p) => (
                 <div key={p.id} style={{
@@ -1417,6 +1728,7 @@ export default function App() {
                   <div style={{ fontSize: 5, color: "#888" }}>#{String(p.id).padStart(3, "0")}</div>
                   <MonSprite sprite={p.sprite} size={48} className="" />
                   <div style={{ fontSize: 6, color: "#fff" }}>{p.name}</div>
+                  <div style={{ fontSize: 6, color: "#FFC107" }}>🍬 {candies[p.id] ?? 0}</div>
                   <div style={{ display: "flex", gap: 2, justifyContent: "center" }}>{typeTag(p.type1)}{p.type2 && typeTag(p.type2)}</div>
                 </div>
               ))}
