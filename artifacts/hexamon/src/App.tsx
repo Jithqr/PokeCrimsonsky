@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { sfx, playMoveSfx, moveTypeOf, TYPE_COLOR as MOVE_TYPE_COLOR } from "./sfx";
+import { ALL_POKEMON, TOTAL_POKEMON, GEN_NAMES, type PokemonTemplate } from "./lib/pokemon-data";
 
 const SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/ani/${name.replace(/[^a-z0-9]/g, "")}.gif`;
 const SPRITE_BACK = (name: string) => `https://play.pokemonshowdown.com/sprites/ani-back/${name.replace(/[^a-z0-9]/g, "")}.gif`;
@@ -10,37 +11,6 @@ const GEN_V_TRAINERS = [
   "cilan", "chili", "cress", "lenora", "burgh", "elesa", "clay", "skyla", "brycen", "drayden", "iris",
 ];
 
-type Template = {
-  id: number; name: string; sprite: string;
-  type1: string; type2: string | null;
-  hp: number; atk: number; def: number; spa: number; spd: number; spe: number;
-  moves: string[];
-  canEvolve?: number; evolveAt?: number;
-};
-
-const ALL_POKEMON: Template[] = [
-  { id:1,  name:"Bulbasaur",  sprite:"bulbasaur",  type1:"Grass",  type2:"Poison",   hp:45,atk:49,def:49,spa:65,spd:65,spe:45, moves:["Tackle","Vine Whip","Razor Leaf","Sleep Powder"], canEvolve:2,  evolveAt:16 },
-  { id:2,  name:"Ivysaur",    sprite:"ivysaur",    type1:"Grass",  type2:"Poison",   hp:60,atk:62,def:63,spa:80,spd:80,spe:60, moves:["Vine Whip","Razor Leaf","Poison Powder","Solar Beam"], canEvolve:3, evolveAt:32 },
-  { id:3,  name:"Venusaur",   sprite:"venusaur",   type1:"Grass",  type2:"Poison",   hp:80,atk:82,def:83,spa:100,spd:100,spe:80, moves:["Razor Leaf","Solar Beam","Earthquake","Sleep Powder"] },
-  { id:4,  name:"Charmander", sprite:"charmander", type1:"Fire",   type2:null,       hp:39,atk:52,def:43,spa:60,spd:50,spe:65, moves:["Scratch","Ember","Dragon Rage","Slash"], canEvolve:5, evolveAt:16 },
-  { id:5,  name:"Charmeleon", sprite:"charmeleon", type1:"Fire",   type2:null,       hp:58,atk:64,def:58,spa:80,spd:65,spe:80, moves:["Ember","Flamethrower","Slash","Dragon Rage"], canEvolve:6, evolveAt:36 },
-  { id:6,  name:"Charizard",  sprite:"charizard",  type1:"Fire",   type2:"Flying",   hp:78,atk:84,def:78,spa:109,spd:85,spe:100, moves:["Flamethrower","Fire Blast","Slash","Dragon Rage"] },
-  { id:7,  name:"Squirtle",   sprite:"squirtle",   type1:"Water",  type2:null,       hp:44,atk:48,def:65,spa:50,spd:64,spe:43, moves:["Tackle","Water Gun","Bite","Withdraw"], canEvolve:8, evolveAt:16 },
-  { id:8,  name:"Wartortle",  sprite:"wartortle",  type1:"Water",  type2:null,       hp:59,atk:63,def:80,spa:65,spd:80,spe:58, moves:["Water Gun","Bubble Beam","Bite","Protect"], canEvolve:9, evolveAt:36 },
-  { id:9,  name:"Blastoise",  sprite:"blastoise",  type1:"Water",  type2:null,       hp:79,atk:83,def:100,spa:85,spd:105,spe:78, moves:["Surf","Hydro Pump","Ice Beam","Bite"] },
-  { id:10, name:"Caterpie",   sprite:"caterpie",   type1:"Bug",    type2:null,       hp:45,atk:30,def:35,spa:20,spd:20,spe:45, moves:["Tackle","String Shot"], canEvolve:11, evolveAt:7 },
-  { id:11, name:"Metapod",    sprite:"metapod",    type1:"Bug",    type2:null,       hp:50,atk:20,def:55,spa:25,spd:25,spe:30, moves:["Harden"], canEvolve:12, evolveAt:10 },
-  { id:12, name:"Butterfree", sprite:"butterfree", type1:"Bug",    type2:"Flying",   hp:60,atk:45,def:50,spa:90,spd:80,spe:70, moves:["Confusion","Sleep Powder","Psybeam","Gust"] },
-  { id:13, name:"Weedle",     sprite:"weedle",     type1:"Bug",    type2:"Poison",   hp:40,atk:35,def:30,spa:20,spd:20,spe:50, moves:["Poison Sting","String Shot"], canEvolve:14, evolveAt:7 },
-  { id:14, name:"Kakuna",     sprite:"kakuna",     type1:"Bug",    type2:"Poison",   hp:45,atk:25,def:50,spa:25,spd:25,spe:35, moves:["Harden"], canEvolve:15, evolveAt:10 },
-  { id:15, name:"Beedrill",   sprite:"beedrill",   type1:"Bug",    type2:"Poison",   hp:65,atk:90,def:40,spa:45,spd:80,spe:75, moves:["Twineedle","Pin Missile","Poison Jab","Agility"] },
-  { id:16, name:"Pidgey",     sprite:"pidgey",     type1:"Normal", type2:"Flying",   hp:40,atk:45,def:40,spa:35,spd:35,spe:56, moves:["Tackle","Gust","Quick Attack","Sand Attack"], canEvolve:17, evolveAt:18 },
-  { id:17, name:"Pidgeotto",  sprite:"pidgeotto",  type1:"Normal", type2:"Flying",   hp:63,atk:60,def:55,spa:50,spd:50,spe:71, moves:["Gust","Quick Attack","Wing Attack","Agility"], canEvolve:18, evolveAt:36 },
-  { id:18, name:"Pidgeot",    sprite:"pidgeot",    type1:"Normal", type2:"Flying",   hp:83,atk:80,def:75,spa:70,spd:70,spe:101, moves:["Wing Attack","Agility","Air Slash","Tailwind"] },
-  { id:19, name:"Rattata",    sprite:"rattata",    type1:"Normal", type2:null,       hp:30,atk:56,def:35,spa:25,spd:35,spe:72, moves:["Tackle","Quick Attack","Bite","Hyper Fang"], canEvolve:20, evolveAt:20 },
-  { id:20, name:"Raticate",   sprite:"raticate",   type1:"Normal", type2:null,       hp:55,atk:81,def:60,spa:50,spd:70,spe:97, moves:["Hyper Fang","Quick Attack","Bite","Super Fang"] },
-  { id:25, name:"Pikachu",    sprite:"pikachu",    type1:"Electric",type2:null,      hp:35,atk:55,def:40,spa:50,spd:50,spe:90, moves:["Thunder Shock","Quick Attack","Thunderbolt","Thunder Wave"], canEvolve:26, evolveAt:999 },
-];
 
 const TYPE_COLORS: Record<string, string> = {
   Normal:"#A8A878",Fire:"#F08030",Water:"#6890F0",Grass:"#78C850",Electric:"#F8D030",
@@ -66,13 +36,13 @@ function calcDmg(atk: number, def: number, power: number, rand = true) {
   return Math.max(1, Math.floor(((atk * power) / (def * 5)) * r));
 }
 
-type Mon = Template & {
+type Mon = PokemonTemplate & {
   level: number; maxHp: number; currentHp: number;
   exp: number; expNeeded: number; status: string | null;
   ivAtk: number; ivDef: number; ivHp: number;
 };
 
-function makeMon(template: Template, level: number): Mon {
+function makeMon(template: PokemonTemplate, level: number): Mon {
   const s = level / 50;
   const maxHp = Math.floor(template.hp * s * 2 + level + 10);
   return {
@@ -203,6 +173,7 @@ export default function App() {
   const [showBuddyPicker, setShowBuddyPicker] = useState(false);
   const [evolving, setEvolving] = useState<{ from: string; to: string; sprite: string } | null>(null);
   const [dexFilter, setDexFilter] = useState("all");
+  const [genFilter, setGenFilter] = useState<number>(0);
   const [pickedMacro, setPickedMacro] = useState(0);
   const logRef = useRef<HTMLDivElement>(null);
 
@@ -510,7 +481,7 @@ export default function App() {
 
   function finishBattle(pMon: Mon, _won: boolean, playerExpGain: number) {
     let mon = { ...pMon };
-    let didEvolve: { from: Mon; to: Template } | null = null;
+    let didEvolve: { from: Mon; to: PokemonTemplate } | null = null;
     while (mon.exp >= mon.expNeeded) {
       mon.level += 1;
       mon.exp -= mon.expNeeded;
@@ -877,7 +848,7 @@ export default function App() {
             <div style={{ fontSize: 7, color: "#555", marginTop: 8, letterSpacing: 3 }}>GEN I · KANTO REGION</div>
           </div>
           <div style={{ fontSize: 7, color: "#444", textAlign: "center", lineHeight: 2.2 }}>
-            151 Pokémon · Hunt · Catch · Battle · Evolve
+            1025 Pokémon · Hunt · Catch · Battle · Evolve
           </div>
           <button className="btn" style={{ border: "2px solid #ff6b35", color: "#ff6b35", padding: "12px 24px", fontSize: 10 }}
             onClick={() => setScreen("nameInput")}>▶ START</button>
@@ -982,7 +953,7 @@ export default function App() {
                 onClick={() => { const m = !muted; setMuted(m); sfx.setMuted(m); if (!m) sfx.click(); }}>
                 <i className={`fa-solid ${muted ? "fa-volume-xmark" : "fa-volume-high"}`} style={{ color: muted ? "var(--m-muted)" : "var(--m-yellow)" }} />
               </span>
-              <span className="m-pill"><i className="fa-solid fa-bullhorn" /> Caught: {caught.size}/151</span>
+              <span className="m-pill"><i className="fa-solid fa-bullhorn" /> Caught: {caught.size}/{TOTAL_POKEMON}</span>
             </div>
           </div>
 
@@ -1092,7 +1063,7 @@ export default function App() {
   }
 
   if (screen === "profile") {
-    const dexPct = Math.round((caught.size / 151) * 100);
+    const dexPct = Math.round((caught.size / TOTAL_POKEMON) * 100);
     return (
       <div style={S.root}><style>{css}</style>
         <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
@@ -1657,7 +1628,7 @@ export default function App() {
           </div>
           <div style={{ padding: "10px 12px 4px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: 7, color: "#aaa" }}>Pokémon Caught</span>
-            <span style={{ fontSize: 8, color: "#26A69A" }}>{caughtMons.length} / 151</span>
+            <span style={{ fontSize: 8, color: "#26A69A" }}>{caughtMons.length} / {TOTAL_POKEMON}</span>
           </div>
           <div style={{ padding: "4px 12px 8px", display: "flex", gap: 8, fontSize: 9, color: "#fff" }}>
             <div style={{ background: "#7e3aed", padding: "5px 10px", borderRadius: 999 }}>
@@ -1743,7 +1714,7 @@ export default function App() {
     const NATURES = ["Jolly", "Timid", "Modest", "Adamant", "Bold", "Calm", "Brave"];
     const RARE_IDS = new Set([6, 9, 12, 15, 18, 25]);
     const LEGEND_IDS = new Set<number>();
-    function priceFor(p: Template) {
+    function priceFor(p: PokemonTemplate) {
       const base = (p.hp + p.atk + p.def + p.spa + p.spd + p.spe);
       const tier = LEGEND_IDS.has(p.id) ? 200 : RARE_IDS.has(p.id) ? 60 : 30;
       return base * tier;
@@ -1976,15 +1947,28 @@ export default function App() {
 
   if (screen === "dex") {
     const types = ["all", ...Array.from(new Set(ALL_POKEMON.map((p) => p.type1)))].sort();
-    const filtered = ALL_POKEMON.filter((p) => dexFilter === "all" || p.type1 === dexFilter || p.type2 === dexFilter);
+    const filtered = ALL_POKEMON.filter((p) =>
+      (dexFilter === "all" || p.type1 === dexFilter || p.type2 === dexFilter) &&
+      (genFilter === 0 || p.gen === genFilter)
+    );
     return (
       <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           <div style={S.header}>
-            <span style={{ fontSize: 9, color: "#9C27B0" }}>📖 POKÉDEX ({caught.size}/151)</span>
+            <span style={{ fontSize: 9, color: "#9C27B0" }}>📖 POKÉDEX ({caught.size}/{TOTAL_POKEMON})</span>
             <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
           </div>
           <div style={{ padding: "8px 10px 4px", overflowX: "auto", display: "flex", gap: 4 }}>
+            <button className="btn"
+              style={{ border: "1px solid #555", color: genFilter === 0 ? "#fff" : "#888", padding: "4px 8px", borderRadius: 4, background: genFilter === 0 ? "#fff2" : "transparent", flexShrink: 0, fontSize: 7 }}
+              onClick={() => setGenFilter(0)}>ALL GENS</button>
+            {[1,2,3,4,5,6,7,8,9].map((g) => (
+              <button key={g} className="btn"
+                style={{ border: "1px solid #5e2c73", color: genFilter === g ? "#FFD700" : "#aaa", padding: "4px 8px", borderRadius: 4, background: genFilter === g ? "#fff2" : "transparent", flexShrink: 0, fontSize: 7 }}
+                onClick={() => setGenFilter(g)}>G{g} {GEN_NAMES[g]}</button>
+            ))}
+          </div>
+          <div style={{ padding: "4px 10px 4px", overflowX: "auto", display: "flex", gap: 4 }}>
             {types.map((t) => (
               <button key={t} className="btn"
                 style={{ border: `1px solid ${t === "all" ? "#555" : TYPE_COLORS[t]}`, color: t === "all" ? "#888" : TYPE_COLORS[t], padding: "4px 8px", borderRadius: 4, background: dexFilter === t ? "#fff2" : "transparent", flexShrink: 0 }}
