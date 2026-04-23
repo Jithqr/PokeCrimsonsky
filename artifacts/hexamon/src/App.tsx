@@ -209,6 +209,7 @@ export default function App() {
   const ringDirRef = useRef<1 | -1>(-1);
   const [spinTick, setSpinTick] = useState(0);
   const [showBuddyPicker, setShowBuddyPicker] = useState(false);
+  const [showSwitchPicker, setShowSwitchPicker] = useState(false);
   const [evolving, setEvolving] = useState<{ from: string; to: string; sprite: string } | null>(null);
   const [dexFilter, setDexFilter] = useState("all");
   const [genFilter, setGenFilter] = useState<number>(0);
@@ -418,7 +419,6 @@ export default function App() {
       sfx.menuBack();
       return;
     }
-    setLastSafariDay(today);
     setPlayer((p) => ({ ...p, money: p.money - 100 }));
     setSafariBalls(30);
     setSafariCounter(0);
@@ -437,6 +437,7 @@ export default function App() {
     if (currentBalls <= 0) {
       addLog(`Safari ended! You caught ${safariCaught} Pokémon.`, "#FFD700");
       setSafariEnc(null);
+      setLastSafariDay(todayStr());
       setScreen("world");
       return;
     }
@@ -577,16 +578,23 @@ export default function App() {
     setBattle((prev) => prev && ({ ...prev, wild, pMon, turnCount: prev.turnCount + 1 }));
   }
 
-  function doSwitchPokemon() {
+  function openSwitchPicker() {
     if (!battle) return;
-    const { pMon } = battle;
-    const aliveOthers = team.filter((m) => m.currentHp > 0 && !(m.id === pMon.id && m.level === pMon.level));
+    const aliveOthers = team.filter((m) => m.currentHp > 0 && !(m.id === battle.pMon.id && m.level === battle.pMon.level));
     if (aliveOthers.length === 0) {
       addLog("No other Pokémon able to fight!", "#F44336");
       return;
     }
-    const next = { ...aliveOthers[0] };
     sfx.menuOpen();
+    setShowSwitchPicker(true);
+  }
+
+  function pickSwitchTo(target: Mon) {
+    if (!battle) return;
+    const { pMon } = battle;
+    if (target.currentHp <= 0) return;
+    if (target.id === pMon.id && target.level === pMon.level) { setShowSwitchPicker(false); return; }
+    const next = { ...target };
     setTeam((prev) => {
       const newTeam = [...prev];
       const idx = newTeam.findIndex((m) => m.id === pMon.id && m.level === pMon.level);
@@ -597,6 +605,7 @@ export default function App() {
     });
     setBattle((prev) => prev && ({ ...prev, pMon: next }));
     addLog(`Go, ${next.name}!`, "#FFD700");
+    setShowSwitchPicker(false);
   }
 
   function startThrowAim() {
@@ -1612,7 +1621,7 @@ export default function App() {
 
           <div style={{ padding: "6px 10px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
             {[
-              { label: "Switch", action: doSwitchPokemon },
+              { label: "Switch", action: openSwitchPicker },
               { label: "Run", action: () => { sfx.menuBack(); addLog("Got away safely!", "#aaa"); setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null }))); addLog("Your team was fully healed!", "#4CAF50"); setBattle(null); setScreen("hunt"); } },
               { label: "Pokeballs", action: startThrowAim },
             ].map((b) => (
@@ -1632,6 +1641,63 @@ export default function App() {
                 onClick={b.action}>{b.label}</button>
             ))}
           </div>
+
+          {showSwitchPicker && (
+            <div
+              onClick={() => setShowSwitchPicker(false)}
+              style={{
+                position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)",
+                display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 50,
+              }}>
+              <div onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: "#10172a", border: "1.5px solid #4ade80", borderRadius: 14,
+                  width: "100%", maxWidth: 320, padding: 14, display: "flex", flexDirection: "column", gap: 10,
+                  fontFamily: "'Inter', system-ui, sans-serif",
+                }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ color: "#4ade80", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>SWITCH POKÉMON</div>
+                  <button className="btn"
+                    style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 9 }}
+                    onClick={() => setShowSwitchPicker(false)}>✕</button>
+                </div>
+                <div style={{ fontSize: 10, color: "#6b7896" }}>{teams[activeTeamIdx]?.name ?? "Team"} · choose your next fighter</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 280, overflowY: "auto" }}>
+                  {team.map((m, i) => {
+                    const isActive = battle && m.id === battle.pMon.id && m.level === battle.pMon.level;
+                    const fainted = m.currentHp <= 0;
+                    const disabled = !!isActive || fainted;
+                    return (
+                      <button key={`sw-${i}`} className="btn"
+                        disabled={disabled}
+                        onClick={() => pickSwitchTo(m)}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 10, padding: "8px 10px",
+                          border: `1.5px solid ${isActive ? "#FFD700" : fainted ? "#3a1f1f" : "#2a3148"}`,
+                          background: isActive ? "#1a1808" : fainted ? "#1a0d0d" : "#0a0e1a",
+                          borderRadius: 10, color: "#cfd6e6", textAlign: "left",
+                          opacity: disabled ? 0.55 : 1, cursor: disabled ? "not-allowed" : "pointer",
+                        }}>
+                        <MonSprite sprite={m.sprite} size={40} className="" style={{ animation: "none" }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>{m.name}</span>
+                            <span style={{ fontSize: 9, color: isActive ? "#FFD700" : "#888" }}>
+                              {isActive ? "★ IN BATTLE" : fainted ? "FAINTED" : `Lv${m.level}`}
+                            </span>
+                          </div>
+                          <div style={{ marginTop: 4 }}><HpBar cur={m.currentHp} max={m.maxHp} /></div>
+                          <div style={{ fontSize: 8, color: "#6b7896", marginTop: 2 }}>
+                            HP {m.currentHp}/{m.maxHp}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1664,7 +1730,7 @@ export default function App() {
           })}
           <button className="btn"
             onClick={() => {
-              const name = (typeof window !== "undefined" ? window.prompt("Name your new team:", `Team ${teams.length + 1}`) : "")?.trim();
+              const name = (typeof window !== "undefined" ? window.prompt("Hello Trainer 👋, Enter Your Team Name!", `Team ${teams.length + 1}`) : "")?.trim();
               if (!name) return;
               const newTeam: TeamGroup = { id: `t-${Date.now()}`, name, mons: [] };
               setTeams((prev) => [...prev, newTeam]);
@@ -2163,7 +2229,7 @@ export default function App() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid #1a1f33" }}>
             <button className="btn"
               style={{ border: "1.5px solid #f87171", color: "#f87171", padding: "5px 12px", borderRadius: 8, background: "transparent", fontSize: 10, fontWeight: 600 }}
-              onClick={() => { setSafariEnc(null); setSafariBalls(0); setSafariCounter(0); setSafariCaught(0); addLog(`Safari ended early. Caught ${safariCaught}.`, "#FFD700"); setScreen("world"); }}>
+              onClick={() => { setScreen("world"); }}>
               ◀ BACK
             </button>
             <div style={{ fontSize: 13, fontWeight: 700, color: "#26A69A", letterSpacing: 2 }}>SAFARI ZONE</div>
@@ -2273,7 +2339,7 @@ export default function App() {
               <button className="btn"
                 disabled={safariThrowAnim !== null}
                 style={{ flex: 1, border: "1.5px solid #2a3a55", color: safariThrowAnim ? "#444" : "#fff", padding: "18px 8px", borderRadius: 16, background: "#10172a", fontSize: 15, fontWeight: 500 }}
-                onClick={() => { setSafariEnc(null); setSafariBalls(0); setSafariCounter(0); setSafariCaught(0); addLog(`Safari ended. Caught ${safariCaught}.`, "#FFD700"); setScreen("world"); }}>
+                onClick={() => { setSafariEnc(null); setSafariBalls(0); setSafariCounter(0); setSafariCaught(0); setLastSafariDay(todayStr()); addLog(`Safari ended. Caught ${safariCaught}.`, "#FFD700"); setScreen("world"); }}>
                 Escape
               </button>
             </div>
