@@ -712,11 +712,11 @@ export default function App() {
     .mon-shake { animation: shake 0.35s; }
     .btn {
       background: transparent;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 8px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 13px;
       cursor: pointer;
       transition: all 0.15s;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.2px;
     }
     .btn:hover { transform: scale(1.04); }
     .btn:active { transform: scale(0.97); }
@@ -2127,57 +2127,63 @@ export default function App() {
   }
 
   if (screen === "regionSelect") {
+    const regionMeta: { icon: string; color: string }[] = [
+      { icon: "fa-fire",          color: "var(--m-orange)" },
+      { icon: "fa-droplet",       color: "var(--m-cyan)" },
+      { icon: "fa-leaf",          color: "var(--m-green)" },
+      { icon: "fa-snowflake",     color: "var(--m-blue)" },
+      { icon: "fa-bolt",          color: "var(--m-yellow)" },
+      { icon: "fa-crown",         color: "var(--m-pink)" },
+      { icon: "fa-umbrella-beach",color: "var(--m-teal)" },
+      { icon: "fa-chess-rook",    color: "var(--m-purple)" },
+      { icon: "fa-mountain-sun",  color: "var(--m-brown)" },
+    ];
     return (
-      <div style={S.root}><style>{css}</style>
-        <div style={S.wrap}>
-          <div style={S.header}>
-            <span style={{ fontSize: 9, color: "#795548" }}>🗺️ SELECT REGION</span>
-            <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
+      <div className="m-app" style={{ ...S.root, background: "var(--m-bg)" }}><style>{css}</style>
+        <div style={{ ...S.wrap, background: "var(--m-bg)", fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid var(--m-border)" }}>
+            <button className="btn"
+              style={{ border: "1.5px solid #f87171", color: "#f87171", padding: "5px 12px", borderRadius: 8, background: "transparent", fontSize: 11, fontWeight: 600 }}
+              onClick={() => setScreen("world")}>◀ BACK</button>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--m-blue)", letterSpacing: 2 }}>SELECT REGION</div>
+            <div style={{ width: 60 }} />
           </div>
 
-          <div style={{ padding: "12px 12px 4px" }}>
-            <div style={{ fontSize: 8, color: "#aaa", marginBottom: 8, letterSpacing: 1 }}>
-              Choose a region to hunt and explore. Each region's wild Pokémon are exclusive to its generation.
-            </div>
+          <div style={{ padding: "14px 20px 6px", fontSize: 12, color: "var(--m-muted)", lineHeight: 1.5 }}>
+            Choose a region to explore. Each region's wild Pokémon are exclusive to its generation.
           </div>
 
-          <div style={{ flex: 1, overflowY: "auto", padding: "4px 12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-            {REGIONS.map((r, i) => {
-              const current = player.macroRegion === i;
-              const myLv = team[0]?.level ?? 5;
-              const danger = myLv < r.minLv - 5 ? "⚠️ DANGER" : myLv > r.maxLv + 10 ? "✅ EASY" : "⚔️ GOOD";
-              const speciesCount = (REGION_POOLS[r.gen]?.length ?? 0) + (REGION_LEGENDS[r.gen]?.length ?? 0);
-              const legendsCount = REGION_LEGENDS[r.gen]?.length ?? 0;
-              return (
-                <button key={r.name} className="btn"
-                  style={{
-                    border: `2px solid ${current ? "#ff6b35" : "#312440"}`,
-                    background: current ? "rgba(255,107,53,0.08)" : "#0f0f24",
-                    borderRadius: 12, padding: "12px 14px",
-                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                    color: current ? "#ff6b35" : "#ddd",
-                  }}
-                  onClick={() => {
-                    setPlayer((p) => ({ ...p, macroRegion: i, region: 0 }));
-                    setHuntCount(0);
-                    setLegendThreshold(20 + Math.floor(Math.random() * 16));
-                    addLog(`Traveled to ${r.name} (Gen ${r.gen})!`, "#FFD700");
-                    setScreen("world");
-                  }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, textAlign: "left" }}>
-                    <span style={{ fontSize: 24 }}>{r.emoji}</span>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700 }}>{r.name}</div>
-                      <div style={{ fontSize: 9, color: "#888", marginTop: 3 }}>
-                        Gen {r.gen} • Lv {r.minLv}–{r.maxLv} • {speciesCount} species • {legendsCount} legendaries
-                      </div>
-                      {current && <div style={{ fontSize: 8, color: "#4CAF50", marginTop: 3 }}>★ CURRENT</div>}
-                    </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px 24px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+              {REGIONS.map((r, i) => {
+                const current = player.macroRegion === i;
+                const meta = regionMeta[i] ?? { icon: "fa-map", color: "var(--m-blue)" };
+                return (
+                  <div key={r.name} className="m-menu-btn"
+                    style={{
+                      color: meta.color,
+                      borderColor: current ? meta.color : `${meta.color}33`,
+                      background: current ? `${meta.color}14` : "var(--m-card)",
+                      position: "relative",
+                      paddingTop: 18, paddingBottom: 14,
+                    }}
+                    onClick={() => {
+                      setPlayer((p) => ({ ...p, macroRegion: i, region: 0 }));
+                      setHuntCount(0);
+                      setLegendThreshold(20 + Math.floor(Math.random() * 16));
+                      addLog(`Traveled to ${r.name} (Gen ${r.gen})!`, "#FFD700");
+                      setScreen("world");
+                    }}>
+                    <i className={`fa-solid ${meta.icon}`} style={{ fontSize: 22 }} />
+                    <span style={{ fontSize: 12, marginTop: 2 }}>{r.name}</span>
+                    <span style={{ fontSize: 9, color: "var(--m-muted)", letterSpacing: 0.5, marginTop: 2 }}>Gen {r.gen}</span>
+                    {current && (
+                      <span style={{ position: "absolute", top: 6, right: 8, fontSize: 8, color: meta.color }}>★</span>
+                    )}
                   </div>
-                  <div style={{ fontSize: 9, fontWeight: 600 }}>{danger}</div>
-                </button>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
