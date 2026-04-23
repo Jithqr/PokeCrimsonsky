@@ -73,24 +73,39 @@ function ivPercent(m: Mon): number {
   return Math.round((((m.ivAtk ?? 0) + (m.ivDef ?? 0) + (m.ivHp ?? 0)) / 45) * 100);
 }
 
-type Area = { name: string; minLv: number; maxLv: number; pool: number[] };
-type MacroRegion = { name: string; emoji: string; available: boolean; areas: Area[] };
-
-const MACRO_REGIONS: MacroRegion[] = [
-  { name: "Kanto",  emoji: "🔴", available: true, areas: [
-    { name: "Pallet Town",     minLv: 2, maxLv: 6,  pool: [16, 19, 10, 13, 4, 1, 7] },
-    { name: "Viridian Forest", minLv: 5, maxLv: 12, pool: [10, 11, 12, 13, 14, 15, 16, 25] },
-    { name: "Mt. Moon",        minLv: 8, maxLv: 18, pool: [16, 19, 10] },
-  ]},
-  { name: "Johto",   emoji: "⚪", available: false, areas: [] },
-  { name: "Hoenn",   emoji: "🟢", available: false, areas: [] },
-  { name: "Sinnoh",  emoji: "🔵", available: false, areas: [] },
-  { name: "Unova",   emoji: "⚫", available: false, areas: [] },
-  { name: "Kalos",   emoji: "🟡", available: false, areas: [] },
-  { name: "Alola",   emoji: "🌺", available: false, areas: [] },
-  { name: "Galar",   emoji: "🟣", available: false, areas: [] },
-  { name: "Paldea",  emoji: "🟠", available: false, areas: [] },
+type RegionDef = { name: string; emoji: string; gen: number; minLv: number; maxLv: number };
+const REGIONS: RegionDef[] = [
+  { name: "Kanto",  emoji: "🔴", gen: 1, minLv: 3,  maxLv: 25 },
+  { name: "Johto",  emoji: "⚪", gen: 2, minLv: 5,  maxLv: 30 },
+  { name: "Hoenn",  emoji: "🟢", gen: 3, minLv: 8,  maxLv: 35 },
+  { name: "Sinnoh", emoji: "🔵", gen: 4, minLv: 10, maxLv: 40 },
+  { name: "Unova",  emoji: "⚫", gen: 5, minLv: 12, maxLv: 45 },
+  { name: "Kalos",  emoji: "🟡", gen: 6, minLv: 15, maxLv: 50 },
+  { name: "Alola",  emoji: "🌺", gen: 7, minLv: 18, maxLv: 55 },
+  { name: "Galar",  emoji: "🟣", gen: 8, minLv: 20, maxLv: 60 },
+  { name: "Paldea", emoji: "🟠", gen: 9, minLv: 22, maxLv: 65 },
 ];
+
+const LEGENDARIES: Record<number, number[]> = {
+  1: [144, 145, 146, 150, 151],
+  2: [243, 244, 245, 249, 250, 251],
+  3: [377, 378, 379, 380, 381, 382, 383, 384, 385, 386],
+  4: [480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493],
+  5: [494, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649],
+  6: [716, 717, 718, 719, 720, 721],
+  7: [772, 773, 785, 786, 787, 788, 789, 790, 791, 792, 800, 801, 802, 807, 808, 809],
+  8: [888, 889, 890, 891, 892, 893, 894, 895, 896, 897, 898],
+  9: [1001, 1002, 1003, 1004, 1007, 1008, 1014, 1015, 1016, 1017, 1024, 1025],
+};
+const ALL_LEGENDARY_IDS = new Set(Object.values(LEGENDARIES).flat());
+
+const REGION_POOLS: Record<number, number[]> = {};
+const REGION_LEGENDS: Record<number, number[]> = {};
+for (const r of REGIONS) {
+  const inGen = ALL_POKEMON.filter((p) => p.gen === r.gen).map((p) => p.id);
+  REGION_POOLS[r.gen] = inGen.filter((id) => !ALL_LEGENDARY_IDS.has(id));
+  REGION_LEGENDS[r.gen] = inGen.filter((id) => ALL_LEGENDARY_IDS.has(id));
+}
 
 type LogEntry = { msg: string; color: string; id: number };
 type Player = { name: string; hometown: string; money: number; stardust: number; macroRegion: number; region: number; level: number; exp: number; expNeeded: number; sprite: string; id: number; rank: number; wins: number; losses: number; adventureStarted: string };
@@ -175,6 +190,14 @@ export default function App() {
   const [dexFilter, setDexFilter] = useState("all");
   const [genFilter, setGenFilter] = useState<number>(0);
   const [pickedMacro, setPickedMacro] = useState(0);
+  const [huntCount, setHuntCount] = useState(0);
+  const [legendThreshold, setLegendThreshold] = useState(() => 20 + Math.floor(Math.random() * 16));
+  const [safariBalls, setSafariBalls] = useState(0);
+  const [safariEnc, setSafariEnc] = useState<Mon | null>(null);
+  const [safariCounter, setSafariCounter] = useState(0);
+  const [safariNextLegend, setSafariNextLegend] = useState(() => 3 + Math.floor(Math.random() * 3));
+  const [safariCaught, setSafariCaught] = useState(0);
+  const [safariThrowAnim, setSafariThrowAnim] = useState<"throw" | "wobble" | "burst" | "stars" | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { if (logRef.current) logRef.current.scrollTop = 99999; }, [log]);
@@ -303,16 +326,32 @@ export default function App() {
 
   function getPokemon(id: number) { return ALL_POKEMON.find((p) => p.id === id)!; }
 
-  function spawnWild(): Mon | null {
-    const macro = MACRO_REGIONS[player.macroRegion];
-    const region = macro.areas[player.region];
-    if (!region) {
-      addLog(`No areas to explore in ${macro.name} yet!`, "#F44336");
-      return null;
+  function spawnWild(forceLegendary = false): Mon | null {
+    const region = REGIONS[player.macroRegion] ?? REGIONS[0];
+    const pool = REGION_POOLS[region.gen] ?? [];
+    const legends = REGION_LEGENDS[region.gen] ?? [];
+    let id: number;
+    let isLegend = forceLegendary;
+    if (!forceLegendary) {
+      const next = huntCount + 1;
+      if (next >= legendThreshold && legends.length > 0) {
+        isLegend = true;
+      }
     }
-    const poolId = region.pool[Math.floor(Math.random() * region.pool.length)];
-    const template = getPokemon(poolId);
-    const lv = region.minLv + Math.floor(Math.random() * (region.maxLv - region.minLv + 1));
+    if (isLegend && legends.length > 0) {
+      id = legends[Math.floor(Math.random() * legends.length)];
+      setHuntCount(0);
+      setLegendThreshold(20 + Math.floor(Math.random() * 16));
+      addLog(`✨ A LEGENDARY Pokémon appears!`, "#FFD700");
+    } else {
+      if (pool.length === 0) { addLog("No wild Pokémon here yet!", "#F44336"); return null; }
+      id = pool[Math.floor(Math.random() * pool.length)];
+      setHuntCount((c) => c + 1);
+    }
+    const template = getPokemon(id);
+    const lv = isLegend
+      ? Math.min(70, region.maxLv + 5 + Math.floor(Math.random() * 6))
+      : region.minLv + Math.floor(Math.random() * (region.maxLv - region.minLv + 1));
     return makeMon(template, lv);
   }
 
@@ -321,6 +360,100 @@ export default function App() {
     if (!w) return;
     setScoutedWild(w);
     setScreen("hunt");
+  }
+
+  function spawnSafari(forceLegendary = false): Mon | null {
+    const region = REGIONS[player.macroRegion] ?? REGIONS[0];
+    const pool = REGION_POOLS[region.gen] ?? [];
+    const legends = REGION_LEGENDS[region.gen] ?? [];
+    const isLegend = forceLegendary && legends.length > 0;
+    const id = isLegend
+      ? legends[Math.floor(Math.random() * legends.length)]
+      : pool[Math.floor(Math.random() * pool.length)];
+    if (!id) return null;
+    const lv = isLegend
+      ? Math.min(70, region.maxLv + 5 + Math.floor(Math.random() * 6))
+      : region.minLv + Math.floor(Math.random() * (region.maxLv - region.minLv + 1));
+    return makeMon(getPokemon(id), lv);
+  }
+
+  function enterSafari() {
+    if (player.money < 100) {
+      addLog("Not enough money! Safari entry costs ₽100.", "#F44336");
+      sfx.menuBack();
+      return;
+    }
+    setPlayer((p) => ({ ...p, money: p.money - 100 }));
+    setSafariBalls(30);
+    setSafariCounter(0);
+    setSafariCaught(0);
+    setSafariNextLegend(3 + Math.floor(Math.random() * 3));
+    const region = REGIONS[player.macroRegion] ?? REGIONS[0];
+    addLog(`Welcome to the ${region.name} Safari Zone! 30 balls, no battles — catch only.`, "#26A69A");
+    const next = 1;
+    const isLegend = next >= (3 + Math.floor(Math.random() * 3));
+    setSafariEnc(spawnSafari(isLegend));
+    setSafariCounter(1);
+    setScreen("safari");
+  }
+
+  function safariNext(currentBalls: number) {
+    if (currentBalls <= 0) {
+      addLog(`Safari ended! You caught ${safariCaught} Pokémon.`, "#FFD700");
+      setSafariEnc(null);
+      setScreen("world");
+      return;
+    }
+    const next = safariCounter + 1;
+    const triggerLegend = next >= safariNextLegend;
+    const region = REGIONS[player.macroRegion] ?? REGIONS[0];
+    const legends = REGION_LEGENDS[region.gen] ?? [];
+    const isLegend = triggerLegend && legends.length > 0;
+    if (isLegend) {
+      setSafariNextLegend(next + 3 + Math.floor(Math.random() * 3));
+      addLog(`✨ A LEGENDARY appears in the safari!`, "#FFD700");
+    }
+    setSafariEnc(spawnSafari(isLegend));
+    setSafariCounter(next);
+  }
+
+  function safariThrow() {
+    if (!safariEnc || safariBalls <= 0 || safariThrowAnim) return;
+    const ballsLeft = safariBalls - 1;
+    setSafariBalls(ballsLeft);
+    sfx.click();
+    const isLegend = ALL_LEGENDARY_IDS.has(safariEnc.id);
+    const baseRate = isLegend ? 0.18 : 0.55;
+    const lvPenalty = Math.max(0, (safariEnc.level - 20) * 0.01);
+    const rate = Math.max(0.05, baseRate - lvPenalty);
+    const success = Math.random() < rate;
+    setSafariThrowAnim("throw");
+    setTimeout(() => setSafariThrowAnim("wobble"), 500);
+    setTimeout(() => {
+      if (success) {
+        setSafariThrowAnim("stars");
+        const caughtMon = safariEnc;
+        addLog(`Gotcha! ${caughtMon.name} (Lv${caughtMon.level}) was caught!`, "#4CAF50");
+        sfx.victory();
+        setCaught((prev) => new Set(prev).add(caughtMon.id));
+        setCandies((prev) => ({ ...prev, [caughtMon.id]: (prev[caughtMon.id] ?? 0) + (isLegend ? 5 : 3) }));
+        setTeam((prev) => prev.length < 6 ? [...prev, caughtMon] : prev);
+        setSafariCaught((c) => c + 1);
+      } else {
+        setSafariThrowAnim("burst");
+        addLog(`Oh no! ${safariEnc.name} broke free!`, "#F44336");
+      }
+      setTimeout(() => {
+        setSafariThrowAnim(null);
+        safariNext(ballsLeft);
+      }, 900);
+    }, 1500);
+  }
+
+  function safariRun() {
+    if (safariThrowAnim) return;
+    sfx.menuBack();
+    safariNext(safariBalls);
   }
 
   function rescout() {
@@ -336,10 +469,9 @@ export default function App() {
       addLog("Your team is too exhausted to battle!", "#F44336");
       return;
     }
-    const macro = MACRO_REGIONS[player.macroRegion];
-    const region = macro.areas[player.region];
+    const region = REGIONS[player.macroRegion] ?? REGIONS[0];
     const pMon = { ...validTeam[0] };
-    addLog(`A wild ${scoutedWild.name} (Lv${scoutedWild.level}) appeared in ${region?.name ?? "the wild"}!`, "#FFD700");
+    addLog(`A wild ${scoutedWild.name} (Lv${scoutedWild.level}) appeared in ${region.name}!`, "#FFD700");
     setBattle({ wild: scoutedWild, pMon, phase: "choose", turnCount: 0, canCatch: true });
     setScoutedWild(null);
     setScreen("battle");
@@ -917,8 +1049,7 @@ export default function App() {
   }
 
   if (screen === "world") {
-    const macro = MACRO_REGIONS[player.macroRegion];
-    const region = macro.areas[player.region] ?? { name: "—", minLv: 0, maxLv: 0, pool: [] };
+    const region = REGIONS[player.macroRegion] ?? REGIONS[0];
     const expPct = Math.min(100, (player.exp / player.expNeeded) * 100);
     const menu = [
       { label: "Hunt",   icon: "fa-dragon",          color: "var(--m-green)",  action: openHunt },
@@ -926,7 +1057,7 @@ export default function App() {
       { label: "Card",   icon: "fa-id-card",         color: "var(--m-pink)",   action: () => setScreen("card") },
       { label: "Dex",    icon: "fa-book",            color: "var(--m-purple)", action: () => setScreen("dex") },
       { label: "Region", icon: "fa-map",             color: "var(--m-blue)",   action: () => setScreen("regionSelect") },
-      { label: "Safari", icon: "fa-umbrella-beach",  color: "var(--m-teal)",   action: () => setScreen("regionSelect") },
+      { label: "Safari", icon: "fa-umbrella-beach",  color: "var(--m-teal)",   action: enterSafari },
       { label: "Bag",    icon: "fa-suitcase",        color: "var(--m-brown)",  action: () => setScreen("inventory") },
       { label: "Store",  icon: "fa-store",           color: "var(--m-yellow)", action: () => setScreen("store") },
       { label: "Caught", icon: "fa-trophy",          color: "var(--m-cyan)",   action: () => setScreen("caughtList") },
@@ -946,7 +1077,7 @@ export default function App() {
           <div className="m-topbar">
             <div>
               <div className="m-game-title">Pokémon &mdash; Crimson Sky</div>
-              <div className="m-location"><i className="fa-solid fa-circle" /> {macro.name} &bull; {region.name}</div>
+              <div className="m-location"><i className="fa-solid fa-circle" /> {region.emoji} {region.name} &bull; Gen {region.gen}</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span className="m-pill" style={{ cursor: "pointer" }}
@@ -1531,8 +1662,7 @@ export default function App() {
   );
 
   if (screen === "hunt") {
-    const macro = MACRO_REGIONS[player.macroRegion];
-    const region = macro.areas[player.region];
+    const region = REGIONS[player.macroRegion] ?? REGIONS[0];
     return (
       <div style={{ ...S.root, background: "#0a0e1a" }}>
         <style>{css}</style>
@@ -1548,7 +1678,10 @@ export default function App() {
           </div>
 
           <div style={{ textAlign: "center", padding: "22px 18px 18px", fontSize: 13, color: "#cfd6e6", letterSpacing: 0.4 }}>
-            {macro.name} <span style={{ color: "#6b7896", margin: "0 6px" }}>•</span> {region?.name ?? "—"}
+            {region.emoji} {region.name} <span style={{ color: "#6b7896", margin: "0 6px" }}>•</span> Lv {region.minLv}–{region.maxLv}
+            <div style={{ fontSize: 10, color: "#6b7896", marginTop: 4 }}>
+              Hunts: {huntCount}/{legendThreshold} until legendary
+            </div>
           </div>
 
           <div style={{ padding: "0 18px" }}>
@@ -1867,8 +2000,111 @@ export default function App() {
     );
   }
 
+  if (screen === "safari") {
+    const region = REGIONS[player.macroRegion] ?? REGIONS[0];
+    const isLegend = safariEnc ? ALL_LEGENDARY_IDS.has(safariEnc.id) : false;
+    return (
+      <div style={{ ...S.root, background: "#0a0e1a" }}><style>{css}</style>
+        <div style={{ ...S.wrap, background: "#0a0e1a", fontFamily: "'Inter', system-ui, sans-serif" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid #1a1f33" }}>
+            <button className="btn"
+              style={{ border: "1.5px solid #f87171", color: "#f87171", padding: "5px 12px", borderRadius: 8, background: "transparent", fontSize: 10, fontWeight: 600 }}
+              onClick={() => { setSafariEnc(null); addLog(`Safari ended early. Caught ${safariCaught}.`, "#FFD700"); setScreen("world"); }}>
+              EXIT
+            </button>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#26A69A", letterSpacing: 2 }}>SAFARI ZONE</div>
+            <div style={{ width: 60 }} />
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-around", padding: "10px 16px", borderBottom: "1px solid #1a1f33", fontSize: 11, color: "#fff" }}>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 8, color: "#888" }}>BALLS</div>
+              <div style={{ color: safariBalls < 5 ? "#f87171" : "#fff", fontWeight: 700 }}>⚪ {safariBalls}/30</div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 8, color: "#888" }}>CAUGHT</div>
+              <div style={{ color: "#4ade80", fontWeight: 700 }}>{safariCaught}</div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 8, color: "#888" }}>{region.name.toUpperCase()}</div>
+              <div style={{ color: "#FFD700", fontWeight: 700 }}>#{safariCounter}</div>
+            </div>
+          </div>
+
+          <div style={{ padding: "16px 18px" }}>
+            <div style={{
+              width: "100%", aspectRatio: "1/1",
+              border: `2px solid ${isLegend ? "#FFD700" : "#26A69A"}`,
+              borderRadius: 14,
+              background: "linear-gradient(180deg,#3a2e1a 0%,#1a1208 60%,#0e0804 100%)",
+              boxShadow: `0 0 24px ${isLegend ? "rgba(255,215,0,0.35)" : "rgba(38,166,154,0.18)"}, inset 0 0 30px rgba(0,0,0,0.6)`,
+              position: "relative", overflow: "hidden",
+            }}>
+              <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 36,
+                background: "repeating-linear-gradient(90deg,#3d2f1a 0 6px,#2a2010 6px 12px)" }} />
+              {safariEnc && (
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ animation: safariThrowAnim === "wobble" ? "ballWobble 0.9s" : "none" }}>
+                    {safariThrowAnim !== "throw" && safariThrowAnim !== "wobble" && (
+                      <MonSprite sprite={safariEnc.sprite} size={170} className="mon-float" />
+                    )}
+                  </div>
+                  {safariThrowAnim === "throw" && (
+                    <div style={{ position: "absolute", animation: "ballThrow 0.5s forwards" }}>
+                      <div className="pokeball" style={{ width: 32, height: 32 }} />
+                    </div>
+                  )}
+                  {safariThrowAnim === "wobble" && (
+                    <div style={{ position: "absolute", animation: "ballWobble 0.9s" }}>
+                      <div className="pokeball" style={{ width: 32, height: 32 }} />
+                    </div>
+                  )}
+                  {safariThrowAnim === "stars" && (
+                    <div style={{ position: "absolute", fontSize: 40, animation: "catchStars 0.9s" }}>✨🌟✨</div>
+                  )}
+                  {safariThrowAnim === "burst" && (
+                    <div style={{ position: "absolute", fontSize: 40, animation: "ballBurst 0.6s" }}>💥</div>
+                  )}
+                </div>
+              )}
+              {isLegend && (
+                <div style={{ position: "absolute", top: 8, left: 8, background: "rgba(255,215,0,0.2)", border: "1px solid #FFD700", borderRadius: 6, padding: "3px 8px", fontSize: 9, color: "#FFD700", fontWeight: 700 }}>
+                  ★ LEGENDARY
+                </div>
+              )}
+            </div>
+
+            <div style={{ textAlign: "center", padding: "14px 6px 0", fontSize: 13, color: "#26A69A" }}>
+              {safariEnc ? (
+                <>A wild <span style={{ color: "#fff" }}>{safariEnc.name}</span>{" "}
+                  <span style={{ background: "#1a1f33", border: "1px solid #2d3450", color: "#fff", padding: "2px 9px", borderRadius: 999, fontSize: 11, fontWeight: 600, margin: "0 4px" }}>Lv. {safariEnc.level}</span>
+                  {isLegend ? "watches you carefully..." : "appeared!"}</>
+              ) : "..."}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 12, padding: "8px 18px 24px", marginTop: "auto" }}>
+            <button className="btn"
+              disabled={!safariEnc || safariThrowAnim !== null || safariBalls <= 0}
+              style={{ flex: 1, border: "1.5px solid #26A69A", color: safariThrowAnim ? "#555" : "#26A69A", padding: "16px 8px", borderRadius: 14, background: "#10172a", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, opacity: (safariEnc && !safariThrowAnim) ? 1 : 0.5 }}
+              onClick={safariThrow}>
+              <i className="fa-solid fa-baseball" style={{ fontSize: 18 }} />
+              <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2 }}>THROW BALL</span>
+            </button>
+            <button className="btn"
+              disabled={safariThrowAnim !== null}
+              style={{ flex: 1, border: "1.5px solid #888", color: safariThrowAnim ? "#444" : "#aaa", padding: "16px 8px", borderRadius: 14, background: "#10172a", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}
+              onClick={safariRun}>
+              <i className="fa-solid fa-shoe-prints" style={{ fontSize: 18 }} />
+              <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2 }}>NEXT</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (screen === "regionSelect") {
-    const viewMacro = MACRO_REGIONS[pickedMacro];
     return (
       <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
@@ -1877,65 +2113,46 @@ export default function App() {
             <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
           </div>
 
-          <div style={{ padding: "10px 10px 4px" }}>
-            <div style={{ fontSize: 7, color: "#888", marginBottom: 6, letterSpacing: 1 }}>WORLD MAP</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
-              {MACRO_REGIONS.map((m, i) => {
-                const selected = pickedMacro === i;
-                const current = player.macroRegion === i;
-                return (
-                  <button key={m.name} className="btn"
-                    disabled={!m.available}
-                    style={{
-                      border: `2px solid ${selected ? "#ff6b35" : current ? "#4CAF50" : m.available ? "#555" : "#222"}`,
-                      background: selected ? "#ff6b3511" : "transparent",
-                      color: m.available ? (selected ? "#ff6b35" : "#ddd") : "#444",
-                      padding: "10px 4px", borderRadius: 8,
-                      display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-                      cursor: m.available ? "pointer" : "not-allowed",
-                      opacity: m.available ? 1 : 0.5,
-                    }}
-                    onClick={() => m.available && setPickedMacro(i)}>
-                    <span style={{ fontSize: 14 }}>{m.emoji}</span>
-                    <span style={{ fontSize: 7 }}>{m.name}</span>
-                    {!m.available && <span style={{ fontSize: 5, color: "#666" }}>SOON</span>}
-                    {current && m.available && <span style={{ fontSize: 5, color: "#4CAF50" }}>HERE</span>}
-                  </button>
-                );
-              })}
+          <div style={{ padding: "12px 12px 4px" }}>
+            <div style={{ fontSize: 8, color: "#aaa", marginBottom: 8, letterSpacing: 1 }}>
+              Choose a region to hunt and explore. Each region's wild Pokémon are exclusive to its generation.
             </div>
           </div>
 
-          <div style={{ borderTop: "1px solid #1a1a3a", margin: "10px 10px 0", paddingTop: 8 }}>
-            <div style={{ fontSize: 7, color: "#888", marginBottom: 6, letterSpacing: 1 }}>
-              {viewMacro.emoji} {viewMacro.name.toUpperCase()} AREAS
-            </div>
-          </div>
-
-          <div style={{ flex: 1, overflowY: "auto", padding: "0 10px 10px", display: "flex", flexDirection: "column", gap: 6 }}>
-            {viewMacro.areas.length === 0 && (
-              <div style={{ textAlign: "center", color: "#444", fontSize: 8, marginTop: 30, lineHeight: 2 }}>
-                No areas available yet<br />
-                <span style={{ fontSize: 6, color: "#333" }}>Coming soon!</span>
-              </div>
-            )}
-            {viewMacro.areas.map((a, i) => {
+          <div style={{ flex: 1, overflowY: "auto", padding: "4px 12px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+            {REGIONS.map((r, i) => {
+              const current = player.macroRegion === i;
               const myLv = team[0]?.level ?? 5;
-              const danger = myLv < a.minLv - 5 ? "⚠️ DANGER" : myLv > a.maxLv + 10 ? "✅ EASY" : "⚔️ GOOD";
-              const isCurrent = player.macroRegion === pickedMacro && player.region === i;
+              const danger = myLv < r.minLv - 5 ? "⚠️ DANGER" : myLv > r.maxLv + 10 ? "✅ EASY" : "⚔️ GOOD";
+              const speciesCount = (REGION_POOLS[r.gen]?.length ?? 0) + (REGION_LEGENDS[r.gen]?.length ?? 0);
+              const legendsCount = REGION_LEGENDS[r.gen]?.length ?? 0;
               return (
-                <button key={i} className="btn"
-                  style={{ border: `2px solid ${isCurrent ? "#ff6b35" : "#222"}`, background: isCurrent ? "#ff6b3511" : "transparent", borderRadius: 8, padding: "10px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", color: isCurrent ? "#ff6b35" : "#aaa" }}
+                <button key={r.name} className="btn"
+                  style={{
+                    border: `2px solid ${current ? "#ff6b35" : "#312440"}`,
+                    background: current ? "rgba(255,107,53,0.08)" : "#0f0f24",
+                    borderRadius: 12, padding: "12px 14px",
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    color: current ? "#ff6b35" : "#ddd",
+                  }}
                   onClick={() => {
-                    setPlayer((p) => ({ ...p, macroRegion: pickedMacro, region: i }));
-                    addLog(`Traveled to ${a.name}, ${viewMacro.name}!`, "#FFD700");
+                    setPlayer((p) => ({ ...p, macroRegion: i, region: 0 }));
+                    setHuntCount(0);
+                    setLegendThreshold(20 + Math.floor(Math.random() * 16));
+                    addLog(`Traveled to ${r.name} (Gen ${r.gen})!`, "#FFD700");
                     setScreen("world");
                   }}>
-                  <div style={{ textAlign: "left" }}>
-                    <div style={{ fontSize: 8 }}>{a.name}</div>
-                    <div style={{ fontSize: 6, color: "#555", marginTop: 2 }}>Lv{a.minLv}–{a.maxLv}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, textAlign: "left" }}>
+                    <span style={{ fontSize: 24 }}>{r.emoji}</span>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700 }}>{r.name}</div>
+                      <div style={{ fontSize: 9, color: "#888", marginTop: 3 }}>
+                        Gen {r.gen} • Lv {r.minLv}–{r.maxLv} • {speciesCount} species • {legendsCount} legendaries
+                      </div>
+                      {current && <div style={{ fontSize: 8, color: "#4CAF50", marginTop: 3 }}>★ CURRENT</div>}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 7 }}>{danger}</div>
+                  <div style={{ fontSize: 9, fontWeight: 600 }}>{danger}</div>
                 </button>
               );
             })}
