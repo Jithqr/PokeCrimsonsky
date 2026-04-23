@@ -137,6 +137,8 @@ type SaveData = {
   safariCounter?: number;
   safariNextLegend?: number;
   safariCaught?: number;
+  lastSafariDay?: string;
+  lastSpinDay?: string;
 };
 function loadSave(): SaveData | null {
   try {
@@ -179,6 +181,8 @@ export default function App() {
   const [candies, setCandies] = useState<Record<number, number>>(initial?.candies ?? {});
   const [buddyIdx, setBuddyIdx] = useState<number>(initial?.buddyIdx ?? -1);
   const [lastSpinTs, setLastSpinTs] = useState<number>(initial?.lastSpinTs ?? 0);
+  const [lastSafariDay, setLastSafariDay] = useState<string>(initial?.lastSafariDay ?? "");
+  const [lastSpinDay, setLastSpinDay] = useState<string>(initial?.lastSpinDay ?? "");
   const [catchStreak, setCatchStreak] = useState<number>(initial?.catchStreak ?? 0);
   const [lastStreakDay, setLastStreakDay] = useState<string>(initial?.lastStreakDay ?? "");
   const [log, setLog] = useState<LogEntry[]>([]);
@@ -215,10 +219,11 @@ export default function App() {
         caught: Array.from(caught), muted,
         candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay,
         safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught,
+        lastSafariDay, lastSpinDay,
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch { /* ignore quota errors */ }
-  }, [screen, player, team, inventory, caught, muted, candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught]);
+  }, [screen, player, team, inventory, caught, muted, candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, lastSpinDay]);
 
   // Buddy walking — buddy earns 1 candy every 30s
   useEffect(() => {
@@ -303,9 +308,13 @@ export default function App() {
   }
 
   function spinPokestop() {
-    const cd = 60_000;
-    const elapsed = Date.now() - lastSpinTs;
-    if (elapsed < cd) return;
+    const today = todayStr();
+    if (lastSpinDay === today) {
+      addLog("You've already spun the Pokéstop today. Come back tomorrow!", "#F44336");
+      sfx.menuBack();
+      return;
+    }
+    setLastSpinDay(today);
     setLastSpinTs(Date.now());
     sfx.menuOpen();
     const dust = 50 + Math.floor(Math.random() * 100);
@@ -384,11 +393,18 @@ export default function App() {
   }
 
   function enterSafari() {
+    const today = todayStr();
+    if (lastSafariDay === today) {
+      addLog("You've already entered the Safari Zone today. Come back tomorrow!", "#F44336");
+      sfx.menuBack();
+      return;
+    }
     if (player.money < 100) {
       addLog("Not enough money! Safari entry costs ₽100.", "#F44336");
       sfx.menuBack();
       return;
     }
+    setLastSafariDay(today);
     setPlayer((p) => ({ ...p, money: p.money - 100 }));
     setSafariBalls(30);
     setSafariCounter(0);
@@ -1149,17 +1165,14 @@ export default function App() {
             </div>
             <div style={{ flex: 1, background: "linear-gradient(135deg,#0891b2,#155e75)", borderRadius: 12, padding: "10px 12px" }}>
               {(() => {
-                const elapsed = Date.now() - lastSpinTs;
-                const cd = 60_000;
-                const ready = elapsed >= cd;
-                const remain = Math.max(0, Math.ceil((cd - elapsed) / 1000));
+                const ready = lastSpinDay !== todayStr();
                 void spinTick;
                 return (
                   <div onClick={ready ? spinPokestop : undefined}
                     style={{ cursor: ready ? "pointer" : "not-allowed", opacity: ready ? 1 : 0.7 }}>
                     <div style={{ fontSize: 9, color: "#cffafe", letterSpacing: 0.5 }}>POKÉSTOP</div>
                     <div style={{ fontSize: 14, color: "#fff", fontWeight: 700 }}>
-                      {ready ? "📍 Spin!" : `⏱ ${remain}s`}
+                      {ready ? "📍 Spin!" : "✓ Done today"}
                     </div>
                   </div>
                 );
