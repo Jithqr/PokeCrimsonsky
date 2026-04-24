@@ -172,7 +172,7 @@ export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: (
         <button style={S.iconBtn} onClick={onBack} aria-label="Close">
           <i className="fa-solid fa-xmark" />
         </button>
-        <div style={S.topTitle}>Poketales dex</div>
+        <div style={S.topTitle}>Crimson Sky Dex</div>
         <div style={{ display: "flex", gap: 4 }}>
           <button style={S.iconBtn} aria-label="Sort">
             <i className="fa-solid fa-chevron-down" />
@@ -184,20 +184,7 @@ export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: (
       </div>
 
       <div style={S.scroll}>
-        <div style={S.heroLogoRow}>
-          <div style={S.logoDot}>
-            <i className="fa-solid fa-circle-dot" style={{ color: "#fff", fontSize: 14 }} />
-          </div>
-          <div style={{ fontSize: 16, fontWeight: 700 }}>
-            <span style={{ color: "#ef4444" }}>Poke</span>
-            <span style={{ color: "#fff" }}>Tales </span>
-            <span style={{ color: "#9ca3af" }}>Dex</span>
-          </div>
-        </div>
-        <div style={S.heroSub}>Your comprehensive Pokémon information companion</div>
-        <div style={S.divider} />
-
-        <div style={S.heroTitle}>PokéTales Dex</div>
+        <div style={S.heroTitle}>Crimson Sky Dex</div>
 
         <div style={S.searchWrap}>
           <i className="fa-solid fa-magnifying-glass" style={{ color: "#6b7280", fontSize: 12, marginRight: 8 }} />
@@ -336,7 +323,7 @@ function DexDetail({
         <button style={S.iconBtn} onClick={onBack} aria-label="Back">
           <i className="fa-solid fa-arrow-left" />
         </button>
-        <div style={S.topTitle}>Poketales dex</div>
+        <div style={S.topTitle}>Crimson Sky Dex</div>
         <div style={{ display: "flex", gap: 4 }}>
           <button style={S.iconBtn}>
             <i className="fa-solid fa-chevron-down" />
@@ -352,7 +339,7 @@ function DexDetail({
 
         <div style={S.detailTopRow}>
           <button style={S.linkBack} onClick={onBack}>
-            <i className="fa-solid fa-chevron-left" /> Back to Pokédex
+            <i className="fa-solid fa-chevron-left" /> Back to Dex
           </button>
           <button style={S.homeBtn} onClick={onHome}>
             <i className="fa-solid fa-house" /> Home
@@ -696,19 +683,16 @@ const S: Record<string, React.CSSProperties> = {
     borderRadius: 6,
   },
   scroll: { flex: 1, overflowY: "auto", padding: "10px 14px 20px" },
-  heroLogoRow: { display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginTop: 6 },
-  logoDot: {
-    width: 26,
-    height: 26,
-    borderRadius: "50%",
-    background: "#ef4444",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+  heroTitle: {
+    fontFamily: "'Press Start 2P', monospace",
+    fontSize: 18,
+    color: "#ef4444",
+    textAlign: "center",
+    margin: "16px 0 18px",
+    letterSpacing: 1,
+    textShadow: "2px 2px 0 #1a1a1a",
+    lineHeight: 1.4,
   },
-  heroSub: { textAlign: "center", color: "#9ca3af", fontSize: 12, marginTop: 6 },
-  divider: { height: 1, background: "#ef4444", margin: "12px 0" },
-  heroTitle: { fontSize: 28, fontWeight: 700, color: "#fff", textAlign: "center", marginBottom: 14 },
   searchWrap: {
     background: "#1a1a1a",
     border: "1px solid #2a2a2a",
