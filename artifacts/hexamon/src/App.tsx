@@ -135,6 +135,7 @@ type SaveData = {
   muted: boolean;
   candies?: Record<number, number>;
   buddyIdx?: number;
+  redeemedCodes?: string[];
   lastSpinTs?: number;
   catchStreak?: number;
   lastStreakDay?: string;
@@ -197,6 +198,9 @@ export default function App() {
   const [caught, setCaught] = useState<Set<number>>(new Set(initial?.caught ?? []));
   const [candies, setCandies] = useState<Record<number, number>>(initial?.candies ?? {});
   const [buddyIdx, setBuddyIdx] = useState<number>(initial?.buddyIdx ?? -1);
+  const [redeemedCodes, setRedeemedCodes] = useState<string[]>(initial?.redeemedCodes ?? []);
+  const [redeemInput, setRedeemInput] = useState<string>("");
+  const [redeemMsg, setRedeemMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [lastSpinTs, setLastSpinTs] = useState<number>(initial?.lastSpinTs ?? 0);
   const [lastSafariDay, setLastSafariDay] = useState<string>(initial?.lastSafariDay ?? "");
   const [lastSpinDay, setLastSpinDay] = useState<string>(initial?.lastSpinDay ?? "");
@@ -240,13 +244,13 @@ export default function App() {
       const data: SaveData = {
         screen, player, teams, activeTeamIdx, inventory,
         caught: Array.from(caught), muted,
-        candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay,
+        candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay,
         safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught,
         lastSafariDay, lastSpinDay,
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch { /* ignore quota errors */ }
-  }, [screen, player, teams, activeTeamIdx, inventory, caught, muted, candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, lastSpinDay]);
+  }, [screen, player, teams, activeTeamIdx, inventory, caught, muted, candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, lastSpinDay]);
 
   // Buddy walking — buddy earns 1 candy every 30s
   useEffect(() => {
@@ -1371,29 +1375,53 @@ export default function App() {
             </div>
             <span className="m-level-badge">Lvl {player.level}</span>
           </div>
-          <h2 className="m-section-h">Buddy Pokémon</h2>
+          <h2 className="m-section-h">Redeem Centre</h2>
           <div className="m-list">
-            {buddyIdx >= 0 && team[buddyIdx] ? (
-              <div className="m-li" onClick={() => { sfx.click(); setShowBuddyPicker(true); }}>
-                <div className="m-li-l">
-                  <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${team[buddyIdx].id}.png`}
-                    alt={team[buddyIdx].name} style={{ width: 40, height: 40, imageRendering: "pixelated" }} />
-                  <div className="m-li-t">
-                    <span className="m-li-tt">{team[buddyIdx].name}</span>
-                    <span className="m-li-st">CP {getCP(team[buddyIdx])} • Earns 1 🍬 / 30s</span>
-                  </div>
+            <div className="m-li" style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
+              <div className="m-li-l" style={{ width: "100%" }}>
+                <div className="m-stat-ic"><i className="fa-solid fa-gift" /></div>
+                <div className="m-li-t">
+                  <span className="m-li-tt">Enter Redeem Code</span>
+                  <span className="m-li-st">Claim rewards with a valid code</span>
                 </div>
-                <i className="fa-solid fa-pencil m-arrow" />
               </div>
-            ) : (
-              <div className="m-li" onClick={() => { sfx.click(); setShowBuddyPicker(true); }}>
-                <div className="m-li-l">
-                  <div className="m-stat-ic"><i className="fa-solid fa-paw" /></div>
-                  <div className="m-li-t"><span className="m-li-tt">Set a Buddy</span><span className="m-li-st">Earns candy as you play</span></div>
+              <div style={{ display: "flex", gap: 8, width: "100%" }}>
+                <input
+                  value={redeemInput}
+                  onChange={(e) => { setRedeemInput(e.target.value); setRedeemMsg(null); }}
+                  placeholder="Enter code"
+                  style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "2px solid #312440", background: "#0d0d1a", color: "#fff", fontSize: 13, outline: "none" }}
+                />
+                <button
+                  onClick={() => {
+                    sfx.click();
+                    const code = redeemInput.trim();
+                    if (!code) { setRedeemMsg({ text: "Enter a code first", ok: false }); return; }
+                    if (code === "Jptx02z") {
+                      if (redeemedCodes.includes(code)) {
+                        setRedeemMsg({ text: "Code already claimed", ok: false });
+                        return;
+                      }
+                      setPlayer((p) => ({ ...p, money: p.money + 100000, stardust: (p.stardust ?? 0) + 10000 }));
+                      setRedeemedCodes((c) => [...c, code]);
+                      setRedeemMsg({ text: "+₽100,000 • +10,000 ✨", ok: true });
+                      setRedeemInput("");
+                      addLog("Redeem code claimed! +₽100,000 +10,000 stardust", "#4ade80");
+                    } else {
+                      setRedeemMsg({ text: "Invalid code", ok: false });
+                    }
+                  }}
+                  style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: "linear-gradient(180deg,#7e3aed,#4c1d95)", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", letterSpacing: 0.5 }}
+                >
+                  CLAIM
+                </button>
+              </div>
+              {redeemMsg && (
+                <div style={{ fontSize: 12, color: redeemMsg.ok ? "#4ade80" : "#f87171", fontWeight: 600 }}>
+                  {redeemMsg.ok ? "✓ " : "✕ "}{redeemMsg.text}
                 </div>
-                <i className="fa-solid fa-caret-right m-arrow" />
-              </div>
-            )}
+              )}
+            </div>
           </div>
           <div className="m-stats">
             <div className="m-statc">
