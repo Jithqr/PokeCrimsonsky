@@ -1376,52 +1376,46 @@ export default function App() {
             <span className="m-level-badge">Lvl {player.level}</span>
           </div>
           <h2 className="m-section-h">Redeem Centre</h2>
-          <div className="m-list">
-            <div className="m-li" style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
-              <div className="m-li-l" style={{ width: "100%" }}>
-                <div className="m-stat-ic"><i className="fa-solid fa-gift" /></div>
-                <div className="m-li-t">
-                  <span className="m-li-tt">Enter Redeem Code</span>
-                  <span className="m-li-st">Claim rewards with a valid code</span>
-                </div>
+          <div style={{ padding: "0 12px" }}>
+            <div style={{ display: "flex", alignItems: "center", background: "#1a1a1f", border: "1px solid #2a2a30", borderRadius: 999, padding: "6px 6px 6px 6px", gap: 8 }}>
+              <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#2a2a30", display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", flexShrink: 0 }}>
+                <i className="fa-solid fa-gift" style={{ fontSize: 13 }} />
               </div>
-              <div style={{ display: "flex", gap: 8, width: "100%" }}>
-                <input
-                  value={redeemInput}
-                  onChange={(e) => { setRedeemInput(e.target.value); setRedeemMsg(null); }}
-                  placeholder="Enter code"
-                  style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "2px solid #312440", background: "#0d0d1a", color: "#fff", fontSize: 13, outline: "none" }}
-                />
-                <button
-                  onClick={() => {
-                    sfx.click();
-                    const code = redeemInput.trim();
-                    if (!code) { setRedeemMsg({ text: "Enter a code first", ok: false }); return; }
-                    if (code === "Jptx02z") {
-                      if (redeemedCodes.includes(code)) {
-                        setRedeemMsg({ text: "Code already claimed", ok: false });
-                        return;
-                      }
-                      setPlayer((p) => ({ ...p, money: p.money + 100000, stardust: (p.stardust ?? 0) + 10000 }));
-                      setRedeemedCodes((c) => [...c, code]);
-                      setRedeemMsg({ text: "+₽100,000 • +10,000 ✨", ok: true });
-                      setRedeemInput("");
-                      addLog("Redeem code claimed! +₽100,000 +10,000 stardust", "#4ade80");
-                    } else {
-                      setRedeemMsg({ text: "Invalid code", ok: false });
+              <input
+                value={redeemInput}
+                onChange={(e) => { setRedeemInput(e.target.value); setRedeemMsg(null); }}
+                placeholder="Enter redeem code"
+                style={{ flex: 1, minWidth: 0, padding: "6px 0", border: "none", background: "transparent", color: "#fff", fontSize: 14, outline: "none" }}
+              />
+              <button
+                onClick={() => {
+                  sfx.click();
+                  const code = redeemInput.trim();
+                  if (!code) { setRedeemMsg({ text: "Enter a code first", ok: false }); return; }
+                  if (code === "Jptx02z") {
+                    if (redeemedCodes.includes(code)) {
+                      setRedeemMsg({ text: "Code already claimed", ok: false });
+                      return;
                     }
-                  }}
-                  style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: "linear-gradient(180deg,#7e3aed,#4c1d95)", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", letterSpacing: 0.5 }}
-                >
-                  CLAIM
-                </button>
-              </div>
-              {redeemMsg && (
-                <div style={{ fontSize: 12, color: redeemMsg.ok ? "#4ade80" : "#f87171", fontWeight: 600 }}>
-                  {redeemMsg.ok ? "✓ " : "✕ "}{redeemMsg.text}
-                </div>
-              )}
+                    setPlayer((p) => ({ ...p, money: p.money + 100000, stardust: (p.stardust ?? 0) + 10000 }));
+                    setRedeemedCodes((c) => [...c, code]);
+                    setRedeemMsg({ text: "+₽100,000 • +10,000 ✨", ok: true });
+                    setRedeemInput("");
+                    addLog("Redeem code claimed! +₽100,000 +10,000 stardust", "#4ade80");
+                  } else {
+                    setRedeemMsg({ text: "Invalid code", ok: false });
+                  }
+                }}
+                style={{ padding: "7px 18px", borderRadius: 999, border: "none", background: "#2563eb", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", flexShrink: 0 }}
+              >
+                Claim
+              </button>
             </div>
+            {redeemMsg && (
+              <div style={{ fontSize: 12, color: redeemMsg.ok ? "#4ade80" : "#f87171", fontWeight: 600, marginTop: 8, paddingLeft: 12 }}>
+                {redeemMsg.ok ? "✓ " : "✕ "}{redeemMsg.text}
+              </div>
+            )}
           </div>
           <div className="m-stats">
             <div className="m-statc">
