@@ -132,6 +132,7 @@ type SaveData = {
   activeTeamIdx?: number;
   inventory: { name: string; qty: number }[];
   caught: number[];
+  seen?: number[];
   muted: boolean;
   candies?: Record<number, number>;
   buddyIdx?: number;
@@ -196,6 +197,7 @@ export default function App() {
   const [moveAnim, setMoveAnim] = useState<{ target: "enemy" | "player"; type: string; key: number } | null>(null);
   const [muted, setMuted] = useState<boolean>(initial?.muted ?? false);
   const [caught, setCaught] = useState<Set<number>>(new Set(initial?.caught ?? []));
+  const [seen, setSeen] = useState<Set<number>>(new Set(initial?.seen ?? initial?.caught ?? []));
   const [candies, setCandies] = useState<Record<number, number>>(initial?.candies ?? {});
   const [buddyIdx, setBuddyIdx] = useState<number>(initial?.buddyIdx ?? -1);
   const [redeemedCodes, setRedeemedCodes] = useState<string[]>(initial?.redeemedCodes ?? []);
@@ -243,14 +245,14 @@ export default function App() {
     try {
       const data: SaveData = {
         screen, player, teams, activeTeamIdx, inventory,
-        caught: Array.from(caught), muted,
+        caught: Array.from(caught), seen: Array.from(seen), muted,
         candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay,
         safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught,
         lastSafariDay, lastSpinDay,
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch { /* ignore quota errors */ }
-  }, [screen, player, teams, activeTeamIdx, inventory, caught, muted, candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, lastSpinDay]);
+  }, [screen, player, teams, activeTeamIdx, inventory, caught, seen, muted, candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, lastSpinDay]);
 
   // Buddy walking — buddy earns 1 candy every 30s
   useEffect(() => {
@@ -414,6 +416,7 @@ export default function App() {
     const w = spawnWild();
     if (!w) return;
     setScoutedWild(w);
+    setSeen((prev) => prev.has(w.id) ? prev : new Set(prev).add(w.id));
     setScreen("hunt");
   }
 
@@ -459,7 +462,9 @@ export default function App() {
     addLog(`Welcome to the ${region.name} Safari Zone! 30 balls, no battles — catch only.`, "#26A69A");
     const next = 1;
     const isLegend = next >= (3 + Math.floor(Math.random() * 3));
-    setSafariEnc(spawnSafari(isLegend));
+    const sm = spawnSafari(isLegend);
+    setSafariEnc(sm);
+    if (sm) setSeen((prev) => prev.has(sm.id) ? prev : new Set(prev).add(sm.id));
     setSafariCounter(1);
     setScreen("safari");
   }
@@ -481,7 +486,9 @@ export default function App() {
       setSafariNextLegend(next + 3 + Math.floor(Math.random() * 3));
       addLog(`✨ A LEGENDARY appears in the safari!`, "#FFD700");
     }
-    setSafariEnc(spawnSafari(isLegend));
+    const sm = spawnSafari(isLegend);
+    setSafariEnc(sm);
+    if (sm) setSeen((prev) => prev.has(sm.id) ? prev : new Set(prev).add(sm.id));
     setSafariCounter(next);
   }
 
@@ -529,6 +536,7 @@ export default function App() {
     const w = spawnWild();
     if (w) {
       setScoutedWild(w);
+      setSeen((prev) => prev.has(w.id) ? prev : new Set(prev).add(w.id));
       // Hunting reward — small XP & coin per scout
       const reward = 5 + Math.floor(Math.random() * 10);
       setPlayer((p) => ({ ...p, money: p.money + reward, exp: p.exp + 5 }));
@@ -1433,7 +1441,7 @@ export default function App() {
             </div>
             <div className="m-statc">
               <div className="m-stat-ic"><i className="fa-solid fa-book-open" /></div>
-              <div><div className="m-stat-lab">Pokémon Seen</div><div className="m-stat-val">{caught.size}</div></div>
+              <div><div className="m-stat-lab">Pokémon Seen</div><div className="m-stat-val">{seen.size}</div></div>
             </div>
             <div className="m-statc">
               <div className="m-stat-ic"><i className="fa-solid fa-circle-dot" /></div>
@@ -1462,7 +1470,7 @@ export default function App() {
             <div className="m-li" onClick={() => { sfx.click(); setScreen("dex"); }}>
               <div className="m-li-l">
                 <div className="m-stat-ic"><i className="fa-solid fa-book-open" /></div>
-                <div className="m-li-t"><span className="m-li-tt">{caught.size} Pokémon Seen</span><span className="m-li-st">Browse</span></div>
+                <div className="m-li-t"><span className="m-li-tt">{seen.size} Pokémon Seen</span><span className="m-li-st">Browse</span></div>
               </div>
               <i className="fa-solid fa-caret-right m-arrow" />
             </div>
@@ -2870,7 +2878,7 @@ export default function App() {
       <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           <div style={S.header}>
-            <span style={{ fontSize: 9, color: "#9C27B0" }}>📖 POKÉDEX ({caught.size}/{TOTAL_POKEMON})</span>
+            <span style={{ fontSize: 9, color: "#9C27B0" }}>📖 POKÉDEX ({seen.size}/{TOTAL_POKEMON} seen • {caught.size} caught)</span>
             <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
           </div>
           <div style={{ padding: "8px 10px 4px", overflowX: "auto", display: "flex", gap: 4 }}>
@@ -2893,16 +2901,18 @@ export default function App() {
           <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6 }}>
               {filtered.map((p) => {
-                const seen = caught.has(p.id) || team.some((m) => m.id === p.id);
+                const isCaught = caught.has(p.id) || team.some((m) => m.id === p.id);
+                const isSeen = isCaught || seen.has(p.id);
                 return (
-                  <div key={p.id} style={{ background: seen ? `${TYPE_COLORS[p.type1]}11` : "#0a0a1e", border: `1px solid ${seen ? TYPE_COLORS[p.type1] + "66" : "#1a1a1a"}`, borderRadius: 8, padding: "8px 4px", textAlign: "center", opacity: seen ? 1 : 0.45 }}>
-                    {seen
-                      ? <MonSprite sprite={p.sprite} size={52} className="" />
+                  <div key={p.id} style={{ background: isSeen ? `${TYPE_COLORS[p.type1]}11` : "#0a0a1e", border: `1px solid ${isSeen ? TYPE_COLORS[p.type1] + "66" : "#1a1a1a"}`, borderRadius: 8, padding: "8px 4px", textAlign: "center", opacity: isSeen ? 1 : 0.45, position: "relative" }}>
+                    {isSeen
+                      ? <div style={{ filter: isCaught ? "none" : "grayscale(1) brightness(0.6)" }}><MonSprite sprite={p.sprite} size={52} className="" /></div>
                       : <div style={{ width: 52, height: 52, margin: "0 auto", background: "#111", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>❓</div>
                     }
-                    <div style={{ fontSize: 5, color: seen ? "#ddd" : "#333", marginTop: 3 }}>#{String(p.id).padStart(3, "0")}</div>
-                    <div style={{ fontSize: 6, color: seen ? "#fff" : "#333", marginTop: 1 }}>{seen ? p.name : "????"}</div>
-                    {seen && <div style={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 3 }}>{typeTag(p.type1)}</div>}
+                    {isCaught && <div style={{ position: "absolute", top: 4, right: 4, fontSize: 8, color: "#4ade80" }} title="Caught"><i className="fa-solid fa-circle-check" /></div>}
+                    <div style={{ fontSize: 5, color: isSeen ? "#ddd" : "#333", marginTop: 3 }}>#{String(p.id).padStart(3, "0")}</div>
+                    <div style={{ fontSize: 6, color: isSeen ? "#fff" : "#333", marginTop: 1 }}>{isSeen ? p.name : "????"}</div>
+                    {isSeen && <div style={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 3 }}>{typeTag(p.type1)}</div>}
                   </div>
                 );
               })}
