@@ -117,7 +117,10 @@ function todayStr() {
   const d = new Date();
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
-type Battle = { wild: Mon; pMon: Mon; phase: string; turnCount: number; canCatch: boolean };
+type Battle = { wild: Mon; pMon: Mon; phase: string; turnCount: number; canCatch: boolean; ballsThrown: number; selectedBall: string };
+const MAX_BATTLE_BALLS = 5;
+const BALL_MULT: Record<string, number> = { "Poké Ball": 1, "Pokeball": 1, "Great Ball": 1.5, "Ultra Ball": 2, "Master Ball": 999 };
+const BALL_NAMES = ["Poké Ball", "Great Ball", "Ultra Ball", "Master Ball"];
 
 const SAVE_KEY = "hexamon:save:v2";
 export type TeamGroup = { id: string; name: string; mons: Mon[] };
@@ -142,6 +145,7 @@ type SaveData = {
   safariCaught?: number;
   lastSafariDay?: string;
   lastSpinDay?: string;
+  lastDailyDay?: string;
 };
 function loadSave(): SaveData | null {
   try {
@@ -197,6 +201,9 @@ export default function App() {
   const [lastSpinTs, setLastSpinTs] = useState<number>(initial?.lastSpinTs ?? 0);
   const [lastSafariDay, setLastSafariDay] = useState<string>(initial?.lastSafariDay ?? "");
   const [lastSpinDay, setLastSpinDay] = useState<string>(initial?.lastSpinDay ?? "");
+  const [lastDailyDay, setLastDailyDay] = useState<string>(initial?.lastDailyDay ?? "");
+  const [showBallPicker, setShowBallPicker] = useState(false);
+  const [showAddMonPicker, setShowAddMonPicker] = useState(false);
   const [catchStreak, setCatchStreak] = useState<number>(initial?.catchStreak ?? 0);
   const [lastStreakDay, setLastStreakDay] = useState<string>(initial?.lastStreakDay ?? "");
   const [log, setLog] = useState<LogEntry[]>([]);
@@ -234,11 +241,11 @@ export default function App() {
         caught: Array.from(caught), muted,
         candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay,
         safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught,
-        lastSafariDay, lastSpinDay,
+        lastSafariDay, lastSpinDay, lastDailyDay,
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch { /* ignore quota errors */ }
-  }, [screen, player, teams, activeTeamIdx, inventory, caught, muted, candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, lastSpinDay]);
+  }, [screen, player, teams, activeTeamIdx, inventory, caught, muted, candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, lastSpinDay, lastDailyDay]);
 
   // Buddy walking — buddy earns 1 candy every 30s
   useEffect(() => {
@@ -332,16 +339,11 @@ export default function App() {
     setLastSpinDay(today);
     setLastSpinTs(Date.now());
     sfx.menuOpen();
-    const dust = 50 + Math.floor(Math.random() * 100);
-    setPlayer((p) => ({ ...p, stardust: p.stardust + dust, money: p.money + 30 }));
-    const drops = ["Pokeball", "Pokeball", "Great Ball", "Potion", "Berry"];
-    const item = drops[Math.floor(Math.random() * drops.length)];
-    setInventory((inv) => {
-      const i = inv.findIndex((x) => x.name === item);
-      if (i >= 0) { const n = [...inv]; n[i] = { ...n[i], qty: n[i].qty + 1 }; return n; }
-      return [...inv, { name: item, qty: 1 }];
-    });
-    addLog(`📍 Pokéstop spun! +${dust} ✨, +1 ${item}`, "#26C6DA");
+    const dust = 100 + Math.floor(Math.random() * 400);
+    setPlayer((p) => ({ ...p, stardust: (p.stardust ?? 0) + dust, money: p.money + 1000 }));
+    addItem("Great Ball", 5);
+    addItem("Ultra Ball", 5);
+    addLog(`📍 Pokéstop! +${dust} ✨, +₽1000, +5 Great Balls, +5 Ultra Balls`, "#26C6DA");
   }
 
   function resetSave() {
@@ -353,6 +355,35 @@ export default function App() {
   const addLog = useCallback((msg: string, color = "#ddd") => {
     setLog((p) => [...p.slice(-40), { msg, color, id: Date.now() + Math.random() }]);
   }, []);
+
+  function inventoryQty(name: string): number {
+    return inventory.find((it) => it.name === name)?.qty ?? 0;
+  }
+  function addItem(name: string, qty: number) {
+    setInventory((inv) => {
+      const i = inv.findIndex((x) => x.name === name);
+      if (i >= 0) { const n = [...inv]; n[i] = { ...n[i], qty: n[i].qty + qty }; return n; }
+      return [...inv, { name, qty }];
+    });
+  }
+  function consumeItem(name: string, qty = 1): boolean {
+    const have = inventoryQty(name);
+    if (have < qty) return false;
+    setInventory((inv) => inv.flatMap((x) => x.name === name ? (x.qty - qty > 0 ? [{ ...x, qty: x.qty - qty }] : []) : [x]));
+    return true;
+  }
+
+  // Daily login reward — granted once per day on entering the world
+  useEffect(() => {
+    if (screen !== "world") return;
+    const today = todayStr();
+    if (lastDailyDay === today) return;
+    setLastDailyDay(today);
+    const dust = 200 + Math.floor(Math.random() * 200);
+    setPlayer((p) => ({ ...p, money: p.money + 500, stardust: (p.stardust ?? 0) + dust }));
+    addItem("Poké Ball", 5);
+    addLog(`🎁 Daily reward! +₽500, +${dust} ✨, +5 Poké Balls`, "#FFD700");
+  }, [screen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function getPokemon(id: number) { return ALL_POKEMON.find((p) => p.id === id)!; }
 
@@ -408,6 +439,12 @@ export default function App() {
   }
 
   function enterSafari() {
+    // Resume an active session instead of restarting
+    if (safariBalls > 0 || safariEnc) {
+      setScreen("safari");
+      addLog("Resumed your Safari run.", "#26A69A");
+      return;
+    }
     const today = todayStr();
     if (lastSafariDay === today) {
       addLog("You've already entered the Safari Zone today. Come back tomorrow!", "#F44336");
@@ -496,7 +533,13 @@ export default function App() {
   function rescout() {
     sfx.click();
     const w = spawnWild();
-    if (w) setScoutedWild(w);
+    if (w) {
+      setScoutedWild(w);
+      // Hunting reward — small XP & coin per scout
+      const reward = 5 + Math.floor(Math.random() * 10);
+      setPlayer((p) => ({ ...p, money: p.money + reward, exp: p.exp + 5 }));
+      addLog(`🔍 Hunt reward: +₽${reward}, +5 XP`, "#26A69A");
+    }
   }
 
   function captureScouted() {
@@ -509,7 +552,7 @@ export default function App() {
     const region = REGIONS[player.macroRegion] ?? REGIONS[0];
     const pMon = { ...validTeam[0] };
     addLog(`A wild ${scoutedWild.name} (Lv${scoutedWild.level}) appeared in ${region.name}!`, "#FFD700");
-    setBattle({ wild: scoutedWild, pMon, phase: "choose", turnCount: 0, canCatch: true });
+    setBattle({ wild: scoutedWild, pMon, phase: "choose", turnCount: 0, canCatch: true, ballsThrown: 0, selectedBall: "Poké Ball" });
     setScoutedWild(null);
     setScreen("battle");
   }
@@ -536,10 +579,13 @@ export default function App() {
 
     if (wild.currentHp <= 0) {
       const expGain = Math.floor(wild.level * (wild.atk + wild.def) / 8);
+      const killCoin = 30 + wild.level * 5;
+      const killDust = 20 + wild.level * 3;
       pMon.exp += expGain;
       logs.push([`⭐ Wild ${wild.name} fainted! +${expGain} EXP`, "#F44336"]);
+      logs.push([`💰 Kill reward: +₽${killCoin}, +${killDust} ✨`, "#FFD700"]);
       logs.forEach(([m, c]) => addLog(m, c));
-      setPlayer((p) => ({ ...p, wins: p.wins + 1 }));
+      setPlayer((p) => ({ ...p, wins: p.wins + 1, money: p.money + killCoin, stardust: (p.stardust ?? 0) + killDust }));
       setTimeout(() => sfx.faint(), 400);
       setTimeout(() => sfx.victory(), 1100);
       finishBattle(pMon, true, expGain);
@@ -567,12 +613,23 @@ export default function App() {
 
     if (pMon.currentHp <= 0) {
       setTimeout(() => sfx.faint(), 1000);
-      addLog(`💀 ${pMon.name} fainted! You blacked out...`, "#F44336");
-      setPlayer((p) => ({ ...p, losses: p.losses + 1 }));
-      setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })));
-      addLog("Your team was fully healed!", "#4CAF50");
-      setBattle(null);
-      setScreen("world");
+      addLog(`💀 ${pMon.name} fainted!`, "#F44336");
+      // Persist the fainted state into the team
+      setTeam((prev) => prev.map((m) => (m.id === pMon.id && m.level === pMon.level) ? { ...m, currentHp: 0 } : m));
+      // Look for next available
+      const aliveOthers = team.filter((m) => m.currentHp > 0 && !(m.id === pMon.id && m.level === pMon.level));
+      if (aliveOthers.length === 0) {
+        addLog("All your Pokémon fainted! You blacked out...", "#F44336");
+        setPlayer((p) => ({ ...p, losses: p.losses + 1 }));
+        setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })));
+        addLog("Your team was fully healed!", "#4CAF50");
+        setBattle(null);
+        setScreen("world");
+        return;
+      }
+      addLog(`Choose your next Pokémon!`, "#FFD700");
+      setBattle((prev) => prev && ({ ...prev, wild, pMon, turnCount: prev.turnCount + 1 }));
+      setShowSwitchPicker(true);
       return;
     }
     setBattle((prev) => prev && ({ ...prev, wild, pMon, turnCount: prev.turnCount + 1 }));
@@ -608,23 +665,52 @@ export default function App() {
     setShowSwitchPicker(false);
   }
 
-  function startThrowAim() {
+  function startThrowAim(ballName?: string) {
     if (!battle || ballAnim || ringActive) return;
+    if (battle.ballsThrown >= MAX_BATTLE_BALLS) {
+      addLog(`Out of throw attempts this battle!`, "#F44336");
+      return;
+    }
+    const ball = ballName ?? battle.selectedBall ?? "Poké Ball";
+    if (inventoryQty(ball) <= 0) {
+      addLog(`You have no ${ball}!`, "#F44336");
+      return;
+    }
+    setBattle((prev) => prev && ({ ...prev, selectedBall: ball }));
+    setShowBallPicker(false);
     setRingRadius(110);
     ringDirRef.current = -1;
     setRingActive(true);
   }
 
+  function openBallPicker() {
+    if (!battle || ballAnim) return;
+    if (battle.ballsThrown >= MAX_BATTLE_BALLS) {
+      addLog(`Out of throw attempts this battle!`, "#F44336");
+      return;
+    }
+    setShowBallPicker(true);
+  }
+
   function releaseThrow() {
     if (!battle || ballAnim || !ringActive) return;
     const { wild } = battle;
+    const ballName = battle.selectedBall || "Poké Ball";
+    if (!consumeItem(ballName, 1)) {
+      addLog(`You have no ${ballName}!`, "#F44336");
+      setRingActive(false);
+      return;
+    }
+    const ballMult = BALL_MULT[ballName] ?? 1;
+    const isMaster = ballName === "Master Ball";
     const q = ringQuality(ringRadius);
     setRingActive(false);
     sfx.ballThrow();
     setBallAnim("throw");
-    addLog(`${q.label}`, q.color);
+    addLog(`Threw ${ballName} — ${q.label}`, q.color);
+    setBattle((prev) => prev && ({ ...prev, ballsThrown: prev.ballsThrown + 1 }));
     const baseRate = 0.2 + (1 - wild.currentHp / wild.maxHp) * 0.6;
-    const catchRate = Math.min(0.97, baseRate * q.mult);
+    const catchRate = isMaster ? 1 : Math.min(0.97, baseRate * q.mult * ballMult);
     const success = Math.random() < catchRate;
 
     setTimeout(() => setBallAnim("capture"), 600);
@@ -652,6 +738,19 @@ export default function App() {
         sfx.catchFail();
         addLog(`${wild.name} broke free!`, "#F44336");
         setTimeout(() => setBallAnim(null), 500);
+        // Wild flee logic: chance grows with throws; forced after MAX_BATTLE_BALLS
+        setTimeout(() => {
+          setBattle((prev) => {
+            if (!prev) return prev;
+            const thrown = prev.ballsThrown;
+            const fleeChance = thrown >= MAX_BATTLE_BALLS ? 1 : 0.08 * thrown;
+            if (Math.random() < fleeChance) {
+              addLog(`💨 Wild ${wild.name} fled!`, "#FF9800");
+              setTimeout(() => { setBattle(null); setScreen("hunt"); }, 700);
+            }
+            return prev;
+          });
+        }, 800);
       }
     }, 2300);
   }
@@ -1622,8 +1721,8 @@ export default function App() {
           <div style={{ padding: "6px 10px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
             {[
               { label: "Switch", action: openSwitchPicker },
-              { label: "Run", action: () => { sfx.menuBack(); addLog("Got away safely!", "#aaa"); setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null }))); addLog("Your team was fully healed!", "#4CAF50"); setBattle(null); setScreen("hunt"); } },
-              { label: "Pokeballs", action: startThrowAim },
+              { label: "Run", action: () => { if (ballAnim || ringActive) return; sfx.menuBack(); addLog("Got away safely!", "#aaa"); setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null }))); addLog("Your team was fully healed!", "#4CAF50"); setBattle(null); setScreen("hunt"); } },
+              { label: `Pokeballs (${MAX_BATTLE_BALLS - battle.ballsThrown})`, action: openBallPicker },
             ].map((b) => (
               <button key={b.label} className="btn"
                 style={{
@@ -1698,6 +1797,57 @@ export default function App() {
               </div>
             </div>
           )}
+
+          {showBallPicker && (
+            <div
+              onClick={() => setShowBallPicker(false)}
+              style={{
+                position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)",
+                display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 50,
+              }}>
+              <div onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: "#10172a", border: "1.5px solid #F44336", borderRadius: 14,
+                  width: "100%", maxWidth: 320, padding: 14, display: "flex", flexDirection: "column", gap: 10,
+                  fontFamily: "'Inter', system-ui, sans-serif",
+                }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ color: "#F44336", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>CHOOSE A BALL</div>
+                  <button className="btn"
+                    style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 9 }}
+                    onClick={() => setShowBallPicker(false)}>✕</button>
+                </div>
+                <div style={{ fontSize: 10, color: "#6b7896" }}>
+                  Throws left this battle: {MAX_BATTLE_BALLS - battle.ballsThrown}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {BALL_NAMES.map((name) => {
+                    const qty = inventoryQty(name);
+                    const mult = BALL_MULT[name] ?? 1;
+                    const disabled = qty <= 0;
+                    return (
+                      <button key={name} className="btn"
+                        disabled={disabled}
+                        onClick={() => startThrowAim(name)}
+                        style={{
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          padding: "10px 12px",
+                          border: `1.5px solid ${disabled ? "#3a1f1f" : "#F44336"}`,
+                          background: disabled ? "#1a0d0d" : "#1a0a0a",
+                          borderRadius: 10, color: "#fff",
+                          opacity: disabled ? 0.5 : 1, cursor: disabled ? "not-allowed" : "pointer",
+                        }}>
+                        <span style={{ fontSize: 12, fontWeight: 700 }}>🔴 {name}</span>
+                        <span style={{ fontSize: 10, color: disabled ? "#666" : "#FFD700" }}>
+                          ×{qty} · {name === "Master Ball" ? "100%" : `${mult}× rate`}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1748,8 +1898,26 @@ export default function App() {
           {teams.length > 1 && (
             <button className="btn"
               onClick={() => {
-                if (typeof window !== "undefined" && !window.confirm(`Delete team "${teams[activeTeamIdx].name}"? Pokémon will be released back to your dex.`)) return;
-                setTeams((prev) => prev.filter((_, i) => i !== activeTeamIdx));
+                const delIdx = activeTeamIdx;
+                const delTeam = teams[delIdx];
+                if (typeof window !== "undefined" && !window.confirm(`Delete team "${delTeam.name}"? Pokémon will be moved to your remaining teams.`)) return;
+                setTeams((prev) => {
+                  const remaining = prev.filter((_, i) => i !== delIdx).map((t) => ({ ...t, mons: [...t.mons] }));
+                  const movers = [...delTeam.mons];
+                  let overflow = 0;
+                  for (const m of movers) {
+                    const target = remaining.find((t) => t.mons.length < 6);
+                    if (target) target.mons.push(m);
+                    else overflow++;
+                  }
+                  if (movers.length - overflow > 0) {
+                    addLog(`Moved ${movers.length - overflow} Pokémon to your other teams.`, "#4CAF50");
+                  }
+                  if (overflow > 0) {
+                    addLog(`⚠ ${overflow} Pokémon couldn't fit and were released.`, "#FF9800");
+                  }
+                  return remaining;
+                });
                 setActiveTeamIdx(0);
                 setBuddyIdx(-1);
               }}
@@ -1760,6 +1928,22 @@ export default function App() {
               <i className="fa-solid fa-trash" />
             </button>
           )}
+        </div>
+
+        <div style={{ padding: "0 12px 6px" }}>
+          <button className="btn"
+            onClick={() => {
+              if (team.length >= 6) { addLog("Team is full!", "#F44336"); return; }
+              if (caught.size === 0) { addLog("Catch a Pokémon first!", "#F44336"); return; }
+              setShowAddMonPicker(true);
+            }}
+            style={{
+              width: "100%", border: "1.5px dashed #4ade80", background: "transparent",
+              color: "#4ade80", padding: "8px 10px", borderRadius: 10, fontSize: 10, fontWeight: 700,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            }}>
+            <i className="fa-solid fa-plus" /> ADD POKÉMON TO {teams[activeTeamIdx]?.name?.toUpperCase() ?? "TEAM"}
+          </button>
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
           {team.map((m, i) => (
@@ -1783,6 +1967,53 @@ export default function App() {
           ))}
           {team.length === 0 && <div style={{ textAlign: "center", color: "#333", fontSize: 8, marginTop: 40 }}>No Pokémon in team!</div>}
         </div>
+
+        {showAddMonPicker && (
+          <div onClick={() => setShowAddMonPicker(false)}
+            style={{
+              position: "fixed", inset: 0, background: "rgba(0,0,0,0.78)",
+              display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 50,
+            }}>
+            <div onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "#10172a", border: "1.5px solid #4ade80", borderRadius: 14,
+                width: "100%", maxWidth: 340, padding: 14, display: "flex", flexDirection: "column", gap: 10,
+                fontFamily: "'Inter', system-ui, sans-serif", maxHeight: "80vh",
+              }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ color: "#4ade80", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>ADD POKÉMON</div>
+                <button className="btn"
+                  style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 9 }}
+                  onClick={() => setShowAddMonPicker(false)}>✕</button>
+              </div>
+              <div style={{ fontSize: 10, color: "#6b7896" }}>
+                Pick a caught species — joins {teams[activeTeamIdx]?.name} at Lv5.
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, overflowY: "auto" }}>
+                {ALL_POKEMON.filter((p) => caught.has(p.id)).map((p) => (
+                  <button key={p.id} className="btn"
+                    onClick={() => {
+                      const m = makeMon(p, 5);
+                      setTeam((prev) => [...prev, m]);
+                      addLog(`Added ${p.name} to ${teams[activeTeamIdx]?.name}!`, "#4CAF50");
+                      setShowAddMonPicker(false);
+                    }}
+                    style={{
+                      background: `${TYPE_COLORS[p.type1]}15`,
+                      border: `2px solid ${TYPE_COLORS[p.type1]}66`,
+                      borderRadius: 8, padding: "6px 4px", textAlign: "center",
+                      display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                      cursor: "pointer",
+                    }}>
+                    <div style={{ fontSize: 5, color: "#888" }}>#{String(p.id).padStart(3, "0")}</div>
+                    <MonSprite sprite={p.sprite} size={40} className="" />
+                    <div style={{ fontSize: 7, color: "#fff" }}>{p.name}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
