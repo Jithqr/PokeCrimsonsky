@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { sfx, playMoveSfx, moveTypeOf, TYPE_COLOR as MOVE_TYPE_COLOR } from "./sfx";
 import { ALL_POKEMON, TOTAL_POKEMON, GEN_NAMES, type PokemonTemplate } from "./lib/pokemon-data";
+import { PokeTalesDex } from "./components/PokeTalesDex";
 
 const SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/ani/${name.replace(/[^a-z0-9]/g, "")}.gif`;
 const SPRITE_BACK = (name: string) => `https://play.pokemonshowdown.com/sprites/ani-back/${name.replace(/[^a-z0-9]/g, "")}.gif`;
@@ -1223,7 +1224,7 @@ export default function App() {
       { label: "Hunt",   icon: "fa-dragon",          color: "var(--m-green)",  action: openHunt },
       { label: "Teams",  icon: "fa-users",           color: "var(--m-orange)", action: () => setScreen("team") },
       { label: "Card",   icon: "fa-id-card",         color: "var(--m-pink)",   action: () => setScreen("card") },
-      { label: "Dex",    icon: "fa-book",            color: "var(--m-purple)", action: () => setScreen("dex") },
+      { label: "Dex",    icon: "fa-book",            color: "var(--m-purple)", action: () => setScreen("poketalesDex") },
       { label: "Region", icon: "fa-map",             color: "var(--m-blue)",   action: () => setScreen("regionSelect") },
       { label: "Safari", icon: "fa-umbrella-beach",  color: "var(--m-teal)",   action: enterSafari },
       { label: "Bag",    icon: "fa-suitcase",        color: "var(--m-brown)",  action: () => setScreen("inventory") },
@@ -2866,6 +2867,10 @@ export default function App() {
         </div>
       </div>
     );
+  }
+
+  if (screen === "poketalesDex") {
+    return <PokeTalesDex onBack={() => setScreen("world")} onHome={() => setScreen("world")} />;
   }
 
   if (screen === "dex") {
