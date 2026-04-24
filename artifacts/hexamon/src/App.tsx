@@ -1376,16 +1376,16 @@ export default function App() {
             <span className="m-level-badge">Lvl {player.level}</span>
           </div>
           <h2 className="m-section-h">Redeem Centre</h2>
-          <div style={{ padding: "0 12px" }}>
-            <div style={{ display: "flex", alignItems: "center", background: "#1a1a1f", border: "1px solid #2a2a30", borderRadius: 999, padding: "6px 6px 6px 6px", gap: 8 }}>
-              <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#2a2a30", display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", flexShrink: 0 }}>
-                <i className="fa-solid fa-gift" style={{ fontSize: 13 }} />
+          <div style={{ padding: "0 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", background: "#15151b", border: "1px solid #26262d", borderRadius: 999, padding: "8px 8px 8px 8px", gap: 12, height: 52, boxSizing: "border-box" }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#26262d", display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", flexShrink: 0 }}>
+                <i className="fa-solid fa-gift" style={{ fontSize: 14 }} />
               </div>
               <input
                 value={redeemInput}
                 onChange={(e) => { setRedeemInput(e.target.value); setRedeemMsg(null); }}
                 placeholder="Enter redeem code"
-                style={{ flex: 1, minWidth: 0, padding: "6px 0", border: "none", background: "transparent", color: "#fff", fontSize: 14, outline: "none" }}
+                style={{ flex: 1, minWidth: 0, padding: 0, border: "none", background: "transparent", color: "#fff", fontSize: 15, outline: "none" }}
               />
               <button
                 onClick={() => {
@@ -1406,7 +1406,7 @@ export default function App() {
                     setRedeemMsg({ text: "Invalid code", ok: false });
                   }
                 }}
-                style={{ padding: "7px 18px", borderRadius: 999, border: "none", background: "#2563eb", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", flexShrink: 0 }}
+                style={{ height: 36, padding: "0 22px", borderRadius: 999, border: "none", background: "#2f7bff", color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer", flexShrink: 0, lineHeight: 1 }}
               >
                 Claim
               </button>
