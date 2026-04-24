@@ -1376,7 +1376,7 @@ export default function App() {
             <span className="m-level-badge">Lvl {player.level}</span>
           </div>
           <h2 className="m-section-h">Redeem Centre</h2>
-          <div style={{ padding: "0 16px" }}>
+          <div style={{ padding: "0 16px", marginBottom: -10 }}>
             <div style={{ display: "flex", alignItems: "center", background: "#15151b", border: "1px solid #26262d", borderRadius: 999, padding: "8px", gap: 12, height: 52, boxSizing: "border-box" }}>
               <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#26262d", display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", flexShrink: 0 }}>
                 <i className="fa-solid fa-gift" style={{ fontSize: 14 }} />
