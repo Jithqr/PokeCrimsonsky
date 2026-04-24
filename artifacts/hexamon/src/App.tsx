@@ -1375,6 +1375,53 @@ export default function App() {
             </div>
             <span className="m-level-badge">Lvl {player.level}</span>
           </div>
+          <h2 className="m-section-h">Redeem Centre</h2>
+          <div style={{ padding: "0 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", background: "#15151b", border: "1px solid #26262d", borderRadius: 999, padding: "8px", gap: 12, height: 52, boxSizing: "border-box" }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#26262d", display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", flexShrink: 0 }}>
+                <i className="fa-solid fa-gift" style={{ fontSize: 14 }} />
+              </div>
+              {redeemMsg ? (
+                <div style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 600, color: redeemMsg.ok ? "#4ade80" : "#f87171", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {redeemMsg.text}
+                </div>
+              ) : (
+                <input
+                  value={redeemInput}
+                  onChange={(e) => setRedeemInput(e.target.value)}
+                  placeholder="Enter redeem code"
+                  style={{ flex: 1, minWidth: 0, padding: 0, border: "none", background: "transparent", color: "#fff", fontSize: 15, outline: "none" }}
+                />
+              )}
+              <button
+                onClick={() => {
+                  sfx.click();
+                  const code = redeemInput.trim();
+                  let result: { text: string; ok: boolean };
+                  if (!code) {
+                    result = { text: "Enter a code first", ok: false };
+                  } else if (code === "Jptx02z") {
+                    if (redeemedCodes.includes(code)) {
+                      result = { text: "Code already claimed", ok: false };
+                    } else {
+                      setPlayer((p) => ({ ...p, money: p.money + 100000, stardust: (p.stardust ?? 0) + 10000 }));
+                      setRedeemedCodes((c) => [...c, code]);
+                      result = { text: "Successfully redeemed!", ok: true };
+                      addLog("Redeem code claimed! +₽100,000 +10,000 stardust", "#4ade80");
+                    }
+                  } else {
+                    result = { text: "Wrong code", ok: false };
+                  }
+                  setRedeemInput("");
+                  setRedeemMsg(result);
+                  setTimeout(() => setRedeemMsg(null), 5000);
+                }}
+                style={{ height: 36, padding: "0 22px", borderRadius: 999, border: "none", background: "#2f7bff", color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer", flexShrink: 0, lineHeight: 1 }}
+              >
+                Claim
+              </button>
+            </div>
+          </div>
           <div className="m-stats">
             <div className="m-statc">
               <div className="m-stat-ic"><i className="fa-solid fa-gavel" /></div>
