@@ -1086,7 +1086,7 @@ export default function App() {
   }
 
   function MonSprite({ sprite, size = 80, back = false, className = "mon-float", style = {} }: { sprite: string; size?: number; back?: boolean; className?: string; style?: React.CSSProperties }) {
-    const clean = sprite.replace(/[^a-z0-9]/g, "");
+    const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
     const fallbacks = back
       ? [
           `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif`,
