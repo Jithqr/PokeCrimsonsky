@@ -202,6 +202,9 @@ export default function App() {
   const [lastSpinDay, setLastSpinDay] = useState<string>(initial?.lastSpinDay ?? "");
   const [showBallPicker, setShowBallPicker] = useState(false);
   const [showAddMonPicker, setShowAddMonPicker] = useState(false);
+  const [showTeamTools, setShowTeamTools] = useState(false);
+  const [showRemovePicker, setShowRemovePicker] = useState(false);
+  const [showOrderEditor, setShowOrderEditor] = useState(false);
   const [catchStreak, setCatchStreak] = useState<number>(initial?.catchStreak ?? 0);
   const [lastStreakDay, setLastStreakDay] = useState<string>(initial?.lastStreakDay ?? "");
   const [log, setLog] = useState<LogEntry[]>([]);
@@ -1919,17 +1922,13 @@ export default function App() {
 
         <div style={{ padding: "0 12px 6px" }}>
           <button className="btn"
-            onClick={() => {
-              if (team.length >= 6) { addLog("Team is full!", "#F44336"); return; }
-              if (caught.size === 0) { addLog("Catch a Pokémon first!", "#F44336"); return; }
-              setShowAddMonPicker(true);
-            }}
+            onClick={() => setShowTeamTools(true)}
             style={{
-              width: "100%", border: "1.5px dashed #4ade80", background: "transparent",
-              color: "#4ade80", padding: "8px 10px", borderRadius: 10, fontSize: 10, fontWeight: 700,
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              width: "100%", border: "1.5px solid #a855f7", background: "linear-gradient(180deg,#3b1066,#1c0a3a)",
+              color: "#e9d5ff", padding: "10px 10px", borderRadius: 10, fontSize: 11, fontWeight: 700,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8, letterSpacing: 1,
             }}>
-            <i className="fa-solid fa-plus" /> ADD POKÉMON TO {teams[activeTeamIdx]?.name?.toUpperCase() ?? "TEAM"}
+            <i className="fa-solid fa-sliders" /> CUSTOMIZE TEAM
           </button>
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1954,6 +1953,209 @@ export default function App() {
           ))}
           {team.length === 0 && <div style={{ textAlign: "center", color: "#333", fontSize: 8, marginTop: 40 }}>No Pokémon in team!</div>}
         </div>
+
+        {showTeamTools && (() => {
+          const tName = teams[activeTeamIdx]?.name ?? "Team";
+          const tools = [
+            { label: "Add Poke", icon: "fa-plus", color: "#4ade80",
+              run: () => {
+                if (team.length >= 6) { addLog("Team is full! Max 6 Pokémon.", "#F44336"); return; }
+                if (caught.size === 0) { addLog("Catch a Pokémon first!", "#F44336"); return; }
+                setShowTeamTools(false); setShowAddMonPicker(true);
+              } },
+            { label: "Remove Poke", icon: "fa-minus", color: "#F44336",
+              run: () => {
+                if (team.length === 0) { addLog("No Pokémon to remove.", "#F44336"); return; }
+                setShowTeamTools(false); setShowRemovePicker(true);
+              } },
+            { label: "Change Order", icon: "fa-arrows-up-down", color: "#FFD700",
+              run: () => {
+                if (team.length < 2) { addLog("Need at least 2 Pokémon to reorder.", "#F44336"); return; }
+                setShowTeamTools(false); setShowOrderEditor(true);
+              } },
+            { label: "Randomize", icon: "fa-shuffle", color: "#26C6DA",
+              run: () => {
+                if (team.length < 2) { addLog("Need at least 2 Pokémon to randomize.", "#F44336"); return; }
+                setTeam((prev) => {
+                  const arr = [...prev];
+                  for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                  }
+                  return arr;
+                });
+                setBuddyIdx(-1);
+                addLog(`🔀 ${tName} order randomized!`, "#26C6DA");
+              } },
+            { label: "Reset Team", icon: "fa-rotate-left", color: "#FF9800",
+              run: () => {
+                if (typeof window !== "undefined" && !window.confirm(`Reset "${tName}"? All Pokémon in this team will be removed.`)) return;
+                setTeam(() => []);
+                setBuddyIdx(-1);
+                addLog(`♻ ${tName} reset.`, "#FF9800");
+                setShowTeamTools(false);
+              } },
+            { label: "Main", icon: "fa-star", color: "#FFD700",
+              run: () => {
+                addLog(`★ ${tName} is now your active main team.`, "#FFD700");
+                setShowTeamTools(false);
+              } },
+            { label: "Rename", icon: "fa-pen", color: "#a855f7",
+              run: () => {
+                const name = (typeof window !== "undefined" ? window.prompt("Rename team:", tName) : "")?.trim();
+                if (!name) return;
+                setTeams((prev) => prev.map((t, i) => i === activeTeamIdx ? { ...t, name } : t));
+                addLog(`✏ Renamed to "${name}".`, "#a855f7");
+                setShowTeamTools(false);
+              } },
+            { label: "Back", icon: "fa-arrow-left", color: "#888",
+              run: () => setShowTeamTools(false) },
+          ];
+          return (
+            <div onClick={() => setShowTeamTools(false)}
+              style={{
+                position: "fixed", inset: 0, background: "rgba(0,0,0,0.78)",
+                display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 50,
+              }}>
+              <div onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: "linear-gradient(180deg,#1a0b2e,#0a0518)", border: "1.5px solid #a855f7", borderRadius: 14,
+                  width: "100%", maxWidth: 360, padding: 16, display: "flex", flexDirection: "column", gap: 12,
+                  fontFamily: "'Inter', system-ui, sans-serif",
+                }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ color: "#e9d5ff", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>CUSTOMIZE — {tName.toUpperCase()}</div>
+                  <button className="btn"
+                    style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 9 }}
+                    onClick={() => setShowTeamTools(false)}>✕</button>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  {tools.map((t) => (
+                    <button key={t.label} className="btn"
+                      onClick={t.run}
+                      style={{
+                        background: "linear-gradient(180deg,rgba(168,85,247,0.25),rgba(60,20,110,0.55))",
+                        border: `1.5px solid ${t.color}55`, color: "#fff",
+                        padding: "16px 8px", borderRadius: 12, fontSize: 13, fontWeight: 700,
+                        display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+                        cursor: "pointer",
+                      }}>
+                      <i className={`fa-solid ${t.icon}`} style={{ fontSize: 16, color: t.color }} />
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {showRemovePicker && (
+          <div onClick={() => setShowRemovePicker(false)}
+            style={{
+              position: "fixed", inset: 0, background: "rgba(0,0,0,0.78)",
+              display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 50,
+            }}>
+            <div onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "#10172a", border: "1.5px solid #F44336", borderRadius: 14,
+                width: "100%", maxWidth: 340, padding: 14, display: "flex", flexDirection: "column", gap: 10,
+                fontFamily: "'Inter', system-ui, sans-serif", maxHeight: "80vh",
+              }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ color: "#F44336", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>REMOVE POKÉMON</div>
+                <button className="btn"
+                  style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 9 }}
+                  onClick={() => setShowRemovePicker(false)}>✕</button>
+              </div>
+              <div style={{ fontSize: 10, color: "#6b7896" }}>Tap a Pokémon to release it from this team.</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, overflowY: "auto" }}>
+                {team.map((m, i) => (
+                  <button key={`rm-${i}`} className="btn"
+                    onClick={() => {
+                      if (typeof window !== "undefined" && !window.confirm(`Remove ${m.name} from this team?`)) return;
+                      setTeam((prev) => prev.filter((_, j) => j !== i));
+                      if (buddyIdx === i) setBuddyIdx(-1);
+                      else if (buddyIdx > i) setBuddyIdx(buddyIdx - 1);
+                      addLog(`Removed ${m.name} from the team.`, "#F44336");
+                      if (team.length - 1 === 0) setShowRemovePicker(false);
+                    }}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10, padding: "8px 10px",
+                      border: "1.5px solid #3a2030", background: "#1a0a14",
+                      borderRadius: 10, color: "#fff", textAlign: "left", cursor: "pointer",
+                    }}>
+                    <MonSprite sprite={m.sprite} size={36} className="" style={{ animation: "none" }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700 }}>{m.name}</div>
+                      <div style={{ fontSize: 8, color: "#888" }}>Lv{m.level} · HP {m.currentHp}/{m.maxHp}</div>
+                    </div>
+                    <i className="fa-solid fa-trash" style={{ color: "#F44336" }} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showOrderEditor && (
+          <div onClick={() => setShowOrderEditor(false)}
+            style={{
+              position: "fixed", inset: 0, background: "rgba(0,0,0,0.78)",
+              display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 50,
+            }}>
+            <div onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "#10172a", border: "1.5px solid #FFD700", borderRadius: 14,
+                width: "100%", maxWidth: 340, padding: 14, display: "flex", flexDirection: "column", gap: 10,
+                fontFamily: "'Inter', system-ui, sans-serif", maxHeight: "80vh",
+              }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ color: "#FFD700", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>CHANGE ORDER</div>
+                <button className="btn"
+                  style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 9 }}
+                  onClick={() => setShowOrderEditor(false)}>Done</button>
+              </div>
+              <div style={{ fontSize: 10, color: "#6b7896" }}>Lead Pokémon at top is your battle starter.</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, overflowY: "auto" }}>
+                {team.map((m, i) => (
+                  <div key={`ord-${i}`}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
+                      border: `1.5px solid ${i === 0 ? "#FFD700" : "#2a3148"}`,
+                      background: i === 0 ? "#1a1808" : "#0a0e1a",
+                      borderRadius: 10, color: "#fff",
+                    }}>
+                    <span style={{ fontSize: 10, color: i === 0 ? "#FFD700" : "#888", width: 18 }}>#{i + 1}</span>
+                    <MonSprite sprite={m.sprite} size={36} className="" style={{ animation: "none" }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700 }}>{m.name}</div>
+                      <div style={{ fontSize: 8, color: "#888" }}>Lv{m.level}{i === 0 ? " · ★ LEAD" : ""}</div>
+                    </div>
+                    <button className="btn"
+                      disabled={i === 0}
+                      onClick={() => setTeam((prev) => {
+                        const arr = [...prev]; [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]]; return arr;
+                      })}
+                      style={{ border: "1px solid #444", color: i === 0 ? "#333" : "#aaa", background: "transparent",
+                        padding: "4px 8px", borderRadius: 6, fontSize: 12, cursor: i === 0 ? "not-allowed" : "pointer" }}>
+                      ▲
+                    </button>
+                    <button className="btn"
+                      disabled={i === team.length - 1}
+                      onClick={() => setTeam((prev) => {
+                        const arr = [...prev]; [arr[i + 1], arr[i]] = [arr[i], arr[i + 1]]; return arr;
+                      })}
+                      style={{ border: "1px solid #444", color: i === team.length - 1 ? "#333" : "#aaa", background: "transparent",
+                        padding: "4px 8px", borderRadius: 6, fontSize: 12, cursor: i === team.length - 1 ? "not-allowed" : "pointer" }}>
+                      ▼
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {showAddMonPicker && (
           <div onClick={() => setShowAddMonPicker(false)}
