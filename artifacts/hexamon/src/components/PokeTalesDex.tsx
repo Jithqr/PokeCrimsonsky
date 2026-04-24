@@ -169,18 +169,10 @@ export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: (
     <div style={S.root}>
       <style>{CSS}</style>
       <div style={S.topBar}>
-        <button style={S.iconBtn} onClick={onBack} aria-label="Close">
-          <i className="fa-solid fa-xmark" />
+        <button style={S.iconBtn} onClick={onHome} aria-label="Home">
+          <i className="fa-solid fa-house" />
         </button>
         <div style={S.topTitle}>Crimson Sky Dex</div>
-        <div style={{ display: "flex", gap: 4 }}>
-          <button style={S.iconBtn} aria-label="Sort">
-            <i className="fa-solid fa-chevron-down" />
-          </button>
-          <button style={S.iconBtn} aria-label="More">
-            <i className="fa-solid fa-ellipsis-vertical" />
-          </button>
-        </div>
       </div>
 
       <div style={S.scroll}>
