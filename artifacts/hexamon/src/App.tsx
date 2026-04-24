@@ -145,7 +145,6 @@ type SaveData = {
   safariCaught?: number;
   lastSafariDay?: string;
   lastSpinDay?: string;
-  lastDailyDay?: string;
 };
 function loadSave(): SaveData | null {
   try {
@@ -201,7 +200,6 @@ export default function App() {
   const [lastSpinTs, setLastSpinTs] = useState<number>(initial?.lastSpinTs ?? 0);
   const [lastSafariDay, setLastSafariDay] = useState<string>(initial?.lastSafariDay ?? "");
   const [lastSpinDay, setLastSpinDay] = useState<string>(initial?.lastSpinDay ?? "");
-  const [lastDailyDay, setLastDailyDay] = useState<string>(initial?.lastDailyDay ?? "");
   const [showBallPicker, setShowBallPicker] = useState(false);
   const [showAddMonPicker, setShowAddMonPicker] = useState(false);
   const [catchStreak, setCatchStreak] = useState<number>(initial?.catchStreak ?? 0);
@@ -241,11 +239,11 @@ export default function App() {
         caught: Array.from(caught), muted,
         candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay,
         safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught,
-        lastSafariDay, lastSpinDay, lastDailyDay,
+        lastSafariDay, lastSpinDay,
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch { /* ignore quota errors */ }
-  }, [screen, player, teams, activeTeamIdx, inventory, caught, muted, candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, lastSpinDay, lastDailyDay]);
+  }, [screen, player, teams, activeTeamIdx, inventory, caught, muted, candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, lastSpinDay]);
 
   // Buddy walking — buddy earns 1 candy every 30s
   useEffect(() => {
@@ -341,9 +339,10 @@ export default function App() {
     sfx.menuOpen();
     const dust = 100 + Math.floor(Math.random() * 400);
     setPlayer((p) => ({ ...p, stardust: (p.stardust ?? 0) + dust, money: p.money + 1000 }));
+    addItem("Poké Ball", 5);
     addItem("Great Ball", 5);
     addItem("Ultra Ball", 5);
-    addLog(`📍 Pokéstop! +${dust} ✨, +₽1000, +5 Great Balls, +5 Ultra Balls`, "#26C6DA");
+    addLog(`📍 Pokéstop! +${dust} ✨, +₽1000, +5 Poké Balls, +5 Great Balls, +5 Ultra Balls`, "#26C6DA");
   }
 
   function resetSave() {
@@ -372,18 +371,6 @@ export default function App() {
     setInventory((inv) => inv.flatMap((x) => x.name === name ? (x.qty - qty > 0 ? [{ ...x, qty: x.qty - qty }] : []) : [x]));
     return true;
   }
-
-  // Daily login reward — granted once per day on entering the world
-  useEffect(() => {
-    if (screen !== "world") return;
-    const today = todayStr();
-    if (lastDailyDay === today) return;
-    setLastDailyDay(today);
-    const dust = 200 + Math.floor(Math.random() * 200);
-    setPlayer((p) => ({ ...p, money: p.money + 500, stardust: (p.stardust ?? 0) + dust }));
-    addItem("Poké Ball", 5);
-    addLog(`🎁 Daily reward! +₽500, +${dust} ✨, +5 Poké Balls`, "#FFD700");
-  }, [screen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function getPokemon(id: number) { return ALL_POKEMON.find((p) => p.id === id)!; }
 
