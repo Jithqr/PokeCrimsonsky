@@ -14,6 +14,9 @@ const GEN_V_TRAINERS = [
 ];
 
 
+const TEAM_MAX = 6;
+const TEAM_MIN = 1;
+
 const TYPE_COLORS: Record<string, string> = {
   Normal:"#A8A878",Fire:"#F08030",Water:"#6890F0",Grass:"#78C850",Electric:"#F8D030",
   Ice:"#98D8D8",Fighting:"#C03028",Poison:"#A040A0",Ground:"#E0C068",Flying:"#A890F0",
@@ -515,7 +518,8 @@ export default function App() {
         sfx.victory();
         setCaught((prev) => new Set(prev).add(caughtMon.id));
         setCandies((prev) => ({ ...prev, [caughtMon.id]: (prev[caughtMon.id] ?? 0) + (isLegend ? 5 : 3) }));
-        setTeam((prev) => prev.length < 6 ? [...prev, caughtMon] : prev);
+        setTeam((prev) => prev.length < TEAM_MAX ? [...prev, caughtMon] : prev);
+        if (team.length >= TEAM_MAX) addLog(`Team is full — ${caughtMon.name} sent to your collection.`, "#FF9800");
         setSafariCaught((c) => c + 1);
       } else {
         setSafariThrowAnim("burst");
@@ -730,7 +734,10 @@ export default function App() {
         addLog(`🎉 Gotcha! ${wild.name} (CP ${getCP(wild)}) was caught!`, "#4CAF50");
         const caughtMon = { ...wild, currentHp: wild.maxHp };
         setCaught((prev) => new Set([...prev, wild.id]));
-        setTeam((prev) => [...prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })), caughtMon]);
+        setTeam((prev) => prev.length < TEAM_MAX
+          ? [...prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })), caughtMon]
+          : prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })));
+        if (team.length >= TEAM_MAX) addLog(`Team is full (${TEAM_MAX}/${TEAM_MAX}) — ${caughtMon.name} added to your collection.`, "#FF9800");
         awardCatchRewards(wild.id, q.mult, q.xp);
         addLog("Your team was fully healed!", "#4CAF50");
         setTimeout(() => {
@@ -1906,7 +1913,7 @@ export default function App() {
                   display: "flex", alignItems: "center", gap: 6,
                 }}>
                 <i className="fa-solid fa-users" style={{ fontSize: 8 }} />
-                {t.name} <span style={{ fontSize: 7, color: sel ? "#FFB74D" : "#555" }}>{t.mons.length}/6</span>
+                {t.name} <span style={{ fontSize: 7, color: sel ? "#FFB74D" : "#555" }}>{t.mons.length}/{TEAM_MAX}</span>
               </button>
             );
           })}
@@ -1938,7 +1945,7 @@ export default function App() {
                   const movers = [...delTeam.mons];
                   let overflow = 0;
                   for (const m of movers) {
-                    const target = remaining.find((t) => t.mons.length < 6);
+                    const target = remaining.find((t) => t.mons.length < TEAM_MAX);
                     if (target) target.mons.push(m);
                     else overflow++;
                   }
@@ -2001,13 +2008,13 @@ export default function App() {
           const tools = [
             { label: "Add Poke", icon: "fa-plus", color: "#4ade80",
               run: () => {
-                if (team.length >= 6) { addLog("Team is full! Max 6 Pokémon.", "#F44336"); return; }
+                if (team.length >= TEAM_MAX) { addLog(`Team is full! Max ${TEAM_MAX} Pokémon.`, "#F44336"); return; }
                 if (caught.size === 0) { addLog("Catch a Pokémon first!", "#F44336"); return; }
                 setShowTeamTools(false); setShowAddMonPicker(true);
               } },
             { label: "Remove Poke", icon: "fa-minus", color: "#F44336",
               run: () => {
-                if (team.length === 0) { addLog("No Pokémon to remove.", "#F44336"); return; }
+                if (team.length <= TEAM_MIN) { addLog(`Team must keep at least ${TEAM_MIN} Pokémon.`, "#F44336"); return; }
                 setShowTeamTools(false); setShowRemovePicker(true);
               } },
             { label: "Change Order", icon: "fa-arrows-up-down", color: "#FFD700",
@@ -2031,10 +2038,11 @@ export default function App() {
               } },
             { label: "Reset Team", icon: "fa-rotate-left", color: "#FF9800",
               run: () => {
-                if (typeof window !== "undefined" && !window.confirm(`Reset "${tName}"? All Pokémon in this team will be removed.`)) return;
-                setTeam(() => []);
+                if (team.length <= TEAM_MIN) { addLog(`Team already at minimum (${TEAM_MIN}). Nothing to reset.`, "#FF9800"); return; }
+                if (typeof window !== "undefined" && !window.confirm(`Reset "${tName}"? All Pokémon except your lead will be removed.`)) return;
+                setTeam((prev) => prev.slice(0, TEAM_MIN));
                 setBuddyIdx(-1);
-                addLog(`♻ ${tName} reset.`, "#FF9800");
+                addLog(`♻ ${tName} reset to lead Pokémon.`, "#FF9800");
                 setShowTeamTools(false);
               } },
             { label: "Main", icon: "fa-star", color: "#FFD700",
@@ -2115,12 +2123,13 @@ export default function App() {
                 {team.map((m, i) => (
                   <button key={`rm-${i}`} className="btn"
                     onClick={() => {
+                      if (team.length <= TEAM_MIN) { addLog(`Team must keep at least ${TEAM_MIN} Pokémon.`, "#F44336"); return; }
                       if (typeof window !== "undefined" && !window.confirm(`Remove ${m.name} from this team?`)) return;
                       setTeam((prev) => prev.filter((_, j) => j !== i));
                       if (buddyIdx === i) setBuddyIdx(-1);
                       else if (buddyIdx > i) setBuddyIdx(buddyIdx - 1);
                       addLog(`Removed ${m.name} from the team.`, "#F44336");
-                      if (team.length - 1 === 0) setShowRemovePicker(false);
+                      if (team.length - 1 <= TEAM_MIN) setShowRemovePicker(false);
                     }}
                     style={{
                       display: "flex", alignItems: "center", gap: 10, padding: "8px 10px",
@@ -2224,8 +2233,9 @@ export default function App() {
                 {ALL_POKEMON.filter((p) => caught.has(p.id)).map((p) => (
                   <button key={p.id} className="btn"
                     onClick={() => {
+                      if (team.length >= TEAM_MAX) { addLog(`Team is full! Max ${TEAM_MAX} Pokémon.`, "#F44336"); setShowAddMonPicker(false); return; }
                       const m = makeMon(p, 5);
-                      setTeam((prev) => [...prev, m]);
+                      setTeam((prev) => prev.length < TEAM_MAX ? [...prev, m] : prev);
                       addLog(`Added ${p.name} to ${teams[activeTeamIdx]?.name}!`, "#4CAF50");
                       setShowAddMonPicker(false);
                     }}
@@ -2601,11 +2611,11 @@ export default function App() {
                     <div key={p.id} className={`m-pcard ${cls}`}
                       onClick={() => {
                         if (!canAfford) { addLog("Not enough Pokédollars!", "#F44336"); return; }
-                        if (team.length >= 6) { addLog("Your team is full!", "#F44336"); return; }
+                        if (team.length >= TEAM_MAX) { addLog(`Your team is full! Max ${TEAM_MAX} Pokémon.`, "#F44336"); return; }
                         sfx.menuOpen();
                         const mon = makeMon(p, 5);
                         setPlayer((pl) => ({ ...pl, money: pl.money - price }));
-                        setTeam((t) => [...t, mon]);
+                        setTeam((t) => t.length < TEAM_MAX ? [...t, mon] : t);
                         setCaught((c) => new Set([...c, p.id]));
                         addLog(`Purchased ${p.name}!`, "#FFD700");
                       }}>
