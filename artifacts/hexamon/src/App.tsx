@@ -1577,10 +1577,10 @@ export default function App() {
               </div>
               <i className="fa-solid fa-caret-right m-arrow" />
             </div>
-            <div className="m-li" onClick={() => { sfx.click(); setScreen("mons"); }}>
+            <div className="m-li" onClick={() => { sfx.click(); setScreen("caught"); }}>
               <div className="m-li-l">
-                <div className="m-stat-ic"><i className="fa-solid fa-paw" /></div>
-                <div className="m-li-t"><span className="m-li-tt">{teams.flatMap(t => t.mons).length + box.length} My Mons</span><span className="m-li-st">Browse</span></div>
+                <div className="m-stat-ic"><i className="fa-solid fa-circle-check" /></div>
+                <div className="m-li-t"><span className="m-li-tt">{caught.size} Pokémon Caught</span><span className="m-li-st">By region</span></div>
               </div>
               <i className="fa-solid fa-caret-right m-arrow" />
             </div>
@@ -2526,6 +2526,114 @@ export default function App() {
               <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2 }}>BATTLE</span>
             </button>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (screen === "caught") {
+    const caughtList = ALL_POKEMON.filter((p) => caught.has(p.id));
+    const byGen = new Map<number, PokemonTemplate[]>();
+    const totalByGen = new Map<number, number>();
+    for (const p of ALL_POKEMON) {
+      totalByGen.set(p.gen, (totalByGen.get(p.gen) ?? 0) + 1);
+    }
+    for (const p of caughtList) {
+      if (!byGen.has(p.gen)) byGen.set(p.gen, []);
+      byGen.get(p.gen)!.push(p);
+    }
+    const totalSpecies = ALL_POKEMON.length;
+    const overallPct = Math.round((caught.size / totalSpecies) * 100);
+    return (
+      <div style={S.root}><style>{css}</style>
+        <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid var(--m-border)" }}>
+            <button className="btn"
+              style={{ border: "1px solid var(--m-border)", color: "var(--m-muted)", padding: "6px 12px", borderRadius: 8, background: "transparent", fontSize: 11, fontWeight: 600 }}
+              onClick={() => { sfx.menuBack(); setScreen("profile"); }}>
+              ◀ BACK
+            </button>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--m-pink)", letterSpacing: 1.5 }}>POKÉMON CAUGHT</div>
+            <div style={{ width: 60 }} />
+          </div>
+
+          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ background: "linear-gradient(135deg,#7e3aed,#4c1d95)", borderRadius: 14, padding: "14px 16px", color: "#fff" }}>
+              <div style={{ fontSize: 10, color: "#e9d5ff", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Total Unique Caught</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                <span style={{ fontSize: 28, fontWeight: 800 }}>{caught.size}</span>
+                <span style={{ fontSize: 13, color: "#e9d5ff" }}>/ {totalSpecies}</span>
+                <span style={{ marginLeft: "auto", fontSize: 12, fontWeight: 700, color: "#fbbf24" }}>{overallPct}%</span>
+              </div>
+              <div style={{ marginTop: 10, height: 6, background: "rgba(0,0,0,0.3)", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{ width: `${overallPct}%`, height: "100%", background: "#fbbf24", transition: "width .3s" }} />
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 11, color: "var(--m-muted)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>By Region</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
+                {REGIONS.map((reg) => {
+                  const total = totalByGen.get(reg.gen) ?? 0;
+                  const got = byGen.get(reg.gen)?.length ?? 0;
+                  const pct = total > 0 ? Math.round((got / total) * 100) : 0;
+                  return (
+                    <div key={reg.gen} className="m-card" style={{ padding: 12, borderRadius: 14 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                        <span style={{ fontSize: 16 }}>{reg.emoji}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--m-text)" }}>{reg.name}</span>
+                        <span style={{ marginLeft: "auto", fontSize: 9, color: "var(--m-muted)" }}>Gen {reg.gen}</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                        <span style={{ fontSize: 18, fontWeight: 800, color: got > 0 ? "var(--m-yellow)" : "var(--m-muted)" }}>{got}</span>
+                        <span style={{ fontSize: 11, color: "var(--m-muted)" }}>/ {total}</span>
+                        <span style={{ marginLeft: "auto", fontSize: 10, color: "var(--m-muted)" }}>{pct}%</span>
+                      </div>
+                      <div style={{ marginTop: 6, height: 4, background: "var(--m-border)", borderRadius: 2, overflow: "hidden" }}>
+                        <div style={{ width: `${pct}%`, height: "100%", background: got > 0 ? "var(--m-yellow)" : "transparent", transition: "width .3s" }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 11, color: "var(--m-muted)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+                Caught List ({caught.size} unique)
+              </div>
+              {caughtList.length === 0 ? (
+                <div className="m-card" style={{ padding: 20, textAlign: "center", color: "var(--m-muted)", fontSize: 12, borderRadius: 14 }}>
+                  No Pokémon caught yet — head out and start hunting!
+                </div>
+              ) : (
+                REGIONS.map((reg) => {
+                  const list = (byGen.get(reg.gen) ?? []).sort((a, b) => a.id - b.id);
+                  if (list.length === 0) return null;
+                  return (
+                    <div key={reg.gen} style={{ marginBottom: 14 }}>
+                      <div style={{ fontSize: 11, color: "var(--m-text)", fontWeight: 700, marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                        <span>{reg.emoji}</span>
+                        <span>{reg.name}</span>
+                        <span style={{ color: "var(--m-muted)", fontWeight: 500 }}>· {list.length}</span>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+                        {list.map((p) => (
+                          <div key={p.id} className="m-card" style={{ padding: 8, borderRadius: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                            <img src={SPRITE(p.sprite)} alt={p.name} style={{ width: 48, height: 48, imageRendering: "pixelated" }} />
+                            <div style={{ fontSize: 9, color: "var(--m-muted)" }}>#{String(p.id).padStart(3, "0")}</div>
+                            <div style={{ fontSize: 10, fontWeight: 600, color: "var(--m-text)", textAlign: "center", lineHeight: 1.1 }}>{p.name}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          <BottomNav active="profile" go={setScreen} />
         </div>
       </div>
     );
