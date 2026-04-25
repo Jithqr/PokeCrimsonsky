@@ -123,6 +123,174 @@ export function moveTypeOf(move: string): string {
   return MOVE_TYPE[move] ?? "normal";
 }
 
+// ===== Background Music (procedural chiptune) =====
+type Note = { f: number; d: number; v?: number; t?: OscillatorType };
+type Track = { name: string; bpm: number; lead: Note[]; bass: Note[]; leadType?: OscillatorType; bassType?: OscillatorType };
+
+// Note frequencies
+const N = {
+  C3: 130.81, D3: 146.83, E3: 164.81, F3: 174.61, G3: 196.00, A3: 220.00, B3: 246.94,
+  C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00, B4: 493.88,
+  C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880.00, B5: 987.77,
+  C6: 1046.50, D6: 1174.66, E6: 1318.51, R: 0,
+};
+
+// d = beats (1 = quarter note)
+const TRACKS: Track[] = [
+  {
+    name: "Route Adventure", bpm: 140, leadType: "square", bassType: "triangle",
+    lead: [
+      { f: N.E5, d: 0.5 }, { f: N.G5, d: 0.5 }, { f: N.A5, d: 1 }, { f: N.G5, d: 0.5 }, { f: N.E5, d: 0.5 },
+      { f: N.D5, d: 1 }, { f: N.C5, d: 0.5 }, { f: N.D5, d: 0.5 }, { f: N.E5, d: 1 }, { f: N.A4, d: 1 },
+      { f: N.E5, d: 0.5 }, { f: N.G5, d: 0.5 }, { f: N.A5, d: 1 }, { f: N.B5, d: 0.5 }, { f: N.A5, d: 0.5 },
+      { f: N.G5, d: 1 }, { f: N.E5, d: 1 }, { f: N.D5, d: 1 }, { f: N.C5, d: 1 },
+    ],
+    bass: [
+      { f: N.A3, d: 1 }, { f: N.E3, d: 1 }, { f: N.A3, d: 1 }, { f: N.E3, d: 1 },
+      { f: N.F3, d: 1 }, { f: N.C3, d: 1 }, { f: N.G3, d: 1 }, { f: N.D3, d: 1 },
+      { f: N.A3, d: 1 }, { f: N.E3, d: 1 }, { f: N.A3, d: 1 }, { f: N.E3, d: 1 },
+      { f: N.F3, d: 1 }, { f: N.C3, d: 1 }, { f: N.G3, d: 1 }, { f: N.E3, d: 1 },
+    ],
+  },
+  {
+    name: "Pallet Calm", bpm: 100, leadType: "triangle", bassType: "sine",
+    lead: [
+      { f: N.G4, d: 1 }, { f: N.A4, d: 0.5 }, { f: N.B4, d: 0.5 }, { f: N.C5, d: 1 }, { f: N.D5, d: 1 },
+      { f: N.E5, d: 1 }, { f: N.D5, d: 0.5 }, { f: N.C5, d: 0.5 }, { f: N.B4, d: 1 }, { f: N.G4, d: 1 },
+      { f: N.A4, d: 1 }, { f: N.B4, d: 0.5 }, { f: N.C5, d: 0.5 }, { f: N.D5, d: 1 }, { f: N.E5, d: 1 },
+      { f: N.G5, d: 2 }, { f: N.E5, d: 1 }, { f: N.D5, d: 1 },
+    ],
+    bass: [
+      { f: N.C3, d: 2 }, { f: N.G3, d: 2 },
+      { f: N.A3, d: 2 }, { f: N.E3, d: 2 },
+      { f: N.F3, d: 2 }, { f: N.C3, d: 2 },
+      { f: N.G3, d: 2 }, { f: N.C3, d: 2 },
+    ],
+  },
+  {
+    name: "Battle Rush", bpm: 165, leadType: "square", bassType: "sawtooth",
+    lead: [
+      { f: N.A4, d: 0.5 }, { f: N.A4, d: 0.5 }, { f: N.E5, d: 0.5 }, { f: N.A4, d: 0.5 },
+      { f: N.B4, d: 0.5 }, { f: N.B4, d: 0.5 }, { f: N.F5, d: 0.5 }, { f: N.B4, d: 0.5 },
+      { f: N.C5, d: 0.5 }, { f: N.E5, d: 0.5 }, { f: N.A5, d: 1 }, { f: N.G5, d: 0.5 }, { f: N.E5, d: 0.5 },
+      { f: N.A5, d: 0.5 }, { f: N.G5, d: 0.5 }, { f: N.E5, d: 0.5 }, { f: N.D5, d: 0.5 }, { f: N.C5, d: 1 },
+      { f: N.A4, d: 0.5 }, { f: N.A4, d: 0.5 }, { f: N.E5, d: 0.5 }, { f: N.A4, d: 0.5 },
+      { f: N.G4, d: 0.5 }, { f: N.G4, d: 0.5 }, { f: N.D5, d: 0.5 }, { f: N.G4, d: 0.5 },
+    ],
+    bass: [
+      { f: N.A3, d: 0.5 }, { f: N.A3, d: 0.5 }, { f: N.A3, d: 0.5 }, { f: N.A3, d: 0.5 },
+      { f: N.B3, d: 0.5 }, { f: N.B3, d: 0.5 }, { f: N.B3, d: 0.5 }, { f: N.B3, d: 0.5 },
+      { f: N.C4, d: 0.5 }, { f: N.C4, d: 0.5 }, { f: N.A3, d: 0.5 }, { f: N.A3, d: 0.5 },
+      { f: N.E3, d: 0.5 }, { f: N.E3, d: 0.5 }, { f: N.A3, d: 0.5 }, { f: N.A3, d: 0.5 },
+      { f: N.A3, d: 0.5 }, { f: N.A3, d: 0.5 }, { f: N.A3, d: 0.5 }, { f: N.A3, d: 0.5 },
+      { f: N.G3, d: 0.5 }, { f: N.G3, d: 0.5 }, { f: N.G3, d: 0.5 }, { f: N.G3, d: 0.5 },
+    ],
+  },
+  {
+    name: "Mystic Cave", bpm: 90, leadType: "triangle", bassType: "sine",
+    lead: [
+      { f: N.A4, d: 1 }, { f: N.C5, d: 1 }, { f: N.E5, d: 1 }, { f: N.D5, d: 1 },
+      { f: N.C5, d: 1 }, { f: N.A4, d: 1 }, { f: N.G4, d: 2 },
+      { f: N.A4, d: 1 }, { f: N.C5, d: 1 }, { f: N.E5, d: 1 }, { f: N.G5, d: 1 },
+      { f: N.F5, d: 1 }, { f: N.E5, d: 1 }, { f: N.C5, d: 2 },
+    ],
+    bass: [
+      { f: N.A3, d: 2 }, { f: N.E3, d: 2 },
+      { f: N.F3, d: 2 }, { f: N.C3, d: 2 },
+      { f: N.A3, d: 2 }, { f: N.E3, d: 2 },
+      { f: N.D3, d: 2 }, { f: N.A3, d: 2 },
+    ],
+  },
+  {
+    name: "Champion Theme", bpm: 150, leadType: "square", bassType: "triangle",
+    lead: [
+      { f: N.C5, d: 0.5 }, { f: N.E5, d: 0.5 }, { f: N.G5, d: 0.5 }, { f: N.C6, d: 1 }, { f: N.G5, d: 0.5 },
+      { f: N.A5, d: 1 }, { f: N.G5, d: 1 }, { f: N.E5, d: 1 }, { f: N.C5, d: 1 },
+      { f: N.D5, d: 0.5 }, { f: N.F5, d: 0.5 }, { f: N.A5, d: 0.5 }, { f: N.D6, d: 1 }, { f: N.A5, d: 0.5 },
+      { f: N.B5, d: 1 }, { f: N.A5, d: 1 }, { f: N.G5, d: 2 },
+    ],
+    bass: [
+      { f: N.C3, d: 1 }, { f: N.G3, d: 1 }, { f: N.C3, d: 1 }, { f: N.G3, d: 1 },
+      { f: N.A3, d: 1 }, { f: N.E3, d: 1 }, { f: N.F3, d: 1 }, { f: N.C3, d: 1 },
+      { f: N.D3, d: 1 }, { f: N.A3, d: 1 }, { f: N.D3, d: 1 }, { f: N.A3, d: 1 },
+      { f: N.G3, d: 1 }, { f: N.D3, d: 1 }, { f: N.G3, d: 2 },
+    ],
+  },
+];
+
+let bgmTimer: number | null = null;
+let bgmActive = false;
+let bgmTrackIdx = -1;
+let bgmGain: GainNode | null = null;
+
+function playNoteRaw(freq: number, dur: number, type: OscillatorType, vol: number, dest: AudioNode, when: number) {
+  if (freq <= 0) return;
+  const a = ac();
+  const t0 = a.currentTime + when;
+  const o = a.createOscillator();
+  const g = a.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(vol, t0 + 0.01);
+  g.gain.linearRampToValueAtTime(vol * 0.6, t0 + dur * 0.5);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(dest);
+  o.start(t0); o.stop(t0 + dur + 0.05);
+}
+
+function playTrackOnce(track: Track) {
+  if (muted || !bgmActive) return;
+  const a = ac();
+  if (!bgmGain) {
+    bgmGain = a.createGain();
+    bgmGain.gain.value = 0.35;
+    bgmGain.connect(a.destination);
+  }
+  const beatSec = 60 / track.bpm;
+  let leadT = 0;
+  for (const n of track.lead) {
+    const dur = n.d * beatSec * 0.95;
+    playNoteRaw(n.f, dur, track.leadType ?? "square", (n.v ?? 0.05), bgmGain, leadT);
+    leadT += n.d * beatSec;
+  }
+  let bassT = 0;
+  for (const n of track.bass) {
+    const dur = n.d * beatSec * 0.95;
+    playNoteRaw(n.f, dur, track.bassType ?? "triangle", (n.v ?? 0.04), bgmGain, bassT);
+    bassT += n.d * beatSec;
+  }
+  const total = Math.max(leadT, bassT) * 1000;
+  bgmTimer = window.setTimeout(() => {
+    if (bgmActive) playTrackOnce(track);
+  }, total);
+}
+
+export const bgm = {
+  pickRandom() {
+    bgmTrackIdx = Math.floor(Math.random() * TRACKS.length);
+    return TRACKS[bgmTrackIdx].name;
+  },
+  start() {
+    if (bgmActive) return;
+    if (bgmTrackIdx < 0) bgm.pickRandom();
+    bgmActive = true;
+    playTrackOnce(TRACKS[bgmTrackIdx]);
+  },
+  stop() {
+    bgmActive = false;
+    if (bgmTimer != null) { clearTimeout(bgmTimer); bgmTimer = null; }
+    if (bgmGain) {
+      try { bgmGain.disconnect(); } catch {}
+      bgmGain = null;
+    }
+  },
+  setVolume(v: number) {
+    if (bgmGain) bgmGain.gain.value = Math.max(0, Math.min(1, v));
+  },
+  current() { return bgmTrackIdx >= 0 ? TRACKS[bgmTrackIdx].name : ""; },
+};
+
 export function playMoveSfx(move: string) {
   const t = moveTypeOf(move);
   const map: Record<string, () => void> = {

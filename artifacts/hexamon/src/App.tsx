@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { sfx, playMoveSfx, moveTypeOf, TYPE_COLOR as MOVE_TYPE_COLOR } from "./sfx";
 import { ALL_POKEMON, TOTAL_POKEMON, GEN_NAMES, type PokemonTemplate } from "./lib/pokemon-data";
 import { PokeTalesDex } from "./components/PokeTalesDex";
+import { SplashLoader } from "./components/SplashLoader";
 
 const SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/ani/${name.replace(/[^a-z0-9]/g, "")}.gif`;
 const SPRITE_BACK = (name: string) => `https://play.pokemonshowdown.com/sprites/ani-back/${name.replace(/[^a-z0-9]/g, "")}.gif`;
@@ -161,6 +162,7 @@ function loadSave(): SaveData | null {
 
 export default function App() {
   const initial = typeof window !== "undefined" ? loadSave() : null;
+  const [splashDone, setSplashDone] = useState(false);
   const [screen, setScreen] = useState<string>(initial ? (initial.screen === "battle" || initial.screen === "hunt" ? "world" : initial.screen) : "title");
   const [player, setPlayer] = useState<Player>(initial?.player ?? {
     name: "Trainer",
@@ -1131,6 +1133,10 @@ export default function App() {
         }}
       />
     );
+  }
+
+  if (!splashDone) {
+    return <SplashLoader onDone={() => setSplashDone(true)} />;
   }
 
   if (screen === "title") return (
