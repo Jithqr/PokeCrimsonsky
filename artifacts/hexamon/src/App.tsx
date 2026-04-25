@@ -228,6 +228,7 @@ export default function App() {
   const [inventory, setInventory] = useState<{ name: string; qty: number }[]>(initial?.inventory ?? []);
   const [storeCat, setStoreCat] = useState<string | null>(null);
   const [tmSearch, setTmSearch] = useState("");
+  const [menuPage, setMenuPage] = useState(0);
   const [bagCat, setBagCat] = useState<string>("balls");
   const [scoutedWild, setScoutedWild] = useState<Mon | null>(null);
   const [moveAnim, setMoveAnim] = useState<{ target: "enemy" | "player"; type: string; key: number } | null>(null);
@@ -967,6 +968,14 @@ export default function App() {
     .m-menu-btn i { font-size: 18px; }
     .m-menu-btn:hover { background: #1f1f24; }
     .m-menu-btn:active { transform: scale(0.97); }
+    .m-menu-btn.locked { opacity: 0.45; cursor: not-allowed; color: var(--m-muted); border-style: dashed; }
+    .m-menu-btn.locked:hover { background: var(--m-card); }
+    .m-menu-carousel { overflow: hidden; padding: 0 16px; margin-bottom: 10px; touch-action: pan-y; }
+    .m-menu-track { display: flex; transition: transform 0.3s ease; }
+    .m-menu-page { flex: 0 0 100%; display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    .m-menu-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
+    .m-menu-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--m-border); cursor: pointer; transition: all 0.2s; border: none; padding: 0; }
+    .m-menu-dot.active { background: var(--m-pink); width: 22px; border-radius: 4px; }
 
     .m-log { background: var(--m-card); border:1px solid var(--m-border); border-radius:16px; margin: 0 16px 16px; padding:16px; min-height: 100px; max-height: 160px; overflow-y:auto; }
     .m-log .ln { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size:11px; line-height:1.6; display:flex; gap:6px; }
@@ -1272,7 +1281,8 @@ export default function App() {
   if (screen === "world") {
     const region = REGIONS[player.macroRegion] ?? REGIONS[0];
     const expPct = Math.min(100, (player.exp / player.expNeeded) * 100);
-    const menu = [
+    type MenuBtn = { label: string; icon: string; color: string; action?: () => void; locked?: boolean };
+    const menuPage1: MenuBtn[] = [
       { label: "Hunt",   icon: "fa-dragon",          color: "var(--m-green)",  action: openHunt },
       { label: "Teams",  icon: "fa-users",           color: "var(--m-orange)", action: () => setScreen("team") },
       { label: "Card",   icon: "fa-id-card",         color: "var(--m-pink)",   action: () => setScreen("card") },
@@ -1281,8 +1291,20 @@ export default function App() {
       { label: "Safari", icon: "fa-umbrella-beach",  color: "var(--m-teal)",   action: enterSafari },
       { label: "Bag",    icon: "fa-suitcase",        color: "var(--m-brown)",  action: () => setScreen("inventory") },
       { label: "Store",  icon: "fa-store",           color: "var(--m-yellow)", action: () => setScreen("store") },
-      { label: "Mons", icon: "fa-paw",              color: "var(--m-cyan)",   action: () => setScreen("mons") },
+      { label: "Mons",   icon: "fa-paw",             color: "var(--m-cyan)",   action: () => setScreen("mons") },
     ];
+    const menuPage2: MenuBtn[] = [
+      { label: "Battle Box",    icon: "fa-shield-halved", color: "var(--m-pink)",   action: () => addLog("Battle Box coming soon!", "#9C27B0"), locked: true },
+      { label: "Training Zone", icon: "fa-dumbbell",      color: "var(--m-orange)", action: () => addLog("Training Zone coming soon!", "#9C27B0"), locked: true },
+      { label: "Referrals",     icon: "fa-user-plus",     color: "var(--m-green)",  action: () => addLog("Referrals coming soon!", "#9C27B0"), locked: true },
+      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
+      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
+      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
+      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
+      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
+      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
+    ];
+    const menuPages = [menuPage1, menuPage2];
     return (
       <div style={S.root}><style>{css}</style>
         <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
@@ -1396,14 +1418,43 @@ export default function App() {
             ))}
           </div>
 
-          <div className="m-menu">
-            {menu.map((b) => (
-              <div key={b.label} className="m-menu-btn"
-                style={{ color: b.color, borderColor: `${b.color}55` }}
-                onClick={() => { sfx.click(); b.action(); }}>
-                <i className={`fa-solid ${b.icon}`} />
-                <span>{b.label}</span>
-              </div>
+          <div
+            className="m-menu-carousel"
+            onTouchStart={(e) => { (e.currentTarget as any)._tx = e.touches[0].clientX; }}
+            onTouchEnd={(e) => {
+              const startX = (e.currentTarget as any)._tx as number | undefined;
+              if (startX == null) return;
+              const dx = e.changedTouches[0].clientX - startX;
+              if (Math.abs(dx) > 40) {
+                sfx.click();
+                if (dx < 0 && menuPage < menuPages.length - 1) setMenuPage(menuPage + 1);
+                else if (dx > 0 && menuPage > 0) setMenuPage(menuPage - 1);
+              }
+              (e.currentTarget as any)._tx = undefined;
+            }}
+          >
+            <div className="m-menu-track" style={{ transform: `translateX(-${menuPage * 100}%)` }}>
+              {menuPages.map((page, pi) => (
+                <div key={pi} className="m-menu-page">
+                  {page.map((b, bi) => (
+                    <div key={`${pi}-${bi}-${b.label}`}
+                      className={`m-menu-btn ${b.locked ? "locked" : ""}`}
+                      style={{ color: b.color, borderColor: `${b.color}55` }}
+                      onClick={() => { sfx.click(); b.action?.(); }}>
+                      <i className={`fa-solid ${b.icon}`} />
+                      <span>{b.label}</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="m-menu-dots">
+            {menuPages.map((_, i) => (
+              <button key={i}
+                className={`m-menu-dot ${menuPage === i ? "active" : ""}`}
+                aria-label={`Go to menu page ${i + 1}`}
+                onClick={() => { sfx.click(); setMenuPage(i); }} />
             ))}
           </div>
 
