@@ -42,16 +42,29 @@ function calcDmg(atk: number, def: number, power: number, rand = true) {
 }
 
 type Mon = PokemonTemplate & {
+  uid?: string;
+  nickname?: string;
   level: number; maxHp: number; currentHp: number;
   exp: number; expNeeded: number; status: string | null;
   ivAtk: number; ivDef: number; ivHp: number;
+  ivSpa?: number; ivSpd?: number; ivSpe?: number;
+  evHp?: number; evAtk?: number; evDef?: number; evSpa?: number; evSpd?: number; evSpe?: number;
+  caughtAt?: number;
+  origin?: "wild" | "safari" | "store" | "redeem" | "starter" | "trade" | "evolve";
 };
 
-function makeMon(template: PokemonTemplate, level: number): Mon {
+let monUidCounter = 0;
+function makeUid() {
+  monUidCounter++;
+  return `m-${Date.now().toString(36)}-${monUidCounter.toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
+}
+
+function makeMon(template: PokemonTemplate, level: number, origin: Mon["origin"] = "wild"): Mon {
   const s = level / 50;
   const maxHp = Math.floor(template.hp * s * 2 + level + 10);
   return {
     ...template,
+    uid: makeUid(),
     level,
     maxHp,
     currentHp: maxHp,
@@ -65,6 +78,12 @@ function makeMon(template: PokemonTemplate, level: number): Mon {
     ivAtk: Math.floor(Math.random() * 16),
     ivDef: Math.floor(Math.random() * 16),
     ivHp: Math.floor(Math.random() * 16),
+    ivSpa: Math.floor(Math.random() * 16),
+    ivSpd: Math.floor(Math.random() * 16),
+    ivSpe: Math.floor(Math.random() * 16),
+    evHp: 0, evAtk: 0, evDef: 0, evSpa: 0, evSpd: 0, evSpe: 0,
+    caughtAt: Date.now(),
+    origin,
   };
 }
 
@@ -134,6 +153,7 @@ type SaveData = {
   player: Player;
   team?: Mon[];
   teams?: TeamGroup[];
+  box?: Mon[];
   activeTeamIdx?: number;
   inventory: { name: string; qty: number }[];
   caught: number[];
@@ -190,6 +210,14 @@ export default function App() {
     return [{ id: `t-${Date.now()}`, name: "Main", mons: legacy }];
   });
   const [activeTeamIdx, setActiveTeamIdx] = useState<number>(initial?.activeTeamIdx ?? 0);
+  const [box, setBox] = useState<Mon[]>(initial?.box ?? []);
+  const [monsSearch, setMonsSearch] = useState<string>("");
+  const [monsView, setMonsView] = useState<"grid" | "list">("grid");
+  const [monsSortKey, setMonsSortKey] = useState<string>("ivTotal");
+  const [monsSortDir, setMonsSortDir] = useState<"max" | "min">("max");
+  const [showMonsSort, setShowMonsSort] = useState(false);
+  const [selectedMonUid, setSelectedMonUid] = useState<string | null>(null);
+  const [monDetailTab, setMonDetailTab] = useState<"info" | "stats" | "iv" | "moves">("info");
   const team = teams[activeTeamIdx]?.mons ?? [];
   const setTeam = (updater: Mon[] | ((prev: Mon[]) => Mon[])) => {
     setTeams((prev) => prev.map((t, i) => i === activeTeamIdx
@@ -250,7 +278,7 @@ export default function App() {
     if (screen === "title" || screen === "nameInput" || screen === "starter") return;
     try {
       const data: SaveData = {
-        screen, player, teams, activeTeamIdx, inventory,
+        screen, player, teams, activeTeamIdx, box, inventory,
         caught: Array.from(caught), seen: Array.from(seen), muted,
         candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay,
         safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught,
@@ -258,7 +286,7 @@ export default function App() {
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch { /* ignore quota errors */ }
-  }, [screen, player, teams, activeTeamIdx, inventory, caught, seen, muted, candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, lastSpinDay]);
+  }, [screen, player, teams, activeTeamIdx, box, inventory, caught, seen, muted, candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, lastSpinDay]);
 
   // Buddy walking — buddy earns 1 candy every 30s
   useEffect(() => {
@@ -518,8 +546,12 @@ export default function App() {
         sfx.victory();
         setCaught((prev) => new Set(prev).add(caughtMon.id));
         setCandies((prev) => ({ ...prev, [caughtMon.id]: (prev[caughtMon.id] ?? 0) + (isLegend ? 5 : 3) }));
-        setTeam((prev) => prev.length < TEAM_MAX ? [...prev, caughtMon] : prev);
-        if (team.length >= TEAM_MAX) addLog(`Team is full — ${caughtMon.name} sent to your collection.`, "#FF9800");
+        if (team.length < TEAM_MAX) {
+          setTeam((prev) => prev.length < TEAM_MAX ? [...prev, caughtMon] : prev);
+        } else {
+          setBox((prev) => [...prev, caughtMon]);
+          addLog(`Team is full — ${caughtMon.name} sent to your Mons collection.`, "#FF9800");
+        }
         setSafariCaught((c) => c + 1);
       } else {
         setSafariThrowAnim("burst");
@@ -732,12 +764,17 @@ export default function App() {
         setBallAnim("success");
         sfx.catchSuccess();
         addLog(`🎉 Gotcha! ${wild.name} (CP ${getCP(wild)}) was caught!`, "#4CAF50");
-        const caughtMon = { ...wild, currentHp: wild.maxHp };
+        const caughtMon = { ...wild, uid: wild.uid ?? makeUid(), origin: "wild" as const, caughtAt: Date.now(), currentHp: wild.maxHp };
         setCaught((prev) => new Set([...prev, wild.id]));
-        setTeam((prev) => prev.length < TEAM_MAX
-          ? [...prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })), caughtMon]
-          : prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })));
-        if (team.length >= TEAM_MAX) addLog(`Team is full (${TEAM_MAX}/${TEAM_MAX}) — ${caughtMon.name} added to your collection.`, "#FF9800");
+        if (team.length < TEAM_MAX) {
+          setTeam((prev) => prev.length < TEAM_MAX
+            ? [...prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })), caughtMon]
+            : prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })));
+        } else {
+          setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })));
+          setBox((prev) => [...prev, caughtMon]);
+          addLog(`Team is full (${TEAM_MAX}/${TEAM_MAX}) — ${caughtMon.name} sent to your Mons collection.`, "#FF9800");
+        }
         awardCatchRewards(wild.id, q.mult, q.xp);
         addLog("Your team was fully healed!", "#4CAF50");
         setTimeout(() => {
@@ -1209,7 +1246,7 @@ export default function App() {
                 <button key={s.id} className="btn"
                   style={{ background: `${TYPE_COLORS[p.type1]}11`, border: `2px solid ${TYPE_COLORS[p.type1]}`, borderRadius: 12, padding: "8px", display: "flex", flexDirection: "row", alignItems: "center", gap: 16, textAlign: "left" }}
                   onClick={() => {
-                    const mon = makeMon(p, 5);
+                    const mon = makeMon(p, 5, "starter");
                     setTeam([mon]);
                     setCaught(new Set([p.id]));
                     addLog(`You chose ${p.name}! Your adventure begins!`, "#FFD700");
@@ -1242,7 +1279,7 @@ export default function App() {
       { label: "Safari", icon: "fa-umbrella-beach",  color: "var(--m-teal)",   action: enterSafari },
       { label: "Bag",    icon: "fa-suitcase",        color: "var(--m-brown)",  action: () => setScreen("inventory") },
       { label: "Store",  icon: "fa-store",           color: "var(--m-yellow)", action: () => setScreen("store") },
-      { label: "Caught", icon: "fa-trophy",          color: "var(--m-cyan)",   action: () => setScreen("caughtList") },
+      { label: "Mons", icon: "fa-paw",              color: "var(--m-cyan)",   action: () => setScreen("mons") },
     ];
     return (
       <div style={S.root}><style>{css}</style>
@@ -1488,10 +1525,10 @@ export default function App() {
               </div>
               <i className="fa-solid fa-caret-right m-arrow" />
             </div>
-            <div className="m-li" onClick={() => { sfx.click(); setScreen("caughtList"); }}>
+            <div className="m-li" onClick={() => { sfx.click(); setScreen("mons"); }}>
               <div className="m-li-l">
-                <div className="m-stat-ic"><i className="fa-solid fa-circle-dot" /></div>
-                <div className="m-li-t"><span className="m-li-tt">{caught.size} Pokémon Caught</span><span className="m-li-st">Browse</span></div>
+                <div className="m-stat-ic"><i className="fa-solid fa-paw" /></div>
+                <div className="m-li-t"><span className="m-li-tt">{teams.flatMap(t => t.mons).length + box.length} My Mons</span><span className="m-li-st">Browse</span></div>
               </div>
               <i className="fa-solid fa-caret-right m-arrow" />
             </div>
@@ -2442,93 +2479,518 @@ export default function App() {
     );
   }
 
-  if (screen === "caughtList") {
-    const caughtMons = ALL_POKEMON.filter((p) => caught.has(p.id)).sort((a, b) => a.id - b.id);
+  if (screen === "mons") {
+    const SORT_OPTIONS: { key: string; label: string }[] = [
+      { key: "caughtOrder", label: "Caught Order" },
+      { key: "name", label: "Name" },
+      { key: "dex", label: "Dex Number" },
+      { key: "level", label: "Level" },
+      { key: "category", label: "Category" },
+      { key: "ivTotal", label: "IV Total" },
+      { key: "evTotal", label: "EV Total" },
+      { key: "hp", label: "HP" },
+      { key: "atk", label: "Attack" },
+      { key: "def", label: "Defense" },
+      { key: "spa", label: "Sp. Attack" },
+      { key: "spd", label: "Sp. Defense" },
+      { key: "spe", label: "Speed" },
+      { key: "total", label: "Total Stats" },
+    ];
+
+    type OwnedMon = { mon: Mon; teamIdx: number; teamName: string | null; orderIdx: number };
+    const teamOwned: OwnedMon[] = teams.flatMap((t, ti) =>
+      t.mons.map((m) => ({ mon: m, teamIdx: ti, teamName: t.name, orderIdx: 0 }))
+    );
+    const boxOwned: OwnedMon[] = box.map((m) => ({ mon: m, teamIdx: -1, teamName: null, orderIdx: 0 }));
+    const allOwned: OwnedMon[] = [...teamOwned, ...boxOwned].map((o, i) => ({ ...o, orderIdx: i }));
+
+    const ivTotal = (m: Mon) => (m.ivHp ?? 0) + (m.ivAtk ?? 0) + (m.ivDef ?? 0) + (m.ivSpa ?? 0) + (m.ivSpd ?? 0) + (m.ivSpe ?? 0);
+    const evTotal = (m: Mon) => (m.evHp ?? 0) + (m.evAtk ?? 0) + (m.evDef ?? 0) + (m.evSpa ?? 0) + (m.evSpd ?? 0) + (m.evSpe ?? 0);
+    const totalStats = (m: Mon) => m.maxHp + m.atk + m.def + m.spa + m.spd + m.spe;
+    const categoryRank = (m: Mon) => ALL_LEGENDARY_IDS.has(m.id) ? 2 : new Set([6, 9, 12, 15, 18, 25, 149, 130, 143, 248]).has(m.id) ? 1 : 0;
+
+    const sortValue = (m: Mon, orderIdx: number, key: string): number | string => {
+      switch (key) {
+        case "caughtOrder": return m.caughtAt ?? orderIdx;
+        case "name": return (m.nickname ?? m.name).toLowerCase();
+        case "dex": return m.id;
+        case "level": return m.level;
+        case "category": return categoryRank(m);
+        case "ivTotal": return ivTotal(m);
+        case "evTotal": return evTotal(m);
+        case "hp": return m.maxHp;
+        case "atk": return m.atk;
+        case "def": return m.def;
+        case "spa": return m.spa;
+        case "spd": return m.spd;
+        case "spe": return m.spe;
+        case "total": return totalStats(m);
+        default: return 0;
+      }
+    };
+
+    const q = monsSearch.trim().toLowerCase();
+    const filtered = q
+      ? allOwned.filter((o) =>
+          (o.mon.nickname ?? "").toLowerCase().includes(q) ||
+          o.mon.name.toLowerCase().includes(q) ||
+          String(o.mon.id).includes(q) ||
+          (o.mon.type1 ?? "").toLowerCase().includes(q) ||
+          (o.mon.type2 ?? "").toLowerCase().includes(q))
+      : allOwned;
+
+    const sorted = [...filtered].sort((a, b) => {
+      const av = sortValue(a.mon, a.orderIdx, monsSortKey);
+      const bv = sortValue(b.mon, b.orderIdx, monsSortKey);
+      let cmp: number;
+      if (typeof av === "string" && typeof bv === "string") cmp = av.localeCompare(bv);
+      else cmp = (av as number) - (bv as number);
+      return monsSortDir === "max" ? -cmp : cmp;
+    });
+
+    const currentSortLabel = SORT_OPTIONS.find((s) => s.key === monsSortKey)?.label ?? "—";
+
     return (
       <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           <div style={S.header}>
-            <span style={{ fontSize: 9, color: "#26A69A" }}>🏆 CAUGHT LIST</span>
+            <span style={{ fontSize: 9, color: "#26A69A" }}><i className="fa-solid fa-paw" /> MY MONS</span>
             <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
           </div>
+
           <div style={{ padding: "10px 12px 4px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 7, color: "#aaa" }}>Pokémon Caught</span>
-            <span style={{ fontSize: 8, color: "#26A69A" }}>{caughtMons.length} / {TOTAL_POKEMON}</span>
+            <span style={{ fontSize: 7, color: "#aaa" }}>{teamOwned.length} in teams · {boxOwned.length} in collection</span>
+            <span style={{ fontSize: 8, color: "#26A69A" }}>{allOwned.length} owned</span>
           </div>
-          <div style={{ padding: "4px 12px 8px", display: "flex", gap: 8, fontSize: 9, color: "#fff" }}>
-            <div style={{ background: "#7e3aed", padding: "5px 10px", borderRadius: 999 }}>
-              <i className="fa-solid fa-wand-sparkles" /> {(player.stardust ?? 0).toLocaleString()}
+
+          <div style={{ padding: "4px 12px", display: "flex", gap: 6, alignItems: "center" }}>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 6, background: "#0d1322", border: "1px solid #2a3148", borderRadius: 8, padding: "6px 10px" }}>
+              <i className="fa-solid fa-magnifying-glass" style={{ fontSize: 10, color: "#6b7896" }} />
+              <input
+                type="text"
+                placeholder="Search by name, type, dex…"
+                value={monsSearch}
+                onChange={(e) => setMonsSearch(e.target.value)}
+                style={{ flex: 1, background: "transparent", border: "none", color: "#fff", fontSize: 10, outline: "none", fontFamily: "'Inter', system-ui, sans-serif" }}
+              />
+              {monsSearch && (
+                <button className="btn" onClick={() => setMonsSearch("")}
+                  style={{ border: "none", background: "transparent", color: "#6b7896", fontSize: 10, padding: 0, cursor: "pointer" }}>✕</button>
+              )}
             </div>
+            <button className="btn"
+              onClick={() => setMonsView((v) => v === "grid" ? "list" : "grid")}
+              title={monsView === "grid" ? "Switch to list view" : "Switch to grid view"}
+              style={{ border: "1px solid #2a3148", background: "#0d1322", color: "#26A69A", padding: "6px 10px", borderRadius: 8, fontSize: 12, cursor: "pointer" }}>
+              <i className={monsView === "grid" ? "fa-solid fa-list" : "fa-solid fa-grip"} />
+            </button>
           </div>
-          <div style={{ flex: 1, overflowY: "auto", padding: "4px 10px 10px" }}>
-            {caughtMons.length === 0 && (
-              <div style={{ textAlign: "center", color: "#333", fontSize: 8, marginTop: 50, lineHeight: 2 }}>
-                No Pokémon caught yet<br />
-                <span style={{ fontSize: 6, color: "#444" }}>Go hunt and catch some!</span>
+
+          <div style={{ padding: "4px 12px 8px", display: "flex", gap: 6, alignItems: "center" }}>
+            <button className="btn"
+              onClick={() => setShowMonsSort(true)}
+              style={{ flex: 1, border: "1px solid #2a3148", background: "#0d1322", color: "#fff", padding: "6px 10px", borderRadius: 8, fontSize: 9, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}>
+              <span><i className="fa-solid fa-arrow-down-wide-short" style={{ marginRight: 6, color: "#26A69A" }} /> Sort: {currentSortLabel}</span>
+              <i className="fa-solid fa-caret-down" style={{ color: "#6b7896" }} />
+            </button>
+            <button className="btn"
+              onClick={() => setMonsSortDir((d) => d === "max" ? "min" : "max")}
+              title={`Direction: ${monsSortDir === "max" ? "Max First" : "Min First"}`}
+              style={{ border: "1px solid #2a3148", background: "#0d1322", color: monsSortDir === "max" ? "#FFD700" : "#26A69A", padding: "6px 10px", borderRadius: 8, fontSize: 9, cursor: "pointer", minWidth: 80 }}>
+              {monsSortDir === "max" ? "↓ Max" : "↑ Min"}
+            </button>
+          </div>
+
+          <div style={{ flex: 1, overflowY: "auto", padding: "4px 10px 14px" }}>
+            {allOwned.length === 0 && (
+              <div style={{ textAlign: "center", color: "#666", fontSize: 9, marginTop: 50, lineHeight: 2 }}>
+                You don't own any Pokémon yet.<br />
+                <span style={{ fontSize: 7, color: "#444" }}>Hunt, buy, or redeem to start your collection!</span>
               </div>
             )}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {team.map((m, idx) => {
-                const cp = getCP(m);
-                const iv = ivPercent(m);
-                const candy = candies[m.id] ?? 0;
-                const cost = 25 + m.level * 5;
-                const candyCost = 1 + Math.floor(m.level / 5);
-                const canPower = (player.stardust ?? 0) >= cost && candy >= candyCost;
-                return (
-                  <div key={`team-${idx}`} style={{
-                    background: `${TYPE_COLORS[m.type1]}15`,
-                    border: `2px solid ${TYPE_COLORS[m.type1]}66`,
-                    borderRadius: 10, padding: 10, display: "flex", gap: 10, alignItems: "center",
-                  }}>
-                    <MonSprite sprite={m.sprite} size={56} className="" />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: 10, color: "#fff", fontWeight: 700 }}>{m.name}</span>
-                        <span style={{ fontSize: 8, color: "#FFD700" }}>CP {cp}</span>
-                      </div>
-                      <div style={{ display: "flex", gap: 4, marginTop: 3 }}>{typeTag(m.type1)}{m.type2 && typeTag(m.type2)}</div>
-                      <div style={{ fontSize: 7, color: "#aaa", marginTop: 4 }}>
-                        Lv {m.level} • IV {iv}% • 🍬 {candy}{buddyIdx === idx ? " • 👣 Buddy" : ""}
-                      </div>
-                    </div>
-                    <button className="btn"
-                      disabled={!canPower}
-                      onClick={() => powerUp(idx)}
+            {sorted.length === 0 && allOwned.length > 0 && (
+              <div style={{ textAlign: "center", color: "#666", fontSize: 9, marginTop: 30 }}>
+                No Pokémon match "{monsSearch}".
+              </div>
+            )}
+
+            {monsView === "grid" ? (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                {sorted.map((o) => {
+                  const m = o.mon;
+                  const iv = ivPercent(m);
+                  return (
+                    <button key={m.uid ?? `${m.id}-${o.orderIdx}`} className="btn"
+                      onClick={() => { sfx.click(); setSelectedMonUid(m.uid ?? null); setMonDetailTab("info"); setScreen("monDetail"); }}
                       style={{
-                        border: `1.5px solid ${canPower ? "#4ade80" : "#333"}`,
-                        color: canPower ? "#4ade80" : "#555",
-                        background: canPower ? "#0d2218" : "transparent",
-                        padding: "8px 10px", borderRadius: 8, fontSize: 7, fontWeight: 700,
-                        opacity: canPower ? 1 : 0.5, cursor: canPower ? "pointer" : "not-allowed",
-                        display: "flex", flexDirection: "column", alignItems: "center", gap: 2, minWidth: 64,
+                        background: `${TYPE_COLORS[m.type1]}15`,
+                        border: `2px solid ${o.teamIdx >= 0 ? "#FFD700" : `${TYPE_COLORS[m.type1]}66`}`,
+                        borderRadius: 10, padding: "8px 4px", textAlign: "center",
+                        display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                        cursor: "pointer", position: "relative",
                       }}>
-                      <span style={{ fontSize: 9 }}>POWER UP</span>
-                      <span style={{ fontSize: 6 }}>✨{cost} 🍬{candyCost}</span>
+                      {o.teamIdx >= 0 && (
+                        <span style={{ position: "absolute", top: 2, right: 4, fontSize: 6, color: "#FFD700" }} title={o.teamName ?? ""}>
+                          <i className="fa-solid fa-star" />
+                        </span>
+                      )}
+                      <div style={{ fontSize: 5, color: "#888" }}>#{String(m.id).padStart(3, "0")}</div>
+                      <MonSprite sprite={m.sprite} size={44} className="" />
+                      <div style={{ fontSize: 7, color: "#fff", fontWeight: 700, lineHeight: 1.2 }}>{m.nickname ?? m.name}</div>
+                      <div style={{ fontSize: 6, color: "#aaa" }}>Lv {m.level} · IV {iv}%</div>
+                      <div style={{ display: "flex", gap: 2, justifyContent: "center" }}>{typeTag(m.type1)}{m.type2 && typeTag(m.type2)}</div>
                     </button>
-                  </div>
-                );
-              })}
-            </div>
-            <h3 style={{ fontSize: 8, color: "#aaa", margin: "16px 4px 8px", letterSpacing: 1 }}>POKÉDEX</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
-              {caughtMons.map((p) => (
-                <div key={p.id} style={{
-                  background: `${TYPE_COLORS[p.type1]}15`,
-                  border: `2px solid ${TYPE_COLORS[p.type1]}66`,
-                  borderRadius: 8,
-                  padding: "8px 4px",
-                  textAlign: "center",
-                  display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {sorted.map((o) => {
+                  const m = o.mon;
+                  const cp = getCP(m);
+                  const iv = ivPercent(m);
+                  return (
+                    <button key={m.uid ?? `${m.id}-${o.orderIdx}`} className="btn"
+                      onClick={() => { sfx.click(); setSelectedMonUid(m.uid ?? null); setMonDetailTab("info"); setScreen("monDetail"); }}
+                      style={{
+                        background: `${TYPE_COLORS[m.type1]}10`,
+                        border: `1.5px solid ${o.teamIdx >= 0 ? "#FFD70066" : `${TYPE_COLORS[m.type1]}55`}`,
+                        borderRadius: 10, padding: "8px 10px",
+                        display: "flex", alignItems: "center", gap: 10, cursor: "pointer", textAlign: "left",
+                      }}>
+                      <MonSprite sprite={m.sprite} size={42} className="" />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontSize: 10, color: "#fff", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {m.nickname ?? m.name} {o.teamIdx >= 0 && <i className="fa-solid fa-star" style={{ fontSize: 7, color: "#FFD700", marginLeft: 4 }} />}
+                          </span>
+                          <span style={{ fontSize: 8, color: "#FFD700" }}>CP {cp}</span>
+                        </div>
+                        <div style={{ display: "flex", gap: 4, marginTop: 3 }}>{typeTag(m.type1)}{m.type2 && typeTag(m.type2)}</div>
+                        <div style={{ fontSize: 7, color: "#aaa", marginTop: 3 }}>
+                          #{String(m.id).padStart(3, "0")} · Lv {m.level} · IV {iv}% · HP {m.currentHp}/{m.maxHp}
+                          {o.teamName && <span style={{ color: "#FFD700" }}> · {o.teamName}</span>}
+                        </div>
+                      </div>
+                      <i className="fa-solid fa-caret-right" style={{ color: "#6b7896" }} />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {showMonsSort && (
+            <div onClick={() => setShowMonsSort(false)}
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 200 }}>
+              <div onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: "#10172a", border: "1.5px solid #26A69A", borderTopLeftRadius: 16, borderTopRightRadius: 16,
+                  width: "100%", maxWidth: 420, padding: 14, display: "flex", flexDirection: "column", gap: 8, maxHeight: "75vh",
+                  fontFamily: "'Inter', system-ui, sans-serif",
                 }}>
-                  <div style={{ fontSize: 5, color: "#888" }}>#{String(p.id).padStart(3, "0")}</div>
-                  <MonSprite sprite={p.sprite} size={48} className="" />
-                  <div style={{ fontSize: 6, color: "#fff" }}>{p.name}</div>
-                  <div style={{ fontSize: 6, color: "#FFC107" }}>🍬 {candies[p.id] ?? 0}</div>
-                  <div style={{ display: "flex", gap: 2, justifyContent: "center" }}>{typeTag(p.type1)}{p.type2 && typeTag(p.type2)}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <div style={{ color: "#26A69A", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>How should I sort your Pokémon?</div>
+                  <button className="btn"
+                    style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 9 }}
+                    onClick={() => setShowMonsSort(false)}>✕</button>
                 </div>
-              ))}
+                <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: 4 }}>
+                  {SORT_OPTIONS.map((s, idx) => {
+                    const active = monsSortKey === s.key;
+                    return (
+                      <button key={s.key} className="btn"
+                        onClick={() => { setMonsSortKey(s.key); setShowMonsSort(false); }}
+                        style={{
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          padding: "10px 12px", borderRadius: 8,
+                          border: `1.5px solid ${active ? "#26A69A" : "#2a3148"}`,
+                          background: active ? "#0d2a26" : "#0d1322",
+                          color: "#fff", fontSize: 11, cursor: "pointer", textAlign: "left",
+                        }}>
+                        <span><span style={{ color: "#6b7896", marginRight: 8 }}>{idx + 1}.</span>{s.label}</span>
+                        {active && <i className="fa-solid fa-check" style={{ color: "#26A69A" }} />}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div style={{ display: "flex", gap: 8, marginTop: 6, paddingTop: 8, borderTop: "1px solid #2a3148" }}>
+                  <div style={{ flex: 1, fontSize: 10, color: "#aaa" }}>
+                    Direction:
+                    <span style={{ color: monsSortDir === "max" ? "#FFD700" : "#26A69A", fontWeight: 700, marginLeft: 6 }}>
+                      {monsSortDir === "max" ? "Max First" : "Min First"}
+                    </span>
+                  </div>
+                  <button className="btn"
+                    onClick={() => setMonsSortDir((d) => d === "max" ? "min" : "max")}
+                    style={{ border: "1px solid #26A69A", background: "#0d2a26", color: "#26A69A", padding: "6px 12px", borderRadius: 8, fontSize: 10, cursor: "pointer" }}>
+                    Switch
+                  </button>
+                </div>
+              </div>
             </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (screen === "monDetail") {
+    const findOwned = (): { mon: Mon | null; teamIdx: number; monIdx: number; inBox: boolean } => {
+      for (let ti = 0; ti < teams.length; ti++) {
+        const idx = teams[ti].mons.findIndex((m) => m.uid === selectedMonUid);
+        if (idx >= 0) return { mon: teams[ti].mons[idx], teamIdx: ti, monIdx: idx, inBox: false };
+      }
+      const bi = box.findIndex((m) => m.uid === selectedMonUid);
+      if (bi >= 0) return { mon: box[bi], teamIdx: -1, monIdx: bi, inBox: true };
+      return { mon: null, teamIdx: -1, monIdx: -1, inBox: false };
+    };
+    const found = findOwned();
+    const m = found.mon;
+    if (!m) {
+      return (
+        <div style={S.root}><style>{css}</style>
+          <div style={S.wrap}>
+            <div style={S.header}>
+              <span style={{ fontSize: 9, color: "#26A69A" }}>POKÉMON</span>
+              <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("mons")}>◀ BACK</button>
+            </div>
+            <div style={{ padding: 30, textAlign: "center", color: "#888", fontSize: 10 }}>This Pokémon is no longer in your collection.</div>
+          </div>
+        </div>
+      );
+    }
+    const cp = getCP(m);
+    const iv = ivPercent(m);
+    const ivT = (m.ivHp ?? 0) + (m.ivAtk ?? 0) + (m.ivDef ?? 0) + (m.ivSpa ?? 0) + (m.ivSpd ?? 0) + (m.ivSpe ?? 0);
+    const evT = (m.evHp ?? 0) + (m.evAtk ?? 0) + (m.evDef ?? 0) + (m.evSpa ?? 0) + (m.evSpd ?? 0) + (m.evSpe ?? 0);
+
+    const updateMon = (updater: (mm: Mon) => Mon) => {
+      if (found.inBox) {
+        setBox((prev) => prev.map((mm) => mm.uid === m.uid ? updater(mm) : mm));
+      } else {
+        setTeams((prev) => prev.map((t, ti) => ti !== found.teamIdx ? t : { ...t, mons: t.mons.map((mm) => mm.uid === m.uid ? updater(mm) : mm) }));
+      }
+    };
+
+    const releaseMon = () => {
+      if (typeof window !== "undefined" && !window.confirm(`Release ${m.nickname ?? m.name} forever? This cannot be undone.`)) return;
+      if (found.inBox) {
+        setBox((prev) => prev.filter((mm) => mm.uid !== m.uid));
+      } else {
+        const teamMons = teams[found.teamIdx]?.mons ?? [];
+        if (teamMons.length <= TEAM_MIN) { addLog(`Team must keep at least ${TEAM_MIN} Pokémon. Move ${m.nickname ?? m.name} to another team or your collection first.`, "#F44336"); return; }
+        setTeams((prev) => prev.map((t, ti) => ti !== found.teamIdx ? t : { ...t, mons: t.mons.filter((mm) => mm.uid !== m.uid) }));
+        if (found.teamIdx === activeTeamIdx) {
+          if (buddyIdx === found.monIdx) setBuddyIdx(-1);
+          else if (buddyIdx > found.monIdx) setBuddyIdx(buddyIdx - 1);
+        }
+      }
+      addLog(`Released ${m.nickname ?? m.name}. Farewell!`, "#FF9800");
+      sfx.menuBack();
+      setScreen("mons");
+    };
+
+    const renameMon = () => {
+      const next = (typeof window !== "undefined" ? window.prompt(`Nickname for ${m.name}:`, m.nickname ?? m.name) : "")?.trim();
+      if (next === undefined || next === null) return;
+      const finalName = next.length === 0 ? undefined : next.slice(0, 16);
+      updateMon((mm) => ({ ...mm, nickname: finalName }));
+      addLog(finalName ? `Nickname set to "${finalName}"!` : `Nickname cleared.`, "#4CAF50");
+    };
+
+    const evolveMon = () => {
+      const candy = candies[m.id] ?? 0;
+      const cost = 25;
+      if (candy < cost) { addLog(`Need ${cost} ${m.name} candy to evolve. (have ${candy})`, "#F44336"); return; }
+      const nextId = m.id + 1;
+      const nextTpl = ALL_POKEMON.find((p) => p.id === nextId);
+      if (!nextTpl) { addLog(`${m.name} cannot evolve further.`, "#F44336"); return; }
+      if (typeof window !== "undefined" && !window.confirm(`Evolve ${m.nickname ?? m.name} into ${nextTpl.name}? This will use ${cost} candy.`)) return;
+      const evolved = makeMon(nextTpl, m.level, "evolve");
+      evolved.uid = m.uid;
+      evolved.nickname = m.nickname;
+      evolved.exp = m.exp;
+      evolved.expNeeded = m.expNeeded;
+      evolved.ivHp = m.ivHp; evolved.ivAtk = m.ivAtk; evolved.ivDef = m.ivDef;
+      evolved.ivSpa = m.ivSpa; evolved.ivSpd = m.ivSpd; evolved.ivSpe = m.ivSpe;
+      evolved.evHp = m.evHp; evolved.evAtk = m.evAtk; evolved.evDef = m.evDef;
+      evolved.evSpa = m.evSpa; evolved.evSpd = m.evSpd; evolved.evSpe = m.evSpe;
+      evolved.caughtAt = m.caughtAt;
+      updateMon(() => evolved);
+      setCandies((prev) => ({ ...prev, [m.id]: Math.max(0, candy - cost) }));
+      setCaught((prev) => new Set([...prev, nextTpl.id]));
+      sfx.evolve();
+      addLog(`${m.nickname ?? m.name} evolved into ${nextTpl.name}!`, "#FFD700");
+    };
+
+    const StatRow = ({ label, val, bonus, max = 200 }: { label: string; val: number; bonus?: string; max?: number }) => (
+      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 10, color: "#fff", padding: "3px 0" }}>
+        <span style={{ width: 70, color: "#aaa" }}>{label}</span>
+        <span style={{ width: 40, textAlign: "right", fontWeight: 700 }}>{val}</span>
+        {bonus && <span style={{ fontSize: 9, color: bonus === "+" ? "#4ade80" : bonus === "-" ? "#F44336" : "#888" }}>({bonus})</span>}
+        <div style={{ flex: 1, height: 6, background: "#0d1322", border: "1px solid #2a3148", borderRadius: 4, overflow: "hidden" }}>
+          <div style={{ width: `${Math.min(100, (val / max) * 100)}%`, height: "100%", background: "linear-gradient(90deg, #26A69A, #4ade80)" }} />
+        </div>
+      </div>
+    );
+
+    const tabs: { key: typeof monDetailTab; label: string }[] = [
+      { key: "info", label: "Info" },
+      { key: "stats", label: "Stats" },
+      { key: "iv", label: "IVs/EVs" },
+      { key: "moves", label: "Moveset" },
+    ];
+
+    const moveset = (m.moves && m.moves.length > 0 ? m.moves : ["Tackle", "Growl"]).slice(0, 4);
+
+    return (
+      <div style={S.root}><style>{css}</style>
+        <div style={S.wrap}>
+          <div style={S.header}>
+            <span style={{ fontSize: 9, color: "#26A69A" }}><i className="fa-solid fa-paw" /> {m.nickname ?? m.name}</span>
+            <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("mons")}>◀ BACK</button>
+          </div>
+
+          <div style={{
+            margin: "10px 12px 8px", padding: 12, borderRadius: 12,
+            background: `linear-gradient(135deg, ${TYPE_COLORS[m.type1]}25, ${TYPE_COLORS[m.type2 ?? m.type1]}10)`,
+            border: `2px solid ${TYPE_COLORS[m.type1]}66`,
+            display: "flex", gap: 12, alignItems: "center",
+          }}>
+            <div style={{ width: 96, height: 96, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.25)", borderRadius: 10 }}>
+              <MonSprite sprite={m.sprite} size={88} className="" />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, color: "#fff", fontWeight: 800 }}>{m.nickname ?? m.name}</div>
+              {m.nickname && <div style={{ fontSize: 8, color: "#aaa" }}>({m.name})</div>}
+              <div style={{ fontSize: 9, color: "#FFD700", marginTop: 2 }}>#{String(m.id).padStart(3, "0")} · CP {cp}</div>
+              <div style={{ display: "flex", gap: 4, marginTop: 4 }}>{typeTag(m.type1)}{m.type2 && typeTag(m.type2)}</div>
+              <div style={{ fontSize: 8, color: "#aaa", marginTop: 4 }}>
+                Lv {m.level} · HP {m.currentHp}/{m.maxHp} · IV {iv}%
+              </div>
+              <div style={{ fontSize: 7, color: "#6b7896", marginTop: 2 }}>
+                {found.inBox ? "📦 In your collection" : `★ In team: ${teams[found.teamIdx]?.name ?? "—"}`}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 4, padding: "0 12px 8px" }}>
+            {tabs.map((t) => (
+              <button key={t.key} className="btn"
+                onClick={() => setMonDetailTab(t.key)}
+                style={{
+                  flex: 1, padding: "6px 4px", fontSize: 9, fontWeight: 700,
+                  border: `1.5px solid ${monDetailTab === t.key ? "#26A69A" : "#2a3148"}`,
+                  background: monDetailTab === t.key ? "#0d2a26" : "#0d1322",
+                  color: monDetailTab === t.key ? "#26A69A" : "#aaa",
+                  borderRadius: 8, cursor: "pointer",
+                }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ flex: 1, overflowY: "auto", padding: "0 12px" }}>
+            {monDetailTab === "info" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 10, color: "#fff" }}>
+                <div><span style={{ color: "#aaa" }}>Level:</span> {m.level} <span style={{ color: "#666" }}>|</span> <span style={{ color: "#aaa" }}>Nature:</span> {m.nickname ? "Hardy" : "Hardy"}</div>
+                <div><span style={{ color: "#aaa" }}>Types:</span> {m.type1}{m.type2 ? ` / ${m.type2}` : ""}</div>
+                <div><span style={{ color: "#aaa" }}>Gender:</span> {m.id % 8 === 0 ? "Genderless" : m.id % 2 === 0 ? "Female" : "Male"}</div>
+                <div><span style={{ color: "#aaa" }}>Ability:</span> {(m as any).ability ?? "—"}</div>
+                <div><span style={{ color: "#aaa" }}>Tera Type:</span> {m.type1}</div>
+                <div><span style={{ color: "#aaa" }}>EXP:</span> {m.exp.toLocaleString()}</div>
+                <div><span style={{ color: "#aaa" }}>Need To Next Level:</span> {Math.max(0, m.expNeeded - m.exp).toLocaleString()}</div>
+                <div style={{ marginTop: 6, height: 8, background: "#0d1322", border: "1px solid #2a3148", borderRadius: 4, overflow: "hidden" }}>
+                  <div style={{ width: `${Math.min(100, (m.exp / Math.max(1, m.expNeeded)) * 100)}%`, height: "100%", background: "linear-gradient(90deg, #26A69A, #4ade80)" }} />
+                </div>
+                <div style={{ fontSize: 8, color: "#888" }}>Caught: {m.caughtAt ? new Date(m.caughtAt).toLocaleDateString() : "—"} · Origin: {m.origin ?? "—"}</div>
+              </div>
+            )}
+
+            {monDetailTab === "stats" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "#aaa", borderBottom: "1px dashed #2a3148", paddingBottom: 4, marginBottom: 4 }}>
+                  <span>Stats</span><span>Points</span>
+                </div>
+                <StatRow label="HP" val={m.maxHp} max={400} />
+                <StatRow label="Attack" val={m.atk} max={250} />
+                <StatRow label="Defense" val={m.def} max={250} />
+                <StatRow label="Sp. Attack" val={m.spa} max={250} />
+                <StatRow label="Sp. Defense" val={m.spd} max={250} />
+                <StatRow label="Speed" val={m.spe} max={250} />
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#FFD700", marginTop: 6, paddingTop: 6, borderTop: "1px dashed #2a3148" }}>
+                  <span>Total</span><span>{m.maxHp + m.atk + m.def + m.spa + m.spd + m.spe}</span>
+                </div>
+              </div>
+            )}
+
+            {monDetailTab === "iv" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 10, color: "#fff" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 60px 60px", fontSize: 9, color: "#aaa", borderBottom: "1px dashed #2a3148", paddingBottom: 4 }}>
+                  <span>Stat</span><span style={{ textAlign: "right" }}>IV</span><span style={{ textAlign: "right" }}>EV</span>
+                </div>
+                {([
+                  ["HP", m.ivHp ?? 0, m.evHp ?? 0],
+                  ["Attack", m.ivAtk ?? 0, m.evAtk ?? 0],
+                  ["Defense", m.ivDef ?? 0, m.evDef ?? 0],
+                  ["Sp. Attack", m.ivSpa ?? 0, m.evSpa ?? 0],
+                  ["Sp. Defense", m.ivSpd ?? 0, m.evSpd ?? 0],
+                  ["Speed", m.ivSpe ?? 0, m.evSpe ?? 0],
+                ] as [string, number, number][]).map(([label, ivv, evv]) => (
+                  <div key={label} style={{ display: "grid", gridTemplateColumns: "1fr 60px 60px", padding: "3px 0" }}>
+                    <span style={{ color: "#aaa" }}>{label}</span>
+                    <span style={{ textAlign: "right", color: ivv >= 31 ? "#FFD700" : ivv >= 25 ? "#4ade80" : "#fff" }}>{ivv}</span>
+                    <span style={{ textAlign: "right", color: "#26A69A" }}>{evv}</span>
+                  </div>
+                ))}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 60px 60px", marginTop: 6, paddingTop: 6, borderTop: "1px dashed #2a3148", color: "#FFD700", fontWeight: 700 }}>
+                  <span>Total</span>
+                  <span style={{ textAlign: "right" }}>{ivT}</span>
+                  <span style={{ textAlign: "right", color: "#26A69A" }}>{evT}</span>
+                </div>
+              </div>
+            )}
+
+            {monDetailTab === "moves" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {moveset.map((mv, i) => {
+                  const mt = moveTypeOf(mv);
+                  const color = MOVE_TYPE_COLOR[mt] ?? "#888";
+                  return (
+                    <div key={`${mv}-${i}`} style={{
+                      padding: "8px 10px", borderRadius: 8,
+                      background: `${color}15`, border: `1.5px solid ${color}66`,
+                      display: "flex", justifyContent: "space-between", alignItems: "center",
+                    }}>
+                      <span style={{ fontSize: 11, color: "#fff", fontWeight: 700 }}>{mv}</span>
+                      <span style={{ fontSize: 8, color, padding: "2px 8px", border: `1px solid ${color}`, borderRadius: 999, background: `${color}22` }}>
+                        {mt.toUpperCase()}
+                      </span>
+                    </div>
+                  );
+                })}
+                {moveset.length === 0 && <div style={{ color: "#666", fontSize: 9, textAlign: "center", padding: 20 }}>No moves learned yet.</div>}
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, padding: "10px 12px 14px", borderTop: "1px solid #2a3148" }}>
+            <button className="btn"
+              onClick={renameMon}
+              style={{ padding: "10px 6px", border: "1.5px solid #a855f7", background: "#1a0a2a", color: "#c084fc", borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
+              <i className="fa-solid fa-pen" style={{ marginRight: 4 }} /> Nickname
+            </button>
+            <button className="btn"
+              onClick={evolveMon}
+              style={{ padding: "10px 6px", border: "1.5px solid #FFD700", background: "#1a1808", color: "#FFD700", borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
+              <i className="fa-solid fa-wand-magic-sparkles" style={{ marginRight: 4 }} /> Evolve
+            </button>
+            <button className="btn"
+              onClick={releaseMon}
+              style={{ padding: "10px 6px", border: "1.5px solid #F44336", background: "#1a0a14", color: "#F44336", borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
+              <i className="fa-solid fa-trash" style={{ marginRight: 4 }} /> Release
+            </button>
           </div>
         </div>
       </div>
@@ -2611,13 +3073,17 @@ export default function App() {
                     <div key={p.id} className={`m-pcard ${cls}`}
                       onClick={() => {
                         if (!canAfford) { addLog("Not enough Pokédollars!", "#F44336"); return; }
-                        if (team.length >= TEAM_MAX) { addLog(`Your team is full! Max ${TEAM_MAX} Pokémon.`, "#F44336"); return; }
                         sfx.menuOpen();
-                        const mon = makeMon(p, 5);
+                        const mon = makeMon(p, 5, "store");
                         setPlayer((pl) => ({ ...pl, money: pl.money - price }));
-                        setTeam((t) => t.length < TEAM_MAX ? [...t, mon] : t);
+                        if (team.length < TEAM_MAX) {
+                          setTeam((t) => t.length < TEAM_MAX ? [...t, mon] : t);
+                          addLog(`Purchased ${p.name}! Added to team.`, "#FFD700");
+                        } else {
+                          setBox((bx) => [...bx, mon]);
+                          addLog(`Purchased ${p.name}! Team full — sent to Mons collection.`, "#FFD700");
+                        }
                         setCaught((c) => new Set([...c, p.id]));
-                        addLog(`Purchased ${p.name}!`, "#FFD700");
                       }}>
                       <img src={SPRITE(p.sprite)} alt={p.name} />
                       <div className="ovr">
