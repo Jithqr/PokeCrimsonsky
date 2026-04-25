@@ -1426,7 +1426,6 @@ export default function App() {
               if (startX == null) return;
               const dx = e.changedTouches[0].clientX - startX;
               if (Math.abs(dx) > 40) {
-                sfx.click();
                 if (dx < 0 && menuPage < menuPages.length - 1) setMenuPage(menuPage + 1);
                 else if (dx > 0 && menuPage > 0) setMenuPage(menuPage - 1);
               }
