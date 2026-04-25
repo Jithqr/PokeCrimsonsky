@@ -1,0 +1,111 @@
+🎮 Battle Box System
+The Battle Box is a multiplayer feature where players can create or join battle rooms to compete in Pokémon battles under different rule sets.
+🏆 Ranked Battle
+Overview:
+A competitive mode where player performance affects their rank.
+How it works:
+When a player selects Ranked Battle, the system generates a unique room code.
+The host can share this code with another player.
+The opponent enters the code to join the room.
+Battle Rules:
+Standard 6v6 Pokémon battle.
+Players use their own Pokémon teams.
+Level caps or rules can be predefined in settings (optional).
+Ranking System:
+Each player has a rank score (ELO/MMR).
+Winning increases score; losing decreases it.
+Players are placed on a leaderboard based on score.
+Match results are permanently recorded.
+⚔️ Unranked Battle
+Overview:
+A casual mode for practice without affecting rankings.
+How it works:
+Same room creation system as Ranked (unique code + join).
+Players invite others using the code.
+Battle Rules:
+Standard 6v6 Pokémon battle.
+Players use their own Pokémon teams.
+Optional custom rules (levels, bans, etc.).
+Progression:
+No rank score changes.
+Match results are not recorded (or only stored for history, not ranking).
+🎲 Random Battle
+Overview:
+A fun, unpredictable mode where teams are automatically generated.
+How it works:
+Room is created with a unique code like other modes.
+Both players join the room.
+Battle Rules:
+Each player is assigned 6 random Pokémon.
+Pokémon are generated based on:
+A selected level range (set in battle settings).
+Optional filters (e.g., no legendaries, region-based, etc.).
+Gameplay Features:
+Movesets, abilities, and items can also be randomized (optional).
+Ensures fairness by giving both players balanced random teams.
+Progression:
+No ranking impact (or optional separate random leaderboard if you want later).
+🔑 Shared Features (All Modes)
+Room Code System: Unique code for private matchmaking.
+6v6 Format: Default battle style.
+Battle Settings:
+Level caps
+Pokémon restrictions (legendary bans, etc.)
+Timer rules
+Reconnect / Rejoin Support (recommended feature)
+Note : wins / losses in trainer card is the count of wins and loses of battles inside battle Box 
+
+🔹 Add a chose region menu while entering safari
+So when safari button is clicked
+Pop up menu appears to choose region
+Safari works only once per day on a single region
+Switching regions through main menu region button does not affect safari's region
+
+🔹 Change search icon of market section to cart icon
+🔹 Add a stardust store inside market
+
+Pokémon store then item store then stardust store
+
+🔹 Add a back button near crimson sky market place 
+Add stardust count near pokedollars in marketplace
+
+🔹 Remove feature to give rewards for hunts
+
+🔹 Remove materball from market place pokeball section and add it to Stardust store for 5000 stardust, add safari pass for 4500 stardust
+
+Add new Pokeballs to market place
+
+🎯 Poké Balls Guide
+🔹 Standard Balls
+Regular Ball → Multiplier: ×1
+Great Ball → Multiplier: ×1.5
+Ultra Ball → Multiplier: ×2
+Master Ball → Multiplier: ×255 (guaranteed catch)
+🔹 Special Condition Balls
+Level Ball
+×8 → If your Pokémon’s level ≥ 4× wild Pokémon
+×4 → If ≥ 2× wild Pokémon
+×2 → If higher than wild Pokémon
+×1 → Otherwise
+Timer Ball
+Starts at ×1
+Scales up to ×4 in long battles
+Fast Ball
+×4 → If base Speed ≥ 100 (or specific Pokémon like Magnemite, Grimer, Tangela)
+×1 → Otherwise
+Repeat Ball
+×3.5 → If Pokémon was previously caught
+×1 → Otherwise
+Nest Ball
+Up to ×4 → More effective on lower-level Pokémon
+Net Ball
+×3.5 → If Pokémon is Water or Bug type
+×1 → Otherwise
+Quick Ball
+×5 → If used on the first turn
+×1 → Otherwise
+Beast Ball
+×5 → On Ultra Beasts
+×0.1 → On other Pokémon
+
+Prices must me 150 pokedollars and under

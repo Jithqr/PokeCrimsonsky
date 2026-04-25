@@ -144,8 +144,69 @@ function todayStr() {
 }
 type Battle = { wild: Mon; pMon: Mon; phase: string; turnCount: number; canCatch: boolean; ballsThrown: number; selectedBall: string };
 const MAX_BATTLE_BALLS = 5;
-const BALL_MULT: Record<string, number> = { "Poké Ball": 1, "Pokeball": 1, "Great Ball": 1.5, "Ultra Ball": 2, "Master Ball": 999 };
-const BALL_NAMES = ["Poké Ball", "Great Ball", "Ultra Ball", "Master Ball"];
+const BALL_BASE_MULT: Record<string, number> = {
+  "Poké Ball": 1, "Pokeball": 1, "Great Ball": 1.5, "Ultra Ball": 2, "Master Ball": 255,
+  "Level Ball": 1, "Timer Ball": 1, "Fast Ball": 1, "Repeat Ball": 1,
+  "Nest Ball": 1, "Net Ball": 1, "Quick Ball": 1, "Beast Ball": 1,
+};
+const BALL_NAMES = [
+  "Poké Ball", "Great Ball", "Ultra Ball", "Master Ball",
+  "Level Ball", "Timer Ball", "Fast Ball", "Repeat Ball",
+  "Nest Ball", "Net Ball", "Quick Ball", "Beast Ball",
+];
+const BALL_BLURB: Record<string, string> = {
+  "Poké Ball": "×1 catch rate",
+  "Great Ball": "×1.5 catch rate",
+  "Ultra Ball": "×2 catch rate",
+  "Master Ball": "Guaranteed catch (×255)",
+  "Level Ball": "Better when your Pokémon out-levels the wild one",
+  "Timer Ball": "Stronger the longer the battle lasts (up to ×4)",
+  "Fast Ball": "×4 vs fast Pokémon (Speed ≥ 100)",
+  "Repeat Ball": "×3.5 if you've caught one before",
+  "Nest Ball": "Up to ×4 vs lower-level Pokémon",
+  "Net Ball": "×3.5 vs Water or Bug types",
+  "Quick Ball": "×5 if used on the first turn",
+  "Beast Ball": "×5 on Ultra Beasts, ×0.1 otherwise",
+};
+const FAST_BALL_FAVORS = new Set([81, 82, 88, 89, 100, 101, 109, 110, 114, 125, 126]);
+const ULTRA_BEASTS = new Set([793, 794, 795, 796, 797, 798, 799, 803, 804, 805, 806]);
+type BallCtx = { wild: Mon; player: Mon | null; turnCount: number; alreadyCaughtSpecies: boolean };
+function ballMultiplier(name: string, ctx: BallCtx): number {
+  const wild = ctx.wild;
+  switch (name) {
+    case "Poké Ball": case "Pokeball": return 1;
+    case "Great Ball": return 1.5;
+    case "Ultra Ball": return 2;
+    case "Master Ball": return 255;
+    case "Level Ball": {
+      const pl = ctx.player?.level ?? 0;
+      if (pl >= wild.level * 4) return 8;
+      if (pl >= wild.level * 2) return 4;
+      if (pl > wild.level) return 2;
+      return 1;
+    }
+    case "Timer Ball": {
+      return Math.min(4, 1 + ctx.turnCount * 0.3);
+    }
+    case "Fast Ball": {
+      if ((wild.spe ?? 0) >= 100 || FAST_BALL_FAVORS.has(wild.id)) return 4;
+      return 1;
+    }
+    case "Repeat Ball": return ctx.alreadyCaughtSpecies ? 3.5 : 1;
+    case "Nest Ball": {
+      if (wild.level >= 30) return 1;
+      return Math.max(1, Math.min(4, (30 - wild.level) / 7));
+    }
+    case "Net Ball": {
+      const t1 = (wild.type1 ?? "").toLowerCase();
+      const t2 = (wild.type2 ?? "").toLowerCase();
+      return (t1 === "water" || t1 === "bug" || t2 === "water" || t2 === "bug") ? 3.5 : 1;
+    }
+    case "Quick Ball": return ctx.turnCount <= 1 ? 5 : 1;
+    case "Beast Ball": return ULTRA_BEASTS.has(wild.id) ? 5 : 0.1;
+    default: return BALL_BASE_MULT[name] ?? 1;
+  }
+}
 
 const SAVE_KEY = "hexamon:save:v2";
 export type TeamGroup = { id: string; name: string; mons: Mon[] };
@@ -172,7 +233,11 @@ type SaveData = {
   safariNextLegend?: number;
   safariCaught?: number;
   lastSafariDay?: string;
+  lastSafariDayByRegion?: Record<number, string>;
+  safariRegion?: number;
   lastSpinDay?: string;
+  battleBoxRank?: number;
+  battleBoxHistory?: { mode: string; result: "W" | "L"; opponent: string; delta: number; ts: number }[];
 };
 function loadSave(): SaveData | null {
   try {
@@ -200,7 +265,7 @@ export default function App() {
     expNeeded: 100,
     sprite: "hilbert",
     id: makePlayerId(),
-    rank: 1,
+    rank: 1000,
     wins: 0,
     losses: 0,
     adventureStarted: todayStr(),
@@ -241,8 +306,19 @@ export default function App() {
   const [redeemInput, setRedeemInput] = useState<string>("");
   const [redeemMsg, setRedeemMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [lastSpinTs, setLastSpinTs] = useState<number>(initial?.lastSpinTs ?? 0);
-  const [lastSafariDay, setLastSafariDay] = useState<string>(initial?.lastSafariDay ?? "");
+  const [lastSafariDayByRegion, setLastSafariDayByRegion] = useState<Record<number, string>>(
+    initial?.lastSafariDayByRegion ??
+      (initial?.lastSafariDay ? { [initial?.safariRegion ?? 0]: initial.lastSafariDay } : {})
+  );
+  const [safariRegion, setSafariRegion] = useState<number>(initial?.safariRegion ?? 0);
+  const [showSafariRegionPicker, setShowSafariRegionPicker] = useState(false);
   const [lastSpinDay, setLastSpinDay] = useState<string>(initial?.lastSpinDay ?? "");
+  const [battleBoxHistory, setBattleBoxHistory] = useState<{ mode: string; result: "W" | "L"; opponent: string; delta: number; ts: number }[]>(initial?.battleBoxHistory ?? []);
+  const [bbMode, setBbMode] = useState<"ranked" | "unranked" | "random" | null>(null);
+  const [bbRoom, setBbRoom] = useState<{ code: string; isHost: boolean; status: "waiting" | "ready"; opponent?: string } | null>(null);
+  const [bbJoinCode, setBbJoinCode] = useState("");
+  const [bbSettings, setBbSettings] = useState({ levelCap: 50, allowLegendaries: true, turnTimer: 60, teamSize: 6, randomLevelMin: 40, randomLevelMax: 60 });
+  const [bbShowSettings, setBbShowSettings] = useState(false);
   const [showBallPicker, setShowBallPicker] = useState(false);
   const [showAddMonPicker, setShowAddMonPicker] = useState(false);
   const [showTeamTools, setShowTeamTools] = useState(false);
@@ -285,11 +361,11 @@ export default function App() {
         caught: Array.from(caught), seen: Array.from(seen), muted,
         candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay,
         safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught,
-        lastSafariDay, lastSpinDay,
+        lastSafariDayByRegion, safariRegion, lastSpinDay, battleBoxHistory,
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch { /* ignore quota errors */ }
-  }, [screen, player, teams, activeTeamIdx, box, inventory, caught, seen, muted, candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, lastSpinDay]);
+  }, [screen, player, teams, activeTeamIdx, box, inventory, caught, seen, muted, candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDayByRegion, safariRegion, lastSpinDay, battleBoxHistory]);
 
   // Buddy walking — buddy earns 1 candy every 30s
   useEffect(() => {
@@ -330,22 +406,8 @@ export default function App() {
     return       { label: "OK",                mult: 1.0, xp: 10,  color: "#aaa" };
   }
 
-  function awardCatchRewards(speciesId: number, mult: number, xpBonus: number) {
-    const today = todayStr();
-    let streak = catchStreak;
-    if (lastStreakDay !== today) {
-      streak = lastStreakDay === "" ? 1 : streak + 1;
-      setLastStreakDay(today);
-      setCatchStreak(streak);
-    }
-    const baseDust = 100;
-    const streakBonus = Math.min(streak, 7) * 20;
-    const dust = Math.floor((baseDust + streakBonus) * mult);
-    const candy = Math.max(1, Math.floor(3 * mult));
-    setPlayer((p) => ({ ...p, money: p.money + Math.floor(50 * mult), exp: p.exp + xpBonus, stardust: p.stardust + dust }));
-    setCandies((c) => ({ ...c, [speciesId]: (c[speciesId] ?? 0) + candy }));
-    addLog(`+${dust} ✨ Stardust, +${candy} 🍬 Candy`, "#FFD700");
-    if (streak > 1 && lastStreakDay !== today) addLog(`🔥 Catch streak: Day ${Math.min(streak, 7)}`, "#FF9800");
+  function awardCatchRewards(_speciesId: number, _mult: number, xpBonus: number) {
+    setPlayer((p) => ({ ...p, exp: p.exp + xpBonus }));
   }
 
   function powerUp(teamIdx: number) {
@@ -458,7 +520,7 @@ export default function App() {
   }
 
   function spawnSafari(forceLegendary = false): Mon | null {
-    const region = REGIONS[player.macroRegion] ?? REGIONS[0];
+    const region = REGIONS[safariRegion] ?? REGIONS[0];
     const pool = REGION_POOLS[region.gen] ?? [];
     const legends = REGION_LEGENDS[region.gen] ?? [];
     const isLegend = forceLegendary && legends.length > 0;
@@ -479,9 +541,16 @@ export default function App() {
       addLog("Resumed your Safari run.", "#26A69A");
       return;
     }
+    sfx.menuOpen();
+    setShowSafariRegionPicker(true);
+  }
+
+  function startSafariInRegion(regionIdx: number) {
     const today = todayStr();
-    if (lastSafariDay === today) {
-      addLog("You've already entered the Safari Zone today. Come back tomorrow!", "#F44336");
+    const usedToday = lastSafariDayByRegion[regionIdx] === today;
+    const hasPass = inventoryQty("Safari Pass") > 0;
+    if (usedToday && !hasPass) {
+      addLog(`You've already entered the ${REGIONS[regionIdx].name} Safari today. Use a Safari Pass or come back tomorrow!`, "#F44336");
       sfx.menuBack();
       return;
     }
@@ -490,16 +559,31 @@ export default function App() {
       sfx.menuBack();
       return;
     }
+    if (usedToday && hasPass) {
+      consumeItem("Safari Pass", 1);
+      addLog("Used 1 Safari Pass!", "#26C6DA");
+    }
     setPlayer((p) => ({ ...p, money: p.money - 100 }));
+    setSafariRegion(regionIdx);
+    setShowSafariRegionPicker(false);
     setSafariBalls(30);
     setSafariCounter(0);
     setSafariCaught(0);
     setSafariNextLegend(3 + Math.floor(Math.random() * 3));
-    const region = REGIONS[player.macroRegion] ?? REGIONS[0];
+    const region = REGIONS[regionIdx];
     addLog(`Welcome to the ${region.name} Safari Zone! 30 balls, no battles — catch only.`, "#26A69A");
     const next = 1;
     const isLegend = next >= (3 + Math.floor(Math.random() * 3));
-    const sm = spawnSafari(isLegend);
+    // spawnSafari uses safariRegion state; call directly with the region we just picked
+    const pool = REGION_POOLS[region.gen] ?? [];
+    const legends = REGION_LEGENDS[region.gen] ?? [];
+    const useLegend = isLegend && legends.length > 0;
+    const id = useLegend
+      ? legends[Math.floor(Math.random() * legends.length)]
+      : pool[Math.floor(Math.random() * pool.length)];
+    const sm = id ? makeMon(getPokemon(id), useLegend
+      ? Math.min(70, region.maxLv + 5 + Math.floor(Math.random() * 6))
+      : region.minLv + Math.floor(Math.random() * (region.maxLv - region.minLv + 1))) : null;
     setSafariEnc(sm);
     if (sm) setSeen((prev) => prev.has(sm.id) ? prev : new Set(prev).add(sm.id));
     setSafariCounter(1);
@@ -510,13 +594,13 @@ export default function App() {
     if (currentBalls <= 0) {
       addLog(`Safari ended! You caught ${safariCaught} Pokémon.`, "#FFD700");
       setSafariEnc(null);
-      setLastSafariDay(todayStr());
+      setLastSafariDayByRegion((prev) => ({ ...prev, [safariRegion]: todayStr() }));
       setScreen("world");
       return;
     }
     const next = safariCounter + 1;
     const triggerLegend = next >= safariNextLegend;
-    const region = REGIONS[player.macroRegion] ?? REGIONS[0];
+    const region = REGIONS[safariRegion] ?? REGIONS[0];
     const legends = REGION_LEGENDS[region.gen] ?? [];
     const isLegend = triggerLegend && legends.length > 0;
     if (isLegend) {
@@ -623,13 +707,9 @@ export default function App() {
 
     if (wild.currentHp <= 0) {
       const expGain = Math.floor(wild.level * (wild.atk + wild.def) / 8);
-      const killCoin = 30 + wild.level * 5;
-      const killDust = 20 + wild.level * 3;
       pMon.exp += expGain;
       logs.push([`⭐ Wild ${wild.name} fainted! +${expGain} EXP`, "#F44336"]);
-      logs.push([`💰 Kill reward: +₽${killCoin}, +${killDust} ✨`, "#FFD700"]);
       logs.forEach(([m, c]) => addLog(m, c));
-      setPlayer((p) => ({ ...p, wins: p.wins + 1, money: p.money + killCoin, stardust: (p.stardust ?? 0) + killDust }));
       setTimeout(() => sfx.faint(), 400);
       setTimeout(() => sfx.victory(), 1100);
       finishBattle(pMon, true, expGain);
@@ -664,7 +744,6 @@ export default function App() {
       const aliveOthers = team.filter((m) => m.currentHp > 0 && !(m.id === pMon.id && m.level === pMon.level));
       if (aliveOthers.length === 0) {
         addLog("All your Pokémon fainted! You blacked out...", "#F44336");
-        setPlayer((p) => ({ ...p, losses: p.losses + 1 }));
         setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })));
         addLog("Your team was fully healed!", "#4CAF50");
         setBattle(null);
@@ -745,13 +824,19 @@ export default function App() {
       setRingActive(false);
       return;
     }
-    const ballMult = BALL_MULT[ballName] ?? 1;
+    const ctx: BallCtx = {
+      wild,
+      player: battle.pMon,
+      turnCount: battle.turnCount,
+      alreadyCaughtSpecies: caught.has(wild.id),
+    };
+    const ballMult = ballMultiplier(ballName, ctx);
     const isMaster = ballName === "Master Ball";
     const q = ringQuality(ringRadius);
     setRingActive(false);
     sfx.ballThrow();
     setBallAnim("throw");
-    addLog(`Threw ${ballName} — ${q.label}`, q.color);
+    addLog(`Threw ${ballName} — ${q.label} (×${ballMult.toFixed(2)})`, q.color);
     setBattle((prev) => prev && ({ ...prev, ballsThrown: prev.ballsThrown + 1 }));
     const baseRate = 0.2 + (1 - wild.currentHp / wild.maxHp) * 0.6;
     const catchRate = isMaster ? 1 : Math.min(0.97, baseRate * q.mult * ballMult);
@@ -1294,7 +1379,7 @@ export default function App() {
       { label: "Mons",   icon: "fa-paw",             color: "var(--m-cyan)",   action: () => setScreen("mons") },
     ];
     const menuPage2: MenuBtn[] = [
-      { label: "Battle Box",    icon: "fa-shield-halved", color: "var(--m-pink)",   action: () => addLog("Battle Box coming soon!", "#9C27B0"), locked: true },
+      { label: "Battle Box",    icon: "fa-shield-halved", color: "var(--m-pink)",   action: () => { sfx.menuOpen(); setBbMode(null); setBbRoom(null); setScreen("battleBox"); } },
       { label: "Training Zone", icon: "fa-dumbbell",      color: "var(--m-orange)", action: () => addLog("Training Zone coming soon!", "#9C27B0"), locked: true },
       { label: "Referrals",     icon: "fa-user-plus",     color: "var(--m-green)",  action: () => addLog("Referrals coming soon!", "#9C27B0"), locked: true },
       { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
@@ -1463,6 +1548,51 @@ export default function App() {
           </div>
 
           <BottomNav active="home" go={setScreen} />
+
+          {showSafariRegionPicker && (
+            <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }}
+              onClick={() => { sfx.menuBack(); setShowSafariRegionPicker(false); }}>
+              <div onClick={(e) => e.stopPropagation()}
+                style={{ background: "var(--m-card)", border: "2px solid #26A69A", borderRadius: 16, padding: 18, width: "100%", maxWidth: 360, maxHeight: "85vh", overflow: "auto" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <div style={{ color: "#26A69A", fontWeight: 700, fontSize: 14, letterSpacing: 1 }}>SAFARI ZONE</div>
+                  <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "4px 10px", borderRadius: 6, fontSize: 11 }}
+                    onClick={() => { sfx.menuBack(); setShowSafariRegionPicker(false); }}>✕</button>
+                </div>
+                <div style={{ fontSize: 11, color: "var(--m-muted)", marginBottom: 14, lineHeight: 1.5 }}>
+                  Pick a region for today's Safari run. Each region can only be visited once per day (use a Safari Pass to retry). Entry costs ₽100.
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {REGIONS.map((r, i) => {
+                    const usedToday = lastSafariDayByRegion[i] === todayStr();
+                    const hasPass = inventoryQty("Safari Pass") > 0;
+                    const blocked = usedToday && !hasPass;
+                    return (
+                      <button key={i} className="btn"
+                        disabled={blocked}
+                        onClick={() => startSafariInRegion(i)}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+                          border: `1.5px solid ${blocked ? "#3a3a3a" : "#26A69A"}`,
+                          background: blocked ? "#161616" : "#0d2018",
+                          borderRadius: 12, color: "#fff", textAlign: "left",
+                          opacity: blocked ? 0.5 : 1, cursor: blocked ? "not-allowed" : "pointer",
+                        }}>
+                        <span style={{ fontSize: 18 }}>{r.emoji}</span>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700 }}>{r.name}</div>
+                          <div style={{ fontSize: 9, color: "var(--m-muted)" }}>Gen {r.gen} · Lv {r.minLv}–{r.maxLv}</div>
+                        </div>
+                        <div style={{ fontSize: 10, color: usedToday ? (hasPass ? "#06b6d4" : "#f87171") : "#4ade80", fontWeight: 700 }}>
+                          {usedToday ? (hasPass ? "USE PASS" : "USED TODAY") : "AVAILABLE"}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1949,29 +2079,44 @@ export default function App() {
                   Throws left this battle: {MAX_BATTLE_BALLS - battle.ballsThrown}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {BALL_NAMES.map((name) => {
+                  {BALL_NAMES.filter((n) => inventoryQty(n) > 0).map((name) => {
                     const qty = inventoryQty(name);
-                    const mult = BALL_MULT[name] ?? 1;
+                    const ctx: BallCtx = {
+                      wild: battle.wild,
+                      player: battle.pMon,
+                      turnCount: battle.turnCount,
+                      alreadyCaughtSpecies: caught.has(battle.wild.id),
+                    };
+                    const mult = ballMultiplier(name, ctx);
                     const disabled = qty <= 0;
                     return (
                       <button key={name} className="btn"
                         disabled={disabled}
                         onClick={() => startThrowAim(name)}
                         style={{
-                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          display: "flex", flexDirection: "column", alignItems: "stretch",
                           padding: "10px 12px",
                           border: `1.5px solid ${disabled ? "#3a1f1f" : "#F44336"}`,
                           background: disabled ? "#1a0d0d" : "#1a0a0a",
                           borderRadius: 10, color: "#fff",
                           opacity: disabled ? 0.5 : 1, cursor: disabled ? "not-allowed" : "pointer",
+                          textAlign: "left",
                         }}>
-                        <span style={{ fontSize: 12, fontWeight: 700 }}>🔴 {name}</span>
-                        <span style={{ fontSize: 10, color: disabled ? "#666" : "#FFD700" }}>
-                          ×{qty} · {name === "Master Ball" ? "100%" : `${mult}× rate`}
-                        </span>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: 12, fontWeight: 700 }}>🔴 {name}</span>
+                          <span style={{ fontSize: 10, color: disabled ? "#666" : "#FFD700" }}>
+                            ×{qty} · {name === "Master Ball" ? "100%" : `${mult.toFixed(2)}× now`}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 9, color: "#9aa0b4", marginTop: 4 }}>{BALL_BLURB[name]}</div>
                       </button>
                     );
                   })}
+                  {BALL_NAMES.filter((n) => inventoryQty(n) > 0).length === 0 && (
+                    <div style={{ fontSize: 11, color: "#888", textAlign: "center", padding: 12 }}>
+                      You have no Poké Balls. Visit the marketplace to stock up.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -2526,6 +2671,306 @@ export default function App() {
               <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2 }}>BATTLE</span>
             </button>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (screen === "battleBox") {
+    function genRoomCode() {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let s = "";
+      for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+      return s;
+    }
+    function startHostRoom(mode: "ranked" | "unranked" | "random") {
+      const code = genRoomCode();
+      setBbMode(mode);
+      setBbRoom({ code, isHost: true, status: "waiting" });
+      sfx.menuOpen();
+      const fakeNames = ["Kazuto", "MR×NOOB", "AshKetchum", "Cynthia", "BluE", "RedX", "Leon", "MistyJr"];
+      setTimeout(() => {
+        setBbRoom((prev) => prev ? { ...prev, status: "ready", opponent: fakeNames[Math.floor(Math.random() * fakeNames.length)] } : prev);
+        addLog(`Opponent connected to room ${code}!`, "#4ade80");
+      }, 1800 + Math.random() * 1500);
+    }
+    function joinRoom(mode: "ranked" | "unranked" | "random") {
+      if (bbJoinCode.trim().length < 4) { addLog("Enter a valid room code.", "#F44336"); return; }
+      sfx.menuOpen();
+      setBbMode(mode);
+      setBbRoom({ code: bbJoinCode.trim().toUpperCase(), isHost: false, status: "waiting" });
+      const fakeNames = ["Kazuto", "MR×NOOB", "AshKetchum", "Cynthia", "BluE", "RedX", "Leon", "MistyJr"];
+      setTimeout(() => {
+        setBbRoom((prev) => prev ? { ...prev, status: "ready", opponent: fakeNames[Math.floor(Math.random() * fakeNames.length)] } : prev);
+        addLog(`Joined room ${bbJoinCode.trim().toUpperCase()}!`, "#4ade80");
+      }, 1200);
+    }
+    function leaveRoom() { sfx.menuBack(); setBbRoom(null); setBbMode(null); }
+    function startBattleSim() {
+      if (!bbMode || !bbRoom || bbRoom.status !== "ready") return;
+      sfx.menuOpen();
+      const myTeam = bbMode === "random"
+        ? Array.from({ length: bbSettings.teamSize }, () => {
+            const pool = bbSettings.allowLegendaries ? ALL_POKEMON : ALL_POKEMON.filter((p) => !ALL_LEGENDARY_IDS.has(p.id));
+            const tpl = pool[Math.floor(Math.random() * pool.length)];
+            const lv = bbSettings.randomLevelMin + Math.floor(Math.random() * (bbSettings.randomLevelMax - bbSettings.randomLevelMin + 1));
+            return makeMon(tpl, lv);
+          })
+        : team.slice(0, bbSettings.teamSize);
+      if (myTeam.length === 0) {
+        addLog("You need at least 1 Pokémon to battle!", "#F44336");
+        return;
+      }
+      const oppTeam = Array.from({ length: bbSettings.teamSize }, () => {
+        const pool = bbSettings.allowLegendaries ? ALL_POKEMON : ALL_POKEMON.filter((p) => !ALL_LEGENDARY_IDS.has(p.id));
+        const tpl = pool[Math.floor(Math.random() * pool.length)];
+        const lv = Math.min(bbSettings.levelCap, 30 + Math.floor(Math.random() * 30));
+        return makeMon(tpl, lv);
+      });
+      const myCp = myTeam.reduce((s, m) => s + getCP(m), 0);
+      const opCp = oppTeam.reduce((s, m) => s + getCP(m), 0);
+      const winChance = Math.min(0.92, Math.max(0.08, myCp / (myCp + opCp)));
+      const won = Math.random() < winChance;
+      const oppName = bbRoom.opponent ?? "Rival";
+      let delta = 0;
+      if (bbMode === "ranked") {
+        const expected = 1 / (1 + Math.pow(10, ((opCp - myCp) / 400)));
+        delta = Math.round(32 * ((won ? 1 : 0) - expected));
+      }
+      const result: "W" | "L" = won ? "W" : "L";
+      setBattleBoxHistory((prev) => [{ mode: bbMode, result, opponent: oppName, delta, ts: Date.now() }, ...prev].slice(0, 50));
+      setPlayer((p) => {
+        const next = { ...p };
+        if (won) next.wins = (p.wins ?? 0) + 1; else next.losses = (p.losses ?? 0) + 1;
+        if (bbMode === "ranked") next.rank = Math.max(0, (p.rank ?? 1000) + delta);
+        return next;
+      });
+      addLog(`${won ? "🏆 Victory" : "💀 Defeat"} vs ${oppName} — ${bbMode.toUpperCase()}${bbMode === "ranked" ? ` (${delta >= 0 ? "+" : ""}${delta} rank)` : ""}`, won ? "#4ade80" : "#f87171");
+      if (won) sfx.victory(); else sfx.faint();
+      setBbRoom(null);
+      setBbMode(null);
+    }
+    const modeMeta: Record<string, { title: string; sub: string; color: string; icon: string }> = {
+      ranked:   { title: "Ranked Battle",   sub: "Climb the leaderboard. Wins/losses count.", color: "#FFD700", icon: "fa-trophy" },
+      unranked: { title: "Unranked Battle", sub: "Casual practice. No rank changes.",          color: "#60a5fa", icon: "fa-hand-fist" },
+      random:   { title: "Random Battle",   sub: "Both players get random teams.",             color: "#a855f7", icon: "fa-dice" },
+    };
+    return (
+      <div style={S.root}><style>{css}</style>
+        <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid var(--m-border)" }}>
+            <button className="btn"
+              style={{ border: "1px solid var(--m-border)", color: "var(--m-muted)", padding: "6px 12px", borderRadius: 8, background: "transparent", fontSize: 11, fontWeight: 600 }}
+              onClick={() => { sfx.menuBack(); if (bbRoom) { setBbRoom(null); setBbMode(null); } else { setScreen("world"); } }}>
+              ◀ BACK
+            </button>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--m-pink)", letterSpacing: 1.5 }}>BATTLE BOX</div>
+            <button className="btn"
+              style={{ border: "1px solid var(--m-border)", color: "var(--m-muted)", padding: "6px 10px", borderRadius: 8, background: "transparent", fontSize: 11, fontWeight: 600 }}
+              onClick={() => { sfx.click(); setBbShowSettings(true); }}>
+              <i className="fa-solid fa-sliders" />
+            </button>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, padding: "10px 16px", borderBottom: "1px solid var(--m-border)" }}>
+            <div className="m-card" style={{ flex: 1, padding: 10, borderRadius: 12, textAlign: "center" }}>
+              <div style={{ fontSize: 9, color: "var(--m-muted)", letterSpacing: 1 }}>RANK</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: "#FFD700" }}>{player.rank ?? 1000}</div>
+            </div>
+            <div className="m-card" style={{ flex: 1, padding: 10, borderRadius: 12, textAlign: "center" }}>
+              <div style={{ fontSize: 9, color: "var(--m-muted)", letterSpacing: 1 }}>WINS</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: "#4ade80" }}>{player.wins}</div>
+            </div>
+            <div className="m-card" style={{ flex: 1, padding: 10, borderRadius: 12, textAlign: "center" }}>
+              <div style={{ fontSize: 9, color: "var(--m-muted)", letterSpacing: 1 }}>LOSSES</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: "#f87171" }}>{player.losses}</div>
+            </div>
+          </div>
+
+          <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+            {!bbRoom && !bbMode && (
+              <>
+                <div style={{ fontSize: 11, color: "var(--m-muted)", letterSpacing: 1, textTransform: "uppercase" }}>Choose Mode</div>
+                {(["ranked", "unranked", "random"] as const).map((m) => {
+                  const meta = modeMeta[m];
+                  return (
+                    <button key={m} className="btn"
+                      onClick={() => { sfx.click(); setBbMode(m); }}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 12, padding: "14px 14px",
+                        border: `2px solid ${meta.color}`, background: `${meta.color}10`,
+                        borderRadius: 14, color: "#fff", textAlign: "left",
+                      }}>
+                      <div style={{ width: 42, height: 42, borderRadius: 10, background: `${meta.color}20`, display: "flex", alignItems: "center", justifyContent: "center", color: meta.color, fontSize: 18 }}>
+                        <i className={`fa-solid ${meta.icon}`} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700 }}>{meta.title}</div>
+                        <div style={{ fontSize: 10, color: "var(--m-muted)", marginTop: 2 }}>{meta.sub}</div>
+                      </div>
+                      <i className="fa-solid fa-chevron-right" style={{ color: meta.color }} />
+                    </button>
+                  );
+                })}
+                {battleBoxHistory.length > 0 && (
+                  <>
+                    <div style={{ fontSize: 11, color: "var(--m-muted)", letterSpacing: 1, textTransform: "uppercase", marginTop: 8 }}>Recent Matches</div>
+                    {battleBoxHistory.slice(0, 6).map((h, i) => (
+                      <div key={i} className="m-card" style={{ padding: "10px 12px", borderRadius: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <div style={{ fontSize: 12, color: "var(--m-text)", fontWeight: 600 }}>vs {h.opponent}</div>
+                          <div style={{ fontSize: 9, color: "var(--m-muted)", textTransform: "uppercase" }}>{h.mode}</div>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          {h.delta !== 0 && (
+                            <span style={{ fontSize: 10, color: h.delta > 0 ? "#4ade80" : "#f87171", fontWeight: 600 }}>
+                              {h.delta > 0 ? "+" : ""}{h.delta}
+                            </span>
+                          )}
+                          <span style={{ fontSize: 14, fontWeight: 800, color: h.result === "W" ? "#4ade80" : "#f87171" }}>{h.result}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </>
+            )}
+
+            {bbMode && !bbRoom && (
+              <>
+                <div className="m-card" style={{ padding: 12, borderRadius: 12, borderColor: modeMeta[bbMode].color }}>
+                  <div style={{ fontSize: 12, color: modeMeta[bbMode].color, fontWeight: 700 }}>
+                    <i className={`fa-solid ${modeMeta[bbMode].icon}`} style={{ marginRight: 6 }} />{modeMeta[bbMode].title}
+                  </div>
+                  <div style={{ fontSize: 10, color: "var(--m-muted)", marginTop: 4 }}>{modeMeta[bbMode].sub}</div>
+                </div>
+                <button className="btn"
+                  onClick={() => startHostRoom(bbMode)}
+                  style={{ padding: "14px 12px", border: `1.5px solid ${modeMeta[bbMode].color}`, background: `${modeMeta[bbMode].color}15`, color: "#fff", borderRadius: 12, fontSize: 13, fontWeight: 700 }}>
+                  <i className="fa-solid fa-plus" style={{ marginRight: 6 }} />HOST A ROOM
+                </button>
+                <div style={{ fontSize: 11, color: "var(--m-muted)", textAlign: "center" }}>or join with a friend's code</div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    type="text"
+                    placeholder="ROOM CODE"
+                    value={bbJoinCode}
+                    onChange={(e) => setBbJoinCode(e.target.value.toUpperCase().slice(0, 8))}
+                    style={{ flex: 1, padding: "12px 14px", border: "1.5px solid var(--m-border)", background: "var(--m-input)", color: "#fff", borderRadius: 10, fontSize: 13, fontFamily: "monospace", letterSpacing: 2, textAlign: "center", outline: "none" }}
+                  />
+                  <button className="btn"
+                    onClick={() => joinRoom(bbMode)}
+                    style={{ padding: "12px 18px", border: "1.5px solid var(--m-pink)", background: "var(--m-pink)", color: "#fff", borderRadius: 10, fontSize: 12, fontWeight: 700 }}>
+                    JOIN
+                  </button>
+                </div>
+                <button className="btn"
+                  onClick={() => { sfx.menuBack(); setBbMode(null); }}
+                  style={{ padding: "10px", border: "1px solid var(--m-border)", color: "var(--m-muted)", background: "transparent", borderRadius: 10, fontSize: 11 }}>
+                  Change Mode
+                </button>
+              </>
+            )}
+
+            {bbRoom && (
+              <>
+                <div className="m-card" style={{ padding: 14, borderRadius: 14, textAlign: "center", borderColor: modeMeta[bbMode!].color }}>
+                  <div style={{ fontSize: 10, color: "var(--m-muted)", letterSpacing: 1 }}>{bbRoom.isHost ? "YOUR ROOM CODE" : "JOINED ROOM"}</div>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: modeMeta[bbMode!].color, fontFamily: "monospace", letterSpacing: 4, marginTop: 6 }}>
+                    {bbRoom.code}
+                  </div>
+                  <div style={{ fontSize: 10, color: "var(--m-muted)", marginTop: 8 }}>
+                    {bbRoom.status === "waiting" ? "Waiting for opponent..." : `Ready vs ${bbRoom.opponent}`}
+                  </div>
+                  {bbRoom.isHost && bbRoom.status === "waiting" && (
+                    <button className="btn"
+                      onClick={() => { navigator.clipboard?.writeText(bbRoom.code).catch(() => {}); addLog("Code copied!", "#4ade80"); }}
+                      style={{ marginTop: 10, padding: "6px 14px", border: "1px solid var(--m-border)", color: "var(--m-text)", background: "transparent", borderRadius: 8, fontSize: 11 }}>
+                      <i className="fa-solid fa-copy" style={{ marginRight: 6 }} />COPY CODE
+                    </button>
+                  )}
+                </div>
+
+                <div className="m-card" style={{ padding: 12, borderRadius: 12, fontSize: 11, color: "var(--m-muted)", lineHeight: 1.6 }}>
+                  <div style={{ color: "var(--m-text)", fontWeight: 600, marginBottom: 6 }}>Settings</div>
+                  Format: {bbSettings.teamSize}v{bbSettings.teamSize} · Level cap: {bbSettings.levelCap} · Timer: {bbSettings.turnTimer}s<br />
+                  Legendaries: {bbSettings.allowLegendaries ? "Allowed" : "Banned"}
+                  {bbMode === "random" && <><br />Random level range: {bbSettings.randomLevelMin}–{bbSettings.randomLevelMax}</>}
+                </div>
+
+                <button className="btn"
+                  disabled={bbRoom.status !== "ready"}
+                  onClick={startBattleSim}
+                  style={{
+                    padding: "16px", border: `2px solid ${bbRoom.status === "ready" ? "#4ade80" : "var(--m-border)"}`,
+                    background: bbRoom.status === "ready" ? "#0f2a1a" : "var(--m-card)",
+                    color: bbRoom.status === "ready" ? "#4ade80" : "var(--m-muted)",
+                    borderRadius: 12, fontSize: 14, fontWeight: 700, letterSpacing: 1,
+                    cursor: bbRoom.status === "ready" ? "pointer" : "not-allowed",
+                    opacity: bbRoom.status === "ready" ? 1 : 0.6,
+                  }}>
+                  {bbRoom.status === "ready" ? <><i className="fa-solid fa-bolt" style={{ marginRight: 6 }} />START BATTLE</> : "WAITING..."}
+                </button>
+                <button className="btn"
+                  onClick={leaveRoom}
+                  style={{ padding: "10px", border: "1px solid #f87171", color: "#f87171", background: "transparent", borderRadius: 10, fontSize: 11, fontWeight: 600 }}>
+                  LEAVE ROOM
+                </button>
+              </>
+            )}
+          </div>
+
+          {bbShowSettings && (
+            <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }}
+              onClick={() => setBbShowSettings(false)}>
+              <div onClick={(e) => e.stopPropagation()}
+                style={{ background: "var(--m-card)", border: "2px solid var(--m-pink)", borderRadius: 16, padding: 18, width: "100%", maxWidth: 360 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div style={{ color: "var(--m-pink)", fontWeight: 700, fontSize: 14 }}>BATTLE SETTINGS</div>
+                  <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "4px 10px", borderRadius: 6, fontSize: 11 }}
+                    onClick={() => setBbShowSettings(false)}>✕</button>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, fontSize: 12, color: "var(--m-text)" }}>
+                  <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    Team size <input type="number" min={1} max={6} value={bbSettings.teamSize}
+                      onChange={(e) => setBbSettings((s) => ({ ...s, teamSize: Math.max(1, Math.min(6, +e.target.value || 1)) }))}
+                      style={{ width: 70, padding: 6, background: "var(--m-input)", border: "1px solid var(--m-border)", color: "#fff", borderRadius: 6, textAlign: "center" }} />
+                  </label>
+                  <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    Level cap <input type="number" min={5} max={100} value={bbSettings.levelCap}
+                      onChange={(e) => setBbSettings((s) => ({ ...s, levelCap: Math.max(5, Math.min(100, +e.target.value || 50)) }))}
+                      style={{ width: 70, padding: 6, background: "var(--m-input)", border: "1px solid var(--m-border)", color: "#fff", borderRadius: 6, textAlign: "center" }} />
+                  </label>
+                  <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    Turn timer (s) <input type="number" min={15} max={180} value={bbSettings.turnTimer}
+                      onChange={(e) => setBbSettings((s) => ({ ...s, turnTimer: Math.max(15, Math.min(180, +e.target.value || 60)) }))}
+                      style={{ width: 70, padding: 6, background: "var(--m-input)", border: "1px solid var(--m-border)", color: "#fff", borderRadius: 6, textAlign: "center" }} />
+                  </label>
+                  <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    Allow legendaries
+                    <input type="checkbox" checked={bbSettings.allowLegendaries}
+                      onChange={(e) => setBbSettings((s) => ({ ...s, allowLegendaries: e.target.checked }))}
+                      style={{ width: 18, height: 18 }} />
+                  </label>
+                  <div style={{ borderTop: "1px solid var(--m-border)", paddingTop: 10, fontSize: 10, color: "var(--m-muted)", letterSpacing: 1 }}>RANDOM MODE</div>
+                  <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    Min level <input type="number" min={1} max={100} value={bbSettings.randomLevelMin}
+                      onChange={(e) => setBbSettings((s) => ({ ...s, randomLevelMin: Math.max(1, Math.min(s.randomLevelMax, +e.target.value || 1)) }))}
+                      style={{ width: 70, padding: 6, background: "var(--m-input)", border: "1px solid var(--m-border)", color: "#fff", borderRadius: 6, textAlign: "center" }} />
+                  </label>
+                  <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    Max level <input type="number" min={1} max={100} value={bbSettings.randomLevelMax}
+                      onChange={(e) => setBbSettings((s) => ({ ...s, randomLevelMax: Math.max(s.randomLevelMin, Math.min(100, +e.target.value || 60)) }))}
+                      style={{ width: 70, padding: 6, background: "var(--m-input)", border: "1px solid var(--m-border)", color: "#fff", borderRadius: 6, textAlign: "center" }} />
+                  </label>
+                </div>
+                <button className="btn" style={{ marginTop: 14, padding: "10px", width: "100%", background: "var(--m-pink)", border: "none", color: "#fff", borderRadius: 10, fontSize: 12, fontWeight: 700 }}
+                  onClick={() => { sfx.click(); setBbShowSettings(false); addLog("Settings saved!", "#4ade80"); }}>
+                  SAVE SETTINGS
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -3166,15 +3611,27 @@ export default function App() {
       const tier = LEGEND_IDS.has(p.id) ? 200 : RARE_IDS.has(p.id) ? 60 : 30;
       return base * tier;
     }
-    const marketTab: "pokemons" | "items" = storeCat === "items" || storeCat === "balls" || storeCat === "boost" || storeCat === "tms" ? "items" : "pokemons";
+    const stardustCats = new Set(["dust-balls", "dust-passes"]);
+    const itemsCats = new Set(["balls", "boost", "tms"]);
+    const marketTab: "pokemons" | "items" | "stardust" =
+      stardustCats.has(storeCat ?? "") ? "stardust"
+      : itemsCats.has(storeCat ?? "") ? "items"
+      : "pokemons";
     const marketMons = ALL_POKEMON.slice(0, 12);
     const categories = [
       { key: "balls", label: "POKÉ BALLS", emoji: "🔴", color: "#F44336", desc: "Catch wild Pokémon",
         items: [
-          { name: "Poké Ball", price: 200, info: "Standard ball" },
-          { name: "Great Ball", price: 600, info: "1.5× catch rate" },
-          { name: "Ultra Ball", price: 1200, info: "2× catch rate" },
-          { name: "Master Ball", price: 9999, info: "Always catches" },
+          { name: "Poké Ball", price: 100, info: BALL_BLURB["Poké Ball"] },
+          { name: "Great Ball", price: 130, info: BALL_BLURB["Great Ball"] },
+          { name: "Ultra Ball", price: 150, info: BALL_BLURB["Ultra Ball"] },
+          { name: "Level Ball", price: 140, info: BALL_BLURB["Level Ball"] },
+          { name: "Timer Ball", price: 130, info: BALL_BLURB["Timer Ball"] },
+          { name: "Fast Ball", price: 140, info: BALL_BLURB["Fast Ball"] },
+          { name: "Repeat Ball", price: 130, info: BALL_BLURB["Repeat Ball"] },
+          { name: "Nest Ball", price: 120, info: BALL_BLURB["Nest Ball"] },
+          { name: "Net Ball", price: 130, info: BALL_BLURB["Net Ball"] },
+          { name: "Quick Ball", price: 150, info: BALL_BLURB["Quick Ball"] },
+          { name: "Beast Ball", price: 150, info: BALL_BLURB["Beast Ball"] },
         ] },
       { key: "boost", label: "BOOST ITEMS", emoji: "💊", color: "#4CAF50", desc: "Heal & power up",
         items: [
@@ -3188,7 +3645,18 @@ export default function App() {
       { key: "tms", label: "TMs", emoji: "💿", color: "#9C27B0", desc: "Teach new moves",
         items: tmStoreItems() },
     ];
-    const cat = categories.find((c) => c.key === storeCat) ?? null;
+    const stardustCategories = [
+      { key: "dust-balls", label: "RARE BALLS", emoji: "🟣", color: "#a855f7", desc: "Premium Poké Balls",
+        items: [
+          { name: "Master Ball", price: 5000, info: "Guaranteed catch — works on any wild Pokémon" },
+        ] },
+      { key: "dust-passes", label: "PASSES", emoji: "🎟️", color: "#06b6d4", desc: "Bonus entries",
+        items: [
+          { name: "Safari Pass", price: 4500, info: "Enter the Safari Zone again on the same day" },
+        ] },
+    ];
+    const allCats = [...categories, ...stardustCategories];
+    const cat = allCats.find((c) => c.key === storeCat) ?? null;
     const visibleItems = (() => {
       const items = cat?.items ?? [];
       if (storeCat !== "tms" || !tmSearch.trim()) return items;
@@ -3197,12 +3665,30 @@ export default function App() {
         it.name.toLowerCase().includes(q) || it.info.toLowerCase().includes(q)
       );
     })();
+    const isStardustCat = stardustCats.has(storeCat ?? "");
     return (
       <div style={S.root}><style>{css}</style>
         <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
-          <div className="m-mkt-head">
+          <div className="m-mkt-head" style={{ position: "relative" }}>
+            <button className="btn"
+              style={{
+                position: "absolute", left: 12, top: 14,
+                border: "1px solid var(--m-border)", color: "var(--m-muted)",
+                padding: "6px 10px", borderRadius: 8, background: "transparent",
+                fontSize: 11, fontWeight: 600,
+              }}
+              onClick={() => { sfx.menuBack(); setScreen("world"); }}>
+              <i className="fa-solid fa-chevron-left" style={{ fontSize: 9, marginRight: 4 }} />BACK
+            </button>
             <h1 className="m-mkt-title">Crimson Sky Marketplace</h1>
-            <div style={{ marginTop: 6, fontSize: 12, color: "var(--m-yellow)", fontWeight: 600 }}>₽{player.money.toLocaleString()}</div>
+            <div style={{ marginTop: 6, display: "flex", justifyContent: "center", gap: 14, alignItems: "center" }}>
+              <span style={{ fontSize: 12, color: "var(--m-yellow)", fontWeight: 600 }}>
+                <i className="fa-solid fa-coins" style={{ fontSize: 10, marginRight: 4 }} />₽{player.money.toLocaleString()}
+              </span>
+              <span style={{ fontSize: 12, color: "#c4b5fd", fontWeight: 600 }}>
+                <i className="fa-solid fa-wand-sparkles" style={{ fontSize: 10, marginRight: 4 }} />{(player.stardust ?? 0).toLocaleString()}
+              </span>
+            </div>
           </div>
 
           <div className="m-toggle-wrap">
@@ -3211,6 +3697,8 @@ export default function App() {
                 onClick={() => { sfx.click(); setStoreCat(null); }}>Pokémons</div>
               <div className={`m-toggle-btn ${marketTab === "items" ? "active" : ""}`}
                 onClick={() => { sfx.click(); setStoreCat("balls"); }}>Items</div>
+              <div className={`m-toggle-btn ${marketTab === "stardust" ? "active" : ""}`}
+                onClick={() => { sfx.click(); setStoreCat("dust-balls"); }}>Stardust</div>
             </div>
           </div>
 
@@ -3218,7 +3706,7 @@ export default function App() {
             <>
               <div className="m-search-row">
                 <div className="m-search">
-                  <i className="fa-solid fa-magnifying-glass" />
+                  <i className="fa-solid fa-cart-shopping" />
                   <input type="text" placeholder="Search" />
                 </div>
                 <button className="m-icon-btn"><i className="fa-solid fa-filter" /></button>
@@ -3259,10 +3747,10 @@ export default function App() {
             </>
           )}
 
-          {marketTab === "items" && (
+          {(marketTab === "items" || marketTab === "stardust") && (
             <>
               <div style={{ padding: "0 16px 8px", display: "flex", gap: 8, overflowX: "auto" }}>
-                {categories.map((c) => (
+                {(marketTab === "stardust" ? stardustCategories : categories).map((c) => (
                   <button key={c.key} className="m-icon-btn"
                     style={{
                       width: "auto", padding: "8px 14px", borderRadius: 16, fontSize: 12, fontWeight: 600,
@@ -3303,18 +3791,24 @@ export default function App() {
                   </div>
                 )}
                 {visibleItems.map((it) => {
-                  const canAfford = player.money >= it.price;
+                  const balance = isStardustCat ? (player.stardust ?? 0) : player.money;
+                  const canAfford = balance >= it.price;
+                  const owned = inventoryQty(it.name);
                   return (
                     <div key={it.name} className="m-card" style={{ padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, borderRadius: 16 }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--m-text)" }}>{it.name}</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--m-text)" }}>
+                          {it.name}{owned > 0 ? <span style={{ fontSize: 10, color: "var(--m-muted)", marginLeft: 6 }}>×{owned}</span> : null}
+                        </div>
                         <div style={{ fontSize: 11, color: "var(--m-muted)", marginTop: 2 }}>{it.info}</div>
                       </div>
-                      <div style={{ fontSize: 13, color: "var(--m-yellow)", minWidth: 70, textAlign: "right", fontWeight: 600 }}>₽{it.price.toLocaleString()}</div>
+                      <div style={{ fontSize: 13, color: isStardustCat ? "#c4b5fd" : "var(--m-yellow)", minWidth: 80, textAlign: "right", fontWeight: 600 }}>
+                        {isStardustCat ? `✨ ${it.price.toLocaleString()}` : `₽${it.price.toLocaleString()}`}
+                      </div>
                       <button
                         disabled={!canAfford}
                         style={{
-                          background: canAfford ? "var(--m-bluebg)" : "var(--m-input)",
+                          background: canAfford ? (isStardustCat ? "linear-gradient(180deg,#7e3aed,#4c1d95)" : "var(--m-bluebg)") : "var(--m-input)",
                           color: canAfford ? "#fff" : "var(--m-muted)",
                           border: "none", padding: "8px 16px", borderRadius: 16, fontSize: 12, fontWeight: 600,
                           fontFamily: "inherit", cursor: canAfford ? "pointer" : "not-allowed", opacity: canAfford ? 1 : 0.5,
@@ -3322,7 +3816,11 @@ export default function App() {
                         onClick={() => {
                           if (!canAfford) return;
                           sfx.click();
-                          setPlayer((p) => ({ ...p, money: p.money - it.price }));
+                          if (isStardustCat) {
+                            setPlayer((p) => ({ ...p, stardust: (p.stardust ?? 0) - it.price }));
+                          } else {
+                            setPlayer((p) => ({ ...p, money: p.money - it.price }));
+                          }
                           setInventory((inv) => {
                             const found = inv.find((x) => x.name === it.name);
                             return found
@@ -3345,7 +3843,7 @@ export default function App() {
   }
 
   if (screen === "safari") {
-    const region = REGIONS[player.macroRegion] ?? REGIONS[0];
+    const region = REGIONS[safariRegion] ?? REGIONS[0];
     const isLegend = safariEnc ? ALL_LEGENDARY_IDS.has(safariEnc.id) : false;
     return (
       <div style={{ ...S.root, background: "#0a0e1a" }}><style>{css}</style>
@@ -3463,7 +3961,7 @@ export default function App() {
               <button className="btn"
                 disabled={safariThrowAnim !== null}
                 style={{ flex: 1, border: "1.5px solid #2a3a55", color: safariThrowAnim ? "#444" : "#fff", padding: "18px 8px", borderRadius: 16, background: "#10172a", fontSize: 15, fontWeight: 500 }}
-                onClick={() => { setSafariEnc(null); setSafariBalls(0); setSafariCounter(0); setSafariCaught(0); setLastSafariDay(todayStr()); addLog(`Safari ended. Caught ${safariCaught}.`, "#FFD700"); setScreen("world"); }}>
+                onClick={() => { setSafariEnc(null); setSafariBalls(0); setSafariCounter(0); setSafariCaught(0); addLog(`Safari ended. Caught ${safariCaught}.`, "#FFD700"); setScreen("world"); }}>
                 Escape
               </button>
             </div>
