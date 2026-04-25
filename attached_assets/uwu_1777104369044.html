@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crimson Sky Marketplace</title>
+    <style>
+        :root {
+            --bg-color: #0d0d0f;
+            --card-bg: #1c1c1e;
+            --text-main: #ffffff;
+            --text-muted: #8e8e93;
+            --accent-pink: #ff3377;
+            --accent-gold: #ffcc00;
+            --accent-blue: #0a84ff;
+            --border-color: #2c2c2e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 16px;
+            padding-bottom: 80px; 
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+            margin-top: 10px;
+        }
+
+        h1 {
+            color: var(--accent-pink);
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .balance {
+            color: var(--accent-gold);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .main-nav {
+            display: flex;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+
+        .main-nav button {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .main-nav button.active {
+            background-color: #2c2c2e;
+            color: var(--text-main);
+        }
+
+        .sub-nav {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            padding-bottom: 4px;
+            scrollbar-width: none; 
+        }
+        
+        .sub-nav::-webkit-scrollbar {
+            display: none; 
+        }
+
+        .sub-nav button {
+            white-space: nowrap;
+            padding: 8px 16px;
+            background-color: var(--card-bg);
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .sub-nav button.active {
+            border-color: #c856ff;
+            color: #c856ff;
+        }
+
+        .store-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .item-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .item-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .item-details {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .item-action {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .item-price {
+            color: var(--accent-gold);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .buy-btn {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .buy-btn:active {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Crimson Sky Marketplace</h1>
+        <div class="balance">₽4,000</div>
+    </header>
+
+    <nav class="main-nav">
+        <button>Pokémons</button>
+        <button class="active">Items</button>
+    </nav>
+
+    <div class="sub-nav">
+        <button>🔴 POKÉ BALLS</button>
+        <button>💊 BOOST ITEMS</button>
+        <button class="active">💿 TMs</button>
+    </div>
+
+    <div class="store-list" id="tm-container"></div>
+</div>
+
+<script>
+    // Full database of 164 filtered TMs [ID, Name, Type, Power, Accuracy, Category]
+    const tmDatabase = [
+        ["TM001", "Acrobatics", "Flying", 55, 100, "Physical"], ["TM002", "Astonish", "Ghost", 30, 100, "Physical"], ["TM003", "Avalanche", "Ice", 60, 100, "Physical"],
+        ["TM004", "Bind", "Normal", 15, 85, "Physical"], ["TM005", "Blizzard", "Ice", 110, 70, "Special"], ["TM006", "Body Press", "Fighting", 80, 100, "Physical"],
+        ["TM007", "Body Slam", "Normal", 85, 100, "Physical"], ["TM008", "Bounce", "Flying", 85, 85, "Physical"], ["TM009", "Brave Bird", "Flying", 120, 100, "Physical"],
+        ["TM010", "Brick Break", "Fighting", 75, 100, "Physical"], ["TM011", "Brine", "Water", 65, 100, "Special"], ["TM012", "Brutal Swing", "Dark", 60, 100, "Physical"],
+        ["TM013", "Bubble Beam", "Water", 65, 100, "Special"], ["TM014", "Bug Bite", "Bug", 60, 100, "Physical"], ["TM015", "Bug Buzz", "Bug", 90, 100, "Special"],
+        ["TM016", "Bulldoze", "Ground", 60, 100, "Physical"], ["TM017", "Bullet Seed", "Grass", 25, 100, "Physical"], ["TM018", "Charge Beam", "Electric", 50, 90, "Special"],
+        ["TM019", "Chilling Water", "Water", 50, 100, "Special"], ["TM020", "Close Combat", "Fighting", 120, 100, "Physical"], ["TM021", "Crunch", "Dark", 80, 100, "Physical"],
+        ["TM022", "Cut", "Normal", 50, 95, "Physical"], ["TM023", "Dark Pulse", "Dark", 80, 100, "Special"], ["TM024", "Dazzling Gleam", "Fairy", 80, 100, "Special"],
+        ["TM025", "Dig", "Ground", 80, 100, "Physical"], ["TM026", "Dive", "Water", 80, 100, "Physical"], ["TM027", "Double-Edge", "Normal", 120, 100, "Physical"],
+        ["TM028", "Draco Meteor", "Dragon", 130, 90, "Special"], ["TM029", "Dragon Breath", "Dragon", 60, 100, "Special"], ["TM030", "Dragon Claw", "Dragon", 80, 100, "Physical"],
+        ["TM031", "Dragon Pulse", "Dragon", 85, 100, "Special"], ["TM032", "Dragon Tail", "Dragon", 60, 90, "Physical"], ["TM033", "Drain Punch", "Fighting", 75, 100, "Physical"],
+        ["TM034", "Draining Kiss", "Fairy", 50, 100, "Special"], ["TM035", "Dream Eater", "Psychic", 100, 100, "Special"], ["TM036", "Dual Wingbeat", "Flying", 40, 90, "Physical"],
+        ["TM037", "Dynamic Punch", "Fighting", 100, 50, "Physical"], ["TM038", "Earth Power", "Ground", 90, 100, "Special"], ["TM039", "Earthquake", "Ground", 100, 100, "Physical"],
+        ["TM040", "Echoed Voice", "Normal", 40, 100, "Special"], ["TM041", "Egg Bomb", "Normal", 100, 75, "Physical"], ["TM042", "Electroweb", "Electric", 55, 95, "Special"],
+        ["TM043", "Energy Ball", "Grass", 90, 100, "Special"], ["TM044", "Expanding Force", "Psychic", 80, 100, "Special"], ["TM045", "Explosion", "Normal", 250, 100, "Physical"],
+        ["TM046", "Facade", "Normal", 70, 100, "Physical"], ["TM047", "False Swipe", "Normal", 40, 100, "Physical"], ["TM048", "Fire Blast", "Fire", 110, 85, "Special"],
+        ["TM049", "Fire Fang", "Fire", 65, 95, "Physical"], ["TM050", "Fire Punch", "Fire", 75, 100, "Physical"], ["TM051", "Fire Spin", "Fire", 35, 85, "Special"],
+        ["TM052", "Flamethrower", "Fire", 90, 100, "Special"], ["TM053", "Flash Cannon", "Steel", 80, 100, "Special"], ["TM054", "Fly", "Flying", 90, 95, "Physical"],
+        ["TM055", "Focus Blast", "Fighting", 120, 70, "Special"], ["TM056", "Focus Punch", "Fighting", 150, 100, "Physical"], ["TM057", "Foul Play", "Dark", 95, 100, "Physical"],
+        ["TM058", "Freeze-Dry", "Ice", 70, 100, "Special"], ["TM059", "Frost Breath", "Ice", 60, 90, "Special"], ["TM060", "Giga Drain", "Grass", 75, 100, "Special"],
+        ["TM061", "Giga Impact", "Normal", 150, 90, "Physical"], ["TM062", "Heat Wave", "Fire", 95, 90, "Special"], ["TM063", "Hex", "Ghost", 65, 100, "Special"],
+        ["TM064", "Hidden Power", "Normal", 60, 100, "Special"], ["TM065", "High Horsepower", "Ground", 95, 95, "Physical"], ["TM066", "Hurricane", "Flying", 110, 70, "Special"],
+        ["TM067", "Hydro Pump", "Water", 110, 80, "Special"], ["TM068", "Hyper Beam", "Normal", 150, 90, "Special"], ["TM069", "Hyper Voice", "Normal", 90, 100, "Special"],
+        ["TM070", "Ice Beam", "Ice", 90, 100, "Special"], ["TM071", "Ice Fang", "Ice", 65, 95, "Physical"], ["TM072", "Ice Punch", "Ice", 75, 100, "Physical"],
+        ["TM073", "Ice Spinner", "Ice", 80, 100, "Physical"], ["TM074", "Icicle Spear", "Ice", 25, 100, "Physical"], ["TM075", "Icy Wind", "Ice", 55, 95, "Special"],
+        ["TM076", "Incinerate", "Fire", 60, 100, "Special"], ["TM077", "Infestation", "Bug", 20, 100, "Special"], ["TM078", "Iron Head", "Steel", 80, 100, "Physical"],
+        ["TM079", "Iron Tail", "Steel", 100, 75, "Physical"], ["TM080", "Leaf Blade", "Grass", 90, 100, "Physical"], ["TM081", "Leaf Storm", "Grass", 130, 90, "Special"],
+        ["TM082", "Leech Life", "Bug", 80, 100, "Physical"], ["TM083", "Liquidation", "Water", 85, 100, "Physical"], ["TM084", "Low Sweep", "Fighting", 65, 100, "Physical"],
+        ["TM085", "Mega Drain", "Grass", 40, 100, "Special"], ["TM086", "Mega Kick", "Normal", 120, 75, "Physical"], ["TM087", "Mega Punch", "Normal", 80, 85, "Physical"],
+        ["TM088", "Mud Shot", "Ground", 55, 95, "Special"], ["TM089", "Mud-Slap", "Ground", 20, 100, "Special"], ["TM090", "Mystical Fire", "Fire", 75, 100, "Special"],
+        ["TM091", "Outrage", "Dragon", 120, 100, "Physical"], ["TM092", "Overheat", "Fire", 130, 90, "Special"], ["TM093", "Pay Day", "Normal", 40, 100, "Physical"],
+        ["TM094", "Payback", "Dark", 50, 100, "Physical"], ["TM095", "Phantom Force", "Ghost", 90, 100, "Physical"], ["TM096", "Pin Missile", "Bug", 25, 95, "Physical"],
+        ["TM097", "Play Rough", "Fairy", 90, 90, "Physical"], ["TM098", "Pluck", "Flying", 60, 100, "Physical"], ["TM099", "Poison Jab", "Poison", 80, 100, "Physical"],
+        ["TM100", "Poison Tail", "Poison", 50, 100, "Physical"], ["TM101", "Pollen Puff", "Bug", 90, 100, "Special"], ["TM102", "Pounce", "Bug", 50, 100, "Physical"],
+        ["TM103", "Power Gem", "Rock", 80, 100, "Special"], ["TM104", "Power-Up Punch", "Fighting", 40, 100, "Physical"], ["TM105", "Psybeam", "Psychic", 65, 100, "Special"],
+        ["TM106", "Psychic", "Psychic", 90, 100, "Special"], ["TM107", "Psychic Fangs", "Psychic", 85, 100, "Physical"], ["TM108", "Psyshock", "Psychic", 80, 100, "Special"],
+        ["TM109", "Rage", "Normal", 20, 100, "Physical"], ["TM110", "Razor Wind", "Normal", 80, 100, "Special"], ["TM111", "Retaliate", "Normal", 70, 100, "Physical"],
+        ["TM112", "Rock Blast", "Rock", 25, 90, "Physical"], ["TM113", "Rock Climb", "Normal", 90, 85, "Physical"], ["TM114", "Rock Slide", "Rock", 75, 90, "Physical"],
+        ["TM115", "Rock Smash", "Fighting", 40, 100, "Physical"], ["TM116", "Rock Tomb", "Rock", 60, 95, "Physical"], ["TM117", "Round", "Normal", 60, 100, "Special"],
+        ["TM118", "Sand Tomb", "Ground", 35, 85, "Physical"], ["TM119", "Scald", "Water", 80, 100, "Special"], ["TM120", "Secret Power", "Normal", 70, 100, "Physical"],
+        ["TM121", "Seed Bomb", "Grass", 80, 100, "Physical"], ["TM122", "Self-Destruct", "Normal", 200, 100, "Physical"], ["TM123", "Shadow Ball", "Ghost", 80, 100, "Special"],
+        ["TM124", "Shadow Claw", "Ghost", 70, 100, "Physical"], ["TM125", "Silver Wind", "Bug", 60, 100, "Special"], ["TM126", "Sky Attack", "Flying", 140, 90, "Physical"],
+        ["TM127", "Sky Drop", "Flying", 60, 100, "Physical"], ["TM128", "Sludge Bomb", "Poison", 90, 100, "Special"], ["TM129", "Sludge Wave", "Poison", 95, 100, "Special"],
+        ["TM130", "Smack Down", "Rock", 50, 100, "Physical"], ["TM131", "Snarl", "Dark", 55, 95, "Special"], ["TM132", "Solar Beam", "Grass", 120, 100, "Special"],
+        ["TM133", "Solar Blade", "Grass", 125, 100, "Physical"], ["TM134", "Steel Wing", "Steel", 70, 90, "Physical"], ["TM135", "Stomping Tantrum", "Ground", 75, 100, "Physical"],
+        ["TM136", "Stone Edge", "Rock", 100, 80, "Physical"], ["TM137", "Struggle Bug", "Bug", 50, 100, "Special"], ["TM138", "Submission", "Fighting", 80, 80, "Physical"],
+        ["TM139", "Surf", "Water", 90, 100, "Special"], ["TM140", "Tackle", "Normal", 40, 100, "Physical"], ["TM141", "Tail Slap", "Normal", 25, 85, "Physical"],
+        ["TM142", "Take Down", "Normal", 90, 85, "Physical"], ["TM143", "Thief", "Dark", 60, 100, "Physical"], ["TM144", "Thunder", "Electric", 110, 70, "Special"],
+        ["TM145", "Thunder Fang", "Electric", 65, 95, "Physical"], ["TM146", "Thunder Punch", "Electric", 75, 100, "Physical"], ["TM147", "Thunderbolt", "Electric", 90, 100, "Special"],
+        ["TM148", "Trailblaze", "Grass", 50, 100, "Physical"], ["TM149", "Tri Attack", "Normal", 80, 100, "Special"], ["TM150", "U-turn", "Bug", 70, 100, "Physical"],
+        ["TM151", "Uproar", "Normal", 90, 100, "Special"], ["TM152", "Vacuum Wave", "Fighting", 40, 100, "Special"], ["TM153", "Venoshock", "Poison", 65, 100, "Special"],
+        ["TM154", "Volt Switch", "Electric", 70, 100, "Special"], ["TM155", "Water Fall", "Water", 80, 100, "Physical"], ["TM156", "Water Gun", "Water", 40, 100, "Special"],
+        ["TM157", "Water Pledge", "Water", 80, 100, "Special"], ["TM158", "Water Pulse", "Water", 60, 100, "Special"], ["TM159", "Weather Ball", "Normal", 50, 100, "Special"],
+        ["TM160", "Whirlpool", "Water", 35, 85, "Special"], ["TM161", "Wild Charge", "Electric", 90, 100, "Physical"], ["TM162", "X-Scissor", "Bug", 80, 100, "Physical"],
+        ["TM163", "Zap Cannon", "Electric", 120, 50, "Special"], ["TM164", "Zen Headbutt", "Psychic", 80, 90, "Physical"]
+    ];
+
+    const container = document.getElementById('tm-container');
+
+    function getPrice(power) {
+        if (power >= 100) return '₽4,000';
+        if (power >= 75) return '₽3,000';
+        return '₽2,000';
+    }
+
+    let htmlContent = '';
+    tmDatabase.forEach(tm => {
+        const [id, name, type, power, accuracy, category] = tm;
+        const price = getPrice(power);
+        
+        htmlContent += `
+        <div class="item-card">
+            <div class="item-info">
+                <div class="item-name">${id} ${name}</div>
+                <div class="item-details">${type} • ${power} Pwr • ${accuracy} Acc • ${category}</div>
+            </div>
+            <div class="item-action">
+                <div class="item-price">${price}</div>
+                <button class="buy-btn">BUY</button>
+            </div>
+        </div>`;
+    });
+
+    container.innerHTML = htmlContent;
+</script>
+
+</body>
+</html>

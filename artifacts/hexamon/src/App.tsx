@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { sfx, playMoveSfx, moveTypeOf, TYPE_COLOR as MOVE_TYPE_COLOR } from "./sfx";
 import { ALL_POKEMON, TOTAL_POKEMON, GEN_NAMES, type PokemonTemplate } from "./lib/pokemon-data";
+import { tmStoreItems } from "./lib/tm-data";
 import { PokeTalesDex } from "./components/PokeTalesDex";
 import { SplashLoader } from "./components/SplashLoader";
 
@@ -226,6 +227,7 @@ export default function App() {
   };
   const [inventory, setInventory] = useState<{ name: string; qty: number }[]>(initial?.inventory ?? []);
   const [storeCat, setStoreCat] = useState<string | null>(null);
+  const [tmSearch, setTmSearch] = useState("");
   const [bagCat, setBagCat] = useState<string>("balls");
   const [scoutedWild, setScoutedWild] = useState<Mon | null>(null);
   const [moveAnim, setMoveAnim] = useState<{ target: "enemy" | "player"; type: string; key: number } | null>(null);
@@ -3026,16 +3028,17 @@ export default function App() {
           { name: "Rare Candy", price: 4800, info: "+1 Level" },
         ] },
       { key: "tms", label: "TMs", emoji: "💿", color: "#9C27B0", desc: "Teach new moves",
-        items: [
-          { name: "TM01 Mega Punch", price: 3000, info: "Normal · 80 pwr" },
-          { name: "TM05 Mega Kick", price: 3000, info: "Normal · 120 pwr" },
-          { name: "TM13 Ice Beam", price: 4000, info: "Ice · 90 pwr" },
-          { name: "TM24 Thunderbolt", price: 4000, info: "Electric · 90 pwr" },
-          { name: "TM35 Flamethrower", price: 4000, info: "Fire · 90 pwr" },
-          { name: "TM50 Substitute", price: 2000, info: "Status" },
-        ] },
+        items: tmStoreItems() },
     ];
     const cat = categories.find((c) => c.key === storeCat) ?? null;
+    const visibleItems = (() => {
+      const items = cat?.items ?? [];
+      if (storeCat !== "tms" || !tmSearch.trim()) return items;
+      const q = tmSearch.trim().toLowerCase();
+      return items.filter((it) =>
+        it.name.toLowerCase().includes(q) || it.info.toLowerCase().includes(q)
+      );
+    })();
     return (
       <div style={S.root}><style>{css}</style>
         <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
@@ -3115,8 +3118,33 @@ export default function App() {
                   </button>
                 ))}
               </div>
+              {storeCat === "tms" && (
+                <div className="m-search-row">
+                  <div className="m-search">
+                    <i className="fa-solid fa-magnifying-glass" />
+                    <input
+                      type="text"
+                      placeholder="Search TMs by name or type"
+                      value={tmSearch}
+                      onChange={(e) => setTmSearch(e.target.value)}
+                    />
+                    {tmSearch && (
+                      <i
+                        className="fa-solid fa-xmark"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => { sfx.click(); setTmSearch(""); }}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
               <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
-                {(cat?.items ?? []).map((it) => {
+                {storeCat === "tms" && visibleItems.length === 0 && (
+                  <div style={{ padding: "20px 12px", textAlign: "center", color: "var(--m-muted)", fontSize: 13 }}>
+                    No TMs match "{tmSearch}"
+                  </div>
+                )}
+                {visibleItems.map((it) => {
                   const canAfford = player.money >= it.price;
                   return (
                     <div key={it.name} className="m-card" style={{ padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, borderRadius: 16 }}>

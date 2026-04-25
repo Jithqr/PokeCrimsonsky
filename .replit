@@ -9,6 +9,25 @@ args = ["pnpm", "store", "prune"]
 env = { "CI" = "true" }
 
 [workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Hexamon"
+
+[[workflows.workflow]]
+name = "Hexamon"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=20373 BASE_PATH=/ pnpm --filter @workspace/hexamon run dev"
+waitForPort = 20373
 
 [agent]
 stack = "PNPM_WORKSPACE"
