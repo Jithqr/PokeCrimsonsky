@@ -1,16 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import logoUrl from "@assets/Adobe_Express_-_file_1777079516654.png";
 import bgUrl from "@assets/43_1777079516677.webp";
-import { sfx, bgm } from "../sfx";
+import { sfx } from "../sfx";
 
 export function SplashLoader({ onDone }: { onDone: () => void }) {
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<"loading" | "ready" | "fading">("loading");
-  const [trackName, setTrackName] = useState("");
   const startedRef = useRef(false);
 
   useEffect(() => {
-    setTrackName(bgm.pickRandom());
     const start = performance.now();
     const duration = 3200;
     let raf = 0;
@@ -28,7 +26,6 @@ export function SplashLoader({ onDone }: { onDone: () => void }) {
     if (startedRef.current) return;
     startedRef.current = true;
     sfx.click();
-    bgm.start();
     setPhase("fading");
     setTimeout(onDone, 500);
   }
@@ -173,19 +170,6 @@ export function SplashLoader({ onDone }: { onDone: () => void }) {
           />
         </div>
 
-        <div
-          style={{
-            color: "#ff9aa6",
-            fontSize: 7,
-            letterSpacing: 2,
-            marginTop: 14,
-            textShadow: "1px 1px 0 #000",
-            opacity: 0.85,
-            animation: "splashFadeUp 0.8s 0.7s both",
-          }}
-        >
-          ♪ {trackName || "—"}
-        </div>
       </div>
     </div>
   );
