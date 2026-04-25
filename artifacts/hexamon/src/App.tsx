@@ -971,7 +971,7 @@ export default function App() {
     .m-menu-btn.locked { opacity: 0.45; cursor: not-allowed; color: var(--m-muted); border-style: dashed; }
     .m-menu-btn.locked:hover { background: var(--m-card); }
     .m-menu-carousel { overflow: hidden; padding: 0 16px; margin-bottom: 10px; touch-action: pan-y; }
-    .m-menu-track { display: flex; gap: 10px; transition: transform 0.3s ease; }
+    .m-menu-track { display: flex; gap: 14px; transition: transform 0.3s ease; }
     .m-menu-page { flex: 0 0 100%; display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
     .m-menu-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
     .m-menu-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--m-border); cursor: pointer; transition: all 0.2s; border: none; padding: 0; }
@@ -1433,7 +1433,7 @@ export default function App() {
               (e.currentTarget as any)._tx = undefined;
             }}
           >
-            <div className="m-menu-track" style={{ transform: `translateX(calc(${menuPage} * (-100% - 10px)))` }}>
+            <div className="m-menu-track" style={{ transform: `translateX(calc(${menuPage} * (-100% - 14px)))` }}>
               {menuPages.map((page, pi) => (
                 <div key={pi} className="m-menu-page">
                   {page.map((b, bi) => (
