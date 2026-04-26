@@ -656,6 +656,43 @@ export default function App() {
     return true;
   }, [player.money]);
 
+  // Generic mon mutator used by Training Zone (level up, evolve, learn moves).
+  // Applies a partial patch to a single mon by uid, refreshes template-derived fields
+  // when the species id changes, and recomputes maxHp/currentHp.
+  const mutateMon = useCallback((uid: string, patch: Partial<Mon>) => {
+    setTeams((prev) => prev.map((g) => ({
+      ...g,
+      mons: g.mons.map((m) => {
+        if (m.uid !== uid) return m;
+        const speciesChanged = patch.id != null && patch.id !== m.id;
+        let next: Mon = { ...m, ...patch };
+        if (speciesChanged) {
+          const tpl = ALL_POKEMON.find((p) => p.id === next.id);
+          if (tpl) {
+            next.name = tpl.name;
+            next.sprite = tpl.sprite;
+            next.type1 = tpl.type1;
+            next.type2 = tpl.type2;
+            next.hp = tpl.hp; next.atk = tpl.atk; next.def = tpl.def;
+            next.spa = tpl.spa; (next as any).spd = (tpl as any).spd ?? tpl.spa; next.spe = tpl.spe;
+            next.canEvolve = tpl.canEvolve;
+            next.evolveAt = tpl.evolveAt;
+          }
+        }
+        const tplFinal = ALL_POKEMON.find((p) => p.id === next.id);
+        if (tplFinal) {
+          const newMax = calcMaxHp({ baseStats: { hp: tplFinal.hp }, ivs: { hp: next.ivHp ?? 0 }, evs: { hp: next.evHp ?? 0 }, level: next.level });
+          const ratio = m.maxHp > 0 ? Math.min(1, m.currentHp / m.maxHp) : 1;
+          next.maxHp = newMax;
+          // Heal to full whenever level changed or species changed; otherwise keep ratio.
+          if (next.level !== m.level || speciesChanged) next.currentHp = newMax;
+          else next.currentHp = Math.max(1, Math.round(newMax * ratio));
+        }
+        return next;
+      }),
+    })));
+  }, []);
+
   // ============ LEAGUE: bot-driven battle ============
   const startLeagueBattle = useCallback((npc: NpcTrainer, opts: { isE4: boolean; e4Idx: number; carryOverHp?: BattleMon[] }) => {
     const myTeam = team.slice(0, 6);
@@ -4489,6 +4526,7 @@ export default function App() {
               setMonEvAbsolute(uid, evKey, ev[k]);
             });
           }}
+          onMutateMon={(uid, patch) => mutateMon(uid, patch as Partial<Mon>)}
           onSpendMoney={(amount) => { spendMoney(amount); }}
           toast={(msg, color) => addLog(msg, color ?? "#a78bfa")}
         />
