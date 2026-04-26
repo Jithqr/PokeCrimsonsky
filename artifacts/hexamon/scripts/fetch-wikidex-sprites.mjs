@@ -1,5 +1,14 @@
-import { writeFileSync, mkdirSync, existsSync } from "node:fs";
+// Fetches transparent animated sprites for Gen 9 Pokémon that Pokémon Showdown
+// doesn't ship. Two sources:
+//   1) User-supplied .webm files in attached_assets/Gen 9/  (already transparent VP9-alpha)
+//   2) WikiDex original (non-thumb) .webm — also VP9-alpha, just needs libvpx-vp9 decode
+//
+// We always decode with -c:v libvpx-vp9 because the default ffmpeg vp9 decoder
+// silently drops the alpha plane.
+
+import { writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
 import { execSync } from "node:child_process";
+import { join, basename } from "node:path";
 
 const TARGETS = [
   { sprite: "ironhands", en: "Iron_Hands" },
@@ -23,88 +32,131 @@ const TARGETS = [
   { sprite: "pecharunt", en: "Pecharunt" },
 ];
 
+// Map user-supplied filenames (zip contents) to sprite keys.
+// Keys are case-insensitive substrings; first match wins.
+const USER_FILE_MAP = [
+  { match: "chi-yu", sprite: "chiyu" },
+  { match: "chien-pao", sprite: "chienpao" },
+  { match: "ferrocuello", sprite: "ironjugulis" },
+  { match: "ferropaladín", sprite: "ironvaliant" },
+  { match: "ferropaladin", sprite: "ironvaliant" },
+  { match: "fezandipiti", sprite: "fezandipiti" },
+  { match: "miraidon", sprite: "miraidon" },
+  { match: "munkidori", sprite: "munkidori" },
+  { match: "ogerpon_máscara_turquesa_home", sprite: "ogerpon" },
+  { match: "ogerpon_mascara_turquesa_home", sprite: "ogerpon" },
+  { match: "okidogi_home", sprite: "okidogi" },
+  { match: "pecharunt", sprite: "pecharunt" },
+  { match: "terapagos_normal", sprite: "terapagos" },
+  { match: "ting-lu", sprite: "tinglu" },
+];
+
 const OUT_DIR = "public/sprites/custom";
+const CACHE_DIR = "/tmp/wikidex";
+const USER_DIR = "/tmp/gen9/Gen 9";
 mkdirSync(OUT_DIR, { recursive: true });
-mkdirSync("/tmp/wikidex", { recursive: true });
+mkdirSync(CACHE_DIR, { recursive: true });
 
 const UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36";
 
 async function fetchText(url) {
   const r = await fetch(url, { headers: { "User-Agent": UA }, redirect: "follow" });
-  if (!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return await r.text();
 }
 
 async function downloadBinary(url, path) {
   const r = await fetch(url, { headers: { "User-Agent": UA } });
-  if (!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
-  const buf = Buffer.from(await r.arrayBuffer());
-  writeFileSync(path, buf);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  writeFileSync(path, Buffer.from(await r.arrayBuffer()));
 }
 
-// Find first .webm URL inside the "Capturas del modelo 3D" section.
-// We pick the first <video> with EP or _EP_variocolor — first is normal sprite.
+// Convert a VP9-alpha .webm to a transparent animated .gif at 96px tall.
+// We MUST force libvpx-vp9 — the default vp9 decoder silently drops alpha.
+function webmToTransparentGif(webmPath, gifPath) {
+  execSync(
+    `ffmpeg -y -c:v libvpx-vp9 -i "${webmPath}" ` +
+      `-vf "fps=20,scale=-1:96:flags=lanczos,split[a][b];` +
+      `[a]palettegen=reserve_transparent=1[p];` +
+      `[b][p]paletteuse=alpha_threshold=128" -loop 0 "${gifPath}"`,
+    { stdio: "pipe" }
+  );
+}
+
+// Pick the original (non-thumb, non-transcoded) webm URL from a WikiDex page.
 function extractWebmUrls(html) {
-  // Find the actual <h2> heading (not the TOC entry) by searching for the headline span.
-  const headingMatch = html.match(/id="Capturas_del_modelo_3D"[\s\S]*$/);
-  const section = headingMatch ? headingMatch[0].slice(0, 60000) : "";
+  const heading = html.match(/id="Capturas_del_modelo_3D"[\s\S]*$/);
+  const section = heading ? heading[0].slice(0, 80000) : "";
   if (!section) return { normal: null, shiny: null };
   const all = [...section.matchAll(/https:\/\/images\.wikidexcdn\.net\/[^"'\s]+\.webm/g)].map(m => m[0]);
-  // Skip transcoded URLs (contain "/transcoded/")
-  const originals = all.filter(u => !u.includes("/transcoded/"));
-  // Skip poster jpgs
+  // Prefer originals (no /thumb/, no /transcoded/).
+  const originals = all.filter(u => !u.includes("/thumb/") && !u.includes("/transcoded/"));
   let normal = null, shiny = null;
   for (const u of originals) {
-    const lower = u.toLowerCase();
-    if (lower.includes("variocolor") || lower.includes("shiny")) {
-      if (!shiny) shiny = u;
-    } else {
-      if (!normal) normal = u;
-    }
+    const isShiny = /variocolor|shiny/i.test(u);
+    if (isShiny && !shiny) shiny = u;
+    else if (!isShiny && !normal) normal = u;
   }
   return { normal, shiny };
 }
 
-async function processOne(t) {
-  const url = `https://www.wikidex.net/wiki/${t.en}`;
-  console.log(`\n[${t.sprite}] Fetching ${url}`);
-  let html;
-  try { html = await fetchText(url); } catch (e) { console.log(`  page fetch failed: ${e.message}`); return { ...t, status: "page-fail" }; }
-  const { normal, shiny } = extractWebmUrls(html);
-  console.log(`  normal: ${normal || "(none)"}`);
-  console.log(`  shiny:  ${shiny || "(none)"}`);
-  const result = { ...t, normal, shiny, status: "ok" };
-
-  for (const [variant, webmUrl] of [["normal", normal], ["shiny", shiny]]) {
-    if (!webmUrl) continue;
-    const webmPath = `/tmp/wikidex/${t.sprite}_${variant}.webm`;
-    const gifName = variant === "shiny" ? `${t.sprite}-shiny.gif` : `${t.sprite}.gif`;
-    const gifPath = `${OUT_DIR}/${gifName}`;
-    if (existsSync(gifPath)) { console.log(`  ${variant}: skip (gif exists)`); continue; }
+// Step 1: convert all user-supplied webms (highest priority).
+const usedSprites = new Set();
+console.log("=== Step 1: user-supplied webms ===");
+if (existsSync(USER_DIR)) {
+  for (const file of readdirSync(USER_DIR)) {
+    if (!file.toLowerCase().endsWith(".webm")) continue;
+    const lower = file.toLowerCase();
+    const map = USER_FILE_MAP.find(m => lower.includes(m.match));
+    if (!map) { console.log(`  skip (no mapping): ${file}`); continue; }
+    if (usedSprites.has(map.sprite)) continue; // already done from another user file
+    const src = join(USER_DIR, file);
+    const out = join(OUT_DIR, `${map.sprite}.gif`);
     try {
-      await downloadBinary(webmUrl, webmPath);
-    } catch (e) { console.log(`  ${variant}: download failed: ${e.message}`); continue; }
-    try {
-      // Convert webm -> transparent gif: chroma-key the white background out, then
-      // generate a palette that reserves a slot for transparency.
-      execSync(
-        `ffmpeg -y -i "${webmPath}" -vf "fps=15,scale=-1:96:flags=lanczos,colorkey=0xffffff:0.10:0.05,format=rgba,split [a][b];[a] palettegen=reserve_transparent=1 [p];[b][p] paletteuse=alpha_threshold=128" -loop 0 "${gifPath}"`,
-        { stdio: "pipe" }
-      );
-      console.log(`  ${variant}: wrote ${gifPath}`);
+      webmToTransparentGif(src, out);
+      console.log(`  ${map.sprite}: wrote ${out}  (from ${file})`);
+      usedSprites.add(map.sprite);
     } catch (e) {
-      console.log(`  ${variant}: ffmpeg failed: ${e.message?.slice(0, 200)}`);
+      console.log(`  ${map.sprite}: FAILED  ${e.message?.slice(0, 120)}`);
     }
   }
-  return result;
+} else {
+  console.log(`  user dir not found: ${USER_DIR}`);
 }
 
-const results = [];
+// Step 2: WikiDex for whatever the user didn't cover.
+console.log("\n=== Step 2: WikiDex full-size webms ===");
 for (const t of TARGETS) {
-  results.push(await processOne(t));
+  const gifPath = join(OUT_DIR, `${t.sprite}.gif`);
+  const shinyGifPath = join(OUT_DIR, `${t.sprite}-shiny.gif`);
+  const haveNormal = usedSprites.has(t.sprite) || existsSync(gifPath);
+  const haveShiny = existsSync(shinyGifPath);
+  if (haveNormal && haveShiny) { console.log(`[${t.sprite}] skip (both gifs present)`); continue; }
+
+  console.log(`\n[${t.sprite}] Fetching https://www.wikidex.net/wiki/${t.en}`);
+  let html;
+  try { html = await fetchText(`https://www.wikidex.net/wiki/${t.en}`); }
+  catch (e) { console.log(`  page fetch failed: ${e.message}`); continue; }
+
+  const { normal, shiny } = extractWebmUrls(html);
+  for (const [variant, url, outPath, alreadyHave] of [
+    ["normal", normal, gifPath, haveNormal],
+    ["shiny", shiny, shinyGifPath, haveShiny],
+  ]) {
+    if (alreadyHave) { console.log(`  ${variant}: skip (have)`); continue; }
+    if (!url) { console.log(`  ${variant}: no url`); continue; }
+    const webmCache = join(CACHE_DIR, `${t.sprite}_${variant}_full.webm`);
+    try {
+      if (!existsSync(webmCache)) await downloadBinary(url, webmCache);
+      webmToTransparentGif(webmCache, outPath);
+      console.log(`  ${variant}: wrote ${outPath}`);
+    } catch (e) {
+      console.log(`  ${variant}: FAILED  ${e.message?.slice(0, 120)}`);
+    }
+  }
 }
 
-console.log("\n=== Summary ===");
-for (const r of results) {
-  console.log(`${r.sprite}: normal=${r.normal ? "Y" : "-"} shiny=${r.shiny ? "Y" : "-"}`);
-}
+console.log("\n=== Final output ===");
+const finalGifs = readdirSync(OUT_DIR).filter(f => f.endsWith(".gif")).sort();
+console.log(`${finalGifs.length} gifs in ${OUT_DIR}`);
+for (const g of finalGifs) console.log(`  ${g}`);
