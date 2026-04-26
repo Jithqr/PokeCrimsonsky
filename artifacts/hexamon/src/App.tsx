@@ -12,6 +12,25 @@ const TRAINER_SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprit
 const CUSTOM_SPRITES: Record<string, string> = {
   irontreads: "sprites/custom/irontreads.gif",
   ironbundle: "sprites/custom/ironbundle.gif",
+  ironhands: "sprites/custom/ironhands.gif",
+  ironjugulis: "sprites/custom/ironjugulis.gif",
+  ironmoth: "sprites/custom/ironmoth.gif",
+  ironthorns: "sprites/custom/ironthorns.gif",
+  wochien: "sprites/custom/wochien.gif",
+  chienpao: "sprites/custom/chienpao.gif",
+  tinglu: "sprites/custom/tinglu.gif",
+  chiyu: "sprites/custom/chiyu.gif",
+  ironvaliant: "sprites/custom/ironvaliant.gif",
+  miraidon: "sprites/custom/miraidon.gif",
+  ironleaves: "sprites/custom/ironleaves.gif",
+  okidogi: "sprites/custom/okidogi.gif",
+  munkidori: "sprites/custom/munkidori.gif",
+  fezandipiti: "sprites/custom/fezandipiti.gif",
+  ogerpon: "sprites/custom/ogerpon.gif",
+  ironboulder: "sprites/custom/ironboulder.gif",
+  ironcrown: "sprites/custom/ironcrown.gif",
+  terapagos: "sprites/custom/terapagos.gif",
+  pecharunt: "sprites/custom/pecharunt.gif",
 };
 const CUSTOM_SPRITE_URL = (clean: string) =>
   CUSTOM_SPRITES[clean] ? `${import.meta.env.BASE_URL}${CUSTOM_SPRITES[clean]}` : null;
