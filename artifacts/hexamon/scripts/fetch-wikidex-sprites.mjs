@@ -85,9 +85,10 @@ async function processOne(t) {
       await downloadBinary(webmUrl, webmPath);
     } catch (e) { console.log(`  ${variant}: download failed: ${e.message}`); continue; }
     try {
-      // Convert webm -> gif: use a 96px height palette for crisp sprite-style output.
+      // Convert webm -> transparent gif: chroma-key the white background out, then
+      // generate a palette that reserves a slot for transparency.
       execSync(
-        `ffmpeg -y -i "${webmPath}" -vf "fps=15,scale=-1:96:flags=lanczos,split [a][b];[a] palettegen=reserve_transparent=1 [p];[b][p] paletteuse=alpha_threshold=128" -loop 0 "${gifPath}"`,
+        `ffmpeg -y -i "${webmPath}" -vf "fps=15,scale=-1:96:flags=lanczos,colorkey=0xffffff:0.10:0.05,format=rgba,split [a][b];[a] palettegen=reserve_transparent=1 [p];[b][p] paletteuse=alpha_threshold=128" -loop 0 "${gifPath}"`,
         { stdio: "pipe" }
       );
       console.log(`  ${variant}: wrote ${gifPath}`);
