@@ -482,14 +482,19 @@ export default function App() {
   }, []);
 
   // Global swipe navigation between Home (world) ↔ Market (store) ↔ Profile.
-  // Active only on those three screens; ignores swipes that start on
-  // interactive/scrollable elements so it doesn't fight buttons or lists.
+  // Live finger-following drag with rubber-band at the edges and a spring-back
+  // or snap-out animation on release based on distance + flick velocity.
   useEffect(() => {
     const NAV_ORDER = ["world", "store", "profile"] as const;
     const idx = NAV_ORDER.indexOf(screen as typeof NAV_ORDER[number]);
     if (idx === -1) return;
 
-    let startX = 0, startY = 0, startT = 0, tracking = false;
+    const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+    let startX = 0, startY = 0;
+    let lastX = 0, lastT = 0, vx = 0;
+    let tracking = false, dragging = false;
+    let app: HTMLElement | null = null;
+    let width = 0;
 
     const isInteractive = (el: EventTarget | null): boolean => {
       let n = el as HTMLElement | null;
@@ -504,35 +509,123 @@ export default function App() {
       return false;
     };
 
-    const onStart = (e: TouchEvent) => {
-      if (e.touches.length !== 1) { tracking = false; return; }
-      if (isInteractive(e.target)) { tracking = false; return; }
-      const t = e.touches[0];
-      startX = t.clientX; startY = t.clientY; startT = Date.now();
-      tracking = true;
+    const clearStyles = () => {
+      if (!app) return;
+      app.style.transition = "";
+      app.style.transform = "";
+      app.style.willChange = "";
     };
+
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      if (isInteractive(e.target)) return;
+      const t = e.touches[0];
+      startX = lastX = t.clientX; startY = t.clientY; lastT = Date.now(); vx = 0;
+      tracking = true; dragging = false;
+      const target = e.target as HTMLElement | null;
+      app = (target?.closest?.(".m-app") as HTMLElement) || document.querySelector(".m-app");
+      width = app?.clientWidth || window.innerWidth;
+    };
+
+    const onMove = (e: TouchEvent) => {
+      if (!tracking) return;
+      const t = e.touches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+      if (!dragging) {
+        // Decide intent: horizontal swipe vs vertical scroll.
+        if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { tracking = false; return; }
+        if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.1) {
+          dragging = true;
+          if (app) { app.style.transition = "none"; app.style.willChange = "transform"; }
+        } else {
+          return;
+        }
+      }
+      const now = Date.now();
+      const dt = Math.max(1, now - lastT);
+      // Smooth velocity tracking (EMA) for natural flick feel.
+      vx = vx * 0.6 + ((t.clientX - lastX) / dt) * 0.4;
+      lastX = t.clientX; lastT = now;
+
+      // Rubber-band resistance when dragging past first/last screen.
+      let translate = dx;
+      const atLeftEdge = idx === 0 && dx > 0;
+      const atRightEdge = idx === NAV_ORDER.length - 1 && dx < 0;
+      if (atLeftEdge || atRightEdge) {
+        const sign = dx < 0 ? -1 : 1;
+        const a = Math.abs(dx);
+        translate = sign * (a / (1 + a / width)) * 0.55;
+      }
+      if (app) app.style.transform = `translate3d(${translate.toFixed(1)}px,0,0)`;
+    };
+
     const onEnd = (e: TouchEvent) => {
       if (!tracking) return;
       tracking = false;
+      if (!dragging) { clearStyles(); return; }
+      dragging = false;
+
       const t = e.changedTouches[0];
       const dx = t.clientX - startX;
-      const dy = t.clientY - startY;
-      const dt = Date.now() - startT;
-      const absX = Math.abs(dx), absY = Math.abs(dy);
-      // Require: mostly horizontal, decent distance, not too slow.
-      if (absX < 60 || absX < absY * 1.5 || dt > 700) return;
-      if (dx < 0 && idx < NAV_ORDER.length - 1) {
-        sfx.click(); setScreen(NAV_ORDER[idx + 1]);
-      } else if (dx > 0 && idx > 0) {
-        sfx.click(); setScreen(NAV_ORDER[idx - 1]);
+      const absX = Math.abs(dx);
+      const flick = Math.abs(vx) > 0.5; // px/ms
+      const past = absX > width * 0.28;
+      const goNext = dx < 0 && idx < NAV_ORDER.length - 1 && (past || (flick && vx < 0));
+      const goPrev = dx > 0 && idx > 0 && (past || (flick && vx > 0));
+
+      if ((goNext || goPrev) && app) {
+        // Duration scales with remaining distance & velocity for a natural finish.
+        const remaining = Math.max(40, width - absX);
+        const speed = Math.max(0.6, Math.abs(vx)); // px/ms
+        const dur = Math.min(280, Math.max(140, remaining / speed));
+        app.style.transition = `transform ${Math.round(dur)}ms ${EASE}`;
+        app.style.transform = `translate3d(${goNext ? -width : width}px,0,0)`;
+        sfx.click();
+        const target = goNext ? NAV_ORDER[idx + 1] : NAV_ORDER[idx - 1];
+        const finish = () => {
+          clearStyles();
+          setScreen(target);
+        };
+        let done = false;
+        const once = () => { if (done) return; done = true; finish(); };
+        app.addEventListener("transitionend", once, { once: true });
+        // Safety fallback in case transitionend doesn't fire.
+        setTimeout(once, dur + 60);
+      } else {
+        // Spring back to origin.
+        if (app) {
+          app.style.transition = `transform 220ms ${EASE}`;
+          app.style.transform = "translate3d(0,0,0)";
+          const reset = () => clearStyles();
+          app.addEventListener("transitionend", reset, { once: true });
+          setTimeout(reset, 280);
+        }
       }
     };
 
+    const onCancel = () => {
+      tracking = false;
+      if (dragging && app) {
+        app.style.transition = `transform 200ms ${EASE}`;
+        app.style.transform = "translate3d(0,0,0)";
+        const reset = () => clearStyles();
+        app.addEventListener("transitionend", reset, { once: true });
+        setTimeout(reset, 260);
+      }
+      dragging = false;
+    };
+
     window.addEventListener("touchstart", onStart, { passive: true });
+    window.addEventListener("touchmove", onMove, { passive: true });
     window.addEventListener("touchend", onEnd, { passive: true });
+    window.addEventListener("touchcancel", onCancel, { passive: true });
     return () => {
       window.removeEventListener("touchstart", onStart);
+      window.removeEventListener("touchmove", onMove);
       window.removeEventListener("touchend", onEnd);
+      window.removeEventListener("touchcancel", onCancel);
+      clearStyles();
     };
   }, [screen]);
 
