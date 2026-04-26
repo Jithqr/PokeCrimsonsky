@@ -2032,7 +2032,13 @@ export default function App() {
     return (
       <div style={S.root}><style>{css}</style>
         <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
-          <div className="m-cover" />
+          <div className="m-cover" style={{ position: "relative" }}>
+            <button
+              className="btn"
+              onClick={() => { sfx.menuBack(); setScreen("world"); }}
+              style={{ position: "absolute", top: 12, left: 12, border: "1px solid rgba(255,255,255,0.35)", background: "rgba(0,0,0,0.45)", color: "#fff", padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, letterSpacing: 1, zIndex: 2 }}
+            >◀ BACK</button>
+          </div>
           <div className="m-prof">
             <div className="m-avatar"><img src={TRAINER_SPRITE(player.sprite)} alt="me" /></div>
             <h1 className="m-prof-name">{player.name}</h1>
