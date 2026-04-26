@@ -8,6 +8,33 @@ import { SplashLoader } from "./components/SplashLoader";
 const SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/ani/${name.replace(/[^a-z0-9]/g, "")}.gif`;
 const SPRITE_BACK = (name: string) => `https://play.pokemonshowdown.com/sprites/ani-back/${name.replace(/[^a-z0-9]/g, "")}.gif`;
 const TRAINER_SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/trainers/${name}.png`;
+const GEN9_LOCAL_SPRITES = new Set<string>([
+  "annihilape", "arboliva", "archaludon", "arctibax", "armarouge",
+  "baxcalibur", "bellibolt", "bombirdier", "brambleghast", "bramblin",
+  "brutebonnet", "capsakid", "ceruledge", "cetitan", "cetoddle",
+  "charcadet", "chienpao", "chiyu", "clodsire", "crocalor",
+  "cyclizar", "dachsbun", "dipplin", "dolliv", "dondozo",
+  "dudunsparcetwosegment", "espathra", "farigiraf", "fezandipiti", "fidough",
+  "finizen", "flamigo", "flittle", "floragato", "fluttermane",
+  "frigibax", "fuecoco", "garganacl", "gholdengo", "gimmighoul",
+  "glimmet", "glimmora", "gougingfire", "grafaiai", "greattusk",
+  "greavard", "houndstone", "hydrapple", "ironboulder", "ironbundle",
+  "ironcrown", "ironhands", "ironjugulis", "ironleaves", "ironmoth",
+  "ironthorns", "irontreads", "ironvaliant", "kilowattrel", "kingambit",
+  "klawf", "koraidon", "lechonk", "lokix", "mabosstiff",
+  "maschiff", "mausholdfamilyoffour", "meowscarada", "miraidon", "munkidori",
+  "nacli", "naclstack", "nymble", "ogerpon", "oinkologne",
+  "okidogi", "orthworm", "palafinzero", "pawmi", "pawmo",
+  "pawmot", "pecharunt", "poltchageist", "quaquaval", "quaxly",
+  "quaxwell", "rabsca", "ragingbolt", "rellor", "revavroom",
+  "roaringmoon", "sandyshocks", "scovillain", "screamtail", "shroodle",
+  "sinistcha", "skeledirge", "slitherwing", "smoliv", "spidops",
+  "sprigatito", "squawkabillygreenplumage", "tadbulb", "tandemaus", "tarountula",
+  "tatsugiricurly", "terapagos", "tinglu", "tinkatink", "tinkaton",
+  "tinkatuff", "toedscool", "toedscruel", "varoom", "veluza",
+  "walkingwake", "wattrel", "wiglett", "wochien", "wugtrio",
+]);
+const GEN9_LOCAL_URL = (clean: string) => `${import.meta.env.BASE_URL}sprites/gen9/${clean}.webp`;
 
 const GEN_V_TRAINERS = [
   "hilbert", "hilda", "cheren", "bianca", "n", "ghetsis", "alder",
@@ -1242,14 +1269,17 @@ export default function App() {
 
   function MonSprite({ sprite, size = 80, back = false, className = "mon-float", style = {} }: { sprite: string; size?: number; back?: boolean; className?: string; style?: React.CSSProperties }) {
     const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
+    const localGen9 = GEN9_LOCAL_SPRITES.has(clean) ? [GEN9_LOCAL_URL(clean)] : [];
     const fallbacks = back
       ? [
+          ...localGen9,
           `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif`,
           `https://play.pokemonshowdown.com/sprites/gen5-back/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
         ]
       : [
+          ...localGen9,
           `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`,
           `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
