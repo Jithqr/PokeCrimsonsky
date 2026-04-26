@@ -1,9 +1,18 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { sfx, playMoveSfx, moveTypeOf, TYPE_COLOR as MOVE_TYPE_COLOR } from "./sfx";
 import { ALL_POKEMON, TOTAL_POKEMON, GEN_NAMES, type PokemonTemplate } from "./lib/pokemon-data";
 import { tmStoreItems } from "./lib/tm-data";
 import { PokeTalesDex } from "./components/PokeTalesDex";
 import { SplashLoader } from "./components/SplashLoader";
+import BattleArena from "./components/BattleArena";
+import TrainingZone from "./components/TrainingZone";
+import LeagueScreen from "./components/LeagueScreen";
+import { GYM_LEADERS, ELITE_FOUR, npcMonToAppMon, type NpcTrainer } from "./lib/league-data";
+import {
+  fromAppMon, makeBattleState, resolveTurn, forceSwitch, calcMaxHp,
+  type Action as BAction, type BattleMon, type BattleState, type Team as BTeam,
+} from "./lib/battle-engine";
+import { chooseBotAction, pickBotForceSwitch } from "./lib/bot-ai";
 
 const SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/ani/${name.replace(/[^a-z0-9]/g, "")}.gif`;
 const SPRITE_BACK = (name: string) => `https://play.pokemonshowdown.com/sprites/ani-back/${name.replace(/[^a-z0-9]/g, "")}.gif`;
@@ -75,9 +84,39 @@ type Mon = PokemonTemplate & {
   ivAtk: number; ivDef: number; ivHp: number;
   ivSpa?: number; ivSpd?: number; ivSpe?: number;
   evHp?: number; evAtk?: number; evDef?: number; evSpa?: number; evSpd?: number; evSpe?: number;
+  nature?: string;
+  moves: string[];
   caughtAt?: number;
   origin?: "wild" | "safari" | "store" | "redeem" | "starter" | "trade" | "evolve";
 };
+
+// Convert an in-app Mon (which has level-scaled cached stats) to the wire format
+// the battle engine expects (raw species base stats + IVs/EVs).
+function toShippableMon(m: Mon) {
+  const tpl = ALL_POKEMON.find((p) => p.id === m.id);
+  return {
+    id: m.id, name: m.name, level: m.level,
+    type1: (tpl?.type1 ?? m.type1), type2: (tpl?.type2 ?? m.type2 ?? null),
+    sprite: tpl?.sprite ?? m.sprite,
+    hp: tpl?.hp ?? m.hp, atk: tpl?.atk ?? m.atk, def: tpl?.def ?? m.def,
+    spa: tpl?.spa ?? m.spa, spd: (tpl as any)?.spd ?? (m as any).spd ?? m.spa, spe: tpl?.spe ?? m.spe,
+    ivHp: m.ivHp, ivAtk: m.ivAtk, ivDef: m.ivDef,
+    ivSpa: m.ivSpa, ivSpd: m.ivSpd, ivSpe: m.ivSpe,
+    evHp: m.evHp ?? 0, evAtk: m.evAtk ?? 0, evDef: m.evDef ?? 0,
+    evSpa: m.evSpa ?? 0, evSpd: m.evSpd ?? 0, evSpe: m.evSpe ?? 0,
+    nature: m.nature ?? "Hardy",
+    moves: (m.moves ?? []).slice(0, 4),
+    uid: m.uid,
+  };
+}
+
+function appMonToBattleMon(m: Mon): BattleMon {
+  return fromAppMon(toShippableMon(m));
+}
+
+function npcTrainerToBattleMons(npc: NpcTrainer): BattleMon[] {
+  return npc.team.map((n) => fromAppMon(npcMonToAppMon(n)));
+}
 
 let monUidCounter = 0;
 function makeUid() {
@@ -263,6 +302,9 @@ type SaveData = {
   lastSpinDay?: string;
   battleBoxRank?: number;
   battleBoxHistory?: { mode: string; result: "W" | "L"; opponent: string; delta: number; ts: number }[];
+  badges?: string[];
+  e4Cleared?: boolean;
+  e4Streak?: number;
 };
 function loadSave(): SaveData | null {
   try {
@@ -344,6 +386,36 @@ export default function App() {
   const [bbJoinCode, setBbJoinCode] = useState("");
   const [bbSettings, setBbSettings] = useState({ levelCap: 50, allowLegendaries: true, turnTimer: 60, teamSize: 6, randomLevelMin: 40, randomLevelMax: 60 });
   const [bbShowSettings, setBbShowSettings] = useState(false);
+  // ----- League state -----
+  const [badges, setBadges] = useState<string[]>(initial?.badges ?? []);
+  const [e4Cleared, setE4Cleared] = useState<boolean>(initial?.e4Cleared ?? false);
+  const [e4Streak, setE4Streak] = useState<number>(initial?.e4Streak ?? 0);
+  const [leagueBattle, setLeagueBattle] = useState<{
+    state: BattleState;
+    npc: NpcTrainer;
+    awaitingMyAction: boolean;
+    awaitingForceSwitch: boolean;
+    pendingMyAction: BAction | null;
+    isE4: boolean;
+    e4Idx: number;          // index into ELITE_FOUR if isE4
+    carryHpFromTeam?: BattleMon[];   // for E4 to carry HP into next match
+  } | null>(null);
+  const [leagueResultBanner, setLeagueResultBanner] = useState<string | null>(null);
+  // ----- PvP state -----
+  const [pvpBattle, setPvpBattle] = useState<{
+    state: BattleState;
+    mySide: 0 | 1;
+    awaitingMyAction: boolean;
+    awaitingForceSwitch: boolean;
+    oppPicked: boolean;
+    turnTimerSec: number | null;
+  } | null>(null);
+  const [pvpBanner, setPvpBanner] = useState<string | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const myPlayerIdRef = useRef<string>(`p-${Math.random().toString(36).slice(2, 10)}`);
+  // ----- Training -----
+  const [trainingActiveUid, setTrainingActiveUid] = useState<string | null>(null);
+  void trainingActiveUid;
   const [showBallPicker, setShowBallPicker] = useState(false);
   const [showAddMonPicker, setShowAddMonPicker] = useState(false);
   const [showTeamTools, setShowTeamTools] = useState(false);
@@ -387,10 +459,11 @@ export default function App() {
         candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay,
         safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught,
         lastSafariDayByRegion, safariRegion, lastSpinDay, battleBoxHistory,
+        badges, e4Cleared, e4Streak,
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch { /* ignore quota errors */ }
-  }, [screen, player, teams, activeTeamIdx, box, inventory, caught, seen, muted, candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDayByRegion, safariRegion, lastSpinDay, battleBoxHistory]);
+  }, [screen, player, teams, activeTeamIdx, box, inventory, caught, seen, muted, candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDayByRegion, safariRegion, lastSpinDay, battleBoxHistory, badges, e4Cleared, e4Streak]);
 
   // Buddy walking — buddy earns 1 candy every 30s
   useEffect(() => {
@@ -487,6 +560,333 @@ export default function App() {
   const addLog = useCallback((msg: string, color = "#ddd") => {
     setLog((p) => [...p.slice(-40), { msg, color, id: Date.now() + Math.random() }]);
   }, []);
+
+  // ============ TRAINING: EV updates ============
+  // Update EVs of a single mon (by uid) with caps; returns whether change was applied.
+  const updateMonEvs = useCallback((uid: string, evDeltas: Partial<Record<"evHp" | "evAtk" | "evDef" | "evSpa" | "evSpd" | "evSpe", number>>): { ok: boolean; reason?: string; wasted?: number } => {
+    let result: { ok: boolean; reason?: string; wasted?: number } = { ok: false };
+    setTeams((prev) => {
+      const next = prev.map((g) => ({ ...g, mons: [...g.mons] }));
+      let found = false;
+      for (const g of next) {
+        const idx = g.mons.findIndex((m) => m.uid === uid);
+        if (idx < 0) continue;
+        found = true;
+        const m = { ...g.mons[idx] } as Mon;
+        const cur: Record<string, number> = {
+          evHp: m.evHp ?? 0, evAtk: m.evAtk ?? 0, evDef: m.evDef ?? 0,
+          evSpa: m.evSpa ?? 0, evSpd: m.evSpd ?? 0, evSpe: m.evSpe ?? 0,
+        };
+        const totalNow = cur.evHp + cur.evAtk + cur.evDef + cur.evSpa + cur.evSpd + cur.evSpe;
+        const STAT_CAP = 252;
+        const TOTAL_CAP = 510;
+        let wasted = 0;
+        let totalAfter = totalNow;
+        for (const k of Object.keys(evDeltas) as (keyof typeof evDeltas)[]) {
+          const want = evDeltas[k] ?? 0;
+          if (want === 0) continue;
+          let canAdd = Math.min(want, STAT_CAP - cur[k]);
+          if (canAdd < 0) canAdd = 0;
+          const totalRoom = TOTAL_CAP - totalAfter;
+          if (canAdd > totalRoom) { wasted += canAdd - totalRoom; canAdd = totalRoom; }
+          if (canAdd <= 0) { wasted += want; continue; }
+          cur[k] += canAdd;
+          totalAfter += canAdd;
+          wasted += want - canAdd;
+        }
+        m.evHp = cur.evHp; m.evAtk = cur.evAtk; m.evDef = cur.evDef;
+        m.evSpa = cur.evSpa; m.evSpd = cur.evSpd; m.evSpe = cur.evSpe;
+        // Recompute maxHp based on the engine formula; preserve current HP ratio.
+        const tpl = ALL_POKEMON.find((p) => p.id === m.id);
+        if (tpl) {
+          const newMax = calcMaxHp({ baseStats: { hp: tpl.hp }, ivs: { hp: m.ivHp ?? 0 }, evs: { hp: m.evHp ?? 0 }, level: m.level });
+          const ratio = m.maxHp > 0 ? m.currentHp / m.maxHp : 1;
+          m.maxHp = newMax;
+          m.currentHp = Math.max(1, Math.round(newMax * ratio));
+        }
+        g.mons[idx] = m;
+        result = { ok: true, wasted };
+        break;
+      }
+      if (!found) result = { ok: false, reason: "Pokémon not found in your teams." };
+      return next;
+    });
+    return result;
+  }, []);
+
+  // Set absolute EV value for one stat (used by paid instant training).
+  const setMonEvAbsolute = useCallback((uid: string, stat: "evHp" | "evAtk" | "evDef" | "evSpa" | "evSpd" | "evSpe", value: number): { ok: boolean; reason?: string } => {
+    let result: { ok: boolean; reason?: string } = { ok: false };
+    setTeams((prev) => {
+      const next = prev.map((g) => ({ ...g, mons: [...g.mons] }));
+      for (const g of next) {
+        const idx = g.mons.findIndex((m) => m.uid === uid);
+        if (idx < 0) continue;
+        const m = { ...g.mons[idx] } as Mon;
+        const cur: Record<string, number> = {
+          evHp: m.evHp ?? 0, evAtk: m.evAtk ?? 0, evDef: m.evDef ?? 0,
+          evSpa: m.evSpa ?? 0, evSpd: m.evSpd ?? 0, evSpe: m.evSpe ?? 0,
+        };
+        const others = Object.keys(cur).filter((k) => k !== stat).reduce((s, k) => s + cur[k], 0);
+        if (others + value > 510) { result = { ok: false, reason: "Total EVs would exceed 510." }; return prev; }
+        cur[stat] = Math.min(252, Math.max(0, value));
+        m.evHp = cur.evHp; m.evAtk = cur.evAtk; m.evDef = cur.evDef;
+        m.evSpa = cur.evSpa; m.evSpd = cur.evSpd; m.evSpe = cur.evSpe;
+        const tpl = ALL_POKEMON.find((p) => p.id === m.id);
+        if (tpl) {
+          const newMax = calcMaxHp({ baseStats: { hp: tpl.hp }, ivs: { hp: m.ivHp ?? 0 }, evs: { hp: m.evHp ?? 0 }, level: m.level });
+          const ratio = m.maxHp > 0 ? m.currentHp / m.maxHp : 1;
+          m.maxHp = newMax;
+          m.currentHp = Math.max(1, Math.round(newMax * ratio));
+        }
+        g.mons[idx] = m;
+        result = { ok: true };
+        return next;
+      }
+      result = { ok: false, reason: "Pokémon not found." };
+      return prev;
+    });
+    return result;
+  }, []);
+
+  const spendMoney = useCallback((cost: number): boolean => {
+    if ((player.money ?? 0) < cost) return false;
+    setPlayer((p) => ({ ...p, money: p.money - cost }));
+    return true;
+  }, [player.money]);
+
+  // ============ LEAGUE: bot-driven battle ============
+  const startLeagueBattle = useCallback((npc: NpcTrainer, opts: { isE4: boolean; e4Idx: number; carryOverHp?: BattleMon[] }) => {
+    const myTeam = team.slice(0, 6);
+    if (myTeam.length === 0) { addLog("You need at least 1 Pokémon!", "#F44336"); return; }
+    const myBattleMons = opts.carryOverHp ?? myTeam.map(appMonToBattleMon);
+    if (myBattleMons.every((m) => m.currentHp <= 0)) { addLog("All your Pokémon have fainted.", "#F44336"); return; }
+    const oppBattleMons = npcTrainerToBattleMons(npc);
+    const teamA: BTeam = { ownerId: "you", ownerName: player.name || "You", mons: myBattleMons, activeIdx: myBattleMons.findIndex((m) => m.currentHp > 0) };
+    const teamB: BTeam = { ownerId: "npc", ownerName: npc.name, mons: oppBattleMons, activeIdx: 0 };
+    const state = makeBattleState(teamA, teamB);
+    setLeagueBattle({ state, npc, awaitingMyAction: true, awaitingForceSwitch: false, pendingMyAction: null, isE4: opts.isE4, e4Idx: opts.e4Idx });
+    setLeagueResultBanner(null);
+    setScreen("leagueBattle");
+    sfx.menuOpen();
+  }, [team, player.name, addLog]);
+
+  // When player submits an action, the bot picks one and we resolve.
+  useEffect(() => {
+    if (!leagueBattle || !leagueBattle.pendingMyAction || leagueBattle.state.finished) return;
+    const lb = leagueBattle;
+    const myAction = lb.pendingMyAction!;
+    const botAction = chooseBotAction(lb.state, 1);
+    const next = resolveTurn(lb.state, myAction, botAction, Math.random);
+    // Check for force-switches.
+    const myActive = next.teams[0].mons[next.teams[0].activeIdx];
+    const oppActive = next.teams[1].mons[next.teams[1].activeIdx];
+    let stateAfter = next;
+    if (oppActive.currentHp <= 0 && next.teams[1].mons.some((m) => m.currentHp > 0)) {
+      const sw = pickBotForceSwitch(next, 1);
+      if (sw != null) stateAfter = forceSwitch(stateAfter, 1, sw);
+    }
+    const myStillFainted = stateAfter.teams[0].mons[stateAfter.teams[0].activeIdx].currentHp <= 0;
+    const myHasReserve = stateAfter.teams[0].mons.some((m, i) => m.currentHp > 0 && i !== stateAfter.teams[0].activeIdx);
+    if (stateAfter.finished) {
+      handleLeagueEnd(stateAfter);
+      return;
+    }
+    if (myStillFainted && myHasReserve) {
+      setLeagueBattle({ ...lb, state: stateAfter, pendingMyAction: null, awaitingMyAction: false, awaitingForceSwitch: true });
+    } else {
+      setLeagueBattle({ ...lb, state: stateAfter, pendingMyAction: null, awaitingMyAction: true, awaitingForceSwitch: false });
+    }
+    void myActive;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leagueBattle?.pendingMyAction]);
+
+  const handleLeagueAction = useCallback((act: BAction) => {
+    if (!leagueBattle) return;
+    if (leagueBattle.awaitingForceSwitch) {
+      if (act.kind !== "switch") return;
+      const after = forceSwitch(leagueBattle.state, 0, act.toIdx);
+      // After force-switch the turn ends — opponent does nothing extra; just resume normal turn.
+      setLeagueBattle({ ...leagueBattle, state: after, awaitingForceSwitch: false, awaitingMyAction: true, pendingMyAction: null });
+      return;
+    }
+    if (!leagueBattle.awaitingMyAction) return;
+    setLeagueBattle({ ...leagueBattle, pendingMyAction: act, awaitingMyAction: false });
+  }, [leagueBattle]);
+
+  function handleLeagueEnd(finalState: BattleState) {
+    if (!leagueBattle) return;
+    const won = finalState.winnerIdx === 0;
+    const npc = leagueBattle.npc;
+    const isE4 = leagueBattle.isE4;
+    const e4Idx = leagueBattle.e4Idx;
+    if (won) {
+      sfx.victory();
+      const reward = 1000 + 200 * (npc.team[npc.team.length - 1]?.level ?? 30);
+      setPlayer((p) => ({ ...p, money: p.money + reward, wins: (p.wins ?? 0) + 1 }));
+      addLog(`🏆 Defeated ${npc.name}! +₽${reward}`, "#4ade80");
+      if (!isE4) {
+        if (!badges.includes(npc.id)) setBadges((b) => [...b, npc.id]);
+        setLeagueResultBanner(`Victory! Earned ${npc.name}'s badge.`);
+        setLeagueBattle({ ...leagueBattle, state: finalState, awaitingMyAction: false, awaitingForceSwitch: false, pendingMyAction: null });
+      } else {
+        // Continue gauntlet — carry HP into next E4 match.
+        const carry = finalState.teams[0].mons.map((m) => ({ ...m }));
+        if (e4Idx + 1 < ELITE_FOUR.length) {
+          setTimeout(() => startLeagueBattle(ELITE_FOUR[e4Idx + 1], { isE4: true, e4Idx: e4Idx + 1, carryOverHp: carry }), 1500);
+          setLeagueResultBanner(`Win ${e4Idx + 1}/4 — onward!`);
+          setLeagueBattle({ ...leagueBattle, state: finalState, awaitingMyAction: false, awaitingForceSwitch: false, pendingMyAction: null });
+        } else {
+          // Cleared all 4 → champion!
+          setE4Cleared(true);
+          setE4Streak((s) => s + 1);
+          setLeagueResultBanner(`🏆 CHAMPION! E4 cleared (streak ${e4Streak + 1}).`);
+          setLeagueBattle({ ...leagueBattle, state: finalState, awaitingMyAction: false, awaitingForceSwitch: false, pendingMyAction: null });
+        }
+      }
+    } else {
+      sfx.faint();
+      setPlayer((p) => ({ ...p, losses: (p.losses ?? 0) + 1 }));
+      if (isE4) {
+        setE4Streak(0);
+        setLeagueResultBanner(`Defeated by ${npc.name}. E4 streak reset.`);
+      } else {
+        setLeagueResultBanner(`Defeated by ${npc.name}. Try again!`);
+      }
+      addLog(`💀 Lost to ${npc.name}.`, "#f87171");
+      setLeagueBattle({ ...leagueBattle, state: finalState, awaitingMyAction: false, awaitingForceSwitch: false, pendingMyAction: null });
+    }
+  }
+
+  // ============ PvP: WebSocket connection + handlers ============
+  const pvpConnect = useCallback((isHost: boolean, code: string | undefined, mode: "ranked" | "unranked" | "random", myTeamMons: Mon[]) => {
+    try { wsRef.current?.close(); } catch { /* ignore */ }
+    const wsUrl = `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/api/ws/battle`;
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+    let myTeamSent = false;
+    const sendTeam = () => {
+      if (myTeamSent) return;
+      myTeamSent = true;
+      ws.send(JSON.stringify({ type: "team", playerId: myPlayerIdRef.current, team: myTeamMons.map(toShippableMon) }));
+    };
+    ws.onopen = () => {
+      if (isHost) {
+        ws.send(JSON.stringify({ type: "host", playerId: myPlayerIdRef.current, playerName: player.name || "Trainer", turnTimerSec: bbSettings.turnTimer }));
+      } else {
+        ws.send(JSON.stringify({ type: "join", playerId: myPlayerIdRef.current, playerName: player.name || "Trainer", code: (code ?? "").toUpperCase() }));
+      }
+    };
+    ws.onerror = () => { addLog("Battle server connection error.", "#f87171"); };
+    ws.onclose = () => {
+      if (wsRef.current === ws) wsRef.current = null;
+    };
+    ws.onmessage = (ev) => {
+      let msg: { type: string; [k: string]: unknown };
+      try { msg = JSON.parse(String(ev.data)); } catch { return; }
+      switch (msg.type) {
+        case "hosted": {
+          const newCode = String(msg["code"]);
+          setBbRoom((prev) => prev ? { ...prev, code: newCode } : prev);
+          addLog(`Room hosted: ${newCode} — waiting for opponent…`, "#60a5fa");
+          break;
+        }
+        case "joined": {
+          const hostName = (msg["hostName"] as string) || "Host";
+          setBbRoom((prev) => prev ? { ...prev, status: "ready", opponent: hostName } : prev);
+          sendTeam();
+          break;
+        }
+        case "opponent_joined": {
+          const joinerName = (msg["joinerName"] as string) || "Opponent";
+          setBbRoom((prev) => prev ? { ...prev, status: "ready", opponent: joinerName } : prev);
+          addLog(`${joinerName} joined the room!`, "#4ade80");
+          sendTeam();
+          break;
+        }
+        case "team_ok":
+          break;
+        case "state": {
+          const state = msg["state"] as BattleState;
+          const mySide = msg["mySide"] as 0 | 1;
+          const awaitingForceSwitch = !!msg["awaitingForceSwitch"];
+          const oppPicked = !!msg["oppPicked"];
+          const turnTimerSec = msg["turnTimerSec"] as number | null;
+          setPvpBattle((prev) => ({
+            state, mySide,
+            awaitingMyAction: !state.finished && !awaitingForceSwitch,
+            awaitingForceSwitch,
+            oppPicked,
+            turnTimerSec: turnTimerSec ?? prev?.turnTimerSec ?? bbSettings.turnTimer,
+          }));
+          if (state && !state.finished) setScreen("pvpBattle");
+          break;
+        }
+        case "turn_start":
+          // Re-enable input on new turn (state message will follow with details).
+          break;
+        case "turn_end":
+          break;
+        case "game_over": {
+          const winnerIdx = msg["winnerIdx"] as number;
+          const won = winnerIdx === (pvpBattle?.mySide ?? 0);
+          // We may not know the local mySide here yet; recompute from current state.
+          finalizePvpResult(winnerIdx, mode);
+          void won;
+          break;
+        }
+        case "opponent_left":
+          addLog("Opponent disconnected.", "#f87171");
+          break;
+        case "error":
+          addLog(`Battle error: ${(msg["reason"] as string) || "unknown"}`, "#f87171");
+          break;
+      }
+    };
+    void code;
+  }, [player.name, bbSettings.turnTimer, addLog]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function finalizePvpResult(winnerIdx: number, mode: "ranked" | "unranked" | "random") {
+    setPvpBattle((prev) => {
+      if (!prev) return prev;
+      const won = winnerIdx === prev.mySide;
+      const oppName = bbRoom?.opponent ?? "Rival";
+      const result: "W" | "L" = won ? "W" : "L";
+      let delta = 0;
+      const myMons = prev.state.teams[prev.mySide].mons;
+      const opMons = prev.state.teams[prev.mySide === 0 ? 1 : 0].mons;
+      const battleMonScore = (m: BattleMon) =>
+        calcMaxHp(m) + m.baseStats.atk + m.baseStats.def + m.baseStats.spa + m.baseStats.spd + m.baseStats.spe;
+      const myCp = myMons.reduce((s, m) => s + battleMonScore(m), 0);
+      const opCp = opMons.reduce((s, m) => s + battleMonScore(m), 0);
+      if (mode === "ranked") {
+        const expected = 1 / (1 + Math.pow(10, ((opCp - myCp) / 400)));
+        delta = Math.round(32 * ((won ? 1 : 0) - expected));
+      }
+      setBattleBoxHistory((p2) => [{ mode, result, opponent: oppName, delta, ts: Date.now() }, ...p2].slice(0, 50));
+      setPlayer((p) => {
+        const next = { ...p };
+        if (won) next.wins = (p.wins ?? 0) + 1; else next.losses = (p.losses ?? 0) + 1;
+        if (mode === "ranked") next.rank = Math.max(0, (p.rank ?? 1000) + delta);
+        return next;
+      });
+      setPvpBanner(`${won ? "🏆 Victory" : "💀 Defeat"} vs ${oppName}${mode === "ranked" ? ` (${delta >= 0 ? "+" : ""}${delta} rank)` : ""}`);
+      if (won) sfx.victory(); else sfx.faint();
+      return { ...prev, awaitingMyAction: false, awaitingForceSwitch: false };
+    });
+  }
+
+  const handlePvpAction = useCallback((act: BAction) => {
+    const ws = wsRef.current;
+    if (!ws || ws.readyState !== ws.OPEN) return;
+    ws.send(JSON.stringify({ type: "action", playerId: myPlayerIdRef.current, action: act }));
+    setPvpBattle((prev) => prev ? { ...prev, awaitingMyAction: false } : prev);
+  }, []);
+
+  // Cleanup WS on unmount.
+  useEffect(() => () => { try { wsRef.current?.close(); } catch { /* ignore */ } }, []);
+  // Memoize for key derivation; avoids unused-var warnings in some builds.
+  const _leagueBgUnused = useMemo(() => null, []); void _leagueBgUnused;
 
   function inventoryQty(name: string): number {
     return inventory.find((it) => it.name === name)?.qty ?? 0;
@@ -1409,9 +1809,9 @@ export default function App() {
     ];
     const menuPage2: MenuBtn[] = [
       { label: "Battle Box",    icon: "fa-shield-halved", color: "var(--m-pink)",   action: () => { sfx.menuOpen(); setBbMode(null); setBbRoom(null); setScreen("battleBox"); } },
-      { label: "Training Zone", icon: "fa-dumbbell",      color: "var(--m-orange)", action: () => addLog("Training Zone coming soon!", "#9C27B0"), locked: true },
+      { label: "Training Zone", icon: "fa-dumbbell",      color: "var(--m-orange)", action: () => { sfx.menuOpen(); setScreen("training"); } },
+      { label: "League",        icon: "fa-trophy",        color: "var(--m-yellow)", action: () => { sfx.menuOpen(); setScreen("league"); } },
       { label: "Referrals",     icon: "fa-user-plus",     color: "var(--m-green)",  action: () => addLog("Referrals coming soon!", "#9C27B0"), locked: true },
-      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
       { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
       { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
       { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
@@ -2712,72 +3112,47 @@ export default function App() {
       for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
       return s;
     }
+    function buildMyTeam(): Mon[] {
+      if (bbMode === "random") {
+        return Array.from({ length: bbSettings.teamSize }, () => {
+          const pool = bbSettings.allowLegendaries ? ALL_POKEMON : ALL_POKEMON.filter((p) => !ALL_LEGENDARY_IDS.has(p.id));
+          const tpl = pool[Math.floor(Math.random() * pool.length)];
+          const lv = bbSettings.randomLevelMin + Math.floor(Math.random() * (bbSettings.randomLevelMax - bbSettings.randomLevelMin + 1));
+          return makeMon(tpl, lv);
+        });
+      }
+      return team.slice(0, bbSettings.teamSize);
+    }
     function startHostRoom(mode: "ranked" | "unranked" | "random") {
-      const code = genRoomCode();
-      setBbMode(mode);
-      setBbRoom({ code, isHost: true, status: "waiting" });
       sfx.menuOpen();
-      const fakeNames = ["Kazuto", "MR×NOOB", "AshKetchum", "Cynthia", "BluE", "RedX", "Leon", "MistyJr"];
-      setTimeout(() => {
-        setBbRoom((prev) => prev ? { ...prev, status: "ready", opponent: fakeNames[Math.floor(Math.random() * fakeNames.length)] } : prev);
-        addLog(`Opponent connected to room ${code}!`, "#4ade80");
-      }, 1800 + Math.random() * 1500);
+      setBbMode(mode);
+      setBbRoom({ code: "…", isHost: true, status: "waiting" });
+      const myTeam = buildMyTeam();
+      if (myTeam.length === 0) { addLog("You need at least 1 Pokémon to battle!", "#F44336"); setBbRoom(null); setBbMode(null); return; }
+      pvpConnect(true, undefined, mode, myTeam);
     }
     function joinRoom(mode: "ranked" | "unranked" | "random") {
       if (bbJoinCode.trim().length < 4) { addLog("Enter a valid room code.", "#F44336"); return; }
       sfx.menuOpen();
       setBbMode(mode);
-      setBbRoom({ code: bbJoinCode.trim().toUpperCase(), isHost: false, status: "waiting" });
-      const fakeNames = ["Kazuto", "MR×NOOB", "AshKetchum", "Cynthia", "BluE", "RedX", "Leon", "MistyJr"];
-      setTimeout(() => {
-        setBbRoom((prev) => prev ? { ...prev, status: "ready", opponent: fakeNames[Math.floor(Math.random() * fakeNames.length)] } : prev);
-        addLog(`Joined room ${bbJoinCode.trim().toUpperCase()}!`, "#4ade80");
-      }, 1200);
+      const code = bbJoinCode.trim().toUpperCase();
+      setBbRoom({ code, isHost: false, status: "waiting" });
+      const myTeam = buildMyTeam();
+      if (myTeam.length === 0) { addLog("You need at least 1 Pokémon to battle!", "#F44336"); setBbRoom(null); setBbMode(null); return; }
+      pvpConnect(false, code, mode, myTeam);
     }
-    function leaveRoom() { sfx.menuBack(); setBbRoom(null); setBbMode(null); }
-    function startBattleSim() {
-      if (!bbMode || !bbRoom || bbRoom.status !== "ready") return;
-      sfx.menuOpen();
-      const myTeam = bbMode === "random"
-        ? Array.from({ length: bbSettings.teamSize }, () => {
-            const pool = bbSettings.allowLegendaries ? ALL_POKEMON : ALL_POKEMON.filter((p) => !ALL_LEGENDARY_IDS.has(p.id));
-            const tpl = pool[Math.floor(Math.random() * pool.length)];
-            const lv = bbSettings.randomLevelMin + Math.floor(Math.random() * (bbSettings.randomLevelMax - bbSettings.randomLevelMin + 1));
-            return makeMon(tpl, lv);
-          })
-        : team.slice(0, bbSettings.teamSize);
-      if (myTeam.length === 0) {
-        addLog("You need at least 1 Pokémon to battle!", "#F44336");
-        return;
-      }
-      const oppTeam = Array.from({ length: bbSettings.teamSize }, () => {
-        const pool = bbSettings.allowLegendaries ? ALL_POKEMON : ALL_POKEMON.filter((p) => !ALL_LEGENDARY_IDS.has(p.id));
-        const tpl = pool[Math.floor(Math.random() * pool.length)];
-        const lv = Math.min(bbSettings.levelCap, 30 + Math.floor(Math.random() * 30));
-        return makeMon(tpl, lv);
-      });
-      const myCp = myTeam.reduce((s, m) => s + getCP(m), 0);
-      const opCp = oppTeam.reduce((s, m) => s + getCP(m), 0);
-      const winChance = Math.min(0.92, Math.max(0.08, myCp / (myCp + opCp)));
-      const won = Math.random() < winChance;
-      const oppName = bbRoom.opponent ?? "Rival";
-      let delta = 0;
-      if (bbMode === "ranked") {
-        const expected = 1 / (1 + Math.pow(10, ((opCp - myCp) / 400)));
-        delta = Math.round(32 * ((won ? 1 : 0) - expected));
-      }
-      const result: "W" | "L" = won ? "W" : "L";
-      setBattleBoxHistory((prev) => [{ mode: bbMode, result, opponent: oppName, delta, ts: Date.now() }, ...prev].slice(0, 50));
-      setPlayer((p) => {
-        const next = { ...p };
-        if (won) next.wins = (p.wins ?? 0) + 1; else next.losses = (p.losses ?? 0) + 1;
-        if (bbMode === "ranked") next.rank = Math.max(0, (p.rank ?? 1000) + delta);
-        return next;
-      });
-      addLog(`${won ? "🏆 Victory" : "💀 Defeat"} vs ${oppName} — ${bbMode.toUpperCase()}${bbMode === "ranked" ? ` (${delta >= 0 ? "+" : ""}${delta} rank)` : ""}`, won ? "#4ade80" : "#f87171");
-      if (won) sfx.victory(); else sfx.faint();
+    function leaveRoom() {
+      sfx.menuBack();
+      try { wsRef.current?.close(); } catch { /* ignore */ }
+      wsRef.current = null;
       setBbRoom(null);
       setBbMode(null);
+    }
+    function startBattleSim() {
+      // Real PvP starts automatically once both teams are submitted (server emits state).
+      // This button now just signals readiness.
+      if (!bbMode || !bbRoom || bbRoom.status !== "ready") return;
+      addLog("Waiting for opponent to lock in…", "#60a5fa");
     }
     const modeMeta: Record<string, { title: string; sub: string; color: string; icon: string }> = {
       ranked:   { title: "Ranked Battle",   sub: "Climb the leaderboard. Wins/losses count.", color: "#FFD700", icon: "fa-trophy" },
@@ -4119,6 +4494,110 @@ export default function App() {
             </div>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // ======================= TRAINING ZONE =======================
+  if (screen === "training") {
+    return (
+      <div style={S.root}><style>{css}</style>
+        <TrainingZone
+          team={team as unknown as Parameters<typeof TrainingZone>[0]["team"]}
+          money={player.money}
+          onBack={() => { sfx.menuBack(); setScreen("world"); }}
+          onUpdateMon={(uid, ev) => {
+            // Apply each stat as an absolute set (validation done in TrainingZone).
+            (Object.keys(ev) as ("hp" | "atk" | "def" | "spa" | "spd" | "spe")[]).forEach((k) => {
+              const evKey = ("ev" + k.charAt(0).toUpperCase() + k.slice(1)) as "evHp" | "evAtk" | "evDef" | "evSpa" | "evSpd" | "evSpe";
+              setMonEvAbsolute(uid, evKey, ev[k]);
+            });
+          }}
+          onSpendMoney={(amount) => { spendMoney(amount); }}
+          toast={(msg, color) => addLog(msg, color ?? "#a78bfa")}
+        />
+      </div>
+    );
+  }
+
+  // ======================= LEAGUE LIST =======================
+  if (screen === "league") {
+    return (
+      <div style={S.root}><style>{css}</style>
+        <LeagueScreen
+          badges={badges}
+          e4Cleared={e4Cleared}
+          e4Streak={e4Streak}
+          onBack={() => { sfx.menuBack(); setScreen("world"); }}
+          onPickGym={(gym) => startLeagueBattle(gym, { isE4: false, e4Idx: 0 })}
+          onStartElite4={() => {
+            if (badges.length < GYM_LEADERS.length) { addLog("You need all 8 badges first.", "#F44336"); return; }
+            startLeagueBattle(ELITE_FOUR[0], { isE4: true, e4Idx: 0 });
+          }}
+        />
+      </div>
+    );
+  }
+
+  // ======================= LEAGUE BATTLE =======================
+  if (screen === "leagueBattle" && leagueBattle) {
+    const lb = leagueBattle;
+    return (
+      <div style={S.root}><style>{css}</style>
+        <BattleArena
+          state={lb.state}
+          mySide={0}
+          mode="league"
+          awaitingMyAction={lb.awaitingMyAction}
+          awaitingForceSwitch={lb.awaitingForceSwitch}
+          turnTimerSec={null}
+          onAction={handleLeagueAction}
+          bannerText={leagueResultBanner}
+          onExit={() => {
+            // If battle ended, persist mon current HP back into team for non-E4 (E4 carries inside engine).
+            if (lb.state.finished && !lb.isE4) {
+              setTeams((prev) => prev.map((g, gi) => gi !== activeTeamIdx ? g : ({
+                ...g,
+                mons: g.mons.map((m) => {
+                  const bm = lb.state.teams[0].mons.find((b) => b.uid === m.uid);
+                  if (!bm) return m;
+                  return { ...m, currentHp: Math.max(0, bm.currentHp), status: bm.status ?? null };
+                }),
+              })));
+            }
+            setLeagueBattle(null);
+            setScreen("league");
+          }}
+        />
+      </div>
+    );
+  }
+
+  // ======================= PVP BATTLE =======================
+  if (screen === "pvpBattle" && pvpBattle) {
+    const pb = pvpBattle;
+    return (
+      <div style={S.root}><style>{css}</style>
+        <BattleArena
+          state={pb.state}
+          mySide={pb.mySide}
+          mode="pvp"
+          awaitingMyAction={pb.awaitingMyAction}
+          awaitingForceSwitch={pb.awaitingForceSwitch}
+          oppPicked={pb.oppPicked}
+          turnTimerSec={pb.turnTimerSec}
+          onAction={handlePvpAction}
+          bannerText={pvpBanner}
+          onExit={() => {
+            try { wsRef.current?.close(); } catch { /* ignore */ }
+            wsRef.current = null;
+            setPvpBattle(null);
+            setPvpBanner(null);
+            setBbRoom(null);
+            setBbMode(null);
+            setScreen("battleBox");
+          }}
+        />
       </div>
     );
   }
