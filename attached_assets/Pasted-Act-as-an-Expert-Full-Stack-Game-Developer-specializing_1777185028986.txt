@@ -1,0 +1,39 @@
+Act as an Expert Full-Stack Game Developer specializing in Python, WebSockets, and modern web UI design. I am building a web-based Pokémon-style game and need to implement several advanced backend systems and frontend components.
+
+The tech stack relies on a Python backend (please use FastAPI or Flask-SocketIO to handle asynchronous requests) and a standard HTML/JS/CSS frontend. The game is designed to run persistently in a cloud-hosted environment. 
+
+Please provide the complete logic, database schemas, and necessary code blocks to implement the following four features:
+
+### 1. EV Training Zones (Grinding Loop)
+Create a Python endpoint to handle a restricted encounter pool. 
+* Implement the core stat formulas for HP and other stats.
+* Write a function that triggers upon a successful "capture" event in this zone, which reads the `ev_yield` of the captured monster and adds it to the user's active monster.
+* Include strict validation logic ensuring no single stat exceeds 252 EVs, and the combined total across all stats does not exceed 510.
+
+### 2. Paid Instant Training Zone (Bypass Mechanics)
+Create an endpoint for instant stat upgrades using in-game currency.
+* Provide the frontend HTML/CSS for a "Glassy UI" card component where users can select a stat and click an "Upgrade" button.
+* Write the backend logic to verify the user's currency balance and check the 510 total EV cap.
+* If valid, deduct the currency, inject 252 EVs into the selected stat's database column, and instantly recalculate the monster's profile.
+
+### 3. PvE Progression: Gyms & Elite 4
+Design a state machine for PvE progression.
+* Create a database model for storing `player_badges` and predefined NPC JSON profiles (including specific IVs, natures, and movesets).
+* Write the logic for the "Elite 4 Gauntlet": 
+    * A session state that tracks an `e4_streak`.
+    * A lockout function that prevents standard healing between these specific matches.
+    * A fail state that resets the streak to 0 if the user's team is wiped out.
+    * A victory state that flags the database upon reaching a streak of 4.
+
+### 4. Real-Time PvP Battle Rooms
+Develop a WebSocket-based battle engine for live 1v1 PvP.
+* Create a `BattleSession` class/object to handle `room_id`, `player1_id`, `player2_id`, and the live state of both teams.
+* Write the asynchronous turn-execution loop with a countdown timer timeout.
+* Implement the Priority & Resolution Engine:
+    1. Switching out takes highest priority.
+    2. Move priority tiers (+1, 0, etc.) are calculated next.
+    3. Speed stats are compared for ties, with a 50/50 RNG coin flip for perfectly matching Speed stats.
+    4. Calculate damage, apply status effects, and include a check that cancels Action 2 immediately if the target faints from Action 1.
+* Show how the backend broadcasts the updated battle log and team states back to both clients to refresh their UIs.
+
+Please structure your response with clear headings, database schemas first, followed by the backend Python logic, and concluding with the frontend WebSocket listeners and Glassy UI CSS.
