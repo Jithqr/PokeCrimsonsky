@@ -481,6 +481,61 @@ export default function App() {
     return () => clearInterval(id);
   }, []);
 
+  // Global swipe navigation between Home (world) ↔ Market (store) ↔ Profile.
+  // Active only on those three screens; ignores swipes that start on
+  // interactive/scrollable elements so it doesn't fight buttons or lists.
+  useEffect(() => {
+    const NAV_ORDER = ["world", "store", "profile"] as const;
+    const idx = NAV_ORDER.indexOf(screen as typeof NAV_ORDER[number]);
+    if (idx === -1) return;
+
+    let startX = 0, startY = 0, startT = 0, tracking = false;
+
+    const isInteractive = (el: EventTarget | null): boolean => {
+      let n = el as HTMLElement | null;
+      while (n && n !== document.body) {
+        const tag = n.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || tag === "BUTTON") return true;
+        if (n.getAttribute && n.getAttribute("role") === "button") return true;
+        const ov = getComputedStyle(n).overflowX;
+        if ((ov === "auto" || ov === "scroll") && n.scrollWidth > n.clientWidth + 2) return true;
+        n = n.parentElement;
+      }
+      return false;
+    };
+
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) { tracking = false; return; }
+      if (isInteractive(e.target)) { tracking = false; return; }
+      const t = e.touches[0];
+      startX = t.clientX; startY = t.clientY; startT = Date.now();
+      tracking = true;
+    };
+    const onEnd = (e: TouchEvent) => {
+      if (!tracking) return;
+      tracking = false;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+      const dt = Date.now() - startT;
+      const absX = Math.abs(dx), absY = Math.abs(dy);
+      // Require: mostly horizontal, decent distance, not too slow.
+      if (absX < 60 || absX < absY * 1.5 || dt > 700) return;
+      if (dx < 0 && idx < NAV_ORDER.length - 1) {
+        sfx.click(); setScreen(NAV_ORDER[idx + 1]);
+      } else if (dx > 0 && idx > 0) {
+        sfx.click(); setScreen(NAV_ORDER[idx - 1]);
+      }
+    };
+
+    window.addEventListener("touchstart", onStart, { passive: true });
+    window.addEventListener("touchend", onEnd, { passive: true });
+    return () => {
+      window.removeEventListener("touchstart", onStart);
+      window.removeEventListener("touchend", onEnd);
+    };
+  }, [screen]);
+
   // Catch ring shrinking animation
   useEffect(() => {
     if (!ringActive) return;
@@ -2032,13 +2087,7 @@ export default function App() {
     return (
       <div style={S.root}><style>{css}</style>
         <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
-          <div className="m-cover" style={{ position: "relative" }}>
-            <button
-              className="btn"
-              onClick={() => { sfx.menuBack(); setScreen("world"); }}
-              style={{ position: "absolute", top: 12, left: 12, border: "1px solid rgba(255,255,255,0.35)", background: "rgba(0,0,0,0.45)", color: "#fff", padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, letterSpacing: 1, zIndex: 2 }}
-            >◀ BACK</button>
-          </div>
+          <div className="m-cover" />
           <div className="m-prof">
             <div className="m-avatar"><img src={TRAINER_SPRITE(player.sprite)} alt="me" /></div>
             <h1 className="m-prof-name">{player.name}</h1>
