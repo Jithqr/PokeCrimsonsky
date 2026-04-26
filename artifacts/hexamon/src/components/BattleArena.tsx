@@ -15,62 +15,97 @@ type Props = {
   mode: "league" | "pvp";
   awaitingMyAction: boolean;
   awaitingForceSwitch: boolean;
-  oppPicked?: boolean;            // true when opponent has locked in their action (PvP only)
-  turnTimerSec?: number | null;   // remaining seconds, or null = no timer
+  oppPicked?: boolean;
+  turnTimerSec?: number | null;
   onAction: (a: Action) => void;
   onForfeit?: () => void;
-  bannerText?: string | null;     // e.g. "Opponent left", "Champion!", etc.
-  onExit?: () => void;            // shown on the result banner
+  bannerText?: string | null;
+  onExit?: () => void;
 };
 
 const STATUS_COLORS: Record<string, string> = {
   Burn: "#FF6B6B", Poison: "#A040A0", Paralyze: "#F8D030", Sleep: "#90A4AE", Freeze: "#81D4FA",
 };
 
-function HpBar({ now, max, big }: { now: number; max: number; big?: boolean }) {
-  const pct = Math.max(0, Math.min(100, (now / max) * 100));
-  const colour = pct > 50 ? "#4CAF50" : pct > 20 ? "#FFC107" : "#F44336";
+/* ---------- Pokéball icon (alive vs fainted) ---------- */
+function Pokeball({ alive, size = 14 }: { alive: boolean; size?: number }) {
+  const top = alive ? "#ef4444" : "#5b6173";
+  const bottom = alive ? "#f7f7f7" : "#a0a4b0";
+  const stroke = alive ? "#1f2330" : "#2c2f38";
+  const center = alive ? "#f7f7f7" : "#cfd2da";
   return (
-    <div style={{ background: "rgba(0,0,0,0.45)", borderRadius: 6, height: big ? 14 : 8, overflow: "hidden", border: "1px solid rgba(255,255,255,0.15)" }}>
-      <div style={{
-        width: `${pct}%`, height: "100%",
-        background: `linear-gradient(180deg, ${colour}, ${colour}cc)`,
-        transition: "width 600ms ease, background 400ms ease",
-      }} />
+    <svg viewBox="0 0 32 32" width={size} height={size} style={{ display: "block" }}>
+      <circle cx="16" cy="16" r="14" fill={bottom} stroke={stroke} strokeWidth="2" />
+      <path d="M2,16 A14,14 0 0,1 30,16 Z" fill={top} stroke={stroke} strokeWidth="2" />
+      <line x1="2" y1="16" x2="30" y2="16" stroke={stroke} strokeWidth="2" />
+      <circle cx="16" cy="16" r="4.5" fill={center} stroke={stroke} strokeWidth="2" />
+      <circle cx="16" cy="16" r="1.7" fill={stroke} />
+    </svg>
+  );
+}
+
+function PokeballRow({ mons, align }: { mons: BattleMon[]; align: "left" | "right" }) {
+  // Always render 6 slots (classic Pokémon style); fill from team length.
+  const slots = Array.from({ length: 6 }, (_, i) => mons[i] ?? null);
+  return (
+    <div style={{ display: "flex", gap: 4, justifyContent: align === "left" ? "flex-start" : "flex-end" }}>
+      {slots.map((m, i) => {
+        if (!m) {
+          return <div key={i} style={{ width: 14, height: 14, opacity: 0.25 }}><Pokeball alive={false} size={14} /></div>;
+        }
+        return <Pokeball key={m.uid} alive={m.currentHp > 0} size={14} />;
+      })}
     </div>
   );
 }
 
-function MonCard({ mon, big, back }: { mon: BattleMon; big?: boolean; back?: boolean }) {
+/* ---------- Classic name plate ---------- */
+function NamePlate({
+  mon, side, showHpNumbers, showExp,
+}: { mon: BattleMon; side: "opp" | "me"; showHpNumbers?: boolean; showExp?: boolean }) {
   const max = calcMaxHp(mon);
-  const sprite = mon.sprite || mon.name.toLowerCase();
-  const url = back ? SPRITE_BACK(sprite) : SPRITE_FRONT(sprite);
-  const fainted = mon.currentHp <= 0;
+  const pct = Math.max(0, Math.min(100, (mon.currentHp / max) * 100));
+  const hpColor = pct > 50 ? "#5dc26b" : pct > 20 ? "#f0c020" : "#e64545";
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, opacity: fainted ? 0.35 : 1, filter: fainted ? "grayscale(1)" : "none" }}>
-      <img
-        src={url}
-        alt={mon.name}
-        style={{
-          width: big ? 140 : 56, height: big ? 140 : 56, imageRendering: "pixelated",
-          objectFit: "contain", filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.4))",
-        }}
-        onError={(e) => { (e.currentTarget as HTMLImageElement).src = SPRITE_FRONT(sprite); }}
-      />
-      <div style={{ width: big ? 220 : 70 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: big ? 14 : 9, color: "#fff", fontWeight: 700, marginBottom: 2 }}>
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{mon.name}</span>
-          <span>Lv{mon.level}</span>
+    <div style={{
+      position: "relative", background: "linear-gradient(180deg,#fff8e3 0%,#ecdfb8 100%)",
+      border: "2px solid #2a2618", borderRadius: 6,
+      boxShadow: side === "me" ? "3px 3px 0 #2a2618" : "-3px 3px 0 #2a2618",
+      padding: "6px 8px", color: "#231d10", minWidth: 168, maxWidth: 200,
+      fontFamily: "'Press Start 2P', monospace",
+      transform: side === "me" ? "skew(-6deg, 0)" : "skew(-6deg, 0)",
+    }}>
+      <div style={{ transform: "skew(6deg, 0)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 9, lineHeight: 1.2 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 3, fontWeight: 700 }}>
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 100, textTransform: "uppercase" }}>{mon.name}</span>
+            {mon.status && <span title={mon.status} style={{ background: STATUS_COLORS[mon.status] ?? "#555", color: "#fff", padding: "1px 3px", borderRadius: 2, fontSize: 7 }}>{mon.status.slice(0,3).toUpperCase()}</span>}
+          </span>
+          <span style={{ fontSize: 9 }}>Lv{mon.level}</span>
         </div>
-        <HpBar now={mon.currentHp} max={max} big={big} />
-        {big && <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#fff", marginTop: 4 }}>
-          <span>HP {mon.currentHp}/{max}</span>
-          {mon.status && <span style={{ background: STATUS_COLORS[mon.status] ?? "#555", color: "#fff", padding: "1px 6px", borderRadius: 6, fontSize: 10, fontWeight: 700 }}>{mon.status}</span>}
-        </div>}
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
+          <span style={{ fontSize: 7, color: "#7a3d1f", fontWeight: 700 }}>HP</span>
+          <div style={{ flex: 1, height: 5, background: "#3b342a", borderRadius: 2, overflow: "hidden", border: "1px solid #2a2618" }}>
+            <div style={{ width: `${pct}%`, height: "100%", background: hpColor, transition: "width 600ms ease, background 400ms ease" }} />
+          </div>
+        </div>
+        {showHpNumbers && (
+          <div style={{ textAlign: "right", fontSize: 8, marginTop: 2 }}>{Math.max(0, Math.floor(mon.currentHp))}/{max}</div>
+        )}
+        {showExp && (
+          <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+            <span style={{ fontSize: 7, color: "#1f3d7a", fontWeight: 700 }}>EXP</span>
+            <div style={{ flex: 1, height: 3, background: "#3b342a", borderRadius: 1, overflow: "hidden", border: "1px solid #2a2618" }}>
+              <div style={{ width: `${(mon.level % 10) * 10}%`, height: "100%", background: "#5fa8e6" }} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
+/* ============================================================ */
 
 export default function BattleArena(props: Props) {
   const { state, mySide, awaitingMyAction, awaitingForceSwitch, oppPicked, turnTimerSec, onAction, onForfeit, bannerText, onExit, mode } = props;
@@ -79,176 +114,270 @@ export default function BattleArena(props: Props) {
   const myActive = me.mons[me.activeIdx];
   const oppActive = opp.mons[opp.activeIdx];
 
-  const [tab, setTab] = useState<"fight" | "switch">("fight");
+  const [actionMode, setActionMode] = useState<"main" | "fight" | "switch" | "items">("main");
+  const [intro, setIntro] = useState(true); // true while pokeball intro plays
+  const [hitMe, setHitMe] = useState(false);
+  const [hitOpp, setHitOpp] = useState(false);
+  const prevMyHp = useRef(myActive.currentHp);
+  const prevOppHp = useRef(oppActive.currentHp);
+  const prevMyUid = useRef(myActive.uid);
+  const prevOppUid = useRef(oppActive.uid);
   const logRef = useRef<HTMLDivElement | null>(null);
+
+  // Battle-start intro animation
+  useEffect(() => {
+    const t = setTimeout(() => setIntro(false), 1100);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Detect HP drops on either active mon → trigger hit flash/shake
+  useEffect(() => {
+    if (myActive.uid !== prevMyUid.current) {
+      prevMyUid.current = myActive.uid; prevMyHp.current = myActive.currentHp;
+    } else if (myActive.currentHp < prevMyHp.current) {
+      setHitMe(true);
+      const t = setTimeout(() => setHitMe(false), 420);
+      prevMyHp.current = myActive.currentHp;
+      return () => clearTimeout(t);
+    } else {
+      prevMyHp.current = myActive.currentHp;
+    }
+  }, [myActive.currentHp, myActive.uid]);
+
+  useEffect(() => {
+    if (oppActive.uid !== prevOppUid.current) {
+      prevOppUid.current = oppActive.uid; prevOppHp.current = oppActive.currentHp;
+    } else if (oppActive.currentHp < prevOppHp.current) {
+      setHitOpp(true);
+      const t = setTimeout(() => setHitOpp(false), 420);
+      prevOppHp.current = oppActive.currentHp;
+      return () => clearTimeout(t);
+    } else {
+      prevOppHp.current = oppActive.currentHp;
+    }
+  }, [oppActive.currentHp, oppActive.uid]);
+
+  // Auto-scroll log
   useEffect(() => {
     const el = logRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [state.log.length]);
 
-  // Auto-open switch tab when force-switch is required.
+  // Auto-open switch mode if forced
   useEffect(() => {
-    if (awaitingForceSwitch) setTab("switch");
-  }, [awaitingForceSwitch]);
+    if (awaitingForceSwitch) setActionMode("switch");
+    else if (!awaitingMyAction) setActionMode("main");
+  }, [awaitingForceSwitch, awaitingMyAction]);
 
-  const benchOpp = opp.mons.map((m, i) => ({ m, i })).filter((x) => x.i !== opp.activeIdx);
   const benchMe = me.mons.map((m, i) => ({ m, i })).filter((x) => x.i !== me.activeIdx);
+  const lastLog = state.log.slice(-2);
+  const headerLabel =
+    mode === "pvp" ? `BATTLE BOX · ${(opp.ownerName || "Opponent").toUpperCase()}` :
+    `LEAGUE BATTLE · ${(opp.ownerName || "Trainer").toUpperCase()}`;
+
+  const myFainted = myActive.currentHp <= 0;
+  const oppFainted = oppActive.currentHp <= 0;
 
   return (
     <div style={{
-      position: "fixed", inset: 0, background: "linear-gradient(180deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%)",
-      display: "flex", flexDirection: "column", color: "#fff", fontFamily: "system-ui",
-      zIndex: 9000,
+      position: "fixed", inset: 0, zIndex: 9000, display: "flex", justifyContent: "center",
+      background: "#05050f", color: "#fff", fontFamily: "system-ui",
     }}>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.1)", background: "rgba(0,0,0,0.3)" }}>
-        <div style={{ fontSize: 13, opacity: 0.85 }}>
-          <strong>{mode === "pvp" ? "PvP Battle" : "League Battle"}</strong> · Turn {state.turn}
-        </div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          {turnTimerSec != null && <div style={{ background: turnTimerSec < 10 ? "#F44336" : "rgba(255,255,255,0.12)", padding: "4px 10px", borderRadius: 12, fontWeight: 700, fontSize: 13 }}>⏱ {turnTimerSec}s</div>}
-          {onForfeit && !state.finished && <button onClick={onForfeit} style={{ background: "#444", color: "#fff", border: 0, borderRadius: 8, padding: "6px 12px", fontWeight: 700, cursor: "pointer" }}>Forfeit</button>}
-        </div>
-      </div>
-
-      {/* Battlefield */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "12px 16px", position: "relative" }}>
-        {/* Opponent row */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
-            <div style={{ fontWeight: 800, fontSize: 14 }}>{opp.ownerName}</div>
-            <div style={{ display: "flex", gap: 4 }}>
-              {opp.mons.map((m, i) => (
-                <div key={m.uid} title={m.name} style={{
-                  width: 14, height: 14, borderRadius: 7,
-                  background: m.currentHp <= 0 ? "#444" : (i === opp.activeIdx ? "#4CAF50" : "rgba(255,255,255,0.55)"),
-                  border: "1px solid rgba(0,0,0,0.4)",
-                }} />
-              ))}
-            </div>
-            {oppPicked && <div style={{ fontSize: 11, color: "#FFD54F", marginTop: 4 }}>● Opponent ready</div>}
+      <style>{css}</style>
+      <div style={{
+        width: "100%", maxWidth: 460, minHeight: "100vh", background: "#0a0a1e",
+        display: "flex", flexDirection: "column", overflow: "hidden",
+      }}>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderBottom: "1px solid #1c1c33" }}>
+          <button
+            onClick={() => { if (state.finished && onExit) onExit(); else if (onForfeit) onForfeit(); else if (onExit) onExit(); }}
+            style={{ background: "#1a1a2e", color: "#cdd2e0", border: "1px solid #2a2a44", borderRadius: 8, padding: "5px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: 1, fontFamily: "'Press Start 2P', monospace" }}
+          >‹ BACK</button>
+          <div style={{ flex: 1, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, fontFamily: "'Press Start 2P', monospace", color: "#fff", textTransform: "uppercase", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {headerLabel}
           </div>
-          <MonCard mon={oppActive} big />
-        </div>
-
-        {/* My row */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-          <MonCard mon={myActive} big back />
-          <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, alignItems: "flex-end" }}>
-            <div style={{ fontWeight: 800, fontSize: 14 }}>{me.ownerName}</div>
-            <div style={{ display: "flex", gap: 4 }}>
-              {me.mons.map((m, i) => (
-                <div key={m.uid} title={m.name} style={{
-                  width: 14, height: 14, borderRadius: 7,
-                  background: m.currentHp <= 0 ? "#444" : (i === me.activeIdx ? "#4CAF50" : "rgba(255,255,255,0.55)"),
-                  border: "1px solid rgba(0,0,0,0.4)",
-                }} />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Result banner */}
-        {(state.finished || bannerText) && (
-          <div style={{
-            position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)",
-            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16,
-          }}>
-            <div style={{ fontSize: 36, fontWeight: 900, textShadow: "0 2px 8px #000" }}>
-              {state.finished
-                ? (state.winnerIdx === mySide ? "Victory!" : state.winnerIdx == null ? "Draw." : "Defeat.")
-                : bannerText}
-            </div>
-            {onExit && <button onClick={onExit} style={{ background: "#4CAF50", color: "#fff", border: 0, borderRadius: 12, padding: "10px 24px", fontWeight: 800, fontSize: 16, cursor: "pointer" }}>Continue</button>}
-          </div>
-        )}
-      </div>
-
-      {/* Bottom panel */}
-      <div style={{ background: "rgba(0,0,0,0.55)", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-        {/* Log */}
-        <div ref={logRef} style={{ maxHeight: 110, overflowY: "auto", padding: "8px 14px", fontSize: 12, fontFamily: "ui-monospace, monospace", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-          {state.log.slice(-50).map((l: LogEntry, i: number) => (
-            <div key={i} style={{ color: l.kind === "faint" ? "#FF8A80" : l.kind === "move" ? "#FFE082" : l.kind === "status" ? "#B39DDB" : "#fff", opacity: 0.92 }}>
-              {l.text}
-            </div>
-          ))}
-        </div>
-
-        {/* Action zone */}
-        <div style={{ padding: 12, minHeight: 150 }}>
-          {!awaitingMyAction && !awaitingForceSwitch && !state.finished && (
-            <div style={{ textAlign: "center", padding: 24, opacity: 0.7 }}>Waiting for opponent…</div>
+          {turnTimerSec != null && (
+            <div style={{ background: turnTimerSec < 10 ? "#F44336" : "#1a1a2e", border: "1px solid #2a2a44", padding: "4px 8px", borderRadius: 8, fontWeight: 800, fontSize: 11, fontFamily: "'Press Start 2P', monospace" }}>{turnTimerSec}s</div>
           )}
+        </div>
 
+        {/* Battle stage */}
+        <div className="bx-stage">
+          {/* Sky/ground */}
+          <div className="bx-sky" />
+          <div className="bx-ground" />
+
+          {/* Opponent: name plate top-left, sprite further right */}
+          <div className="bx-opp-plate">
+            <NamePlate mon={oppActive} side="opp" />
+            <div style={{ marginTop: 4, paddingLeft: 4 }}>
+              <PokeballRow mons={opp.mons} align="left" />
+            </div>
+          </div>
+          <div className={`bx-opp-platform ${intro ? "bx-slide-in-right" : ""}`} />
+          <div className={`bx-opp-sprite ${intro ? "bx-slide-in-right" : ""} ${hitOpp ? "bx-hit" : ""} ${oppFainted ? "bx-faint" : ""}`}>
+            {intro ? (
+              <div className="bx-pokeball-throw bx-pokeball-throw-opp"><Pokeball alive size={28} /></div>
+            ) : (
+              <img
+                src={SPRITE_FRONT(oppActive.sprite || oppActive.name.toLowerCase())}
+                alt={oppActive.name}
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = SPRITE_FRONT(oppActive.name.toLowerCase()); }}
+                style={{ width: 110, height: 110, imageRendering: "pixelated", objectFit: "contain", filter: "drop-shadow(0 6px 8px rgba(0,0,0,0.5))" }}
+              />
+            )}
+          </div>
+
+          {/* Player: sprite bottom-left, name plate bottom-right */}
+          <div className={`bx-me-platform ${intro ? "bx-slide-in-left" : ""}`} />
+          <div className={`bx-me-sprite ${intro ? "bx-slide-in-left" : ""} ${hitMe ? "bx-hit" : ""} ${myFainted ? "bx-faint" : ""}`}>
+            {intro ? (
+              <div className="bx-pokeball-throw bx-pokeball-throw-me"><Pokeball alive size={28} /></div>
+            ) : (
+              <img
+                src={SPRITE_BACK(myActive.sprite || myActive.name.toLowerCase())}
+                alt={myActive.name}
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = SPRITE_FRONT(myActive.sprite || myActive.name.toLowerCase()); }}
+                style={{ width: 130, height: 130, imageRendering: "pixelated", objectFit: "contain", filter: "drop-shadow(0 6px 8px rgba(0,0,0,0.5))" }}
+              />
+            )}
+          </div>
+          <div className="bx-me-plate">
+            <NamePlate mon={myActive} side="me" showHpNumbers showExp />
+            <div style={{ marginTop: 4, display: "flex", justifyContent: "flex-end", paddingRight: 4 }}>
+              <PokeballRow mons={me.mons} align="right" />
+            </div>
+          </div>
+
+          {/* Battle text dialog */}
+          <div className="bx-dialog">
+            {!awaitingMyAction && !awaitingForceSwitch && !state.finished && !intro && (
+              <div className="bx-dialog-text">
+                {oppPicked ? "Opponent is ready…" : "Waiting for opponent…"}
+              </div>
+            )}
+            {intro && (
+              <div className="bx-dialog-text">
+                {opp.ownerName || "Opponent"} sent out {oppActive.name}!<br />
+                Go, {myActive.name}!
+              </div>
+            )}
+            {!intro && lastLog.map((l: LogEntry, i: number) => (
+              <div key={i} className="bx-dialog-text" style={{
+                color: l.kind === "faint" ? "#FF8A80" : l.kind === "move" ? "#FFE082" : l.kind === "status" ? "#B39DDB" : "#fff",
+              }}>{l.text}</div>
+            ))}
+          </div>
+
+          {/* Result overlay */}
+          {(state.finished || bannerText) && (
+            <div className="bx-result">
+              <div className="bx-result-title">
+                {state.finished
+                  ? (state.winnerIdx === mySide ? "VICTORY!" : state.winnerIdx == null ? "DRAW" : "DEFEAT")
+                  : bannerText}
+              </div>
+              {onExit && <button className="bx-continue" onClick={onExit}>CONTINUE</button>}
+            </div>
+          )}
+        </div>
+
+        {/* Action panel */}
+        <div className="bx-panel">
+          {/* Force-switch */}
           {awaitingForceSwitch && (
             <>
-              <div style={{ fontSize: 13, marginBottom: 8, fontWeight: 700 }}>Choose your next Pokémon:</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+              <div className="bx-section-h">CHOOSE NEXT POKÉMON</div>
+              <div className="bx-bench-grid">
                 {benchMe.map(({ m, i }) => (
-                  <button key={m.uid} disabled={m.currentHp <= 0}
-                    onClick={() => onAction({ kind: "switch", toIdx: i })}
-                    style={{
-                      background: m.currentHp <= 0 ? "#333" : "rgba(76, 175, 80, 0.25)",
-                      border: "1px solid " + (m.currentHp <= 0 ? "#222" : "#4CAF50"),
-                      borderRadius: 10, padding: 10, cursor: m.currentHp <= 0 ? "not-allowed" : "pointer",
-                      color: "#fff", display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-                    }}>
-                    <MonCard mon={m} />
+                  <button key={m.uid} disabled={m.currentHp <= 0} onClick={() => onAction({ kind: "switch", toIdx: i })} className="bx-bench-btn">
+                    <BenchCard mon={m} />
                   </button>
                 ))}
+                {benchMe.every((b) => b.m.currentHp <= 0) && (
+                  <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: 16, opacity: 0.6, fontSize: 11 }}>No Pokémon left.</div>
+                )}
               </div>
             </>
           )}
 
+          {/* Main → fight / switch / items */}
           {awaitingMyAction && !awaitingForceSwitch && (
             <>
-              <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-                <button onClick={() => setTab("fight")} style={tabBtn(tab === "fight")}>Fight</button>
-                <button onClick={() => setTab("switch")} style={tabBtn(tab === "switch")}>Switch</button>
-              </div>
-              {tab === "fight" && (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                  {[0, 1, 2, 3].map((i) => {
-                    const name = myActive.moves[i];
-                    if (!name) return <div key={i} style={{ background: "rgba(255,255,255,0.05)", borderRadius: 8, height: 56 }} />;
-                    const def = getMove(name);
-                    const pp = myActive.pp?.[name] ?? def.pp;
-                    const colour = TYPE_COLORS[def.type] ?? "#888";
-                    return (
-                      <button key={i} disabled={pp <= 0}
-                        onClick={() => onAction({ kind: "move", moveIdx: i })}
-                        style={{
-                          background: `linear-gradient(135deg, ${colour}, ${colour}aa)`,
-                          border: "2px solid rgba(255,255,255,0.18)", color: "#fff",
-                          borderRadius: 10, padding: "8px 10px", cursor: pp <= 0 ? "not-allowed" : "pointer",
-                          textAlign: "left", opacity: pp <= 0 ? 0.4 : 1,
-                        }}>
-                        <div style={{ fontWeight: 800, fontSize: 14 }}>{def.name}</div>
-                        <div style={{ fontSize: 10, opacity: 0.95, display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-                          <span>{def.type} · {def.category}</span>
-                          <span>PP {pp}/{def.pp}</span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-              {tab === "switch" && (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-                  {benchMe.length === 0 && <div style={{ gridColumn: "1 / -1", textAlign: "center", opacity: 0.6, padding: 12 }}>No other Pokémon available.</div>}
-                  {benchMe.map(({ m, i }) => (
-                    <button key={m.uid} disabled={m.currentHp <= 0}
-                      onClick={() => onAction({ kind: "switch", toIdx: i })}
-                      style={{
-                        background: m.currentHp <= 0 ? "#333" : "rgba(255,255,255,0.08)",
-                        border: "1px solid rgba(255,255,255,0.18)", color: "#fff",
-                        borderRadius: 10, padding: 8, cursor: m.currentHp <= 0 ? "not-allowed" : "pointer",
-                      }}>
-                      <MonCard mon={m} />
+              {actionMode === "main" && (
+                <>
+                  <div className="bx-section-h">WHAT WILL {myActive.name.toUpperCase()} DO?</div>
+                  <div className="bx-main-grid">
+                    <button className="bx-main-btn bx-main-fight" onClick={() => setActionMode("fight")}>
+                      <i style={{ fontStyle: "normal", fontSize: 18 }}>⚔</i><span>FIGHT</span>
                     </button>
-                  ))}
-                </div>
+                    <button className="bx-main-btn" onClick={() => setActionMode("switch")}>
+                      <i style={{ fontStyle: "normal", fontSize: 18 }}>↻</i><span>SWITCH</span>
+                    </button>
+                    <button className="bx-main-btn" onClick={() => setActionMode("items")}>
+                      <i style={{ fontStyle: "normal", fontSize: 18 }}>🎒</i><span>ITEMS</span>
+                    </button>
+                    <button className="bx-main-btn bx-main-escape" onClick={() => { if (onForfeit) onForfeit(); else if (onExit) onExit(); }}>
+                      <i style={{ fontStyle: "normal", fontSize: 18 }}>⤴</i><span>ESCAPE</span>
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {actionMode === "fight" && (
+                <>
+                  <div className="bx-row-h">
+                    <button className="bx-back-mini" onClick={() => setActionMode("main")}>‹</button>
+                    <span>CHOOSE A MOVE</span>
+                  </div>
+                  <div className="bx-move-grid">
+                    {[0, 1, 2, 3].map((i) => {
+                      const name = myActive.moves[i];
+                      if (!name) return <div key={i} className="bx-move-empty" />;
+                      const def = getMove(name);
+                      const pp = myActive.pp?.[name] ?? def.pp;
+                      const colour = TYPE_COLORS[def.type] ?? "#888";
+                      return (
+                        <button key={i} disabled={pp <= 0} onClick={() => onAction({ kind: "move", moveIdx: i })} className="bx-move-card" style={{ borderColor: colour, opacity: pp <= 0 ? 0.4 : 1 }}>
+                          <div className="bx-move-name">{def.name}</div>
+                          <div className="bx-move-sub">
+                            <span style={{ color: colour }}>{def.type.toUpperCase()}</span>
+                            <span>PWR: {def.power || "—"}</span>
+                            <span>PP {pp}/{def.pp}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+
+              {actionMode === "switch" && (
+                <>
+                  <div className="bx-row-h">
+                    <button className="bx-back-mini" onClick={() => setActionMode("main")}>‹</button>
+                    <span>SWITCH POKÉMON</span>
+                  </div>
+                  <div className="bx-bench-grid">
+                    {benchMe.length === 0 && <div style={{ gridColumn: "1 / -1", textAlign: "center", opacity: 0.6, fontSize: 11, padding: 16 }}>No other Pokémon available.</div>}
+                    {benchMe.map(({ m, i }) => (
+                      <button key={m.uid} disabled={m.currentHp <= 0} onClick={() => onAction({ kind: "switch", toIdx: i })} className="bx-bench-btn">
+                        <BenchCard mon={m} />
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {actionMode === "items" && (
+                <>
+                  <div className="bx-row-h">
+                    <button className="bx-back-mini" onClick={() => setActionMode("main")}>‹</button>
+                    <span>ITEMS</span>
+                  </div>
+                  <div style={{ textAlign: "center", padding: 22, opacity: 0.6, fontSize: 11 }}>No usable items in this battle.</div>
+                </>
               )}
             </>
           )}
@@ -258,10 +387,103 @@ export default function BattleArena(props: Props) {
   );
 }
 
-function tabBtn(active: boolean): React.CSSProperties {
-  return {
-    flex: 1, background: active ? "rgba(76, 175, 80, 0.28)" : "rgba(255,255,255,0.05)",
-    border: "1px solid " + (active ? "#4CAF50" : "rgba(255,255,255,0.18)"),
-    color: "#fff", borderRadius: 10, padding: "8px 12px", cursor: "pointer", fontWeight: 700,
-  };
+function BenchCard({ mon }: { mon: BattleMon }) {
+  const max = calcMaxHp(mon);
+  const pct = Math.max(0, Math.min(100, (mon.currentHp / max) * 100));
+  const fainted = mon.currentHp <= 0;
+  const url = SPRITE_FRONT(mon.sprite || mon.name.toLowerCase());
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, opacity: fainted ? 0.4 : 1, filter: fainted ? "grayscale(1)" : "none" }}>
+      <img src={url} alt={mon.name} style={{ width: 54, height: 54, imageRendering: "pixelated", objectFit: "contain" }} />
+      <div style={{ width: "100%" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, fontWeight: 700, color: "#fff", marginBottom: 2 }}>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{mon.name}</span>
+          <span>L{mon.level}</span>
+        </div>
+        <div style={{ height: 4, background: "rgba(0,0,0,0.6)", borderRadius: 2, overflow: "hidden" }}>
+          <div style={{ width: `${pct}%`, height: "100%", background: pct > 50 ? "#5dc26b" : pct > 20 ? "#f0c020" : "#e64545", transition: "width 400ms" }} />
+        </div>
+      </div>
+    </div>
+  );
 }
+
+/* ---------- CSS (animations + layout) ---------- */
+const css = `
+.bx-stage {
+  position: relative; height: 320px; width: 100%; overflow: hidden;
+  background: linear-gradient(180deg, #b6e7ff 0%, #b6e7ff 60%, #d6c08a 60%, #c2a866 100%);
+}
+.bx-sky { position: absolute; inset: 0 0 40% 0; background: linear-gradient(180deg,#9adfff 0%,#cfeeff 100%); }
+.bx-ground { position: absolute; inset: 60% 0 0 0; background: linear-gradient(180deg,#d6c08a 0%,#a88e58 100%); }
+
+.bx-opp-plate { position: absolute; top: 10px; left: 10px; z-index: 5; }
+.bx-me-plate  { position: absolute; bottom: 14px; right: 10px; z-index: 5; }
+
+.bx-opp-platform {
+  position: absolute; top: 88px; right: 28px; width: 150px; height: 32px;
+  background: radial-gradient(ellipse at center, #b8a16b 0%, #b8a16b 55%, transparent 70%);
+  border-radius: 50%; opacity: 0.85;
+}
+.bx-me-platform {
+  position: absolute; bottom: 86px; left: 18px; width: 190px; height: 38px;
+  background: radial-gradient(ellipse at center, #b8a16b 0%, #b8a16b 55%, transparent 70%);
+  border-radius: 50%; opacity: 0.9;
+}
+.bx-opp-sprite { position: absolute; top: 30px; right: 50px; width: 110px; height: 110px; display:flex; align-items:flex-end; justify-content:center; z-index: 4; }
+.bx-me-sprite  { position: absolute; bottom: 60px; left: 38px; width: 130px; height: 130px; display:flex; align-items:flex-end; justify-content:center; z-index: 4; }
+
+@keyframes bx-slide-in-right { from { transform: translateX(180%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes bx-slide-in-left  { from { transform: translateX(-180%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.bx-slide-in-right { animation: bx-slide-in-right 700ms cubic-bezier(0.22, 1, 0.36, 1); }
+.bx-slide-in-left  { animation: bx-slide-in-left  700ms cubic-bezier(0.22, 1, 0.36, 1); }
+
+@keyframes bx-hit { 0%,100% { transform: translate(0,0); filter: none; } 20% { transform: translate(-4px,2px); filter: brightness(2.2) hue-rotate(-30deg); } 40% { transform: translate(4px,-2px); } 60% { transform: translate(-3px,1px); filter: brightness(1.6); } 80% { transform: translate(2px,0); } }
+.bx-hit img { animation: bx-hit 420ms steps(8); }
+
+@keyframes bx-faint { from { transform: translateY(0); opacity: 1; } to { transform: translateY(40px); opacity: 0; } }
+.bx-faint img { animation: bx-faint 600ms forwards ease-in; }
+
+@keyframes bx-throw-opp { 0% { transform: translate(-160px, 60px) rotate(0deg); opacity: 0; } 30% { opacity: 1; } 70% { transform: translate(20px, -10px) rotate(540deg); } 100% { transform: translate(0,0) rotate(720deg); opacity: 0; } }
+@keyframes bx-throw-me  { 0% { transform: translate(160px, 60px) rotate(0deg); opacity: 0; }  30% { opacity: 1; } 70% { transform: translate(-20px, -10px) rotate(-540deg); } 100% { transform: translate(0,0) rotate(-720deg); opacity: 0; } }
+.bx-pokeball-throw-opp { animation: bx-throw-opp 900ms ease-out forwards; }
+.bx-pokeball-throw-me  { animation: bx-throw-me  900ms ease-out forwards; }
+
+.bx-dialog {
+  position: absolute; left: 12px; right: 12px; bottom: 8px; z-index: 6;
+  background: #6cb4b1; border: 3px solid #c0392b; border-radius: 8px;
+  min-height: 56px; padding: 8px 10px;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.35);
+}
+.bx-dialog-text { color: #0a0a1e; font-family: 'Press Start 2P', monospace; font-size: 9px; line-height: 1.4; }
+
+.bx-result { position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; z-index: 20; }
+.bx-result-title { font-family: 'Press Start 2P', monospace; font-size: 22px; color: #ffd54f; text-shadow: 0 3px 0 #000; letter-spacing: 2px; }
+.bx-continue { background: #4CAF50; color: #fff; border: 2px solid #2e7d32; border-radius: 10px; padding: 10px 22px; font-weight: 800; font-size: 12px; cursor: pointer; font-family: 'Press Start 2P', monospace; letter-spacing: 1.5px; }
+
+/* Bottom action panel */
+.bx-panel { padding: 12px; background: #0a0a1e; border-top: 1px solid #1c1c33; min-height: 230px; }
+.bx-section-h { font-family: 'Press Start 2P', monospace; font-size: 9px; color: #8794ad; letter-spacing: 1.5px; margin: 4px 4px 10px; text-transform: uppercase; }
+.bx-row-h { display:flex; align-items: center; gap: 8px; font-family: 'Press Start 2P', monospace; font-size: 9px; color: #8794ad; letter-spacing: 1.5px; margin: 0 4px 10px; }
+.bx-back-mini { background: #1a1a2e; border: 1px solid #2a2a44; color: #cdd2e0; border-radius: 6px; padding: 3px 8px; cursor: pointer; font-weight: 800; }
+
+.bx-main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.bx-main-btn { background: #15172a; border: 1px solid #2a2a44; color: #fff; border-radius: 12px; padding: 14px 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-family: 'Press Start 2P', monospace; font-size: 11px; letter-spacing: 1px; transition: transform 100ms, background 150ms; }
+.bx-main-btn:hover { background: #1f223a; }
+.bx-main-btn:active { transform: scale(0.97); }
+.bx-main-fight { border-color: #e64545; background: linear-gradient(180deg,#2a1320,#15172a); }
+.bx-main-escape { border-color: #f0c020; }
+
+.bx-move-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.bx-move-card { background: #0f1226; border: 1.5px solid #3b6cb3; color: #fff; border-radius: 10px; padding: 10px 12px; text-align: left; cursor: pointer; transition: transform 100ms, background 150ms; }
+.bx-move-card:hover:not(:disabled) { background: #161a36; }
+.bx-move-card:active:not(:disabled) { transform: scale(0.97); }
+.bx-move-card:disabled { cursor: not-allowed; }
+.bx-move-name { font-family: 'Press Start 2P', monospace; font-size: 11px; margin-bottom: 6px; letter-spacing: 0.5px; }
+.bx-move-sub { display: flex; justify-content: space-between; gap: 6px; font-size: 9px; color: #8794ad; font-family: 'Press Start 2P', monospace; }
+.bx-move-empty { background: rgba(255,255,255,0.03); border-radius: 10px; min-height: 64px; }
+
+.bx-bench-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.bx-bench-btn { background: #15172a; border: 1px solid #2a2a44; color: #fff; border-radius: 10px; padding: 8px; cursor: pointer; }
+.bx-bench-btn:disabled { background: #0d0e1d; cursor: not-allowed; }
+`;
