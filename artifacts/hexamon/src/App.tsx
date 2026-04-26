@@ -8,6 +8,13 @@ import { SplashLoader } from "./components/SplashLoader";
 const SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/ani/${name.replace(/[^a-z0-9]/g, "")}.gif`;
 const SPRITE_BACK = (name: string) => `https://play.pokemonshowdown.com/sprites/ani-back/${name.replace(/[^a-z0-9]/g, "")}.gif`;
 const TRAINER_SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/trainers/${name}.png`;
+
+const CUSTOM_SPRITES: Record<string, string> = {
+  irontreads: "sprites/custom/irontreads.gif",
+  ironbundle: "sprites/custom/ironbundle.gif",
+};
+const CUSTOM_SPRITE_URL = (clean: string) =>
+  CUSTOM_SPRITES[clean] ? `${import.meta.env.BASE_URL}${CUSTOM_SPRITES[clean]}` : null;
 const GEN_V_TRAINERS = [
   "hilbert", "hilda", "cheren", "bianca", "n", "ghetsis", "alder",
   "cilan", "chili", "cress", "lenora", "burgh", "elesa", "clay", "skyla", "brycen", "drayden", "iris",
@@ -1241,14 +1248,18 @@ export default function App() {
 
   function MonSprite({ sprite, size = 80, back = false, className = "mon-float", style = {} }: { sprite: string; size?: number; back?: boolean; className?: string; style?: React.CSSProperties }) {
     const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
+    const custom = CUSTOM_SPRITE_URL(clean);
+    const customList = custom ? [custom] : [];
     const fallbacks = back
       ? [
+          ...customList,
           `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif`,
           `https://play.pokemonshowdown.com/sprites/gen5-back/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
         ]
       : [
+          ...customList,
           `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`,
           `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,

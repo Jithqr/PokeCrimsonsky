@@ -35,13 +35,20 @@ const NATURE_MOD: Record<string, { plus?: string; minus?: string }> = {
   Sassy: { plus: "spd", minus: "spe" }, Careful: { plus: "spd", minus: "spa" }, Quirky: {},
 };
 
+const CUSTOM_SPRITES: Record<string, string> = {
+  irontreads: "sprites/custom/irontreads.gif",
+  ironbundle: "sprites/custom/ironbundle.gif",
+};
+
 function spriteUrl(name: string) {
   const clean = name.toLowerCase().replace(/[^a-z0-9-]/g, "");
+  if (CUSTOM_SPRITES[clean]) return `${import.meta.env.BASE_URL}${CUSTOM_SPRITES[clean]}`;
   return `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
 }
 
 function spriteAniUrl(name: string) {
   const clean = name.toLowerCase().replace(/[^a-z0-9-]/g, "");
+  if (CUSTOM_SPRITES[clean]) return `${import.meta.env.BASE_URL}${CUSTOM_SPRITES[clean]}`;
   return `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`;
 }
 
