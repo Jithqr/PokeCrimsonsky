@@ -1560,7 +1560,7 @@ export default function App() {
     return (
       <div className="m-bnav">
         <i className={`fa-solid fa-house ${active === "home" ? "active" : ""}`} onClick={() => { sfx.click(); go("world"); }} />
-        <i className={`fa-solid fa-magnifying-glass ${active === "market" ? "active" : ""}`} onClick={() => { sfx.click(); go("store"); }} />
+        <i className={`fa-solid fa-cart-shopping ${active === "market" ? "active" : ""}`} onClick={() => { sfx.click(); go("store"); }} />
         <div className={`av ${active === "profile" ? "active" : ""}`} onClick={() => { sfx.click(); go("profile"); }}>
           <img src={TRAINER_SPRITE(player.sprite)} alt="me" />
         </div>
@@ -4111,7 +4111,7 @@ export default function App() {
             <>
               <div className="m-search-row">
                 <div className="m-search">
-                  <i className="fa-solid fa-cart-shopping" />
+                  <i className="fa-solid fa-magnifying-glass" />
                   <input type="text" placeholder="Search" />
                 </div>
                 <button className="m-icon-btn"><i className="fa-solid fa-filter" /></button>
