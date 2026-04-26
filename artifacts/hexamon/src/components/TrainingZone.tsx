@@ -197,18 +197,43 @@ function ActiveMonSummary({ mon }: { mon: Mon }) {
 }
 
 /* ============================ PAID ZONE ============================ */
+const STAT_BAR_COLOR: Record<EvKey, string> = {
+  hp: "#ff3b30", atk: "#ff9500", def: "#ffcc00",
+  spa: "#007aff", spd: "#34c759", spe: "#ff2d55",
+};
+const STAT_BAR_MAX = 255; // % bar denominator
+
+function typeBadgeColor(t?: string | null): string {
+  const map: Record<string, string> = {
+    Normal: "#A8A878", Fire: "#F08030", Water: "#6890F0", Electric: "#F8D030",
+    Grass: "#78C850", Ice: "#98D8D8", Fighting: "#C03028", Poison: "#A040A0",
+    Ground: "#E0C068", Flying: "#A890F0", Psychic: "#F85888", Bug: "#A8B820",
+    Rock: "#B8A038", Ghost: "#705898", Dragon: "#7038F8", Dark: "#705848",
+    Steel: "#B8B8D0", Fairy: "#EE99AC",
+  };
+  return (t && map[t]) || "#6b7280";
+}
+
+/** Compute a stat from base + IV + EV at level (Gen3+ formula, no nature mult). */
+function calcStatPreview(base: number, iv: number, ev: number, level: number, isHp: boolean): number {
+  const inner = Math.floor(((2 * base + iv + Math.floor(ev / 4)) * level) / 100);
+  return isHp ? inner + level + 10 : inner + 5;
+}
+
 function PaidZone({ mon, money, onBack, onCommitEv, onMutateMon, onSpendMoney, toast }: {
   mon: Mon; money: number; onBack: () => void;
   onCommitEv: Props["onUpdateMon"]; onMutateMon: Props["onMutateMon"]; onSpendMoney: Props["onSpendMoney"]; toast: Props["toast"];
 }) {
   const tpl = ALL_POKEMON.find((p) => p.id === mon.id);
 
-  // Local edit buffer for sliders (committed when user releases the thumb).
-  const [draft, setDraft] = useState<Record<EvKey, number>>(() => ({
+  // Committed EVs (from the actual mon).
+  const committed: Record<EvKey, number> = {
     hp: mon.evHp ?? 0, atk: mon.evAtk ?? 0, def: mon.evDef ?? 0,
     spa: mon.evSpa ?? 0, spd: mon.evSpd ?? 0, spe: mon.evSpe ?? 0,
-  }));
-  // Re-sync draft when active mon changes (e.g., after evolve / level-up changes EV totals).
+  };
+  // Local draft (preview only, NOT applied until "Pay" pressed).
+  const [draft, setDraft] = useState<Record<EvKey, number>>(committed);
+  // Re-sync draft when active mon changes (after evolve / level-up / payment).
   useEffect(() => {
     setDraft({
       hp: mon.evHp ?? 0, atk: mon.evAtk ?? 0, def: mon.evDef ?? 0,
@@ -217,9 +242,36 @@ function PaidZone({ mon, money, onBack, onCommitEv, onMutateMon, onSpendMoney, t
   }, [mon.uid, mon.id, mon.evHp, mon.evAtk, mon.evDef, mon.evSpa, mon.evSpd, mon.evSpe]);
 
   const draftTotal = (Object.keys(draft) as EvKey[]).reduce((s, k) => s + draft[k], 0);
+  // Cost = sum of *positive* deltas only. Decreases are free but no money refund.
+  const pendingCost = (Object.keys(draft) as EvKey[]).reduce((s, k) => s + Math.max(0, draft[k] - committed[k]), 0) * PAID_COST_PER_EV;
+  const dirty = (Object.keys(draft) as EvKey[]).some((k) => draft[k] !== committed[k]);
+  const canAfford = money >= pendingCost;
 
-  // Pending event queue: shown one at a time after each level-up.
+  // Pending event queue (level-up popups).
   const [eventQueue, setEventQueue] = useState<AnyEvent[]>([]);
+
+  function ivOf(k: EvKey): number {
+    const map: Record<EvKey, number> = {
+      hp: mon.ivHp ?? 0, atk: mon.ivAtk ?? 0, def: mon.ivDef ?? 0,
+      spa: mon.ivSpa ?? 0, spd: mon.ivSpd ?? 0, spe: mon.ivSpe ?? 0,
+    };
+    return map[k];
+  }
+  function baseOf(k: EvKey): number {
+    if (k === "spd") return ((tpl as any)?.spd ?? tpl?.spa ?? 0);
+    return ((tpl as any)?.[k] ?? 0) as number;
+  }
+
+  // Live preview stats from draft.
+  const liveStat: Record<EvKey, number> = {
+    hp:  calcStatPreview(baseOf("hp"),  ivOf("hp"),  draft.hp,  mon.level, true),
+    atk: calcStatPreview(baseOf("atk"), ivOf("atk"), draft.atk, mon.level, false),
+    def: calcStatPreview(baseOf("def"), ivOf("def"), draft.def, mon.level, false),
+    spa: calcStatPreview(baseOf("spa"), ivOf("spa"), draft.spa, mon.level, false),
+    spd: calcStatPreview(baseOf("spd"), ivOf("spd"), draft.spd, mon.level, false),
+    spe: calcStatPreview(baseOf("spe"), ivOf("spe"), draft.spe, mon.level, false),
+  };
+  const liveTotal = (Object.keys(liveStat) as EvKey[]).reduce((s, k) => s + liveStat[k], 0);
 
   function setStat(k: EvKey, value: number) {
     const clamped = Math.max(0, Math.min(EV_PER_STAT_CAP, value));
@@ -228,33 +280,27 @@ function PaidZone({ mon, money, onBack, onCommitEv, onMutateMon, onSpendMoney, t
     setDraft((d) => ({ ...d, [k]: finalVal }));
   }
 
-  function commit(k: EvKey) {
-    const oldVal = (mon as any)["ev" + k.charAt(0).toUpperCase() + k.slice(1)] ?? 0;
-    const delta = draft[k] - oldVal;
-    if (delta === 0) return;
-    if (delta > 0) {
-      const cost = delta * PAID_COST_PER_EV;
-      if (money < cost) {
-        toast(`Need ₽${cost.toLocaleString()} (you have ₽${money.toLocaleString()}).`, "#F44336");
-        // Snap draft back to current saved EV.
-        setDraft((d) => ({ ...d, [k]: oldVal }));
-        return;
-      }
-      onSpendMoney(cost);
-      toast(`+${delta} ${EV_LABEL[k]} EV  (−₽${cost.toLocaleString()})`, EV_COLOR[k]);
-    } else {
-      toast(`−${-delta} ${EV_LABEL[k]} EV refunded`, EV_COLOR[k]);
-      // No refund of money on decrease (training-only consumable).
+  /** Commit all pending EV changes, deducting money for the net increase. */
+  function payAndApply() {
+    if (!dirty) return;
+    if (!canAfford) {
+      toast(`Need ₽${pendingCost.toLocaleString()} (you have ₽${money.toLocaleString()}).`, "#F44336");
+      return;
     }
+    if (pendingCost > 0) onSpendMoney(pendingCost);
     onCommitEv(mon.uid!, draft);
+    if (pendingCost > 0) toast(`Applied EVs · −₽${pendingCost.toLocaleString()}`, "#5dc26b");
+    else toast(`EVs updated.`, "#5dc26b");
+  }
+
+  function discardChanges() {
+    setDraft({ ...committed });
+    toast("Pending EV changes discarded.", "#94a3b8");
   }
 
   function resetEvs() {
-    if (!window.confirm("Reset all EVs to 0?")) return;
-    const zeros = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 } as Record<EvKey, number>;
-    setDraft(zeros);
-    onCommitEv(mon.uid!, zeros);
-    toast("All EVs reset.", "#9aa3b8");
+    if (!window.confirm("Reset draft EVs to 0? (You still need to press Pay to apply.)")) return;
+    setDraft({ hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 });
   }
 
   /** Apply N level-ups, queueing learn/evolve events. */
@@ -265,26 +311,21 @@ function PaidZone({ mon, money, onBack, onCommitEv, onMutateMon, onSpendMoney, t
     const newEvents: AnyEvent[] = [];
     let lvl = mon.level;
     let knownMoves = [...(mon.moves ?? [])];
-    let speciesId = mon.id;
     let speciesTpl = tplCur;
     let evolutionOffered = false;
     for (let i = 0; i < n; i++) {
       lvl = Math.min(100, lvl + 1);
-      // Move-learn event: pick a random move from species template that mon doesn't know.
       const candidates = (speciesTpl.moves ?? []).filter((mv) => !knownMoves.includes(mv));
       if (candidates.length > 0 && lvl % 2 === 0) {
-        // Offer one new move per even level for some pacing.
         const pick = candidates[Math.floor(Math.random() * candidates.length)];
         newEvents.push({ type: "learn", move: pick });
-        if (knownMoves.length < 4) knownMoves.push(pick); // optimistic preview only
+        if (knownMoves.length < 4) knownMoves.push(pick);
       }
-      // Evolution check (only first time it's reached).
       if (!evolutionOffered && speciesTpl.canEvolve != null && speciesTpl.evolveAt != null && lvl >= speciesTpl.evolveAt) {
         const evTpl = ALL_POKEMON.find((p) => p.id === speciesTpl.canEvolve!);
         if (evTpl) {
           newEvents.push({ type: "evolve", toId: evTpl.id, toName: evTpl.name, toSprite: evTpl.sprite });
           evolutionOffered = true;
-          speciesId = evTpl.id; // for further evolution checks within the loop
           speciesTpl = evTpl;
         }
       }
@@ -294,54 +335,121 @@ function PaidZone({ mon, money, onBack, onCommitEv, onMutateMon, onSpendMoney, t
     if (newEvents.length > 0) setEventQueue((q) => [...q, ...newEvents]);
   }
 
-  // Process top of queue (one popup at a time).
   const head = eventQueue[0] ?? null;
-
   function dequeue() { setEventQueue((q) => q.slice(1)); }
+
+  // Stat row helper
+  const statOrder: EvKey[] = ["hp", "atk", "def", "spa", "spd", "spe"];
+
+  // EV grid order (matches mockup: HP, Sp.Atk, Atk, Sp.Def, Def, Speed)
+  const evGridOrder: EvKey[] = ["hp", "spa", "atk", "spd", "def", "spe"];
 
   return (
     <>
       <Header onBack={onBack} title={`Paid Zone · ${mon.name}`} />
-      <div style={{ padding: 14, paddingBottom: 90, display: "flex", flexDirection: "column", gap: 10 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "#cbd5e1", fontSize: 13 }}>
-          <span>EVs: <strong style={{ color: "#fff" }}>{draftTotal}/{EV_TOTAL_CAP}</strong></span>
-          <span>Wallet: <strong style={{ color: "#fff" }}>₽{money.toLocaleString()}</strong></span>
+      <div style={{ padding: "16px 14px 110px", display: "flex", flexDirection: "column", gap: 18 }}>
+        {/* Hero */}
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
+            <div style={{ fontSize: 26, fontWeight: 800 }}>{mon.name}</div>
+            {mon.type1 && <span style={{ ...typeBadge, background: typeBadgeColor(mon.type1) }}>{mon.type1}</span>}
+            {mon.type2 && <span style={{ ...typeBadge, background: typeBadgeColor(mon.type2) }}>{mon.type2}</span>}
+            <span style={{ marginLeft: "auto", fontSize: 12, color: "#94a3b8" }}>Lv {mon.level}</span>
+          </div>
+          <div style={{ background: "#1a1a1f", borderRadius: 12, padding: 16, display: "flex", justifyContent: "center", alignItems: "center", minHeight: 160 }}>
+            <img src={SPRITE(mon.sprite)} alt={mon.name} style={{ width: 150, height: 150, imageRendering: "pixelated" }} />
+          </div>
         </div>
 
-        {(Object.keys(EV_LABEL) as EvKey[]).map((k) => {
-          const base = k === "spd" ? ((tpl as any)?.spd ?? tpl?.spa ?? 0) : (tpl as any)?.[k] ?? 0;
-          const others = (Object.keys(draft) as EvKey[]).filter((x) => x !== k).reduce((s, x) => s + draft[x], 0);
-          const allowedMax = Math.min(EV_PER_STAT_CAP, EV_TOTAL_CAP - others);
-          return (
-            <div key={k} style={statRow}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                <div style={{ fontWeight: 800, fontSize: 14 }}>{EV_LABEL[k]} <span style={{ color: "#94a3b8", fontWeight: 500, fontSize: 12, marginLeft: 4 }}>({base})</span></div>
+        {/* Current Stats (live) */}
+        <div>
+          <h2 style={sectionTitle}>Current Stats</h2>
+          {statOrder.map((k) => {
+            const v = liveStat[k];
+            const pct = Math.min(100, Math.round((v / STAT_BAR_MAX) * 100));
+            const dirtyHere = draft[k] !== committed[k];
+            return (
+              <div key={k} style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: 10, fontSize: 14 }}>
+                <div style={{ width: 64, color: "#8e8e93" }}>{EV_LABEL[k]}</div>
+                <div style={{ width: 38, fontWeight: 700, textAlign: "right", marginRight: 12, color: dirtyHere ? STAT_BAR_COLOR[k] : "#fff" }}>{v}</div>
+                <div style={{ flex: 1, height: 6, background: "#2c2c35", borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: pct + "%", background: STAT_BAR_COLOR[k], borderRadius: 3, transition: "width 120ms ease" }} />
+                </div>
+                <div style={{ width: 44, textAlign: "right", color: "#8e8e93", fontSize: 12 }}>{pct}%</div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
-                <span style={{ fontSize: 12, color: "#94a3b8", width: 24 }}>EV</span>
-                <input type="range" min={0} max={allowedMax} value={draft[k]}
-                  onChange={(e) => setStat(k, +e.target.value)}
-                  onMouseUp={() => commit(k)}
-                  onTouchEnd={() => commit(k)}
-                  style={{ flex: 1, accentColor: EV_COLOR[k] }}
-                />
-                <input type="number" min={0} max={EV_PER_STAT_CAP} value={draft[k]}
-                  onChange={(e) => setStat(k, +e.target.value || 0)}
-                  onBlur={() => commit(k)}
-                  style={evNumberInput}
-                />
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 14, paddingTop: 12, borderTop: "1px solid #2c2c35", fontWeight: 700, fontSize: 16 }}>
+            <span>Total</span>
+            <span style={{ color: "#ff3b30" }}>{liveTotal}</span>
+          </div>
+        </div>
+
+        {/* EV Enhancer */}
+        <div>
+          <h2 style={{ ...sectionTitle, display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ color: "#ff3b30", fontSize: 16 }}>◎</span> EV Enhancer
+          </h2>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "0 0 8px", fontSize: 12, color: "#8e8e93" }}>
+            <span>EVs: <strong style={{ color: draftTotal > EV_TOTAL_CAP ? "#ff3b30" : "#fff" }}>{draftTotal}/{EV_TOTAL_CAP}</strong></span>
+            <span>₽1 per EV</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            {evGridOrder.map((k) => {
+              const others = (Object.keys(draft) as EvKey[]).filter((x) => x !== k).reduce((s, x) => s + draft[x], 0);
+              const allowedMax = Math.min(EV_PER_STAT_CAP, EV_TOTAL_CAP - others);
+              const isDirty = draft[k] !== committed[k];
+              return (
+                <div key={k} style={{ background: "#1a1a1f", borderRadius: 12, padding: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, fontSize: 14 }}>
+                    <span style={{ fontWeight: 700 }}>{EV_LABEL[k]}</span>
+                    <span style={{ color: "#8e8e93" }}>({baseOf(k)})</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                    <span style={{ fontSize: 12, color: "#8e8e93" }}>EV</span>
+                    <input type="text" inputMode="numeric" value={draft[k]}
+                      onChange={(e) => setStat(k, +e.target.value.replace(/[^0-9]/g, "") || 0)}
+                      style={{
+                        background: "transparent", border: `1px solid ${isDirty ? STAT_BAR_COLOR[k] : "#3a3a44"}`,
+                        color: "#fff", borderRadius: 4, width: 50, padding: "4px", textAlign: "center", fontSize: 12,
+                      }}
+                    />
+                  </div>
+                  <input type="range" min={0} max={allowedMax} value={draft[k]}
+                    onChange={(e) => setStat(k, +e.target.value)}
+                    style={{ width: "100%", accentColor: STAT_BAR_COLOR[k] }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Action buttons row */}
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={() => levelUpBy(1)} style={actionBtn}>lvl + 1</button>
+          <button onClick={() => levelUpBy(10)} style={actionBtn}>lvl + 10</button>
+        </div>
+
+        <button onClick={resetEvs} style={resetBtn}>Reset EVs</button>
       </div>
 
-      {/* Sticky bottom bar */}
-      <div style={stickyBar}>
-        <button onClick={resetEvs} style={barBtn("#374151")}>Reset EVs</button>
-        <button onClick={() => levelUpBy(10)} style={barBtn("#1f2937")}>lvl + 10</button>
-        <button onClick={() => levelUpBy(1)} style={barBtn("#1f2937")}>lvl + 1</button>
-      </div>
+      {/* Sticky Pay bar (only shown when there are pending EV changes) */}
+      {dirty && (
+        <div style={payBar}>
+          <div style={{ flex: 1, fontSize: 12, color: "#cbd5e1" }}>
+            <div style={{ fontWeight: 700, color: "#fff", fontSize: 13 }}>
+              Pending: {pendingCost > 0 ? `₽${pendingCost.toLocaleString()}` : "free"}
+            </div>
+            <div>Wallet: ₽{money.toLocaleString()}</div>
+          </div>
+          <button onClick={discardChanges} style={{ ...barBtn("#374151"), flex: 0, padding: "10px 14px" }}>Discard</button>
+          <button onClick={payAndApply} disabled={!canAfford}
+            style={{ ...barBtn(canAfford ? "#22c55e" : "#4b5563"), flex: 0, padding: "10px 18px", opacity: canAfford ? 1 : 0.65, cursor: canAfford ? "pointer" : "not-allowed" }}>
+            {pendingCost > 0 ? `Pay ₽${pendingCost.toLocaleString()}` : "Apply"}
+          </button>
+        </div>
+      )}
 
       {/* Modal popups */}
       {head?.type === "evolve" && (
@@ -358,11 +466,8 @@ function PaidZone({ mon, money, onBack, onCommitEv, onMutateMon, onSpendMoney, t
           newMove={head.move}
           onLearn={(replaceIdx) => {
             const moves = [...(mon.moves ?? [])];
-            if (moves.length < 4 && replaceIdx == null) {
-              moves.push(head.move);
-            } else if (replaceIdx != null) {
-              moves[replaceIdx] = head.move;
-            }
+            if (moves.length < 4 && replaceIdx == null) moves.push(head.move);
+            else if (replaceIdx != null) moves[replaceIdx] = head.move;
             onMutateMon(mon.uid!, { moves });
             toast(`${mon.name} learned ${head.move}!`, "#5dc26b");
             dequeue();
@@ -601,8 +706,29 @@ function Header({ onBack, title }: { onBack: () => void; title: string }) {
 
 const pageStyle: React.CSSProperties = {
   position: "fixed", inset: 0, overflowY: "auto",
-  background: "linear-gradient(180deg, #1f2640 0%, #2a1f4a 100%)",
+  background: "#0d0d12",
   color: "#fff", fontFamily: "system-ui", zIndex: 8500,
+};
+const typeBadge: React.CSSProperties = {
+  padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 700, color: "#fff",
+};
+const sectionTitle: React.CSSProperties = {
+  fontSize: 18, fontWeight: 600, margin: "0 0 14px", paddingBottom: 8,
+  borderBottom: "1px solid #2c2c35",
+};
+const actionBtn: React.CSSProperties = {
+  flex: 1, background: "#2c2c3a", color: "#fff", border: 0, padding: "12px",
+  borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer",
+};
+const resetBtn: React.CSSProperties = {
+  display: "block", width: "100%", background: "#2c2c3a", color: "#fff",
+  border: 0, padding: 16, borderRadius: 24, fontSize: 18, fontWeight: 700, cursor: "pointer",
+};
+const payBar: React.CSSProperties = {
+  position: "fixed", left: 0, right: 0, bottom: 0, padding: "10px 14px",
+  background: "rgba(13,13,18,0.96)", borderTop: "1px solid #2c2c35",
+  display: "flex", gap: 10, alignItems: "center", maxWidth: 480, margin: "0 auto",
+  backdropFilter: "blur(8px)",
 };
 const card: React.CSSProperties = {
   background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
