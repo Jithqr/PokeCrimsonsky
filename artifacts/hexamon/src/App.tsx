@@ -319,7 +319,7 @@ function loadSave(): SaveData | null {
 export default function App() {
   const initial = typeof window !== "undefined" ? loadSave() : null;
   const [splashDone, setSplashDone] = useState(false);
-  const [screen, setScreen] = useState<string>(initial ? (initial.screen === "battle" || initial.screen === "hunt" ? "world" : initial.screen) : "title");
+  const [screen, setScreen] = useState<string>(initial ? (initial.screen === "battle" || initial.screen === "hunt" || initial.screen === "title" ? "world" : initial.screen) : "nameInput");
   const [player, setPlayer] = useState<Player>(initial?.player ?? {
     name: "Trainer",
     hometown: "Nuvema Town",
@@ -1708,31 +1708,6 @@ export default function App() {
   if (!splashDone) {
     return <SplashLoader onDone={() => setSplashDone(true)} />;
   }
-
-  if (screen === "title") return (
-    <div style={S.root}>
-      <style>{css}</style>
-      <div style={S.wrap}>
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24, padding: 32 }}>
-          <div style={{ display: "flex", gap: 4, animation: "float 2s infinite" }}>
-            {[25, 4, 7, 1].map((id) => <MonSprite key={id} sprite={getPokemon(id).sprite} size={56} style={{ animation: "none" }} />)}
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 16, color: "#ff6b35", letterSpacing: 3, textShadow: "0 0 30px #ff6b35cc" }}>POKÉMON</div>
-            <div style={{ fontSize: 20, color: "#ff3b6b", letterSpacing: 2, textShadow: "0 0 30px #ff3b6bcc", marginTop: 6 }}>
-              <span>CRIMSON</span><span style={{ display: "inline-block", width: 10 }} /><span>SKY</span>
-            </div>
-            <div style={{ fontSize: 7, color: "#555", marginTop: 8, letterSpacing: 3 }}>GEN I · KANTO REGION</div>
-          </div>
-          <div style={{ fontSize: 7, color: "#444", textAlign: "center", lineHeight: 2.2 }}>
-            1025 Pokémon · Hunt · Catch · Battle · Evolve
-          </div>
-          <button className="btn" style={{ border: "2px solid #ff6b35", color: "#ff6b35", padding: "12px 24px", fontSize: 10 }}
-            onClick={() => setScreen("nameInput")}>▶ START</button>
-        </div>
-      </div>
-    </div>
-  );
 
   if (screen === "nameInput") return (
     <div style={S.root}><style>{css}</style>
