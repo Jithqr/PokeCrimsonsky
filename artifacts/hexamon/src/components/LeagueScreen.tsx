@@ -32,16 +32,42 @@ export default function LeagueScreen({ badges, e4Cleared, e4Streak, onPickGym, o
         <div style={card}>
           <div style={cardTitle}>Badges Earned: {badges.length} / {GYM_LEADERS.length}</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 6, marginTop: 6 }}>
-            {GYM_LEADERS.map((g) => {
+            {GYM_LEADERS.map((g, i) => {
               const got = badges.includes(g.id);
+              const badgeUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/badges/${i + 1}.png`;
               return (
                 <div key={g.id} title={`${g.name}'s Badge`}
                   style={{
-                    background: got ? g.color : "rgba(255,255,255,0.05)",
-                    border: "1px solid " + (got ? "#fff" : "rgba(255,255,255,0.15)"),
+                    background: got ? `${g.color}33` : "rgba(255,255,255,0.05)",
+                    border: "1px solid " + (got ? g.color : "rgba(255,255,255,0.15)"),
                     borderRadius: 8, padding: "6px 0",
-                    textAlign: "center", fontSize: 18, opacity: got ? 1 : 0.4,
-                  }}>{got ? g.emoji : "·"}</div>
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    minHeight: 44, opacity: got ? 1 : 0.35,
+                  }}>
+                  <img
+                    src={badgeUrl}
+                    alt={`${g.name}'s Badge`}
+                    style={{
+                      width: 32, height: 32, objectFit: "contain",
+                      // Grayscale until the badge is earned, then pop in colour.
+                      filter: got ? "drop-shadow(0 0 4px rgba(255,255,255,0.5))" : "grayscale(1) brightness(0.6)",
+                      imageRendering: "pixelated",
+                    }}
+                    onError={(e) => {
+                      // Fallback to the leader's emoji if the PokeAPI image fails to load.
+                      const img = e.currentTarget as HTMLImageElement;
+                      img.style.display = "none";
+                      const parent = img.parentElement;
+                      if (parent && !parent.querySelector(".badge-fallback")) {
+                        const span = document.createElement("span");
+                        span.className = "badge-fallback";
+                        span.textContent = got ? g.emoji : "·";
+                        span.style.fontSize = "18px";
+                        parent.appendChild(span);
+                      }
+                    }}
+                  />
+                </div>
               );
             })}
           </div>

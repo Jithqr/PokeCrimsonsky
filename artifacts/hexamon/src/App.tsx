@@ -13,6 +13,7 @@ import {
   type Action as BAction, type BattleMon, type BattleState, type Team as BTeam,
 } from "./lib/battle-engine";
 import { chooseBotAction, pickBotForceSwitch } from "./lib/bot-ai";
+import { getMove } from "./lib/move-data";
 
 const SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/ani/${name.replace(/[^a-z0-9]/g, "")}.gif`;
 const SPRITE_BACK = (name: string) => `https://play.pokemonshowdown.com/sprites/ani-back/${name.replace(/[^a-z0-9]/g, "")}.gif`;
@@ -56,7 +57,7 @@ const TYPE_COLORS: Record<string, string> = {
   Normal:"#A8A878",Fire:"#F08030",Water:"#6890F0",Grass:"#78C850",Electric:"#F8D030",
   Ice:"#98D8D8",Fighting:"#C03028",Poison:"#A040A0",Ground:"#E0C068",Flying:"#A890F0",
   Psychic:"#F85888",Bug:"#A8B820",Rock:"#B8A038",Ghost:"#705898",Dragon:"#7038F8",
-  Steel:"#B8B8D0",Fairy:"#EE99AC",
+  Dark:"#705848",Steel:"#B8B8D0",Fairy:"#EE99AC",
 };
 
 const MOVE_POWER: Record<string, number> = {
@@ -490,6 +491,14 @@ export default function App() {
   const [safariNextLegend, setSafariNextLegend] = useState(() => initial?.safariNextLegend ?? (3 + Math.floor(Math.random() * 3)));
   const [safariCaught, setSafariCaught] = useState(initial?.safariCaught ?? 0);
   const [safariThrowAnim, setSafariThrowAnim] = useState<"throw" | "wobble" | "burst" | "stars" | null>(null);
+  // Status banner shown inside the safari encounter screen. Replaces the old
+  // "A wild X appears" caption with the throw / catch / fled flow.
+  const [safariStatusMsg, setSafariStatusMsg] = useState<{
+    kind: "throw" | "caught" | "fled";
+    text: string;
+    stars?: number;          // 1..3 stars for "throw" animation
+  } | null>(null);
+  const [emptyTeamWarning, setEmptyTeamWarning] = useState<string | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { if (logRef.current) logRef.current.scrollTop = 99999; }, [log]);
@@ -1021,9 +1030,11 @@ export default function App() {
       setHuntCount((c) => c + 1);
     }
     const template = getPokemon(id);
+    // Wild Pokémon levels are now completely random across the whole 5–89 range,
+    // independent of the player's region. Legendary still gets a small boost.
     const lv = isLegend
-      ? Math.min(70, region.maxLv + 5 + Math.floor(Math.random() * 6))
-      : region.minLv + Math.floor(Math.random() * (region.maxLv - region.minLv + 1));
+      ? Math.min(99, 60 + Math.floor(Math.random() * 30))
+      : 5 + Math.floor(Math.random() * 85);
     return makeMon(template, lv);
   }
 
@@ -1044,9 +1055,10 @@ export default function App() {
       ? legends[Math.floor(Math.random() * legends.length)]
       : pool[Math.floor(Math.random() * pool.length)];
     if (!id) return null;
+    // Levels are random across the entire 5–89 range — no per-region cap.
     const lv = isLegend
-      ? Math.min(70, region.maxLv + 5 + Math.floor(Math.random() * 6))
-      : region.minLv + Math.floor(Math.random() * (region.maxLv - region.minLv + 1));
+      ? Math.min(99, 60 + Math.floor(Math.random() * 30))
+      : 5 + Math.floor(Math.random() * 85);
     return makeMon(getPokemon(id), lv);
   }
 
@@ -1098,8 +1110,8 @@ export default function App() {
       ? legends[Math.floor(Math.random() * legends.length)]
       : pool[Math.floor(Math.random() * pool.length)];
     const sm = id ? makeMon(getPokemon(id), useLegend
-      ? Math.min(70, region.maxLv + 5 + Math.floor(Math.random() * 6))
-      : region.minLv + Math.floor(Math.random() * (region.maxLv - region.minLv + 1))) : null;
+      ? Math.min(99, 60 + Math.floor(Math.random() * 30))
+      : 5 + Math.floor(Math.random() * 85)) : null;
     setSafariEnc(sm);
     if (sm) setSeen((prev) => prev.has(sm.id) ? prev : new Set(prev).add(sm.id));
     setSafariCounter(1);
@@ -1110,6 +1122,7 @@ export default function App() {
     if (currentBalls <= 0) {
       addLog(`Safari ended! You caught ${safariCaught} Pokémon.`, "#FFD700");
       setSafariEnc(null);
+      setSafariStatusMsg(null);
       setLastSafariDayByRegion((prev) => ({ ...prev, [safariRegion]: todayStr() }));
       setScreen("world");
       return;
@@ -1121,10 +1134,10 @@ export default function App() {
     const isLegend = triggerLegend && legends.length > 0;
     if (isLegend) {
       setSafariNextLegend(next + 3 + Math.floor(Math.random() * 3));
-      addLog(`✨ A LEGENDARY appears in the safari!`, "#FFD700");
     }
     const sm = spawnSafari(isLegend);
     setSafariEnc(sm);
+    setSafariStatusMsg(null);
     if (sm) setSeen((prev) => prev.has(sm.id) ? prev : new Set(prev).add(sm.id));
     setSafariCounter(next);
   }
@@ -1140,12 +1153,16 @@ export default function App() {
     const rate = Math.max(0.05, baseRate - lvPenalty);
     const success = Math.random() < rate;
     setSafariThrowAnim("throw");
+    // Animate the "You threw a Safari" message with growing star tier ★ → ★★ → ★★★
+    setSafariStatusMsg({ kind: "throw", text: "You threw a Safari", stars: 1 });
+    setTimeout(() => setSafariStatusMsg({ kind: "throw", text: "You threw a Safari", stars: 2 }), 250);
+    setTimeout(() => setSafariStatusMsg({ kind: "throw", text: "You threw a Safari", stars: 3 }), 500);
     setTimeout(() => setSafariThrowAnim("wobble"), 500);
+    const encName = safariEnc.name;
     setTimeout(() => {
       if (success) {
         setSafariThrowAnim("stars");
         const caughtMon = safariEnc;
-        addLog(`Gotcha! ${caughtMon.name} (Lv${caughtMon.level}) was caught!`, "#4CAF50");
         sfx.victory();
         setCaught((prev) => new Set(prev).add(caughtMon.id));
         setCandies((prev) => ({ ...prev, [caughtMon.id]: (prev[caughtMon.id] ?? 0) + (isLegend ? 5 : 3) }));
@@ -1153,17 +1170,17 @@ export default function App() {
           setTeam((prev) => prev.length < TEAM_MAX ? [...prev, caughtMon] : prev);
         } else {
           setBox((prev) => [...prev, caughtMon]);
-          addLog(`Team is full — ${caughtMon.name} sent to your Mons collection.`, "#FF9800");
         }
         setSafariCaught((c) => c + 1);
+        setSafariStatusMsg({ kind: "caught", text: `You Caught A Wild ${encName}` });
       } else {
         setSafariThrowAnim("burst");
-        addLog(`Oh no! ${safariEnc.name} broke free!`, "#F44336");
+        setSafariStatusMsg({ kind: "fled", text: `Your Safari Failed And wild ${encName} Has fled.` });
       }
       setTimeout(() => {
         setSafariThrowAnim(null);
         safariNext(ballsLeft);
-      }, 900);
+      }, 1400);
     }, 1500);
   }
 
@@ -1211,18 +1228,27 @@ export default function App() {
     const logs: [string, string][] = [];
     wild = { ...wild }; pMon = { ...pMon };
 
-    const pwr = MOVE_POWER[move] ?? 40;
-    const dmg = calcDmg(pMon.atk, wild.def, pwr);
+    // Use real move data (power + accuracy) from move-data.ts so wild battles
+    // line up with what's shown on the move buttons.
+    const md = getMove(move);
+    const pwr = md.power;
+    const accuracy = md.accuracy;
+    const hit = Math.random() * 100 < accuracy;
     playMoveSfx(move);
     setMoveAnim({ target: "enemy", type: moveTypeOf(move), key: Date.now() });
     setTimeout(() => setMoveAnim(null), 600);
-    if (dmg > 0) {
-      wild.currentHp = Math.max(0, wild.currentHp - dmg);
-      setShakeE(true); setTimeout(() => setShakeE(false), 350);
-      setTimeout(() => sfx.hit(), 250);
-      logs.push([`⚔️ ${pMon.name} used ${move}! (${dmg} dmg)`, "#81D4FA"]);
+    if (!hit) {
+      logs.push([`💨 ${pMon.name}'s ${move} missed!`, "#FFB74D"]);
     } else {
-      logs.push([`✨ ${pMon.name} used ${move}!`, "#aaa"]);
+      const dmg = calcDmg(pMon.atk, wild.def, pwr);
+      if (dmg > 0) {
+        wild.currentHp = Math.max(0, wild.currentHp - dmg);
+        setShakeE(true); setTimeout(() => setShakeE(false), 350);
+        setTimeout(() => sfx.hit(), 250);
+        logs.push([`⚔️ ${pMon.name} used ${move}! (${dmg} dmg)`, "#81D4FA"]);
+      } else {
+        logs.push([`✨ ${pMon.name} used ${move}!`, "#aaa"]);
+      }
     }
 
     if (wild.currentHp <= 0) {
@@ -1237,20 +1263,27 @@ export default function App() {
     }
 
     const eMove = wild.moves[Math.floor(Math.random() * wild.moves.length)];
-    const ePwr = MOVE_POWER[eMove] ?? 30;
-    const eDmg = calcDmg(wild.atk, pMon.def, ePwr);
+    const eMd = getMove(eMove);
+    const ePwr = eMd.power;
+    const eAcc = eMd.accuracy;
+    const eHit = Math.random() * 100 < eAcc;
     setTimeout(() => {
       playMoveSfx(eMove);
       setMoveAnim({ target: "player", type: moveTypeOf(eMove), key: Date.now() });
       setTimeout(() => setMoveAnim(null), 600);
     }, 700);
-    if (eDmg > 0) {
-      pMon.currentHp = Math.max(0, pMon.currentHp - eDmg);
-      setShakeP(true); setTimeout(() => setShakeP(false), 350);
-      setTimeout(() => sfx.hurt(), 950);
-      logs.push([`💢 ${wild.name} used ${eMove}! (${eDmg} dmg)`, "#FF7043"]);
+    if (!eHit) {
+      logs.push([`💨 ${wild.name}'s ${eMove} missed!`, "#FFB74D"]);
     } else {
-      logs.push([`${wild.name} used ${eMove}!`, "#aaa"]);
+      const eDmg = calcDmg(wild.atk, pMon.def, ePwr);
+      if (eDmg > 0) {
+        pMon.currentHp = Math.max(0, pMon.currentHp - eDmg);
+        setShakeP(true); setTimeout(() => setShakeP(false), 350);
+        setTimeout(() => sfx.hurt(), 950);
+        logs.push([`💢 ${wild.name} used ${eMove}! (${eDmg} dmg)`, "#FF7043"]);
+      } else {
+        logs.push([`${wild.name} used ${eMove}!`, "#aaa"]);
+      }
     }
 
     logs.forEach(([m, c]) => addLog(m, c));
@@ -1784,12 +1817,14 @@ export default function App() {
           `https://play.pokemonshowdown.com/sprites/gen5-back/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
+          `https://play.pokemonshowdown.com/sprites/home/${clean}.png`,
         ]
       : [
           ...customList,
           `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`,
           `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
+          `https://play.pokemonshowdown.com/sprites/home/${clean}.png`,
         ];
     return (
       <img
@@ -2075,32 +2110,55 @@ export default function App() {
                   Pick a region for today's Safari run. Each region can only be visited once per day (use a Safari Pass to retry). Entry costs ₽100.
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {REGIONS.map((r, i) => {
-                    const usedToday = lastSafariDayByRegion[i] === todayStr();
-                    const hasPass = inventoryQty("Safari Pass") > 0;
-                    const blocked = usedToday && !hasPass;
-                    return (
-                      <button key={i} className="btn"
-                        disabled={blocked}
-                        onClick={() => startSafariInRegion(i)}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-                          border: `1.5px solid ${blocked ? "#3a3a3a" : "#26A69A"}`,
-                          background: blocked ? "#161616" : "#0d2018",
-                          borderRadius: 12, color: "#fff", textAlign: "left",
-                          opacity: blocked ? 0.5 : 1, cursor: blocked ? "not-allowed" : "pointer",
-                        }}>
-                        <span style={{ fontSize: 18 }}>{r.emoji}</span>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 13, fontWeight: 700 }}>{r.name}</div>
-                          <div style={{ fontSize: 9, color: "var(--m-muted)" }}>Gen {r.gen} · Lv {r.minLv}–{r.maxLv}</div>
-                        </div>
-                        <div style={{ fontSize: 10, color: usedToday ? (hasPass ? "#06b6d4" : "#f87171") : "#4ade80", fontWeight: 700 }}>
-                          {usedToday ? (hasPass ? "USE PASS" : "USED TODAY") : "AVAILABLE"}
-                        </div>
-                      </button>
-                    );
-                  })}
+                  {(() => {
+                    // Reuse the same icon palette as the WORLD region picker so
+                    // both screens stay visually consistent (no more emojis).
+                    const safariRegionMeta: { icon: string; color: string }[] = [
+                      { icon: "fa-fire",          color: "var(--m-orange)" },
+                      { icon: "fa-droplet",       color: "var(--m-cyan)" },
+                      { icon: "fa-leaf",          color: "var(--m-green)" },
+                      { icon: "fa-snowflake",     color: "var(--m-blue)" },
+                      { icon: "fa-bolt",          color: "var(--m-yellow)" },
+                      { icon: "fa-crown",         color: "var(--m-pink)" },
+                      { icon: "fa-umbrella-beach",color: "var(--m-teal)" },
+                      { icon: "fa-chess-rook",    color: "var(--m-purple)" },
+                      { icon: "fa-mountain-sun",  color: "var(--m-brown)" },
+                    ];
+                    return REGIONS.map((r, i) => {
+                      const usedToday = lastSafariDayByRegion[i] === todayStr();
+                      const hasPass = inventoryQty("Safari Pass") > 0;
+                      const blocked = usedToday && !hasPass;
+                      const meta = safariRegionMeta[i] ?? { icon: "fa-map", color: "var(--m-teal)" };
+                      return (
+                        <button key={i} className="btn"
+                          disabled={blocked}
+                          onClick={() => startSafariInRegion(i)}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+                            border: `1.5px solid ${blocked ? "#3a3a3a" : "#26A69A"}`,
+                            background: blocked ? "#161616" : "#0d2018",
+                            borderRadius: 12, color: "#fff", textAlign: "left",
+                            opacity: blocked ? 0.5 : 1, cursor: blocked ? "not-allowed" : "pointer",
+                          }}>
+                          <span style={{
+                            width: 32, height: 32, borderRadius: "50%",
+                            background: blocked ? "#222" : `${meta.color}22`,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            color: blocked ? "#555" : meta.color, fontSize: 14, flexShrink: 0,
+                          }}>
+                            <i className={`fa-solid ${meta.icon}`} />
+                          </span>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 13, fontWeight: 700 }}>{r.name}</div>
+                            <div style={{ fontSize: 9, color: "var(--m-muted)" }}>Gen {r.gen}</div>
+                          </div>
+                          <div style={{ fontSize: 10, color: usedToday ? (hasPass ? "#06b6d4" : "#f87171") : "#4ade80", fontWeight: 700 }}>
+                            {usedToday ? (hasPass ? "USE PASS" : "USED TODAY") : "AVAILABLE"}
+                          </div>
+                        </button>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
             </div>
@@ -2475,13 +2533,16 @@ export default function App() {
             <div style={{ fontSize: 7, color: "#555", marginBottom: 6 }}>CHOOSE A MOVE</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
               {pMon.moves.map((m) => {
-                const pwr = MOVE_POWER[m] ?? 40;
+                const md = getMove(m);
+                const typeColor = TYPE_COLORS[md.type] ?? "#1E88E5";
                 return (
                   <button key={m} className="btn"
-                    style={{ border: "2px solid #1E88E5", color: "#90CAF9", padding: "9px 6px", borderRadius: 6, textAlign: "left" }}
+                    style={{ border: `2px solid ${typeColor}`, color: typeColor, padding: "9px 6px", borderRadius: 6, textAlign: "left" }}
                     onClick={() => doPlayerMove(m)}>
                     <div style={{ fontSize: 8 }}>{m}</div>
-                    <div style={{ fontSize: 6, color: "#555", marginTop: 2 }}>PWR: {pwr || "—"}</div>
+                    <div style={{ fontSize: 6, color: "#888", marginTop: 2 }}>
+                      PWR: {md.power || "—"} · ACC: {md.accuracy}% · {md.type}
+                    </div>
                   </button>
                 );
               })}
@@ -2672,6 +2733,9 @@ export default function App() {
               setActiveTeamIdx(teams.length);
               setBuddyIdx(-1);
               addLog(`Created team "${name}"`, "#FF9800");
+              // New teams start empty — show a friendly popup reminding the
+              // trainer to add at least one Pokémon before battling.
+              setEmptyTeamWarning(`"${name}" is empty! Please add at least 1 Pokémon to this team before battling.`);
             }}
             style={{
               border: "1.5px dashed #4ade80", background: "transparent", color: "#4ade80",
@@ -2785,10 +2849,13 @@ export default function App() {
             { label: "Reset Team", icon: "fa-rotate-left", color: "#FF9800",
               run: () => {
                 if (team.length <= TEAM_MIN) { addLog(`Team already at minimum (${TEAM_MIN}). Nothing to reset.`, "#FF9800"); return; }
-                if (typeof window !== "undefined" && !window.confirm(`Reset "${tName}"? All Pokémon except your lead will be removed.`)) return;
+                if (typeof window !== "undefined" && !window.confirm(`Reset "${tName}"? All Pokémon except your lead will be sent back to your Mons collection.`)) return;
+                // Send all removed mons back to the box instead of deleting them.
+                const removed = team.slice(TEAM_MIN);
                 setTeam((prev) => prev.slice(0, TEAM_MIN));
+                setBox((prev) => [...prev, ...removed]);
                 setBuddyIdx(-1);
-                addLog(`♻ ${tName} reset to lead Pokémon.`, "#FF9800");
+                addLog(`♻ ${tName} reset — ${removed.length} Pokémon returned to your Mons collection.`, "#FF9800");
                 setShowTeamTools(false);
               } },
             { label: "Main", icon: "fa-star", color: "#FFD700",
@@ -2864,17 +2931,20 @@ export default function App() {
                   style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 9 }}
                   onClick={() => setShowRemovePicker(false)}>✕</button>
               </div>
-              <div style={{ fontSize: 10, color: "#6b7896" }}>Tap a Pokémon to release it from this team.</div>
+              <div style={{ fontSize: 10, color: "#6b7896" }}>Tap a Pokémon to send it back to your Mons collection.</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6, overflowY: "auto" }}>
                 {team.map((m, i) => (
                   <button key={`rm-${i}`} className="btn"
                     onClick={() => {
                       if (team.length <= TEAM_MIN) { addLog(`Team must keep at least ${TEAM_MIN} Pokémon.`, "#F44336"); return; }
-                      if (typeof window !== "undefined" && !window.confirm(`Remove ${m.name} from this team?`)) return;
+                      if (typeof window !== "undefined" && !window.confirm(`Send ${m.name} back to your Mons collection?`)) return;
+                      // Move the Pokémon from the team into the box (collection)
+                      // instead of deleting it permanently.
                       setTeam((prev) => prev.filter((_, j) => j !== i));
+                      setBox((prev) => [...prev, m]);
                       if (buddyIdx === i) setBuddyIdx(-1);
                       else if (buddyIdx > i) setBuddyIdx(buddyIdx - 1);
-                      addLog(`Removed ${m.name} from the team.`, "#F44336");
+                      addLog(`${m.name} returned to your Mons collection.`, "#FFD54F");
                       if (team.length - 1 <= TEAM_MIN) setShowRemovePicker(false);
                     }}
                     style={{
@@ -3007,6 +3077,34 @@ export default function App() {
             </div>
           </div>
         )}
+
+        {emptyTeamWarning && (
+          <div onClick={() => setEmptyTeamWarning(null)}
+            style={{
+              position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)",
+              display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 80,
+            }}>
+            <div onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "#1a0f1f", border: "2px solid #FF9800", borderRadius: 14,
+                width: "100%", maxWidth: 320, padding: "18px 20px",
+                display: "flex", flexDirection: "column", gap: 12, textAlign: "center",
+                fontFamily: "'Inter', system-ui, sans-serif",
+                boxShadow: "0 0 30px rgba(255,152,0,0.45)",
+              }}>
+              <i className="fa-solid fa-triangle-exclamation" style={{ fontSize: 28, color: "#FF9800" }} />
+              <div style={{ fontSize: 14, fontWeight: 800, color: "#FFB74D", letterSpacing: 1 }}>EMPTY TEAM</div>
+              <div style={{ fontSize: 12, color: "#fff", lineHeight: 1.5 }}>{emptyTeamWarning}</div>
+              <button className="btn"
+                onClick={() => setEmptyTeamWarning(null)}
+                style={{
+                  border: "1.5px solid #FF9800", background: "#FF9800", color: "#1a0f1f",
+                  padding: "10px 14px", borderRadius: 10, fontSize: 12, fontWeight: 800,
+                  marginTop: 4, cursor: "pointer",
+                }}>OK, GOT IT</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -3078,17 +3176,18 @@ export default function App() {
         <style>{css}</style>
         <div style={{ ...S.wrap, background: "#0a0e1a", fontFamily: "'Inter', system-ui, sans-serif" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 18px 12px", borderBottom: "1px solid #1a1f33" }}>
-            <div style={{ width: 78 }} />
-            <div style={{ fontSize: 17, fontWeight: 700, color: "#e8efe8", letterSpacing: 3 }}>WILD HUNT</div>
+            {/* BACK button moved to the LEFT side of the header (was on the right). */}
             <button className="btn"
               style={{ border: "1.5px solid #4ade80", color: "#4ade80", padding: "6px 14px", borderRadius: 10, background: "transparent", fontSize: 11, fontWeight: 600, letterSpacing: 1, fontFamily: "'Inter', system-ui, sans-serif" }}
               onClick={() => { setScoutedWild(null); setScreen("world"); }}>
               <i className="fa-solid fa-chevron-left" style={{ fontSize: 9, marginRight: 5 }} />BACK
             </button>
+            <div style={{ fontSize: 17, fontWeight: 700, color: "#e8efe8", letterSpacing: 3 }}>WILD HUNT</div>
+            <div style={{ width: 78 }} />
           </div>
 
           <div style={{ textAlign: "center", padding: "22px 18px 18px", fontSize: 13, color: "#cfd6e6", letterSpacing: 0.4 }}>
-            {region.emoji} {region.name} <span style={{ color: "#6b7896", margin: "0 6px" }}>•</span> Lv {region.minLv}–{region.maxLv}
+            {region.emoji} {region.name}
             <div style={{ fontSize: 10, color: "#6b7896", marginTop: 4 }}>
               Hunts: {huntCount}/{legendThreshold} until legendary
             </div>
@@ -3905,13 +4004,11 @@ export default function App() {
     };
 
     const evolveMon = () => {
-      const candy = candies[m.id] ?? 0;
-      const cost = 25;
-      if (candy < cost) { addLog(`Need ${cost} ${m.name} candy to evolve. (have ${candy})`, "#F44336"); return; }
+      // Candy is no longer required to evolve — just confirm and go.
       const nextId = m.id + 1;
       const nextTpl = ALL_POKEMON.find((p) => p.id === nextId);
       if (!nextTpl) { addLog(`${m.name} cannot evolve further.`, "#F44336"); return; }
-      if (typeof window !== "undefined" && !window.confirm(`Evolve ${m.nickname ?? m.name} into ${nextTpl.name}? This will use ${cost} candy.`)) return;
+      if (typeof window !== "undefined" && !window.confirm(`Evolve ${m.nickname ?? m.name} into ${nextTpl.name}?`)) return;
       const evolved = makeMon(nextTpl, m.level, "evolve");
       evolved.uid = m.uid;
       evolved.nickname = m.nickname;
@@ -3923,7 +4020,6 @@ export default function App() {
       evolved.evSpa = m.evSpa; evolved.evSpd = m.evSpd; evolved.evSpe = m.evSpe;
       evolved.caughtAt = m.caughtAt;
       updateMon(() => evolved);
-      setCandies((prev) => ({ ...prev, [m.id]: Math.max(0, candy - cost) }));
       setCaught((prev) => new Set([...prev, nextTpl.id]));
       sfx.evolve();
       addLog(`${m.nickname ?? m.name} evolved into ${nextTpl.name}!`, "#FFD700");
@@ -4416,11 +4512,48 @@ export default function App() {
               )}
             </div>
 
-            <div style={{ textAlign: "center", padding: "14px 6px 0", fontSize: 13, color: "#26A69A" }}>
-              {safariEnc ? (
-                <>A wild <span style={{ color: "#fff" }}>{safariEnc.name}</span>{" "}
-                  <span style={{ background: "#1a1f33", border: "1px solid #2d3450", color: "#fff", padding: "2px 9px", borderRadius: 999, fontSize: 11, fontWeight: 600, margin: "0 4px" }}>Lv. {safariEnc.level}</span>
-                  {isLegend ? "watches you carefully..." : "appeared!"}</>
+            {/* Fixed-size status banner — height never changes so the layout
+                doesn't shift between "throw / caught / fled" messages. */}
+            <div style={{
+              margin: "14px 6px 0",
+              height: 64,
+              minHeight: 64,
+              maxHeight: 64,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              padding: "0 10px",
+              background: "#0d0d12",
+              border: `1.5px solid ${
+                safariStatusMsg?.kind === "caught" ? "#4ade80" :
+                safariStatusMsg?.kind === "fled"   ? "#f87171" :
+                "#2a3a55"
+              }`,
+              borderRadius: 10,
+              color: safariStatusMsg?.kind === "caught" ? "#4ade80" :
+                     safariStatusMsg?.kind === "fled"   ? "#f87171" :
+                     "#26A69A",
+              fontSize: 12,
+              fontWeight: 600,
+              lineHeight: 1.4,
+              overflow: "hidden",
+            }}>
+              {safariStatusMsg ? (
+                <span>
+                  {safariStatusMsg.text}
+                  {safariStatusMsg.kind === "throw" && (
+                    <span style={{ marginLeft: 6, color: "#FFD700", letterSpacing: 2 }}>
+                      {"★".repeat(safariStatusMsg.stars ?? 1)}
+                    </span>
+                  )}
+                </span>
+              ) : safariEnc ? (
+                <span>
+                  A wild <span style={{ color: "#fff" }}>{safariEnc.name}</span>
+                  <span style={{ background: "#1a1f33", border: "1px solid #2d3450", color: "#fff", padding: "2px 8px", borderRadius: 999, fontSize: 10, fontWeight: 600, margin: "0 6px" }}>Lv. {safariEnc.level}</span>
+                  {isLegend ? "is watching..." : "appeared!"}
+                </span>
               ) : "..."}
             </div>
           </div>
@@ -4652,16 +4785,13 @@ export default function App() {
           bannerText={leagueResultBanner}
           onExit={() => {
             // If battle ended, persist mon current HP back into team for non-E4 (E4 carries inside engine).
-            if (lb.state.finished && !lb.isE4) {
-              setTeams((prev) => prev.map((g, gi) => gi !== activeTeamIdx ? g : ({
-                ...g,
-                mons: g.mons.map((m) => {
-                  const bm = lb.state.teams[0].mons.find((b) => b.uid === m.uid);
-                  if (!bm) return m;
-                  return { ...m, currentHp: Math.max(0, bm.currentHp), status: bm.status ?? null };
-                }),
-              })));
-            }
+            // Auto-heal the active team after every league battle (win or lose)
+            // so the player is never blocked from the next gym by chip damage.
+            setTeams((prev) => prev.map((g, gi) => gi !== activeTeamIdx ? g : ({
+              ...g,
+              mons: g.mons.map((m) => ({ ...m, currentHp: m.maxHp, status: null })),
+            })));
+            addLog("Your team was fully healed!", "#4CAF50");
             setLeagueBattle(null);
             setScreen("league");
           }}
@@ -4688,6 +4818,13 @@ export default function App() {
           onExit={() => {
             try { wsRef.current?.close(); } catch { /* ignore */ }
             wsRef.current = null;
+            // Auto-heal active team after every PvP battle so players always
+            // start the next match at full strength.
+            setTeams((prev) => prev.map((g, gi) => gi !== activeTeamIdx ? g : ({
+              ...g,
+              mons: g.mons.map((m) => ({ ...m, currentHp: m.maxHp, status: null })),
+            })));
+            addLog("Your team was fully healed!", "#4CAF50");
             setPvpBattle(null);
             setPvpBanner(null);
             setBbRoom(null);
