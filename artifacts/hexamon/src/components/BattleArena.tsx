@@ -418,10 +418,11 @@ const css = `
 .bx-ground { position: absolute; inset: 60% 0 0 0; background: linear-gradient(180deg,#d6c08a 0%,#a88e58 100%); }
 
 .bx-opp-plate { position: absolute; top: 10px; left: 10px; z-index: 5; }
-.bx-me-plate  { position: absolute; bottom: 14px; right: 10px; z-index: 5; }
+/* Player plate moved up so it sits in the empty band above the dialog */
+.bx-me-plate  { position: absolute; bottom: 96px; right: 10px; z-index: 5; }
 
 .bx-opp-platform {
-  position: absolute; top: 88px; right: 28px; width: 150px; height: 32px;
+  position: absolute; top: 140px; right: 36px; width: 150px; height: 32px;
   background: radial-gradient(ellipse at center, #b8a16b 0%, #b8a16b 55%, transparent 70%);
   border-radius: 50%; opacity: 0.85;
 }
@@ -430,7 +431,8 @@ const css = `
   background: radial-gradient(ellipse at center, #b8a16b 0%, #b8a16b 55%, transparent 70%);
   border-radius: 50%; opacity: 0.9;
 }
-.bx-opp-sprite { position: absolute; top: 30px; right: 50px; width: 110px; height: 110px; display:flex; align-items:flex-end; justify-content:center; z-index: 4; }
+/* Enemy sprite repositioned so its feet land on the platform ellipse */
+.bx-opp-sprite { position: absolute; top: 46px; right: 56px; width: 110px; height: 110px; display:flex; align-items:flex-end; justify-content:center; z-index: 4; }
 .bx-me-sprite  { position: absolute; bottom: 60px; left: 38px; width: 130px; height: 130px; display:flex; align-items:flex-end; justify-content:center; z-index: 4; }
 
 @keyframes bx-slide-in-right { from { transform: translateX(180%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }

@@ -409,6 +409,7 @@ export default function App() {
     awaitingForceSwitch: boolean;
     oppPicked: boolean;
     turnTimerSec: number | null;
+    opponentName: string;
   } | null>(null);
   const [pvpBanner, setPvpBanner] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -856,6 +857,12 @@ export default function App() {
             awaitingForceSwitch,
             oppPicked,
             turnTimerSec: turnTimerSec ?? prev?.turnTimerSec ?? bbSettings.turnTimer,
+            // Capture opponent name on the first state arrival so it survives even if
+            // bbRoom is cleared by the time the result is finalized.
+            opponentName: prev?.opponentName
+              ?? state.teams[mySide === 0 ? 1 : 0]?.ownerName
+              ?? bbRoom?.opponent
+              ?? "Opponent",
           }));
           if (state && !state.finished) setScreen("pvpBattle");
           break;
@@ -888,7 +895,10 @@ export default function App() {
     setPvpBattle((prev) => {
       if (!prev) return prev;
       const won = winnerIdx === prev.mySide;
-      const oppName = bbRoom?.opponent ?? "Rival";
+      const oppName = prev.opponentName
+        || prev.state.teams[prev.mySide === 0 ? 1 : 0]?.ownerName
+        || bbRoom?.opponent
+        || "Opponent";
       const result: "W" | "L" = won ? "W" : "L";
       let delta = 0;
       const myMons = prev.state.teams[prev.mySide].mons;
