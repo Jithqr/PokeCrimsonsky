@@ -1522,10 +1522,10 @@ export default function App() {
   const css = `
     @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
     * { box-sizing: border-box; }
-    body { margin: 0; background: #05050f; }
+    body { margin: 0; background: #09090b; }
     ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: #0a0a1e; }
-    ::-webkit-scrollbar-thumb { background: #ff6b35; border-radius: 2px; }
+    ::-webkit-scrollbar-track { background: #18181b; }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 2px; }
     @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 60%{transform:translateX(7px)} }
     @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
     @keyframes evoFlash { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0;transform:scale(1.5)} }
@@ -1709,9 +1709,9 @@ export default function App() {
   }
 
   const S: Record<string, React.CSSProperties> = {
-    root: { fontFamily: "'Press Start 2P',monospace", background: "#05050f", minHeight: "100vh", display: "flex", justifyContent: "center" },
-    wrap: { width: "100%", maxWidth: 460, minHeight: "100vh", background: "#0a0a1e", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" },
-    header: { background: "linear-gradient(90deg,#150030,#0a0a1e)", borderBottom: "2px solid #ff6b35", padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" },
+    root: { fontFamily: "'Press Start 2P',monospace", background: "#09090b", minHeight: "100vh", display: "flex", justifyContent: "center" },
+    wrap: { width: "100%", maxWidth: 460, minHeight: "100vh", background: "#09090b", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" },
+    header: { background: "#0a0a0a", borderBottom: "1px solid #1f1f1f", padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" },
   };
 
   function typeTag(t: string | null) {
@@ -4708,7 +4708,7 @@ export default function App() {
                 const isCaught = caught.has(p.id) || team.some((m) => m.id === p.id);
                 const isSeen = isCaught || seen.has(p.id);
                 return (
-                  <div key={p.id} style={{ background: isSeen ? `${TYPE_COLORS[p.type1]}11` : "#0a0a1e", border: `1px solid ${isSeen ? TYPE_COLORS[p.type1] + "66" : "#1a1a1a"}`, borderRadius: 8, padding: "8px 4px", textAlign: "center", opacity: isSeen ? 1 : 0.45, position: "relative" }}>
+                  <div key={p.id} style={{ background: isSeen ? `${TYPE_COLORS[p.type1]}11` : "#18181b", border: `1px solid ${isSeen ? TYPE_COLORS[p.type1] + "66" : "#27272a"}`, borderRadius: 8, padding: "8px 4px", textAlign: "center", opacity: isSeen ? 1 : 0.45, position: "relative" }}>
                     {isSeen
                       ? <div style={{ filter: isCaught ? "none" : "grayscale(1) brightness(0.6)" }}><MonSprite sprite={p.sprite} size={52} className="" /></div>
                       : <div style={{ width: 52, height: 52, margin: "0 auto", background: "#111", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>❓</div>
