@@ -2420,57 +2420,196 @@ export default function App() {
 
   if (screen === "battle" && battle) {
     const { wild, pMon } = battle;
+    const wildHpPct = Math.max(0, Math.min(100, (wild.currentHp / wild.maxHp) * 100));
+    const wildHpClass = wildHpPct > 50 ? "#4ade80" : wildHpPct > 25 ? "#facc15" : "#f87171";
+    const pHpPct = Math.max(0, Math.min(100, (pMon.currentHp / pMon.maxHp) * 100));
+    const pHpClass = pHpPct > 50 ? "#4ade80" : pHpPct > 25 ? "#facc15" : "#f87171";
+    const runAway = () => {
+      if (ballAnim || ringActive) return;
+      sfx.menuBack();
+      addLog("Got away safely!", "#aaa");
+      setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })));
+      addLog("Your team was fully healed!", "#4CAF50");
+      setBattle(null);
+      setScreen("hunt");
+    };
     return (
-      <div style={S.root}><style>{css}</style>
-        <div style={S.wrap}>
-          <div style={S.header}>
-            <span style={{ fontSize: 8, color: "#ff6b35" }}>⚔️ WILD BATTLE</span>
-            <span style={{ fontSize: 6, color: "#555" }}>Turn {battle.turnCount + 1}</span>
+      <div style={{ ...S.root, background: "#0a0a0c" }}>
+        <style>{css}{`
+          .wb-close-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #f0f0f0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          }
+          .wb-info-card {
+            background: rgba(10,10,14,0.82);
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 10px;
+            padding: 8px 12px;
+            backdrop-filter: blur(6px);
+            min-width: 160px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          }
+          .wb-move-btn {
+            background: linear-gradient(180deg, #1a1a22 0%, #111118 100%);
+            border: 1px solid #a78bfa;
+            border-radius: 10px;
+            padding: 12px 14px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.18s ease;
+            color: #f0f0f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          }
+          .wb-move-btn:hover:not(:disabled) {
+            background: linear-gradient(180deg, #26263a 0%, #1a1a28 100%);
+            border-color: #c4b5fd;
+            transform: translateY(-2px);
+          }
+          .wb-move-btn:active:not(:disabled) { transform: translateY(1px); }
+          .wb-move-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+          .wb-action-btn {
+            flex: 1;
+            background: linear-gradient(180deg, #1c1c21 0%, #121216 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #f0f0f0;
+            padding: 16px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          }
+          .wb-action-btn:hover:not(:disabled) {
+            background: linear-gradient(180deg, #2a2a32 0%, #1a1a20 100%);
+            border-color: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+          }
+          .wb-action-btn:active:not(:disabled) { transform: translateY(1px); }
+          .wb-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        `}</style>
+        <div style={{ ...S.wrap, background: "#0a0a0c", fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", padding: "16px 16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "2px solid #c0392b" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button className="wb-close-btn" onClick={runAway}>◀ BACK</button>
+              <div style={{ fontSize: 14, letterSpacing: 3, fontWeight: 800, color: "#f87171" }}>WILD BATTLE</div>
+            </div>
+            <div style={{ fontSize: 12, color: "#888890", letterSpacing: 1 }}>Turn {battle.turnCount + 1}</div>
           </div>
 
-          <div style={{ position: "relative", height: 210, background: "linear-gradient(180deg,#0f0f2a,#05050f)", margin: "10px 10px 0", borderRadius: 12, border: "1px solid #1a1a3a", overflow: "hidden" }}>
-            <div style={{ position: "absolute", bottom: 50, left: 0, right: 0, height: 2, background: "#1a2a1a" }} />
-            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 50, background: "#0a1a0a" }} />
+          {/* Battle arena */}
+          <div style={{
+            height: 260,
+            borderRadius: 16,
+            border: "1px solid rgba(180,30,30,0.35)",
+            backgroundImage: `url(${safariForestBg})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+            position: "relative",
+            overflow: "hidden",
+            boxShadow: "inset 0 0 60px rgba(0,0,0,0.7)",
+          }}>
+            {/* Enemy info card — top-left */}
+            <div style={{ position: "absolute", top: 14, left: 14, zIndex: 4 }}>
+              <div className="wb-info-card">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 0.5, color: "#f0f0f0" }}>{wild.name}</span>
+                  <span style={{ fontSize: 11, color: "#888890" }}>Lv{wild.level}</span>
+                </div>
+                <div style={{ marginBottom: 5, display: "flex", gap: 4 }}>
+                  {wild.type1 && (
+                    <span style={{ display: "inline-block", padding: "1px 7px", borderRadius: 4, fontSize: 9, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", background: (TYPE_COLORS[wild.type1] ?? "#444") + "33", color: TYPE_COLORS[wild.type1] ?? "#f0f0f0", border: `1px solid ${(TYPE_COLORS[wild.type1] ?? "#444")}66` }}>{wild.type1}</span>
+                  )}
+                  {wild.type2 && (
+                    <span style={{ display: "inline-block", padding: "1px 7px", borderRadius: 4, fontSize: 9, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", background: (TYPE_COLORS[wild.type2] ?? "#444") + "33", color: TYPE_COLORS[wild.type2] ?? "#f0f0f0", border: `1px solid ${(TYPE_COLORS[wild.type2] ?? "#444")}66` }}>{wild.type2}</span>
+                  )}
+                </div>
+                <div style={{ height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden", marginBottom: 4 }}>
+                  <div style={{ height: "100%", borderRadius: 3, transition: "width 0.4s ease", width: `${wildHpPct}%`, background: wildHpClass }} />
+                </div>
+                <div style={{ fontSize: 9, color: "#888890" }}>{wild.currentHp}/{wild.maxHp}</div>
+              </div>
+            </div>
 
-            <div style={{ position: "absolute", top: 10, right: 30 }}>
+            {/* Enemy sprite — top-right */}
+            <div style={{ position: "absolute", top: 10, right: 14, zIndex: 3 }}>
               {ballAnim !== "capture" && ballAnim !== "wobble" && ballAnim !== "success" && (
-                <MonSprite sprite={wild.sprite} size={90} className={
+                <MonSprite sprite={wild.sprite} size={110} className={
                   shakeE ? "mon-shake" : (ballAnim === "fail" ? "" : "mon-float")
-                } />
+                } style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
               )}
               {ballAnim === "capture" && (
-                <MonSprite sprite={wild.sprite} size={90} className="mon-suck" />
+                <MonSprite sprite={wild.sprite} size={110} className="mon-suck" style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
               )}
               {moveAnim?.target === "enemy" && <MoveFx key={moveAnim.key} type={moveAnim.type} />}
             </div>
+
+            {/* Player sprite — bottom-left */}
+            <div style={{ position: "absolute", bottom: 12, left: 12, zIndex: 3 }}>
+              <MonSprite sprite={pMon.sprite} size={95} back className={shakeP ? "mon-shake" : "mon-float"} style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.8))" }} />
+              {moveAnim?.target === "player" && <MoveFx key={moveAnim.key} type={moveAnim.type} />}
+            </div>
+
+            {/* Player info card — bottom-right */}
+            <div style={{ position: "absolute", bottom: 12, right: 12, zIndex: 4 }}>
+              <div className="wb-info-card">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 0.5, color: "#f0f0f0" }}>{pMon.name}</span>
+                  <span style={{ fontSize: 11, color: "#888890" }}>Lv{pMon.level}</span>
+                </div>
+                <div style={{ height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden", marginBottom: 4 }}>
+                  <div style={{ height: "100%", borderRadius: 3, transition: "width 0.4s ease", width: `${pHpPct}%`, background: pHpClass }} />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: 9, color: "#888890" }}>{pMon.currentHp}/{pMon.maxHp}</span>
+                  <span style={{ fontSize: 9, color: "#888890" }}>ATK: {pMon.atk}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Ball animations */}
             {ballAnim === "throw" && (
-              <div className="ball-throw"><div className="pokeball" /></div>
+              <div className="ball-throw" style={{ zIndex: 5 }}><div className="pokeball" /></div>
             )}
             {(ballAnim === "capture" || ballAnim === "wobble") && (
-              <div className="ball-static">
+              <div className="ball-static" style={{ zIndex: 5 }}>
                 <div className={ballAnim === "wobble" ? "pokeball ball-wobble" : "pokeball"} />
               </div>
             )}
             {ballAnim === "success" && (
               <>
-                <div className="ball-static"><div className="pokeball" /></div>
+                <div className="ball-static" style={{ zIndex: 5 }}><div className="pokeball" /></div>
                 {[0, 1, 2, 3].map((i) => (
                   <div key={i} className="catch-star" style={{
                     left: `calc(100% - ${60 + i * 14}px)`, bottom: `${110 + (i % 2) * 12}px`,
-                    color: "#FFD700", animationDelay: `${i * 0.08}s`,
+                    color: "#FFD700", animationDelay: `${i * 0.08}s`, zIndex: 5,
                   }}>✨</div>
                 ))}
               </>
             )}
             {ballAnim === "fail" && (
-              <div className="ball-static"><div className="pokeball ball-burst" /></div>
+              <div className="ball-static" style={{ zIndex: 5 }}><div className="pokeball ball-burst" /></div>
             )}
 
+            {/* Aim ring */}
             {ringActive && (
               <>
                 <div style={{
-                  position: "absolute", top: 10, right: 30, width: 90, height: 90,
-                  display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none",
+                  position: "absolute", top: 10, right: 14, width: 110, height: 110,
+                  display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", zIndex: 6,
                 }}>
                   <div style={{
                     width: ringRadius, height: ringRadius, borderRadius: "50%",
@@ -2482,7 +2621,7 @@ export default function App() {
                 <div style={{
                   position: "absolute", left: 0, right: 0, top: 6, textAlign: "center",
                   color: ringQuality(ringRadius).color, fontSize: 11, fontWeight: 700, letterSpacing: 2,
-                  textShadow: "1px 1px 0 #000", fontFamily: "'Inter', system-ui, sans-serif",
+                  textShadow: "1px 1px 0 #000", zIndex: 7,
                 }}>
                   {ringQuality(ringRadius).label}
                 </div>
@@ -2491,86 +2630,59 @@ export default function App() {
                     position: "absolute", left: "50%", bottom: 8, transform: "translateX(-50%)",
                     background: "#4ade80", color: "#0a0e1a", border: "none",
                     padding: "8px 22px", borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: 1,
-                    cursor: "pointer", fontFamily: "'Inter', system-ui, sans-serif",
-                    boxShadow: "0 2px 10px rgba(74,222,128,0.5)", zIndex: 60,
+                    cursor: "pointer", boxShadow: "0 2px 10px rgba(74,222,128,0.5)", zIndex: 60,
                   }}>
                   TAP TO THROW
                 </button>
               </>
             )}
-            <div style={{ position: "absolute", bottom: 18, left: 20 }}>
-              <MonSprite sprite={pMon.sprite} size={90} back className={shakeP ? "mon-shake" : "mon-float"} />
-              {moveAnim?.target === "player" && <MoveFx key={moveAnim.key} type={moveAnim.type} />}
-            </div>
-
-            <div style={{ position: "absolute", top: 8, left: 8, background: "rgba(0,0,0,0.8)", border: `1px solid ${TYPE_COLORS[wild.type1]}88`, borderRadius: 8, padding: "6px 10px", minWidth: 140 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-                <span style={{ fontSize: 8, color: "#fff" }}>{wild.name}</span>
-                <span style={{ fontSize: 7, color: "#aaa" }}>Lv{wild.level}</span>
-              </div>
-              <div style={{ display: "flex", gap: 3, marginBottom: 4 }}>{typeTag(wild.type1)}{typeTag(wild.type2)}</div>
-              <HpBar cur={wild.currentHp} max={wild.maxHp} />
-              <div style={{ fontSize: 6, color: "#aaa", marginTop: 2 }}>{wild.currentHp}/{wild.maxHp}</div>
-            </div>
-
-            <div style={{ position: "absolute", bottom: 8, right: 8, background: "rgba(0,0,0,0.8)", border: `1px solid ${TYPE_COLORS[pMon.type1]}88`, borderRadius: 8, padding: "6px 10px", minWidth: 140 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-                <span style={{ fontSize: 8, color: "#fff" }}>{pMon.name}</span>
-                <span style={{ fontSize: 7, color: "#aaa" }}>Lv{pMon.level}</span>
-              </div>
-              <HpBar cur={pMon.currentHp} max={pMon.maxHp} />
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-                <span style={{ fontSize: 6, color: "#aaa" }}>{pMon.currentHp}/{pMon.maxHp}</span>
-                <span style={{ fontSize: 6, color: "#aaa" }}>ATK:{pMon.atk}</span>
-              </div>
-            </div>
           </div>
 
-          <div style={{ margin: "6px 10px 0", background: "#050510", border: "1px solid #1a1a2a", borderRadius: 6, padding: "6px 10px", height: 48, overflowY: "auto" }}>
-            {log.slice(-3).map((l) => <div key={l.id} style={{ fontSize: 7, color: l.color, marginBottom: 1 }}>▸ {l.msg}</div>)}
-          </div>
-
-          <div style={{ padding: "8px 10px 4px" }}>
-            <div style={{ fontSize: 7, color: "#555", marginBottom: 6 }}>CHOOSE A MOVE</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-              {pMon.moves.map((m) => {
-                const md = getMove(m);
-                const typeColor = TYPE_COLORS[md.type] ?? "#1E88E5";
-                return (
-                  <button key={m} className="btn"
-                    style={{ border: `2px solid ${typeColor}`, color: typeColor, padding: "9px 6px", borderRadius: 6, textAlign: "left" }}
-                    onClick={() => doPlayerMove(m)}>
-                    <div style={{ fontSize: 8 }}>{m}</div>
-                    <div style={{ fontSize: 6, color: "#888", marginTop: 2 }}>
-                      PWR: {md.power || "—"} · ACC: {md.accuracy}% · {md.type}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div style={{ padding: "6px 10px 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-            {[
-              { label: "Switch", action: openSwitchPicker },
-              { label: "Run", action: () => { if (ballAnim || ringActive) return; sfx.menuBack(); addLog("Got away safely!", "#aaa"); setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null }))); addLog("Your team was fully healed!", "#4CAF50"); setBattle(null); setScreen("hunt"); } },
-              { label: `Pokeballs (${MAX_BATTLE_BALLS - battle.ballsThrown})`, action: openBallPicker },
-            ].map((b) => (
-              <button key={b.label} className="btn"
-                style={{
-                  background: "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  color: "#fff",
-                  padding: "14px 8px",
-                  borderRadius: 14,
-                  fontFamily: "'Inter', system-ui, sans-serif",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  letterSpacing: 0.3,
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
-                }}
-                onClick={b.action}>{b.label}</button>
+          {/* Terminal log */}
+          <div style={{
+            background: "#050508",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 12,
+            padding: "14px 16px",
+            fontFamily: "'Courier New', Courier, monospace",
+            fontSize: 12,
+            color: "#fb923c",
+            lineHeight: 1.7,
+            boxShadow: "inset 0 4px 10px rgba(0,0,0,0.5)",
+            minHeight: 72,
+            maxHeight: 96,
+            overflowY: "auto",
+          }}>
+            {log.slice(-3).map((l) => (
+              <div key={l.id} style={{ color: l.color || "#fb923c" }}>
+                <span style={{ color: "#fb923c", marginRight: 6 }}>·</span>{l.msg}
+              </div>
             ))}
+          </div>
+
+          {/* Moves */}
+          <div style={{ fontSize: 10, letterSpacing: 2, color: "#888890", textTransform: "uppercase", paddingLeft: 2 }}>Choose a Move</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            {pMon.moves.map((m) => {
+              const md = getMove(m);
+              return (
+                <button key={m} className="wb-move-btn" onClick={() => doPlayerMove(m)}>
+                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{m}</div>
+                  <div style={{ fontSize: 9, color: "#888890", letterSpacing: 0.3 }}>
+                    PWR: {md.power || "—"} · ACC: {md.accuracy}% · {md.type}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Actions */}
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="wb-action-btn" onClick={openSwitchPicker}>Switch</button>
+            <button className="wb-action-btn" onClick={runAway}>Run</button>
+            <button className="wb-action-btn" onClick={openBallPicker}>
+              Pokéballs <span style={{ fontSize: 10, color: "#888890", fontWeight: 400, letterSpacing: 0, textTransform: "none" }}>({MAX_BATTLE_BALLS - battle.ballsThrown})</span>
+            </button>
           </div>
 
           {showSwitchPicker && (
