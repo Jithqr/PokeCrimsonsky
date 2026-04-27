@@ -3172,23 +3172,23 @@ export default function App() {
   if (screen === "hunt") {
     const region = REGIONS[player.macroRegion] ?? REGIONS[0];
     return (
-      <div style={{ ...S.root, background: "#0a0e1a" }}>
+      <div style={{ ...S.root, background: "#09090b" }}>
         <style>{css}</style>
-        <div style={{ ...S.wrap, background: "#0a0e1a", fontFamily: "'Inter', system-ui, sans-serif" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 18px 12px", borderBottom: "1px solid #1a1f33" }}>
+        <div style={{ ...S.wrap, background: "#09090b", fontFamily: "'Inter', system-ui, sans-serif" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 18px 12px", borderBottom: "1px solid #27272a" }}>
             {/* BACK button moved to the LEFT side of the header (was on the right). */}
             <button className="btn"
-              style={{ border: "1.5px solid #4ade80", color: "#4ade80", padding: "6px 14px", borderRadius: 10, background: "transparent", fontSize: 11, fontWeight: 600, letterSpacing: 1, fontFamily: "'Inter', system-ui, sans-serif" }}
+              style={{ border: "1px solid #27272a", color: "#a1a1aa", padding: "6px 14px", borderRadius: 10, background: "#18181b", fontSize: 11, fontWeight: 600, letterSpacing: 1, fontFamily: "'Inter', system-ui, sans-serif" }}
               onClick={() => { setScoutedWild(null); setScreen("world"); }}>
               <i className="fa-solid fa-chevron-left" style={{ fontSize: 9, marginRight: 5 }} />BACK
             </button>
-            <div style={{ fontSize: 17, fontWeight: 700, color: "#e8efe8", letterSpacing: 3 }}>WILD HUNT</div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: "#f4f4f5", letterSpacing: 3 }}>WILD HUNT</div>
             <div style={{ width: 78 }} />
           </div>
 
-          <div style={{ textAlign: "center", padding: "22px 18px 18px", fontSize: 13, color: "#cfd6e6", letterSpacing: 0.4 }}>
+          <div style={{ textAlign: "center", padding: "22px 18px 18px", fontSize: 13, color: "#f4f4f5", letterSpacing: 0.4 }}>
             {region.emoji} {region.name}
-            <div style={{ fontSize: 10, color: "#6b7896", marginTop: 4 }}>
+            <div style={{ fontSize: 10, color: "#a1a1aa", marginTop: 4 }}>
               Hunts: {huntCount}/{legendThreshold} until legendary
             </div>
           </div>
@@ -3196,57 +3196,55 @@ export default function App() {
           <div style={{ padding: "0 18px" }}>
             <div style={{
               width: "100%", aspectRatio: "1/1",
-              border: "2px solid #4ade80",
+              border: "1px solid #27272a",
               borderRadius: 14,
-              background: "linear-gradient(180deg,#1a3a2a 0%,#0d2218 60%,#08180e 100%)",
-              boxShadow: "0 0 20px rgba(74,222,128,0.15), inset 0 0 30px rgba(0,0,0,0.6)",
+              background: "#0a0a0a",
+              boxShadow: "inset 0 0 30px rgba(0,0,0,0.6)",
               position: "relative", overflow: "hidden",
             }}>
               <div style={{ position: "absolute", inset: 0, background:
-                "radial-gradient(ellipse at 20% 30%, rgba(46,90,55,0.55) 0%, transparent 35%)," +
-                "radial-gradient(ellipse at 80% 25%, rgba(34,70,42,0.5) 0%, transparent 38%)," +
-                "radial-gradient(ellipse at 50% 90%, rgba(26,52,32,0.7) 0%, transparent 55%)",
+                "radial-gradient(ellipse at 50% 90%, rgba(255,255,255,0.03) 0%, transparent 55%)",
                 pointerEvents: "none",
               }} />
-              <div style={{ position: "absolute", left: "12%", top: "18%", width: 36, height: "70%", background: "linear-gradient(180deg,#1a2e1f,#0d1a12)", borderRadius: "6px 6px 0 0", opacity: 0.7 }} />
-              <div style={{ position: "absolute", right: "14%", top: "22%", width: 28, height: "65%", background: "linear-gradient(180deg,#162a1c,#0a160f)", borderRadius: "5px 5px 0 0", opacity: 0.65 }} />
+              <div style={{ position: "absolute", left: "12%", top: "18%", width: 36, height: "70%", background: "linear-gradient(180deg,#18181b,#09090b)", borderRadius: "6px 6px 0 0", opacity: 0.8 }} />
+              <div style={{ position: "absolute", right: "14%", top: "22%", width: 28, height: "65%", background: "linear-gradient(180deg,#18181b,#09090b)", borderRadius: "5px 5px 0 0", opacity: 0.75 }} />
               <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 30,
-                background: "repeating-linear-gradient(90deg,#1f3a26 0 6px,#172e1d 6px 12px)" }} />
+                background: "repeating-linear-gradient(90deg,#1f1f23 0 6px,#18181b 6px 12px)" }} />
 
               {scoutedWild ? (
                 <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <MonSprite sprite={scoutedWild.sprite} size={170} className="mon-float" />
                 </div>
               ) : (
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#7a9a82", fontSize: 12, textAlign: "center", lineHeight: 1.8, padding: 20 }}>
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 12, textAlign: "center", lineHeight: 1.8, padding: 20 }}>
                   Tap HUNT to search<br />the tall grass...
                 </div>
               )}
             </div>
 
-            <div style={{ textAlign: "center", padding: "16px 6px 0", fontSize: 13, color: "#FFD700", letterSpacing: 0.3 }}>
+            <div style={{ textAlign: "center", padding: "16px 6px 0", fontSize: 13, color: "#a1a1aa", letterSpacing: 0.3 }}>
               {scoutedWild ? (
                 <>A wild <span style={{ color: "#fff" }}>{scoutedWild.name}</span>{" "}
                   <span style={{
-                    background: "#1a1f33", border: "1px solid #2d3450", color: "#fff",
+                    background: "#18181b", border: "1px solid #27272a", color: "#fff",
                     padding: "2px 9px", borderRadius: 999, fontSize: 11, fontWeight: 600,
                     margin: "0 4px",
                   }}>Lv. {scoutedWild.level}</span>
-                  <span style={{ color: "#FFD700" }}>has appeared!</span></>
+                  <span style={{ color: "#a1a1aa" }}>has appeared!</span></>
               ) : (
-                <span style={{ color: "#6b7896" }}>No Pokémon nearby...</span>
+                <span style={{ color: "#71717a" }}>No Pokémon nearby...</span>
               )}
             </div>
           </div>
 
           <div style={{ padding: "16px 18px 0" }}>
-            <div style={{ fontSize: 10, color: "#6b7896", letterSpacing: 1, marginBottom: 6, display: "flex", justifyContent: "space-between" }}>
+            <div style={{ fontSize: 10, color: "#a1a1aa", letterSpacing: 1, marginBottom: 6, display: "flex", justifyContent: "space-between" }}>
               <span>YOUR PARTY · {teams[activeTeamIdx]?.name ?? "Team"}</span>
-              <span style={{ color: "#FFD700" }}>tap to set lead</span>
+              <span style={{ color: "#71717a" }}>tap to set lead</span>
             </div>
             <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
               {team.length === 0 && (
-                <div style={{ fontSize: 10, color: "#6b7896", padding: "8px 4px" }}>No Pokémon in this team yet.</div>
+                <div style={{ fontSize: 10, color: "#71717a", padding: "8px 4px" }}>No Pokémon in this team yet.</div>
               )}
               {team.map((m, i) => {
                 const lead = i === 0;
@@ -3266,14 +3264,14 @@ export default function App() {
                     }}
                     style={{
                       flexShrink: 0, width: 64, padding: 6,
-                      border: `1.5px solid ${lead ? "#FFD700" : fainted ? "#3a1f1f" : "#2a3148"}`,
-                      background: lead ? "#1a1808" : fainted ? "#1a0d0d" : "#10172a",
+                      border: `1px solid ${lead ? "#a1a1aa" : fainted ? "#3a1f1f" : "#27272a"}`,
+                      background: lead ? "#18181b" : fainted ? "#1a0d0d" : "#0a0a0a",
                       borderRadius: 10, display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
                       opacity: fainted ? 0.5 : 1, cursor: lead || fainted ? "default" : "pointer",
                     }}>
                     <MonSprite sprite={m.sprite} size={36} className="" style={{ animation: "none" }} />
-                    <span style={{ fontSize: 8, color: "#cfd6e6", maxWidth: 56, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
-                    <span style={{ fontSize: 7, color: lead ? "#FFD700" : "#6b7896" }}>{lead ? "★ LEAD" : `Lv${m.level}`}</span>
+                    <span style={{ fontSize: 8, color: "#f4f4f5", maxWidth: 56, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
+                    <span style={{ fontSize: 7, color: lead ? "#fff" : "#a1a1aa" }}>{lead ? "★ LEAD" : `Lv${m.level}`}</span>
                   </button>
                 );
               })}
@@ -3282,14 +3280,14 @@ export default function App() {
 
           <div style={{ display: "flex", gap: 12, padding: "16px 18px 24px" }}>
             <button className="btn"
-              style={{ flex: 1, border: "1.5px solid #4ade80", color: "#4ade80", padding: "16px 8px", borderRadius: 14, background: "#10172a", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, fontFamily: "'Inter', system-ui, sans-serif" }}
+              style={{ flex: 1, border: "1px solid #27272a", color: "#f4f4f5", padding: "16px 8px", borderRadius: 14, background: "#18181b", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, fontFamily: "'Inter', system-ui, sans-serif" }}
               onClick={rescout}>
               <i className="fa-solid fa-shoe-prints" style={{ fontSize: 18 }} />
               <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2 }}>HUNT</span>
             </button>
             <button className="btn"
               disabled={!scoutedWild}
-              style={{ flex: 1, border: `1.5px solid ${scoutedWild ? "#4ade80" : "#2a3148"}`, color: scoutedWild ? "#4ade80" : "#3d4566", padding: "16px 8px", borderRadius: 14, background: "#10172a", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, opacity: scoutedWild ? 1 : 0.6, cursor: scoutedWild ? "pointer" : "not-allowed", fontFamily: "'Inter', system-ui, sans-serif" }}
+              style={{ flex: 1, border: `1px solid ${scoutedWild ? "#27272a" : "#1f1f23"}`, color: scoutedWild ? "#f4f4f5" : "#52525b", padding: "16px 8px", borderRadius: 14, background: "#18181b", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, opacity: scoutedWild ? 1 : 0.6, cursor: scoutedWild ? "pointer" : "not-allowed", fontFamily: "'Inter', system-ui, sans-serif" }}
               onClick={captureScouted}>
               <i className="fa-solid fa-bolt" style={{ fontSize: 18 }} />
               <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2 }}>BATTLE</span>
@@ -4442,29 +4440,29 @@ export default function App() {
     const region = REGIONS[safariRegion] ?? REGIONS[0];
     const isLegend = safariEnc ? ALL_LEGENDARY_IDS.has(safariEnc.id) : false;
     return (
-      <div style={{ ...S.root, background: "#0a0e1a" }}><style>{css}</style>
-        <div style={{ ...S.wrap, background: "#0a0e1a", fontFamily: "'Inter', system-ui, sans-serif" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid #1a1f33" }}>
+      <div style={{ ...S.root, background: "#09090b" }}><style>{css}</style>
+        <div style={{ ...S.wrap, background: "#09090b", fontFamily: "'Inter', system-ui, sans-serif" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid #27272a" }}>
             <button className="btn"
-              style={{ border: "1.5px solid #f87171", color: "#f87171", padding: "5px 12px", borderRadius: 8, background: "transparent", fontSize: 10, fontWeight: 600 }}
+              style={{ border: "1px solid #27272a", color: "#a1a1aa", padding: "5px 12px", borderRadius: 8, background: "#18181b", fontSize: 10, fontWeight: 600 }}
               onClick={() => { setScreen("world"); }}>
               ◀ BACK
             </button>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#26A69A", letterSpacing: 2 }}>SAFARI ZONE</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#f4f4f5", letterSpacing: 2 }}>SAFARI ZONE</div>
             <div style={{ width: 60 }} />
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-around", padding: "10px 16px", borderBottom: "1px solid #1a1f33", fontSize: 11, color: "#fff" }}>
+          <div style={{ display: "flex", justifyContent: "space-around", padding: "10px 16px", borderBottom: "1px solid #27272a", fontSize: 11, color: "#fff" }}>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 8, color: "#888" }}>BALLS</div>
+              <div style={{ fontSize: 8, color: "#71717a" }}>BALLS</div>
               <div style={{ color: safariBalls < 5 ? "#f87171" : "#fff", fontWeight: 700 }}>⚪ {safariBalls}/30</div>
             </div>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 8, color: "#888" }}>CAUGHT</div>
+              <div style={{ fontSize: 8, color: "#71717a" }}>CAUGHT</div>
               <div style={{ color: "#4ade80", fontWeight: 700 }}>{safariCaught}</div>
             </div>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 8, color: "#888" }}>{region.name.toUpperCase()}</div>
+              <div style={{ fontSize: 8, color: "#71717a" }}>{region.name.toUpperCase()}</div>
               <div style={{ color: "#FFD700", fontWeight: 700 }}>#{safariCounter}</div>
             </div>
           </div>
@@ -4472,14 +4470,14 @@ export default function App() {
           <div style={{ padding: "16px 18px" }}>
             <div style={{
               width: "100%", aspectRatio: "1/1",
-              border: `2px solid ${isLegend ? "#FFD700" : "#26A69A"}`,
+              border: `1px solid ${isLegend ? "#FFD700" : "#27272a"}`,
               borderRadius: 14,
-              background: "linear-gradient(180deg,#3a2e1a 0%,#1a1208 60%,#0e0804 100%)",
-              boxShadow: `0 0 24px ${isLegend ? "rgba(255,215,0,0.35)" : "rgba(38,166,154,0.18)"}, inset 0 0 30px rgba(0,0,0,0.6)`,
+              background: "#0a0a0a",
+              boxShadow: `${isLegend ? "0 0 24px rgba(255,215,0,0.25), " : ""}inset 0 0 30px rgba(0,0,0,0.6)`,
               position: "relative", overflow: "hidden",
             }}>
               <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 36,
-                background: "repeating-linear-gradient(90deg,#3d2f1a 0 6px,#2a2010 6px 12px)" }} />
+                background: "repeating-linear-gradient(90deg,#1f1f23 0 6px,#18181b 6px 12px)" }} />
               {safariEnc && (
                 <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <div style={{ animation: safariThrowAnim === "wobble" ? "ballWobble 0.9s" : "none" }}>
@@ -4524,16 +4522,16 @@ export default function App() {
               justifyContent: "center",
               textAlign: "center",
               padding: "0 10px",
-              background: "#0d0d12",
-              border: `1.5px solid ${
+              background: "#18181b",
+              border: `1px solid ${
                 safariStatusMsg?.kind === "caught" ? "#4ade80" :
                 safariStatusMsg?.kind === "fled"   ? "#f87171" :
-                "#2a3a55"
+                "#27272a"
               }`,
               borderRadius: 10,
               color: safariStatusMsg?.kind === "caught" ? "#4ade80" :
                      safariStatusMsg?.kind === "fled"   ? "#f87171" :
-                     "#26A69A",
+                     "#f4f4f5",
               fontSize: 12,
               fontWeight: 600,
               lineHeight: 1.4,
@@ -4551,7 +4549,7 @@ export default function App() {
               ) : safariEnc ? (
                 <span>
                   A wild <span style={{ color: "#fff" }}>{safariEnc.name}</span>
-                  <span style={{ background: "#1a1f33", border: "1px solid #2d3450", color: "#fff", padding: "2px 8px", borderRadius: 999, fontSize: 10, fontWeight: 600, margin: "0 6px" }}>Lv. {safariEnc.level}</span>
+                  <span style={{ background: "#0a0a0a", border: "1px solid #27272a", color: "#fff", padding: "2px 8px", borderRadius: 999, fontSize: 10, fontWeight: 600, margin: "0 6px" }}>Lv. {safariEnc.level}</span>
                   {isLegend ? "is watching..." : "appeared!"}
                 </span>
               ) : "..."}
@@ -4560,8 +4558,8 @@ export default function App() {
 
           <div style={{
             margin: "4px 18px 0",
-            background: "#0d0d12",
-            border: "1.5px solid #2a2a3a",
+            background: "#18181b",
+            border: "1px solid #27272a",
             borderRadius: 10,
             padding: "10px 12px",
             flex: 1,
@@ -4570,30 +4568,30 @@ export default function App() {
             fontFamily: "'Press Start 2P', ui-monospace, monospace",
             fontSize: 9,
             lineHeight: 1.7,
-            color: "#9bd17a",
+            color: "#a1a1aa",
           }}>
             {log.slice(-12).map((l, i) => (
-              <div key={i} style={{ color: l.color || "#9bd17a" }}>&gt; {l.msg}</div>
+              <div key={i} style={{ color: l.color || "#a1a1aa" }}>&gt; {l.msg}</div>
             ))}
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "14px 18px 24px", marginTop: "auto" }}>
             <button className="btn"
               disabled={safariThrowAnim !== null || safariBalls <= 0}
-              style={{ width: "100%", border: "1.5px solid #2a3a55", color: safariThrowAnim ? "#555" : "#fff", padding: "18px 8px", borderRadius: 16, background: "#10172a", fontSize: 17, fontWeight: 500, opacity: (!safariThrowAnim && safariBalls > 0) ? 1 : 0.5 }}
+              style={{ width: "100%", border: "1px solid #27272a", color: safariThrowAnim ? "#52525b" : "#f4f4f5", padding: "18px 8px", borderRadius: 16, background: "#18181b", fontSize: 17, fontWeight: 500, opacity: (!safariThrowAnim && safariBalls > 0) ? 1 : 0.5 }}
               onClick={() => { if (safariBalls > 0) safariNext(safariBalls); }}>
               Hunt
             </button>
             <div style={{ display: "flex", gap: 12 }}>
               <button className="btn"
                 disabled={!safariEnc || safariThrowAnim !== null || safariBalls <= 0}
-                style={{ flex: 1, border: "1.5px solid #2a3a55", color: safariThrowAnim ? "#555" : "#fff", padding: "18px 8px", borderRadius: 16, background: "#10172a", fontSize: 15, fontWeight: 500, opacity: (safariEnc && !safariThrowAnim && safariBalls > 0) ? 1 : 0.5 }}
+                style={{ flex: 1, border: "1px solid #27272a", color: safariThrowAnim ? "#52525b" : "#f4f4f5", padding: "18px 8px", borderRadius: 16, background: "#18181b", fontSize: 15, fontWeight: 500, opacity: (safariEnc && !safariThrowAnim && safariBalls > 0) ? 1 : 0.5 }}
                 onClick={safariThrow}>
                 Use Safari Ball
               </button>
               <button className="btn"
                 disabled={safariThrowAnim !== null}
-                style={{ flex: 1, border: "1.5px solid #2a3a55", color: safariThrowAnim ? "#444" : "#fff", padding: "18px 8px", borderRadius: 16, background: "#10172a", fontSize: 15, fontWeight: 500 }}
+                style={{ flex: 1, border: "1px solid #27272a", color: safariThrowAnim ? "#52525b" : "#f4f4f5", padding: "18px 8px", borderRadius: 16, background: "#18181b", fontSize: 15, fontWeight: 500 }}
                 onClick={() => { setSafariEnc(null); setSafariBalls(0); setSafariCounter(0); setSafariCaught(0); addLog(`Safari ended. Caught ${safariCaught}.`, "#FFD700"); setScreen("world"); }}>
                 Escape
               </button>

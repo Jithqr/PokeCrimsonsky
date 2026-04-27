@@ -13,7 +13,7 @@ export default function LeagueScreen({ badges, e4Cleared, e4Streak, onPickGym, o
   const allBadges = badges.length === GYM_LEADERS.length;
   return (
     <div style={pageStyle}>
-      <div style={{ position: "sticky", top: 0, zIndex: 1, padding: "12px 14px", background: "rgba(0,0,0,0.5)", borderBottom: "1px solid rgba(255,255,255,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 1, padding: "12px 14px", background: "#0a0a0a", borderBottom: "1px solid #27272a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <button onClick={onBack} style={backBtn}>← Back</button>
         <div style={{ fontWeight: 800, fontSize: 16 }}>🏆 League</div>
         <div style={{ width: 60 }} />
@@ -38,11 +38,11 @@ export default function LeagueScreen({ badges, e4Cleared, e4Streak, onPickGym, o
               return (
                 <div key={g.id} title={`${g.name}'s Badge`}
                   style={{
-                    background: got ? `${g.color}33` : "rgba(255,255,255,0.05)",
-                    border: "1px solid " + (got ? g.color : "rgba(255,255,255,0.15)"),
+                    background: got ? `${g.color}22` : "#0a0a0a",
+                    border: "1px solid " + (got ? g.color : "#27272a"),
                     borderRadius: 8, padding: "6px 0",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    minHeight: 44, opacity: got ? 1 : 0.35,
+                    minHeight: 44, opacity: got ? 1 : 0.4,
                   }}>
                   <img
                     src={badgeUrl}
@@ -86,10 +86,10 @@ export default function LeagueScreen({ badges, e4Cleared, e4Streak, onPickGym, o
                   onClick={() => onPickGym(g)}
                   style={{
                     display: "flex", justifyContent: "space-between", alignItems: "center",
-                    background: locked ? "rgba(255,255,255,0.04)" : `linear-gradient(90deg, ${g.color}33, ${g.color}11)`,
-                    border: "1px solid " + (beaten ? "#4CAF50" : locked ? "rgba(255,255,255,0.1)" : g.color),
+                    background: locked ? "#0a0a0a" : beaten ? "#0a0a0a" : `linear-gradient(90deg, ${g.color}22, ${g.color}08)`,
+                    border: "1px solid " + (beaten ? "#4CAF50" : locked ? "#27272a" : g.color),
                     color: "#fff", borderRadius: 12, padding: "10px 12px", cursor: locked ? "not-allowed" : "pointer",
-                    opacity: locked ? 0.4 : 1, textAlign: "left",
+                    opacity: locked ? 0.5 : 1, textAlign: "left",
                   }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{ fontSize: 28 }}>{g.emoji}</div>
@@ -108,7 +108,7 @@ export default function LeagueScreen({ badges, e4Cleared, e4Streak, onPickGym, o
         </div>
 
         {/* Elite 4 entry */}
-        <div style={{ ...card, borderColor: allBadges ? "#FFD54F" : "rgba(255,255,255,0.1)" }}>
+        <div style={{ ...card, borderColor: allBadges ? "#FFD54F" : "#27272a" }}>
           <div style={cardTitle}>Elite 4 Gauntlet</div>
           <div style={{ fontSize: 12, opacity: 0.85, marginBottom: 8 }}>
             4 sequential battles. <strong>No healing or items between matches.</strong> Lose your last Pokémon and the run resets.
@@ -117,7 +117,7 @@ export default function LeagueScreen({ badges, e4Cleared, e4Streak, onPickGym, o
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginBottom: 8 }}>
             {ELITE_FOUR.map((e) => (
               <div key={e.id} style={{
-                background: `linear-gradient(180deg, ${e.color}33, ${e.color}11)`,
+                background: "#0a0a0a",
                 border: "1px solid " + e.color, borderRadius: 10, padding: 8, textAlign: "center",
               }}>
                 <div style={{ fontSize: 22 }}>{e.emoji}</div>
@@ -129,8 +129,8 @@ export default function LeagueScreen({ badges, e4Cleared, e4Streak, onPickGym, o
           <button disabled={!allBadges} onClick={onStartElite4}
             style={{
               width: "100%", padding: "12px 14px", border: 0, borderRadius: 12,
-              background: allBadges ? "linear-gradient(135deg, #FFD54F, #FF9800)" : "rgba(255,255,255,0.07)",
-              color: allBadges ? "#000" : "#888",
+              background: allBadges ? "linear-gradient(135deg, #FFD54F, #FF9800)" : "#18181b",
+              color: allBadges ? "#000" : "#71717a",
               fontWeight: 800, fontSize: 14, cursor: allBadges ? "pointer" : "not-allowed",
             }}>
             {allBadges ? "Begin Elite 4 Run →" : "Earn all 8 badges to unlock"}
@@ -143,15 +143,15 @@ export default function LeagueScreen({ badges, e4Cleared, e4Streak, onPickGym, o
 
 const pageStyle: React.CSSProperties = {
   position: "fixed", inset: 0, overflowY: "auto",
-  background: "linear-gradient(180deg, #0d1b2a 0%, #1b263b 100%)",
-  color: "#fff", fontFamily: "system-ui", zIndex: 8500,
+  background: "#09090b",
+  color: "#f4f4f5", fontFamily: "system-ui", zIndex: 8500,
 };
 const card: React.CSSProperties = {
-  background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+  background: "#18181b", border: "1px solid #27272a",
   borderRadius: 16, padding: 12,
 };
 const cardTitle: React.CSSProperties = { fontWeight: 800, fontSize: 14, marginBottom: 4 };
 const backBtn: React.CSSProperties = {
-  background: "transparent", color: "#fff", border: "1px solid rgba(255,255,255,0.25)",
+  background: "#18181b", color: "#f4f4f5", border: "1px solid #27272a",
   borderRadius: 8, padding: "6px 10px", cursor: "pointer",
 };
