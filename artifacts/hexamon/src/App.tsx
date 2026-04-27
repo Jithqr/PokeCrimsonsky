@@ -3173,125 +3173,208 @@ export default function App() {
   if (screen === "hunt") {
     const region = REGIONS[player.macroRegion] ?? REGIONS[0];
     return (
-      <div style={{ ...S.root, background: "#09090b" }}>
-        <style>{css}</style>
-        <div style={{ ...S.wrap, background: "#09090b", fontFamily: "'Inter', system-ui, sans-serif" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 18px 12px", borderBottom: "1px solid #27272a" }}>
-            {/* BACK button moved to the LEFT side of the header (was on the right). */}
-            <button className="btn"
-              style={{ border: "1px solid #27272a", color: "#a1a1aa", padding: "6px 14px", borderRadius: 10, background: "#18181b", fontSize: 11, fontWeight: 600, letterSpacing: 1, fontFamily: "'Inter', system-ui, sans-serif" }}
+      <div style={{ ...S.root, background: "#0a0a0c" }}>
+        <style>{css}{`
+          .hunt-act-btn {
+            background: linear-gradient(180deg, #1c1c21 0%, #121216 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #f0f0f0;
+            padding: 18px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-align: center;
+            flex: 1;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          }
+          .hunt-act-btn:hover:not(:disabled) {
+            background: linear-gradient(180deg, #2a2a32 0%, #1a1a20 100%);
+            transform: translateY(-2px);
+          }
+          .hunt-act-btn:active:not(:disabled) { transform: translateY(1px); }
+          .hunt-act-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+          .hunt-act-btn.hunt-go { border-color: rgba(74,222,128,0.25); }
+          .hunt-act-btn.hunt-go:hover:not(:disabled) { border-color: rgba(74,222,128,0.45); }
+          .hunt-act-btn.hunt-go .hunt-act-label { color: #4ade80; }
+          .hunt-act-btn.hunt-go .hunt-act-icon { color: #4ade80; }
+          .hunt-act-btn.hunt-bt { border-color: rgba(251,146,60,0.25); }
+          .hunt-act-btn.hunt-bt:hover:not(:disabled) { border-color: rgba(251,146,60,0.45); }
+          .hunt-act-btn.hunt-bt .hunt-act-label { color: #fb923c; }
+          .hunt-act-btn.hunt-bt .hunt-act-icon { color: #fb923c; }
+          .party-card-mini {
+            flex: 1; min-width: 0;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 8px 6px;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            cursor: pointer; transition: all 0.2s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          }
+          .party-card-mini:hover:not(:disabled) {
+            border-color: rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.06);
+          }
+          .party-card-mini.lead {
+            border-color: #fb923c;
+            background: rgba(251,146,60,0.07);
+          }
+          .party-card-mini:disabled { cursor: default; }
+        `}</style>
+        <div style={{ ...S.wrap, background: "#0a0a0c", fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", padding: "16px 16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+            <button
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "#f0f0f0", padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer", backdropFilter: "blur(4px)" }}
               onClick={() => { setScoutedWild(null); setScreen("world"); }}>
-              <i className="fa-solid fa-chevron-left" style={{ fontSize: 9, marginRight: 5 }} />BACK
+              ◀ BACK
             </button>
-            <div style={{ fontSize: 17, fontWeight: 700, color: "#f4f4f5", letterSpacing: 3 }}>WILD HUNT</div>
-            <div style={{ width: 78 }} />
+            <div style={{ fontSize: 14, letterSpacing: 2, fontWeight: 700, color: "#f0f0f0" }}>wild hunt</div>
+            <div style={{ width: 50 }} />
           </div>
 
-          <div style={{ textAlign: "center", padding: "22px 18px 18px", fontSize: 13, color: "#f4f4f5", letterSpacing: 0.4 }}>
-            {region.emoji} {region.name}
-            <div style={{ fontSize: 10, color: "#a1a1aa", marginTop: 4 }}>
+          {/* Region banner */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "10px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, backdropFilter: "blur(10px)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 15, fontWeight: 700, color: "#f0f0f0" }}>
+              <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#fb923c", display: "inline-block" }} />
+              {region.name}
+            </div>
+            <div style={{ fontSize: 11, color: "#888890", letterSpacing: 0.5 }}>
               Hunts: {huntCount}/{legendThreshold} until legendary
             </div>
           </div>
 
-          <div style={{ padding: "0 18px" }}>
-            <div style={{
-              width: "100%", aspectRatio: "1/1",
-              border: "1px solid #27272a",
-              borderRadius: 14,
-              background: "#0a0a0a",
-              boxShadow: "inset 0 0 30px rgba(0,0,0,0.6)",
-              position: "relative", overflow: "hidden",
-            }}>
-              <div style={{ position: "absolute", inset: 0, background:
-                "radial-gradient(ellipse at 50% 90%, rgba(255,255,255,0.03) 0%, transparent 55%)",
-                pointerEvents: "none",
-              }} />
-              <div style={{ position: "absolute", left: "12%", top: "18%", width: 36, height: "70%", background: "linear-gradient(180deg,#18181b,#09090b)", borderRadius: "6px 6px 0 0", opacity: 0.8 }} />
-              <div style={{ position: "absolute", right: "14%", top: "22%", width: 28, height: "65%", background: "linear-gradient(180deg,#18181b,#09090b)", borderRadius: "5px 5px 0 0", opacity: 0.75 }} />
-              <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 30,
-                background: "repeating-linear-gradient(90deg,#1f1f23 0 6px,#18181b 6px 12px)" }} />
-
-              {scoutedWild ? (
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <MonSprite sprite={scoutedWild.sprite} size={170} className="mon-float" />
-                </div>
-              ) : (
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontSize: 12, textAlign: "center", lineHeight: 1.8, padding: 20 }}>
-                  Tap HUNT to search<br />the tall grass...
-                </div>
-              )}
-            </div>
-
-            <div style={{ textAlign: "center", padding: "16px 6px 0", fontSize: 13, color: "#a1a1aa", letterSpacing: 0.3 }}>
-              {scoutedWild ? (
-                <>A wild <span style={{ color: "#fff" }}>{scoutedWild.name}</span>{" "}
-                  <span style={{
-                    background: "#18181b", border: "1px solid #27272a", color: "#fff",
-                    padding: "2px 9px", borderRadius: 999, fontSize: 11, fontWeight: 600,
-                    margin: "0 4px",
-                  }}>Lv. {scoutedWild.level}</span>
-                  <span style={{ color: "#a1a1aa" }}>has appeared!</span></>
-              ) : (
-                <span style={{ color: "#71717a" }}>No Pokémon nearby...</span>
-              )}
-            </div>
+          {/* Sprite showcase with forest backdrop */}
+          <div style={{
+            height: 280,
+            borderRadius: 16,
+            border: "1px solid rgba(180,30,30,0.35)",
+            backgroundImage: `url(${safariForestBg})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            position: "relative",
+            boxShadow: "inset 0 0 60px rgba(0,0,0,0.75)",
+            overflow: "hidden",
+          }}>
+            {scoutedWild ? (
+              <div style={{ filter: "drop-shadow(0px 10px 20px rgba(0,0,0,0.8))", zIndex: 2 }}>
+                <MonSprite sprite={scoutedWild.sprite} size={160} className="mon-float" />
+              </div>
+            ) : (
+              <div style={{ color: "#f0f0f0", fontSize: 13, textAlign: "center", lineHeight: 1.7, padding: 20, textShadow: "0 2px 8px rgba(0,0,0,0.9)", zIndex: 2 }}>
+                Tap HUNT to search<br />the tall grass...
+              </div>
+            )}
           </div>
 
-          <div style={{ padding: "16px 18px 0" }}>
-            <div style={{ fontSize: 10, color: "#a1a1aa", letterSpacing: 1, marginBottom: 6, display: "flex", justifyContent: "space-between" }}>
-              <span>YOUR PARTY · {teams[activeTeamIdx]?.name ?? "Team"}</span>
-              <span style={{ color: "#71717a" }}>tap to set lead</span>
-            </div>
-            <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
-              {team.length === 0 && (
-                <div style={{ fontSize: 10, color: "#71717a", padding: "8px 4px" }}>No Pokémon in this team yet.</div>
-              )}
-              {team.map((m, i) => {
-                const lead = i === 0;
-                const fainted = m.currentHp <= 0;
-                return (
-                  <button key={`${m.id}-${m.level}-${i}`} className="btn"
-                    onClick={() => {
-                      if (i === 0 || fainted) return;
-                      setTeam((prev) => {
-                        const next = [...prev];
-                        const tmp = next[0];
-                        next[0] = next[i];
-                        next[i] = tmp;
-                        return next;
-                      });
-                      addLog(`${m.name} is now your lead!`, "#FFD700");
-                    }}
-                    style={{
-                      flexShrink: 0, width: 64, padding: 6,
-                      border: `1px solid ${lead ? "#a1a1aa" : fainted ? "#3a1f1f" : "#27272a"}`,
-                      background: lead ? "#18181b" : fainted ? "#1a0d0d" : "#0a0a0a",
-                      borderRadius: 10, display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
-                      opacity: fainted ? 0.5 : 1, cursor: lead || fainted ? "default" : "pointer",
-                    }}>
-                    <MonSprite sprite={m.sprite} size={36} className="" style={{ animation: "none" }} />
-                    <span style={{ fontSize: 8, color: "#f4f4f5", maxWidth: 56, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
-                    <span style={{ fontSize: 7, color: lead ? "#fff" : "#a1a1aa" }}>{lead ? "★ LEAD" : `Lv${m.level}`}</span>
-                  </button>
-                );
-              })}
-            </div>
+          {/* Encounter banner */}
+          <div style={{
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            padding: "14px 16px",
+            borderRadius: 12,
+            textAlign: "center",
+            fontSize: 15,
+            fontWeight: 600,
+            backdropFilter: "blur(10px)",
+            color: "#f0f0f0",
+          }}>
+            {scoutedWild ? (
+              <>A wild <span style={{ color: "#fb923c" }}>{scoutedWild.name}</span>
+                <span style={{ background: "#1e1e26", padding: "2px 8px", borderRadius: 20, fontSize: 11, color: "#888890", margin: "0 4px", border: "1px solid #333" }}>Lv. {scoutedWild.level}</span>
+                has appeared!
+              </>
+            ) : (
+              <span style={{ color: "#888890" }}>No Pokémon nearby...</span>
+            )}
           </div>
 
-          <div style={{ display: "flex", gap: 12, padding: "16px 18px 24px" }}>
-            <button className="btn"
-              style={{ flex: 1, border: "1px solid #27272a", color: "#f4f4f5", padding: "16px 8px", borderRadius: 14, background: "#18181b", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, fontFamily: "'Inter', system-ui, sans-serif" }}
-              onClick={rescout}>
-              <i className="fa-solid fa-shoe-prints" style={{ fontSize: 18 }} />
-              <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2 }}>HUNT</span>
+          {/* Party section */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, color: "#888890", letterSpacing: 1, textTransform: "uppercase" }}>
+              <span>Your Party · {teams[activeTeamIdx]?.name ?? "Team"}</span>
+              <span style={{ color: "#fb923c", fontSize: 10, textTransform: "none" }}>tap to set lead</span>
+            </div>
+            {team.length === 0 ? (
+              <div style={{ fontSize: 11, color: "#71717a", padding: "8px 4px" }}>No Pokémon in this team yet.</div>
+            ) : (
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {team.slice(0, 6).map((m, i) => {
+                  const lead = i === 0;
+                  const fainted = m.currentHp <= 0;
+                  return (
+                    <button key={`${m.id}-${m.level}-${i}`}
+                      className={`party-card-mini${lead ? " lead" : ""}`}
+                      disabled={lead || fainted}
+                      onClick={() => {
+                        if (i === 0 || fainted) return;
+                        setTeam((prev) => {
+                          const next = [...prev];
+                          const tmp = next[0];
+                          next[0] = next[i];
+                          next[i] = tmp;
+                          return next;
+                        });
+                        addLog(`${m.name} is now your lead!`, "#FFD700");
+                      }}
+                      style={{ opacity: fainted ? 0.45 : 1 }}>
+                      <MonSprite sprite={m.sprite} size={44} className="" style={{ animation: "none" }} />
+                      <span style={{ fontSize: 9, fontWeight: 600, color: "#f0f0f0", textAlign: "center", lineHeight: 1.2, maxWidth: 64, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
+                      <span style={{ fontSize: lead ? 8 : 9, fontWeight: lead ? 700 : 400, color: lead ? "#fb923c" : "#888890", letterSpacing: lead ? 0.5 : 0 }}>
+                        {lead ? "★ LEAD" : `Lv${m.level}`}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Terminal log */}
+          <div style={{
+            background: "#050508",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 12,
+            padding: 16,
+            fontFamily: "'Courier New', Courier, monospace",
+            fontSize: 12,
+            color: "#22d3ee",
+            lineHeight: 1.6,
+            boxShadow: "inset 0 4px 10px rgba(0,0,0,0.5)",
+            minHeight: 100,
+            maxHeight: 140,
+            overflowY: "auto",
+          }}>
+            {log.slice(-6).map((l, idx) => (
+              <div key={idx} style={{ color: l.color || "#22d3ee" }}>&gt; {l.msg}</div>
+            ))}
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display: "flex", gap: 12 }}>
+            <button className="hunt-act-btn hunt-go" onClick={rescout}>
+              <i className="fa-solid fa-shoe-prints hunt-act-icon" style={{ fontSize: 22 }} />
+              <span className="hunt-act-label">HUNT</span>
             </button>
-            <button className="btn"
+            <button className="hunt-act-btn hunt-bt"
               disabled={!scoutedWild}
-              style={{ flex: 1, border: `1px solid ${scoutedWild ? "#27272a" : "#1f1f23"}`, color: scoutedWild ? "#f4f4f5" : "#52525b", padding: "16px 8px", borderRadius: 14, background: "#18181b", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, opacity: scoutedWild ? 1 : 0.6, cursor: scoutedWild ? "pointer" : "not-allowed", fontFamily: "'Inter', system-ui, sans-serif" }}
               onClick={captureScouted}>
-              <i className="fa-solid fa-bolt" style={{ fontSize: 18 }} />
-              <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2 }}>BATTLE</span>
+              <i className="fa-solid fa-bolt hunt-act-icon" style={{ fontSize: 22 }} />
+              <span className="hunt-act-label">BATTLE</span>
             </button>
           </div>
         </div>
