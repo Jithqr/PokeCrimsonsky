@@ -411,29 +411,32 @@ function BenchCard({ mon }: { mon: BattleMon }) {
 /* ---------- CSS (animations + layout) ---------- */
 const css = `
 .bx-stage {
-  position: relative; height: 320px; width: 100%; overflow: hidden;
-  background: linear-gradient(180deg, #b6e7ff 0%, #b6e7ff 60%, #d6c08a 60%, #c2a866 100%);
+  position: relative; height: 380px; width: 100%; overflow: hidden;
+  background: linear-gradient(180deg, #b6e7ff 0%, #b6e7ff 50%, #d6c08a 50%, #c2a866 100%);
 }
-.bx-sky { position: absolute; inset: 0 0 40% 0; background: linear-gradient(180deg,#9adfff 0%,#cfeeff 100%); }
-.bx-ground { position: absolute; inset: 60% 0 0 0; background: linear-gradient(180deg,#d6c08a 0%,#a88e58 100%); }
+.bx-sky { position: absolute; inset: 0 0 50% 0; background: linear-gradient(180deg,#9adfff 0%,#cfeeff 100%); }
+.bx-ground { position: absolute; inset: 50% 0 0 0; background: linear-gradient(180deg,#d6c08a 0%,#a88e58 100%); }
 
 .bx-opp-plate { position: absolute; top: 10px; left: 10px; z-index: 5; }
-/* Player plate moved up so it sits in the empty band above the dialog */
-.bx-me-plate  { position: absolute; bottom: 96px; right: 10px; z-index: 5; }
+/* Player plate sits in the band above the dialog, lower-right */
+.bx-me-plate  { position: absolute; bottom: 100px; right: 10px; z-index: 5; }
 
+/* Opponent shadow ellipse: large enough that the sprite clearly sits INSIDE it */
 .bx-opp-platform {
-  position: absolute; top: 140px; right: 36px; width: 150px; height: 32px;
-  background: radial-gradient(ellipse at center, #b8a16b 0%, #b8a16b 55%, transparent 70%);
-  border-radius: 50%; opacity: 0.85;
+  position: absolute; top: 135px; right: 38px; width: 170px; height: 30px;
+  background: radial-gradient(ellipse at center, rgba(120,90,50,0.55) 0%, rgba(120,90,50,0.35) 55%, transparent 75%);
+  border-radius: 50%;
 }
+/* Player platform kept very subtle — the dirt area itself reads as the ground */
 .bx-me-platform {
-  position: absolute; bottom: 86px; left: 18px; width: 190px; height: 38px;
-  background: radial-gradient(ellipse at center, #b8a16b 0%, #b8a16b 55%, transparent 70%);
-  border-radius: 50%; opacity: 0.9;
+  position: absolute; bottom: 96px; left: 14px; width: 210px; height: 34px;
+  background: radial-gradient(ellipse at center, rgba(120,90,50,0.35) 0%, rgba(120,90,50,0.18) 50%, transparent 75%);
+  border-radius: 50%;
 }
-/* Enemy sprite repositioned so its feet land on the platform ellipse */
-.bx-opp-sprite { position: absolute; top: 46px; right: 56px; width: 110px; height: 110px; display:flex; align-items:flex-end; justify-content:center; z-index: 4; }
-.bx-me-sprite  { position: absolute; bottom: 60px; left: 38px; width: 130px; height: 130px; display:flex; align-items:flex-end; justify-content:center; z-index: 4; }
+/* Enemy: feet land on the upper portion of the shadow (perspective) */
+.bx-opp-sprite { position: absolute; top: 38px; right: 60px; width: 120px; height: 115px; display:flex; align-items:flex-end; justify-content:center; z-index: 4; }
+/* Player: bigger foreground sprite */
+.bx-me-sprite  { position: absolute; bottom: 80px; left: 8px; width: 180px; height: 180px; display:flex; align-items:flex-end; justify-content:center; z-index: 4; }
 
 @keyframes bx-slide-in-right { from { transform: translateX(180%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes bx-slide-in-left  { from { transform: translateX(-180%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
