@@ -37,3 +37,13 @@ Pokémon-style React + Vite + TS web game. Major in-game systems:
 - **Shared `BattleArena` component** (`src/components/BattleArena.tsx`) — used by both League (local engine) and PvP (WS-driven) modes. Pure presentational view of `BattleState`.
 - **Save schema** (`SAVE_KEY = "hexamon:save:v2"` in `App.tsx`) now also persists `badges: string[]`, `e4Cleared: boolean`, `e4Streak: number`.
 - **Mon→engine adapter**: in-app `Mon` objects store level-scaled stats; converting to engine-shape requires the species' base stats. `toShippableMon(m)` in `App.tsx` (and the same idea in `npcMonToAppMon`) does this lookup before `fromAppMon`.
+- **PP system removed** (battle-engine.ts ~L249) — moves are unlimited use; no PP enforcement, no Struggle fallback.
+- **Mon generation (`makeMon` in App.tsx ~L174)** — every spawn (wild, marketplace, NPC) gets:
+  - `nature`: random from 25 standard natures via `randomNature()`.
+  - **Weighted IVs (per-stat 0–31, total cap 186)**: `rollTotalIv()` picks a target Total IV by tier (170–186: 7.4%, 160–169: 14.8%, 150–159: 18.5%, 130–149: 25.9%, 0–129: 33.4%), then `generateIvs()` distributes that total across 6 stats respecting the per-stat cap.
+- **Evolution duplication fix** (App.tsx `finishBattle` ~L1453) — evolved Mon copies the original's `uid`, `nickname`, IVs, EVs, nature, exp; team replacement uses `prev.map((m) => m.uid === ev.from.uid ? evolved : m)` (no longer assumes index 0).
+- **AddMon picker** (App.tsx ~L2962) — pulls instances from `box` (preserves uid/level/IVs/EVs/nature) instead of creating new Lv5 mon from `caught` species set.
+- **Wild level range 5–89** — region table in `REGIONS` (App.tsx ~L212) scales Kanto 5–18 → Paldea 55–89 progressively.
+- **Safari ball flee threshold** — `Battle.fleeThreshold` (random 1–5, hidden) controls when wild flees on a missed catch; replaces the prior gradual 8% × throws formula.
+- **Inventory categories** — `OTHERS` tab catches anything not matching balls/TMs/eggs/key/stones; KEY ITEMS regex no longer captures "pass" (Safari Pass now lives under OTHERS).
+- **Ranked PvP** — flat ±50 rank delta per ranked match (replaces ELO formula).

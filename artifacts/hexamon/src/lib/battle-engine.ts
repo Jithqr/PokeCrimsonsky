@@ -243,12 +243,7 @@ function executeAction(state: BattleState, actorSide: 0 | 1, action: Action, rng
   const moveName = attacker.moves[action.moveIdx] || "Tackle";
   const move = getMove(moveName);
 
-  // PP check (soft — if 0 PP, fall back to Struggle).
-  if (attacker.pp && (attacker.pp[moveName] ?? 1) <= 0) {
-    pushLog(state, { side: actorSide, kind: "info", text: `${attacker.name} has no PP left for ${moveName}!` });
-  } else if (attacker.pp) {
-    attacker.pp[moveName] = Math.max(0, (attacker.pp[moveName] ?? move.pp) - 1);
-  }
+  // PP system removed — moves can be used unlimited times.
 
   pushLog(state, { side: actorSide, kind: "move", text: `${attacker.name} used ${move.name}!` });
 

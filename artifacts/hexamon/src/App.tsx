@@ -124,9 +124,54 @@ function makeUid() {
   return `m-${Date.now().toString(36)}-${monUidCounter.toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
 }
 
+// 25 standard Pokémon natures.
+const NATURE_NAMES = [
+  "Hardy", "Lonely", "Brave", "Adamant", "Naughty",
+  "Bold", "Docile", "Relaxed", "Impish", "Lax",
+  "Timid", "Hasty", "Serious", "Jolly", "Naive",
+  "Modest", "Mild", "Quiet", "Bashful", "Rash",
+  "Calm", "Gentle", "Sassy", "Careful", "Quirky",
+];
+function randomNature(): string {
+  return NATURE_NAMES[Math.floor(Math.random() * NATURE_NAMES.length)];
+}
+
+// Weighted random Total IV roll (max 186 = 31 × 6 stats).
+// Tier distribution:
+//   170–186: 7.4%   |  160–169: 14.8%  |  150–159: 18.5%
+//   130–149: 25.9%  |    0–129: 33.4%
+function rollTotalIv(): number {
+  const r = Math.random();
+  let lo: number, hi: number;
+  if (r < 0.074)            { lo = 170; hi = 186; }
+  else if (r < 0.222)       { lo = 160; hi = 169; }
+  else if (r < 0.407)       { lo = 150; hi = 159; }
+  else if (r < 0.666)       { lo = 130; hi = 149; }
+  else                       { lo = 0;   hi = 129; }
+  return lo + Math.floor(Math.random() * (hi - lo + 1));
+}
+
+// Distribute a target Total IV across 6 stats, respecting per-stat cap (0–31).
+function generateIvs(): { ivHp: number; ivAtk: number; ivDef: number; ivSpa: number; ivSpd: number; ivSpe: number } {
+  const target = Math.min(186, rollTotalIv());
+  const buckets = [0, 0, 0, 0, 0, 0];
+  let remaining = target;
+  // Increment a random non-capped bucket until we've placed every point.
+  while (remaining > 0) {
+    const open: number[] = [];
+    for (let i = 0; i < 6; i++) if (buckets[i] < 31) open.push(i);
+    if (open.length === 0) break;
+    const pick = open[Math.floor(Math.random() * open.length)];
+    buckets[pick] += 1;
+    remaining -= 1;
+  }
+  return { ivHp: buckets[0], ivAtk: buckets[1], ivDef: buckets[2], ivSpa: buckets[3], ivSpd: buckets[4], ivSpe: buckets[5] };
+}
+
 function makeMon(template: PokemonTemplate, level: number, origin: Mon["origin"] = "wild"): Mon {
   const s = level / 50;
   const maxHp = Math.floor(template.hp * s * 2 + level + 10);
+  const ivs = generateIvs();
   return {
     ...template,
     uid: makeUid(),
@@ -140,13 +185,9 @@ function makeMon(template: PokemonTemplate, level: number, origin: Mon["origin"]
     exp: 0,
     expNeeded: Math.floor(level * level * 1.2),
     status: null,
-    ivAtk: Math.floor(Math.random() * 16),
-    ivDef: Math.floor(Math.random() * 16),
-    ivHp: Math.floor(Math.random() * 16),
-    ivSpa: Math.floor(Math.random() * 16),
-    ivSpd: Math.floor(Math.random() * 16),
-    ivSpe: Math.floor(Math.random() * 16),
+    ...ivs,
     evHp: 0, evAtk: 0, evDef: 0, evSpa: 0, evSpd: 0, evSpe: 0,
+    nature: randomNature(),
     caughtAt: Date.now(),
     origin,
   };
@@ -163,16 +204,18 @@ function ivPercent(m: Mon): number {
 }
 
 type RegionDef = { name: string; emoji: string; gen: number; minLv: number; maxLv: number };
+// Wild Pokémon level range expanded to 5–89 across regions, with each region
+// scaling progressively higher so the world still feels region-balanced.
 const REGIONS: RegionDef[] = [
-  { name: "Kanto",  emoji: "🔴", gen: 1, minLv: 3,  maxLv: 25 },
-  { name: "Johto",  emoji: "⚪", gen: 2, minLv: 5,  maxLv: 30 },
-  { name: "Hoenn",  emoji: "🟢", gen: 3, minLv: 8,  maxLv: 35 },
-  { name: "Sinnoh", emoji: "🔵", gen: 4, minLv: 10, maxLv: 40 },
-  { name: "Unova",  emoji: "⚫", gen: 5, minLv: 12, maxLv: 45 },
-  { name: "Kalos",  emoji: "🟡", gen: 6, minLv: 15, maxLv: 50 },
-  { name: "Alola",  emoji: "🌺", gen: 7, minLv: 18, maxLv: 55 },
-  { name: "Galar",  emoji: "🟣", gen: 8, minLv: 20, maxLv: 60 },
-  { name: "Paldea", emoji: "🟠", gen: 9, minLv: 22, maxLv: 65 },
+  { name: "Kanto",  emoji: "🔴", gen: 1, minLv: 5,  maxLv: 18 },
+  { name: "Johto",  emoji: "⚪", gen: 2, minLv: 8,  maxLv: 25 },
+  { name: "Hoenn",  emoji: "🟢", gen: 3, minLv: 12, maxLv: 35 },
+  { name: "Sinnoh", emoji: "🔵", gen: 4, minLv: 18, maxLv: 45 },
+  { name: "Unova",  emoji: "⚫", gen: 5, minLv: 25, maxLv: 55 },
+  { name: "Kalos",  emoji: "🟡", gen: 6, minLv: 32, maxLv: 65 },
+  { name: "Alola",  emoji: "🌺", gen: 7, minLv: 40, maxLv: 73 },
+  { name: "Galar",  emoji: "🟣", gen: 8, minLv: 48, maxLv: 81 },
+  { name: "Paldea", emoji: "🟠", gen: 9, minLv: 55, maxLv: 89 },
 ];
 
 const LEGENDARIES: Record<number, number[]> = {
@@ -206,7 +249,7 @@ function todayStr() {
   const d = new Date();
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
-type Battle = { wild: Mon; pMon: Mon; phase: string; turnCount: number; canCatch: boolean; ballsThrown: number; selectedBall: string };
+type Battle = { wild: Mon; pMon: Mon; phase: string; turnCount: number; canCatch: boolean; ballsThrown: number; selectedBall: string; fleeThreshold: number };
 const MAX_BATTLE_BALLS = 5;
 const BALL_BASE_MULT: Record<string, number> = {
   "Poké Ball": 1, "Pokeball": 1, "Great Ball": 1.5, "Ultra Ball": 2, "Master Ball": 255,
@@ -908,8 +951,8 @@ export default function App() {
       const myCp = myMons.reduce((s, m) => s + battleMonScore(m), 0);
       const opCp = opMons.reduce((s, m) => s + battleMonScore(m), 0);
       if (mode === "ranked") {
-        const expected = 1 / (1 + Math.pow(10, ((opCp - myCp) / 400)));
-        delta = Math.round(32 * ((won ? 1 : 0) - expected));
+        // Flat ±50 rank change per ranked match, regardless of opponent strength.
+        delta = won ? 50 : -50;
       }
       setBattleBoxHistory((p2) => [{ mode, result, opponent: oppName, delta, ts: Date.now() }, ...p2].slice(0, 50));
       setPlayer((p) => {
@@ -1153,7 +1196,11 @@ export default function App() {
     const region = REGIONS[player.macroRegion] ?? REGIONS[0];
     const pMon = { ...validTeam[0] };
     addLog(`A wild ${scoutedWild.name} (Lv${scoutedWild.level}) appeared in ${region.name}!`, "#FFD700");
-    setBattle({ wild: scoutedWild, pMon, phase: "choose", turnCount: 0, canCatch: true, ballsThrown: 0, selectedBall: "Poké Ball" });
+    // Hidden flee threshold: wild Pokémon flees the FIRST time the player
+    // throws a ball that misses AFTER this many balls have been used.
+    // Random 1–5 means some catches succeed/fail before the mon ever runs.
+    const fleeThreshold = 1 + Math.floor(Math.random() * MAX_BATTLE_BALLS);
+    setBattle({ wild: scoutedWild, pMon, phase: "choose", turnCount: 0, canCatch: true, ballsThrown: 0, selectedBall: "Poké Ball", fleeThreshold });
     setScoutedWild(null);
     setScreen("battle");
   }
@@ -1353,8 +1400,11 @@ export default function App() {
           setBattle((prev) => {
             if (!prev) return prev;
             const thrown = prev.ballsThrown;
-            const fleeChance = thrown >= MAX_BATTLE_BALLS ? 1 : 0.08 * thrown;
-            if (Math.random() < fleeChance) {
+            // Wild flees once the player has thrown at least its (hidden)
+            // flee threshold balls. Always flees by MAX_BATTLE_BALLS.
+            const threshold = prev.fleeThreshold ?? MAX_BATTLE_BALLS;
+            const shouldFlee = thrown >= threshold;
+            if (shouldFlee) {
               addLog(`💨 Wild ${wild.name} fled!`, "#FF9800");
               setTimeout(() => { setBattle(null); setScreen("hunt"); }, 700);
             }
@@ -1409,11 +1459,21 @@ export default function App() {
     if (didEvolve) {
       const ev = didEvolve;
       setTimeout(() => {
-        const evolved = makeMon(ev.to, mon.level);
-        evolved.currentHp = evolved.maxHp;
+        // Mutate-in-place: keep the original Pokémon's uid, nickname, IVs, EVs and nature.
+        // Only species, moves and base stats roll over to the evolved form.
+        const evolved = makeMon(ev.to, mon.level, "evolve");
+        evolved.uid = ev.from.uid;
+        evolved.nickname = ev.from.nickname;
         evolved.exp = mon.exp;
         evolved.expNeeded = mon.expNeeded;
-        setTeam((prev) => [evolved, ...prev.slice(1)]);
+        evolved.ivHp = ev.from.ivHp; evolved.ivAtk = ev.from.ivAtk; evolved.ivDef = ev.from.ivDef;
+        evolved.ivSpa = ev.from.ivSpa; evolved.ivSpd = ev.from.ivSpd; evolved.ivSpe = ev.from.ivSpe;
+        evolved.evHp = ev.from.evHp; evolved.evAtk = ev.from.evAtk; evolved.evDef = ev.from.evDef;
+        evolved.evSpa = ev.from.evSpa; evolved.evSpd = ev.from.evSpd; evolved.evSpe = ev.from.evSpe;
+        evolved.nature = ev.from.nature ?? evolved.nature;
+        evolved.currentHp = evolved.maxHp;
+        // Replace the SAME Pokémon (by uid) — never duplicates, never assumes index 0.
+        setTeam((prev) => prev.map((m) => (m.uid && m.uid === ev.from.uid) ? evolved : m));
         setCaught((prev) => new Set([...prev, ev.to.id]));
         sfx.evolve();
         setEvolving({ from: ev.from.name, to: ev.to.name, sprite: ev.to.sprite });
@@ -2913,28 +2973,34 @@ export default function App() {
                   onClick={() => setShowAddMonPicker(false)}>✕</button>
               </div>
               <div style={{ fontSize: 10, color: "#6b7896" }}>
-                Pick a caught species — joins {teams[activeTeamIdx]?.name} at Lv5.
+                Pick from your Mons collection — moves the actual Pokémon (with its level, IVs &amp; EVs) into {teams[activeTeamIdx]?.name}.
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, overflowY: "auto" }}>
-                {ALL_POKEMON.filter((p) => caught.has(p.id)).map((p) => (
-                  <button key={p.id} className="btn"
+                {box.length === 0 && (
+                  <div style={{ gridColumn: "1 / -1", textAlign: "center", color: "#666", fontSize: 9, padding: 20 }}>
+                    No Pokémon in your collection. Catch some in the wild!
+                  </div>
+                )}
+                {box.map((bm) => (
+                  <button key={bm.uid ?? `${bm.id}-${bm.caughtAt}`} className="btn"
                     onClick={() => {
                       if (team.length >= TEAM_MAX) { addLog(`Team is full! Max ${TEAM_MAX} Pokémon.`, "#F44336"); setShowAddMonPicker(false); return; }
-                      const m = makeMon(p, 5);
-                      setTeam((prev) => prev.length < TEAM_MAX ? [...prev, m] : prev);
-                      addLog(`Added ${p.name} to ${teams[activeTeamIdx]?.name}!`, "#4CAF50");
+                      // Move the existing instance from box to team — preserves uid, level, IVs, EVs, nature.
+                      setBox((prev) => prev.filter((x) => (x.uid ?? `${x.id}-${x.caughtAt}`) !== (bm.uid ?? `${bm.id}-${bm.caughtAt}`)));
+                      setTeam((prev) => prev.length < TEAM_MAX ? [...prev, bm] : prev);
+                      addLog(`Added ${bm.nickname ?? bm.name} (Lv${bm.level}) to ${teams[activeTeamIdx]?.name}!`, "#4CAF50");
                       setShowAddMonPicker(false);
                     }}
                     style={{
-                      background: `${TYPE_COLORS[p.type1]}15`,
-                      border: `2px solid ${TYPE_COLORS[p.type1]}66`,
+                      background: `${TYPE_COLORS[bm.type1]}15`,
+                      border: `2px solid ${TYPE_COLORS[bm.type1]}66`,
                       borderRadius: 8, padding: "6px 4px", textAlign: "center",
                       display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
                       cursor: "pointer",
                     }}>
-                    <div style={{ fontSize: 5, color: "#888" }}>#{String(p.id).padStart(3, "0")}</div>
-                    <MonSprite sprite={p.sprite} size={40} className="" />
-                    <div style={{ fontSize: 7, color: "#fff" }}>{p.name}</div>
+                    <div style={{ fontSize: 5, color: "#888" }}>#{String(bm.id).padStart(3, "0")} · Lv{bm.level}</div>
+                    <MonSprite sprite={bm.sprite} size={40} className="" />
+                    <div style={{ fontSize: 7, color: "#fff" }}>{bm.nickname ?? bm.name}</div>
                   </button>
                 ))}
               </div>
@@ -2957,14 +3023,21 @@ export default function App() {
             { key: "balls", label: "BALLS", emoji: "🔴", color: "#F44336", match: (n: string) => /ball/i.test(n) },
             { key: "tms", label: "TMs", emoji: "💿", color: "#9C27B0", match: (n: string) => /^TM/i.test(n) || /^HM/i.test(n) },
             { key: "eggs", label: "EGGS", emoji: "🥚", color: "#FFEB3B", match: (n: string) => /egg/i.test(n) },
-            { key: "key", label: "KEY ITEMS", emoji: "🔑", color: "#FF9800", match: (n: string) => /(bike|rod|key|pass|map|card|ticket|flute|stone tablet)/i.test(n) },
+            // KEY ITEMS no longer matches "pass" — Safari Pass and similar
+            // permit-style items belong under OTHERS instead.
+            { key: "key", label: "KEY ITEMS", emoji: "🔑", color: "#FF9800", match: (n: string) => /(bike|rod|key|map|card|ticket|flute|stone tablet)/i.test(n) },
             { key: "stones", label: "STONES", emoji: "💎", color: "#03A9F4", match: (n: string) => /stone|shard/i.test(n) && !/stone tablet/i.test(n) },
+            { key: "others", label: "OTHERS", emoji: "📦", color: "#26A69A", match: (_n: string) => true /* fallback; handled below */ },
           ];
           const active = bagCats.find((c) => c.key === bagCat)!;
-          const filtered = inventory.filter((it) => active.match(it.name));
+          // OTHERS catches everything that doesn't fit the explicit categories above.
+          const explicit = bagCats.filter((c) => c.key !== "others");
+          const filtered = bagCat === "others"
+            ? inventory.filter((it) => !explicit.some((c) => c.match(it.name)))
+            : inventory.filter((it) => active.match(it.name));
           return (
             <>
-              <div style={{ padding: "8px 10px 4px", display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4 }}>
+              <div style={{ padding: "8px 10px 4px", display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 4 }}>
                 {bagCats.map((c) => {
                   const sel = bagCat === c.key;
                   return (
@@ -3926,7 +3999,7 @@ export default function App() {
           <div style={{ flex: 1, overflowY: "auto", padding: "0 12px" }}>
             {monDetailTab === "info" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 10, color: "#fff" }}>
-                <div><span style={{ color: "#aaa" }}>Level:</span> {m.level} <span style={{ color: "#666" }}>|</span> <span style={{ color: "#aaa" }}>Nature:</span> {m.nickname ? "Hardy" : "Hardy"}</div>
+                <div><span style={{ color: "#aaa" }}>Level:</span> {m.level} <span style={{ color: "#666" }}>|</span> <span style={{ color: "#aaa" }}>Nature:</span> {m.nature ?? "Hardy"}</div>
                 <div><span style={{ color: "#aaa" }}>Types:</span> {m.type1}{m.type2 ? ` / ${m.type2}` : ""}</div>
                 <div><span style={{ color: "#aaa" }}>Gender:</span> {m.id % 8 === 0 ? "Genderless" : m.id % 2 === 0 ? "Female" : "Male"}</div>
                 <div><span style={{ color: "#aaa" }}>Ability:</span> {(m as any).ability ?? "—"}</div>
