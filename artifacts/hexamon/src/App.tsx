@@ -7,6 +7,7 @@ import { SplashLoader } from "./components/SplashLoader";
 import BattleArena from "./components/BattleArena";
 import TrainingZone from "./components/TrainingZone";
 import LeagueScreen from "./components/LeagueScreen";
+import safariForestBg from "@assets/6155a54f-3b2d-4298-911f-596582b8196c_1777290294414.jpeg";
 import { GYM_LEADERS, ELITE_FOUR, npcMonToAppMon, type NpcTrainer } from "./lib/league-data";
 import {
   fromAppMon, makeBattleState, resolveTurn, forceSwitch, calcMaxHp,
@@ -4440,158 +4441,186 @@ export default function App() {
     const region = REGIONS[safariRegion] ?? REGIONS[0];
     const isLegend = safariEnc ? ALL_LEGENDARY_IDS.has(safariEnc.id) : false;
     return (
-      <div style={{ ...S.root, background: "#09090b" }}><style>{css}</style>
-        <div style={{ ...S.wrap, background: "#09090b", fontFamily: "'Inter', system-ui, sans-serif" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid #27272a" }}>
-            <button className="btn"
-              style={{ border: "1px solid #27272a", color: "#a1a1aa", padding: "5px 12px", borderRadius: 8, background: "#18181b", fontSize: 10, fontWeight: 600 }}
+      <div style={{ ...S.root, background: "#0a0a0c" }}><style>{css}{`
+        .safari-btn {
+          background: linear-gradient(180deg, #1c1c21 0%, #121216 100%);
+          border: 1px solid rgba(255,255,255,0.08);
+          color: #f0f0f0;
+          padding: 16px;
+          border-radius: 12px;
+          font-size: 15px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+          text-align: center;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .safari-btn:hover:not(:disabled) {
+          background: linear-gradient(180deg, #2a2a32 0%, #1a1a20 100%);
+          border-color: rgba(255,255,255,0.15);
+          transform: translateY(-2px);
+        }
+        .safari-btn:active:not(:disabled) { transform: translateY(1px); }
+        .safari-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      `}</style>
+        <div style={{ ...S.wrap, background: "#0a0a0c", fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", padding: "16px 16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+            <button
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "#f0f0f0", padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer", backdropFilter: "blur(4px)" }}
               onClick={() => { setScreen("world"); }}>
-              ◀ BACK
+              ◀
             </button>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#f4f4f5", letterSpacing: 2 }}>SAFARI ZONE</div>
-            <div style={{ width: 60 }} />
+            <div style={{ fontSize: 14, letterSpacing: 2, fontWeight: 700, color: "#f0f0f0" }}>safari zone</div>
+            <div style={{ width: 50 }} />
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-around", padding: "10px 16px", borderBottom: "1px solid #27272a", fontSize: 11, color: "#fff" }}>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 8, color: "#71717a" }}>BALLS</div>
-              <div style={{ color: safariBalls < 5 ? "#f87171" : "#fff", fontWeight: 700 }}>⚪ {safariBalls}/30</div>
+          {/* Stats bar */}
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 20px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, backdropFilter: "blur(10px)" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", fontSize: 10, color: "#888890", textTransform: "uppercase", letterSpacing: 1 }}>
+              Balls
+              <div style={{ fontSize: 14, fontWeight: 700, color: safariBalls < 5 ? "#f87171" : "#f0f0f0", marginTop: 4 }}>⚪ {safariBalls}/30</div>
             </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 8, color: "#71717a" }}>CAUGHT</div>
-              <div style={{ color: "#4ade80", fontWeight: 700 }}>{safariCaught}</div>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", fontSize: 10, color: "#888890", textTransform: "uppercase", letterSpacing: 1 }}>
+              Caught
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#4ade80", marginTop: 4 }}>{safariCaught}</div>
             </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 8, color: "#71717a" }}>{region.name.toUpperCase()}</div>
-              <div style={{ color: "#FFD700", fontWeight: 700 }}>#{safariCounter}</div>
-            </div>
-          </div>
-
-          <div style={{ padding: "16px 18px" }}>
-            <div style={{
-              width: "100%", aspectRatio: "1/1",
-              border: `1px solid ${isLegend ? "#FFD700" : "#27272a"}`,
-              borderRadius: 14,
-              background: "#0a0a0a",
-              boxShadow: `${isLegend ? "0 0 24px rgba(255,215,0,0.25), " : ""}inset 0 0 30px rgba(0,0,0,0.6)`,
-              position: "relative", overflow: "hidden",
-            }}>
-              <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 36,
-                background: "repeating-linear-gradient(90deg,#1f1f23 0 6px,#18181b 6px 12px)" }} />
-              {safariEnc && (
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <div style={{ animation: safariThrowAnim === "wobble" ? "ballWobble 0.9s" : "none" }}>
-                    {safariThrowAnim !== "throw" && safariThrowAnim !== "wobble" && (
-                      <MonSprite sprite={safariEnc.sprite} size={170} className="mon-float" />
-                    )}
-                  </div>
-                  {safariThrowAnim === "throw" && (
-                    <div style={{ position: "absolute", animation: "ballThrow 0.5s forwards" }}>
-                      <div className="pokeball" style={{ width: 32, height: 32 }} />
-                    </div>
-                  )}
-                  {safariThrowAnim === "wobble" && (
-                    <div style={{ position: "absolute", animation: "ballWobble 0.9s" }}>
-                      <div className="pokeball" style={{ width: 32, height: 32 }} />
-                    </div>
-                  )}
-                  {safariThrowAnim === "stars" && (
-                    <div style={{ position: "absolute", fontSize: 40, animation: "catchStars 0.9s" }}>✨🌟✨</div>
-                  )}
-                  {safariThrowAnim === "burst" && (
-                    <div style={{ position: "absolute", fontSize: 40, animation: "ballBurst 0.6s" }}>💥</div>
-                  )}
-                </div>
-              )}
-              {isLegend && (
-                <div style={{ position: "absolute", top: 8, left: 8, background: "rgba(255,215,0,0.2)", border: "1px solid #FFD700", borderRadius: 6, padding: "3px 8px", fontSize: 9, color: "#FFD700", fontWeight: 700 }}>
-                  ★ LEGENDARY
-                </div>
-              )}
-            </div>
-
-            {/* Fixed-size status banner — height never changes so the layout
-                doesn't shift between "throw / caught / fled" messages. */}
-            <div style={{
-              margin: "14px 6px 0",
-              height: 64,
-              minHeight: 64,
-              maxHeight: 64,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-              padding: "0 10px",
-              background: "#18181b",
-              border: `1px solid ${
-                safariStatusMsg?.kind === "caught" ? "#4ade80" :
-                safariStatusMsg?.kind === "fled"   ? "#f87171" :
-                "#27272a"
-              }`,
-              borderRadius: 10,
-              color: safariStatusMsg?.kind === "caught" ? "#4ade80" :
-                     safariStatusMsg?.kind === "fled"   ? "#f87171" :
-                     "#f4f4f5",
-              fontSize: 12,
-              fontWeight: 600,
-              lineHeight: 1.4,
-              overflow: "hidden",
-            }}>
-              {safariStatusMsg ? (
-                <span>
-                  {safariStatusMsg.text}
-                  {safariStatusMsg.kind === "throw" && (
-                    <span style={{ marginLeft: 6, color: "#FFD700", letterSpacing: 2 }}>
-                      {"★".repeat(safariStatusMsg.stars ?? 1)}
-                    </span>
-                  )}
-                </span>
-              ) : safariEnc ? (
-                <span>
-                  A wild <span style={{ color: "#fff" }}>{safariEnc.name}</span>
-                  <span style={{ background: "#0a0a0a", border: "1px solid #27272a", color: "#fff", padding: "2px 8px", borderRadius: 999, fontSize: 10, fontWeight: 600, margin: "0 6px" }}>Lv. {safariEnc.level}</span>
-                  {isLegend ? "is watching..." : "appeared!"}
-                </span>
-              ) : "..."}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", fontSize: 10, color: "#888890", textTransform: "uppercase", letterSpacing: 1 }}>
+              {region.name}
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#facc15", marginTop: 4 }}>#{safariCounter}</div>
             </div>
           </div>
 
+          {/* Sprite showcase with forest background */}
           <div style={{
-            margin: "4px 18px 0",
-            background: "#18181b",
-            border: "1px solid #27272a",
-            borderRadius: 10,
-            padding: "10px 12px",
-            flex: 1,
-            minHeight: 110,
-            overflowY: "auto",
-            fontFamily: "'Press Start 2P', ui-monospace, monospace",
-            fontSize: 9,
-            lineHeight: 1.7,
-            color: "#a1a1aa",
+            height: 250,
+            borderRadius: 16,
+            border: `1px solid ${isLegend ? "#FFD700" : "rgba(255,255,255,0.08)"}`,
+            backgroundImage: `url(${safariForestBg})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center bottom",
+            backgroundRepeat: "no-repeat",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            position: "relative",
+            boxShadow: `${isLegend ? "0 0 24px rgba(255,215,0,0.35), " : ""}inset 0 0 50px rgba(0,0,0,0.8)`,
+            overflow: "hidden",
           }}>
-            {log.slice(-12).map((l, i) => (
-              <div key={i} style={{ color: l.color || "#a1a1aa" }}>&gt; {l.msg}</div>
+            {safariEnc && (
+              <>
+                <div style={{ animation: safariThrowAnim === "wobble" ? "ballWobble 0.9s" : "none", zIndex: 2 }}>
+                  {safariThrowAnim !== "throw" && safariThrowAnim !== "wobble" && (
+                    <div style={{ filter: "drop-shadow(0px 15px 15px rgba(0,0,0,0.6))" }}>
+                      <MonSprite sprite={safariEnc.sprite} size={150} className="mon-float" />
+                    </div>
+                  )}
+                </div>
+                {safariThrowAnim === "throw" && (
+                  <div style={{ position: "absolute", animation: "ballThrow 0.5s forwards", zIndex: 3 }}>
+                    <div className="pokeball" style={{ width: 32, height: 32 }} />
+                  </div>
+                )}
+                {safariThrowAnim === "wobble" && (
+                  <div style={{ position: "absolute", animation: "ballWobble 0.9s", zIndex: 3 }}>
+                    <div className="pokeball" style={{ width: 32, height: 32 }} />
+                  </div>
+                )}
+                {safariThrowAnim === "stars" && (
+                  <div style={{ position: "absolute", fontSize: 40, animation: "catchStars 0.9s", zIndex: 3 }}>✨🌟✨</div>
+                )}
+                {safariThrowAnim === "burst" && (
+                  <div style={{ position: "absolute", fontSize: 40, animation: "ballBurst 0.6s", zIndex: 3 }}>💥</div>
+                )}
+              </>
+            )}
+            {isLegend && (
+              <div style={{ position: "absolute", top: 10, left: 10, background: "rgba(255,215,0,0.2)", border: "1px solid #FFD700", borderRadius: 6, padding: "3px 8px", fontSize: 10, color: "#FFD700", fontWeight: 700, zIndex: 3 }}>
+                ★ LEGENDARY
+              </div>
+            )}
+          </div>
+
+          {/* Encounter banner */}
+          <div style={{
+            background: "rgba(255,255,255,0.03)",
+            border: `1px solid ${
+              safariStatusMsg?.kind === "caught" ? "#4ade80" :
+              safariStatusMsg?.kind === "fled"   ? "#f87171" :
+              "rgba(255,255,255,0.08)"
+            }`,
+            padding: 16,
+            borderRadius: 12,
+            textAlign: "center",
+            fontSize: 15,
+            fontWeight: 600,
+            backdropFilter: "blur(10px)",
+            color: safariStatusMsg?.kind === "caught" ? "#4ade80" :
+                   safariStatusMsg?.kind === "fled"   ? "#f87171" :
+                   "#f0f0f0",
+            minHeight: 56,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            {safariStatusMsg ? (
+              <span>
+                {safariStatusMsg.text}
+                {safariStatusMsg.kind === "throw" && (
+                  <span style={{ marginLeft: 6, color: "#FFD700", letterSpacing: 2 }}>
+                    {"★".repeat(safariStatusMsg.stars ?? 1)}
+                  </span>
+                )}
+              </span>
+            ) : safariEnc ? (
+              <span>
+                A wild {safariEnc.name}
+                <span style={{ background: "#222", padding: "2px 6px", borderRadius: 4, fontSize: 11, color: "#888890", margin: "0 6px", border: "1px solid #333" }}>Lv. {safariEnc.level}</span>
+                {isLegend ? "is watching..." : "appeared!"}
+              </span>
+            ) : "..."}
+          </div>
+
+          {/* Terminal log */}
+          <div style={{
+            background: "#050508",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 12,
+            padding: 16,
+            fontFamily: "'Courier New', Courier, monospace",
+            fontSize: 12,
+            color: "#22d3ee",
+            lineHeight: 1.6,
+            boxShadow: "inset 0 4px 10px rgba(0,0,0,0.5)",
+            minHeight: 120,
+            maxHeight: 160,
+            overflowY: "auto",
+          }}>
+            {log.slice(-8).map((l, i) => (
+              <div key={i} style={{ color: l.color || "#22d3ee" }}>&gt; {l.msg}</div>
             ))}
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "14px 18px 24px", marginTop: "auto" }}>
-            <button className="btn"
+          {/* Action stack */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <button className="safari-btn"
               disabled={safariThrowAnim !== null || safariBalls <= 0}
-              style={{ width: "100%", border: "1px solid #27272a", color: safariThrowAnim ? "#52525b" : "#f4f4f5", padding: "18px 8px", borderRadius: 16, background: "#18181b", fontSize: 17, fontWeight: 500, opacity: (!safariThrowAnim && safariBalls > 0) ? 1 : 0.5 }}
+              style={{ width: "100%" }}
               onClick={() => { if (safariBalls > 0) safariNext(safariBalls); }}>
               Hunt
             </button>
             <div style={{ display: "flex", gap: 12 }}>
-              <button className="btn"
+              <button className="safari-btn"
                 disabled={!safariEnc || safariThrowAnim !== null || safariBalls <= 0}
-                style={{ flex: 1, border: "1px solid #27272a", color: safariThrowAnim ? "#52525b" : "#f4f4f5", padding: "18px 8px", borderRadius: 16, background: "#18181b", fontSize: 15, fontWeight: 500, opacity: (safariEnc && !safariThrowAnim && safariBalls > 0) ? 1 : 0.5 }}
+                style={{ flex: 1 }}
                 onClick={safariThrow}>
                 Use Safari Ball
               </button>
-              <button className="btn"
+              <button className="safari-btn"
                 disabled={safariThrowAnim !== null}
-                style={{ flex: 1, border: "1px solid #27272a", color: safariThrowAnim ? "#52525b" : "#f4f4f5", padding: "18px 8px", borderRadius: 16, background: "#18181b", fontSize: 15, fontWeight: 500 }}
+                style={{ flex: 1 }}
                 onClick={() => { setSafariEnc(null); setSafariBalls(0); setSafariCounter(0); setSafariCaught(0); addLog(`Safari ended. Caught ${safariCaught}.`, "#FFD700"); setScreen("world"); }}>
                 Escape
               </button>
