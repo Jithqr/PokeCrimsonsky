@@ -421,22 +421,34 @@ const css = `
 /* Player plate sits in the band above the dialog, lower-right */
 .bx-me-plate  { position: absolute; bottom: 100px; right: 10px; z-index: 5; }
 
-/* Opponent shadow ellipse: large enough that the sprite clearly sits INSIDE it */
+/* Opponent shadow: darker pooled drop-shadow with blur for true depth */
 .bx-opp-platform {
-  position: absolute; top: 135px; right: 38px; width: 170px; height: 30px;
-  background: radial-gradient(ellipse at center, rgba(120,90,50,0.55) 0%, rgba(120,90,50,0.35) 55%, transparent 75%);
+  position: absolute; top: 142px; right: 38px; width: 170px; height: 26px;
+  background: radial-gradient(ellipse at 50% 60%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0) 75%);
   border-radius: 50%;
+  filter: blur(2px);
 }
-/* Player platform kept very subtle — the dirt area itself reads as the ground */
+/* Player platform: lighter shadow, slightly blurred */
 .bx-me-platform {
-  position: absolute; bottom: 96px; left: 14px; width: 210px; height: 34px;
-  background: radial-gradient(ellipse at center, rgba(120,90,50,0.35) 0%, rgba(120,90,50,0.18) 50%, transparent 75%);
+  position: absolute; bottom: 92px; left: 14px; width: 210px; height: 28px;
+  background: radial-gradient(ellipse at 50% 60%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.22) 50%, rgba(0,0,0,0) 75%);
   border-radius: 50%;
+  filter: blur(2px);
 }
-/* Enemy: feet land on the upper portion of the shadow (perspective) */
-.bx-opp-sprite { position: absolute; top: 38px; right: 60px; width: 120px; height: 115px; display:flex; align-items:flex-end; justify-content:center; z-index: 4; }
-/* Player: bigger foreground sprite */
-.bx-me-sprite  { position: absolute; bottom: 80px; left: 8px; width: 180px; height: 180px; display:flex; align-items:flex-end; justify-content:center; z-index: 4; }
+/* Enemy: feet land on the upper portion of the shadow (perspective).
+   Promoted to its own GPU layer so the GIF doesn't flicker as the browser
+   recomposites it over the semi-transparent shadow gradient. */
+.bx-opp-sprite {
+  position: absolute; top: 38px; right: 60px; width: 120px; height: 115px;
+  display:flex; align-items:flex-end; justify-content:center; z-index: 4;
+  transform: translateZ(0); will-change: transform; backface-visibility: hidden;
+}
+/* Player: bigger foreground sprite, also isolated to its own layer */
+.bx-me-sprite  {
+  position: absolute; bottom: 80px; left: 8px; width: 180px; height: 180px;
+  display:flex; align-items:flex-end; justify-content:center; z-index: 4;
+  transform: translateZ(0); will-change: transform; backface-visibility: hidden;
+}
 
 @keyframes bx-slide-in-right { from { transform: translateX(180%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes bx-slide-in-left  { from { transform: translateX(-180%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
