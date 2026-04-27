@@ -224,7 +224,7 @@ export default function BattleArena(props: Props) {
                 src={SPRITE_FRONT(oppActive.sprite || oppActive.name.toLowerCase())}
                 alt={oppActive.name}
                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = SPRITE_FRONT(oppActive.name.toLowerCase()); }}
-                style={{ width: 110, height: 110, imageRendering: "pixelated", objectFit: "contain", filter: "drop-shadow(0 6px 8px rgba(0,0,0,0.5))" }}
+                style={{ width: 110, height: 110, imageRendering: "pixelated", objectFit: "contain", background: "transparent" }}
               />
             )}
           </div>
@@ -239,7 +239,7 @@ export default function BattleArena(props: Props) {
                 src={SPRITE_BACK(myActive.sprite || myActive.name.toLowerCase())}
                 alt={myActive.name}
                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = SPRITE_FRONT(myActive.sprite || myActive.name.toLowerCase()); }}
-                style={{ width: 130, height: 130, imageRendering: "pixelated", objectFit: "contain", filter: "drop-shadow(0 6px 8px rgba(0,0,0,0.5))" }}
+                style={{ width: 170, height: 170, imageRendering: "pixelated", objectFit: "contain", background: "transparent" }}
               />
             )}
           </div>
