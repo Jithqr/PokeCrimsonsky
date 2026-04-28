@@ -1859,22 +1859,60 @@ export default function App() {
     return <SplashLoader onDone={() => setSplashDone(true)} />;
   }
 
-  if (screen === "nameInput") return (
-    <div style={S.root}><style>{css}</style>
-      <div style={S.wrap}>
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18, padding: 32 }}>
-          <MonSprite sprite="pikachu" size={80} />
-          <div style={{ fontSize: 10, color: "#ff6b35" }}>WHAT IS YOUR NAME?</div>
-          <input id="nf" defaultValue="Trainer" maxLength={12}
-            style={{ background: "#111", border: "2px solid #ff6b35", color: "#fff", fontFamily: "'Press Start 2P',monospace", fontSize: 11, padding: "10px 14px", borderRadius: 4, textAlign: "center", outline: "none", width: "100%", maxWidth: 260 }} />
-          <button className="btn" style={{ border: "2px solid #4CAF50", color: "#4CAF50", padding: "10px 20px" }}
-            onClick={() => { const v = (document.getElementById("nf") as HTMLInputElement).value || "Trainer"; setPlayer((p) => ({ ...p, name: v })); setScreen("starter"); }}>
-            CONFIRM ▶
+  if (screen === "nameInput") {
+    const submitName = () => {
+      const el = document.getElementById("nf") as HTMLInputElement | null;
+      const v = (el?.value || "").trim() || "Trainer";
+      setPlayer((p) => ({ ...p, name: v }));
+      setScreen("starter");
+    };
+    return (
+      <div style={{ minHeight: "100vh", background: "#000", color: "#d4d4d4", fontFamily: "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+        <div style={{ width: "100%", maxWidth: 384, background: "#0a0a0a", border: "1px solid #404040", padding: 32, borderRadius: 16, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.8)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+            <div style={{ padding: 8, background: "#171717", borderRadius: 9999, border: "1px solid #262626", display: "inline-flex" }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a3a3a3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </div>
+            <h2 style={{ fontSize: 20, fontWeight: 500, color: "#f5f5f5", margin: 0 }}>Enter your name</h2>
+          </div>
+
+          <input
+            id="nf"
+            type="text"
+            defaultValue=""
+            maxLength={15}
+            placeholder="Your name..."
+            autoFocus
+            onKeyDown={(e) => { if (e.key === "Enter" && (e.currentTarget.value || "").trim()) submitName(); }}
+            onInput={(e) => {
+              const btn = document.getElementById("nf-confirm") as HTMLButtonElement | null;
+              if (btn) {
+                const has = (e.currentTarget as HTMLInputElement).value.trim().length > 0;
+                btn.style.opacity = has ? "1" : "0.3";
+                btn.style.cursor = has ? "pointer" : "not-allowed";
+              }
+            }}
+            style={{ width: "100%", boxSizing: "border-box", background: "#000", border: "1px solid #262626", color: "#e5e5e5", padding: "12px 16px", borderRadius: 12, marginBottom: 32, outline: "none", fontSize: 18, fontFamily: "inherit" }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = "#737373"; e.currentTarget.style.boxShadow = "0 0 0 1px #737373"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "#262626"; e.currentTarget.style.boxShadow = "none"; }}
+          />
+
+          <button
+            id="nf-confirm"
+            onClick={submitName}
+            style={{ width: "100%", background: "#e5e5e5", color: "#000", fontWeight: 600, padding: "14px 0", borderRadius: 12, border: "none", cursor: "not-allowed", opacity: 0.3, fontSize: 16, fontFamily: "inherit", boxShadow: "0 0 15px rgba(255,255,255,0.1)", transition: "all 0.2s" }}
+            onMouseEnter={(e) => { if (e.currentTarget.style.opacity === "1") { e.currentTarget.style.background = "#fff"; e.currentTarget.style.boxShadow = "0 0 20px rgba(255,255,255,0.2)"; } }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "#e5e5e5"; e.currentTarget.style.boxShadow = "0 0 15px rgba(255,255,255,0.1)"; }}
+          >
+            Confirm
           </button>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   if (screen === "starter") {
     const starters = [
