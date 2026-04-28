@@ -4455,8 +4455,8 @@ export default function App() {
 
     // Stat row used in the Stats tab — keeps the new monochrome look.
     const newStatRow = (label: string, val: number, max: number) => (
-      <div key={label} style={{ marginBottom: 10 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+      <div key={label} style={{ marginBottom: 4 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 2 }}>
           <span style={{ color: C.textMuted }}>{label}</span>
           <span style={{ color: C.textMain, fontWeight: 600 }}>{val}</span>
         </div>
@@ -4572,50 +4572,50 @@ export default function App() {
             margin: "16px 16px 0 16px",
             padding: 16,
             borderRadius: 12,
-            fontFamily: FONT_MONO,
+            fontFamily: FONT_BASE,
             fontSize: 13,
-            lineHeight: 1.6,
+            lineHeight: 1.5,
             color: C.textMain,
             border: `1px solid ${C.borderDim}`,
           }}>
             {monDetailTab === "info" && (
-              <>
-                <span style={{ color: C.textMuted }}>Level: </span><b style={{ fontWeight: "normal" }}>{m.level}</b> | <span style={{ color: C.textMuted }}>Nature: </span><b style={{ fontWeight: "normal" }}>{m.nature ?? "Hardy"}</b><br />
-                <span style={{ color: C.textMuted }}>Types: </span><b style={{ fontWeight: "normal" }}>{typeText}</b><br />
-                <span style={{ color: C.textMuted }}>Gender: </span><b style={{ fontWeight: "normal" }}>{gender}</b><br />
-                <span style={{ color: C.textMuted }}>Ability: </span><b style={{ fontWeight: "normal" }}>{(m as any).ability ?? "—"}</b><br />
-                <span style={{ color: C.textMuted }}>Tera Type: </span><b style={{ fontWeight: "normal" }}>{m.type1}</b><br />
-                <span style={{ color: C.textMuted }}>EXP: </span><b style={{ fontWeight: "normal" }}>{m.exp.toLocaleString()}</b><br />
-                <span style={{ color: C.textMuted }}>Need To Next Level: </span><b style={{ fontWeight: "normal" }}>{needNext.toLocaleString()}</b>
-                <div style={{ width: "100%", height: 6, background: "#1a1a2e", borderRadius: 3, margin: "12px 0", border: "1px solid #2a2a4a", position: "relative", overflow: "hidden" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div><span style={{ color: C.textMuted }}>Level: </span><b style={{ fontWeight: 600 }}>{m.level}</b> <span style={{ color: C.textMuted }}>| Nature: </span><b style={{ fontWeight: 600 }}>{m.nature ?? "Hardy"}</b></div>
+                <div><span style={{ color: C.textMuted }}>Types: </span><b style={{ fontWeight: 600 }}>{typeText}</b></div>
+                <div><span style={{ color: C.textMuted }}>Gender: </span><b style={{ fontWeight: 600 }}>{gender}</b></div>
+                <div><span style={{ color: C.textMuted }}>Ability: </span><b style={{ fontWeight: 600 }}>{(m as any).ability ?? "—"}</b></div>
+                <div><span style={{ color: C.textMuted }}>Tera Type: </span><b style={{ fontWeight: 600 }}>{m.type1}</b></div>
+                <div><span style={{ color: C.textMuted }}>EXP: </span><b style={{ fontWeight: 600 }}>{m.exp.toLocaleString()}</b></div>
+                <div><span style={{ color: C.textMuted }}>Need To Next Level: </span><b style={{ fontWeight: 600 }}>{needNext.toLocaleString()}</b></div>
+                <div style={{ width: "100%", height: 6, background: "#1a1a2e", borderRadius: 3, margin: "8px 0 4px", border: "1px solid #2a2a4a", position: "relative", overflow: "hidden" }}>
                   <div style={{ height: "100%", width: `${Math.max(2, expPct)}%`, background: "#3b3b6d" }} />
                 </div>
-                <div style={{ fontSize: 11, color: C.textMuted, marginTop: 4 }}>
+                <div style={{ fontSize: 11, color: C.textMuted }}>
                   Caught: {m.caughtAt ? new Date(m.caughtAt).toLocaleDateString() : "—"} • Origin: {m.origin ?? "—"}
                 </div>
-              </>
+              </div>
             )}
 
             {monDetailTab === "stats" && (
-              <div style={{ fontFamily: FONT_BASE }}>
+              <div>
                 {newStatRow("HP", m.maxHp, 400)}
                 {newStatRow("Attack", m.atk, 250)}
                 {newStatRow("Defense", m.def, 250)}
                 {newStatRow("Sp. Attack", m.spa, 250)}
                 {newStatRow("Sp. Defense", m.spd, 250)}
                 {newStatRow("Speed", m.spe, 250)}
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: C.cyan, marginTop: 8, paddingTop: 10, borderTop: "1px solid #1a1a2e" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: C.cyan, marginTop: 6, paddingTop: 6, borderTop: "1px solid #1a1a2e" }}>
                   <span>Total</span>
                   <span style={{ fontWeight: 700 }}>{m.maxHp + m.atk + m.def + m.spa + m.spd + m.spe}</span>
                 </div>
-                <div style={{ fontSize: 11, color: C.textMuted, marginTop: 8 }}>
+                <div style={{ fontSize: 11, color: C.textMuted, marginTop: 4 }}>
                   CP {cp} • IV Avg {iv}%
                 </div>
               </div>
             )}
 
             {monDetailTab === "iv" && (
-              <div style={{ fontFamily: FONT_BASE }}>
+              <div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 70px 70px", fontSize: 12, color: C.textMuted, paddingBottom: 8, borderBottom: "1px solid #1a1a2e", marginBottom: 8 }}>
                   <span>Stat</span>
                   <span style={{ textAlign: "right" }}>IV</span>
