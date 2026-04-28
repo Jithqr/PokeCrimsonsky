@@ -210,7 +210,12 @@ function getCP(m: Mon): number {
   return Math.max(10, Math.floor((a * d * h * (m.level / 50)) / 10) * 10);
 }
 function ivPercent(m: Mon): number {
-  return Math.round((((m.ivAtk ?? 0) + (m.ivDef ?? 0) + (m.ivHp ?? 0)) / 45) * 100);
+  // Average of all 6 IVs out of the theoretical maximum (31 × 6 = 186).
+  // 186 IV total → 100%, 0 IV total → 0%.
+  const total =
+    (m.ivHp ?? 0) + (m.ivAtk ?? 0) + (m.ivDef ?? 0) +
+    (m.ivSpa ?? 0) + (m.ivSpd ?? 0) + (m.ivSpe ?? 0);
+  return Math.min(100, Math.round((total / 186) * 100));
 }
 
 type RegionDef = { name: string; emoji: string; gen: number; minLv: number; maxLv: number };
@@ -859,20 +864,45 @@ export default function App() {
   }
 
   // ============ PvP: WebSocket connection + handlers ============
-  const pvpConnect = useCallback((isHost: boolean, code: string | undefined, mode: "ranked" | "unranked" | "random", myTeamMons: Mon[]) => {
+  const pvpConnect = useCallback((
+    isHost: boolean,
+    code: string | undefined,
+    mode: "ranked" | "unranked" | "random",
+    mySettings: typeof bbSettings,
+    buildTeam: (settings: typeof bbSettings) => Mon[],
+  ) => {
     try { wsRef.current?.close(); } catch { /* ignore */ }
     const wsUrl = `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/api/ws/battle`;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
+    // Settings actually used to build my team.  For host this stays as the
+    // local settings; for joiner it gets overwritten with host's canonical
+    // settings the moment we receive the "joined" event.
+    let activeSettings: typeof bbSettings = mySettings;
     let myTeamSent = false;
     const sendTeam = () => {
       if (myTeamSent) return;
+      const myTeamMons = buildTeam(activeSettings);
+      if (!myTeamMons || myTeamMons.length === 0) {
+        addLog("You need at least 1 Pokémon to battle!", "#F44336");
+        try { ws.close(); } catch { /* ignore */ }
+        setBbRoom(null); setBbMode(null);
+        return;
+      }
       myTeamSent = true;
       ws.send(JSON.stringify({ type: "team", playerId: myPlayerIdRef.current, team: myTeamMons.map(toShippableMon) }));
     };
     ws.onopen = () => {
       if (isHost) {
-        ws.send(JSON.stringify({ type: "host", playerId: myPlayerIdRef.current, playerName: player.name || "Trainer", turnTimerSec: bbSettings.turnTimer }));
+        // Host ships the full settings bundle so the server can relay it
+        // to the joiner — guarantees both sides battle by the same rules.
+        ws.send(JSON.stringify({
+          type: "host",
+          playerId: myPlayerIdRef.current,
+          playerName: player.name || "Trainer",
+          turnTimerSec: mySettings.turnTimer,
+          settings: mySettings,
+        }));
       } else {
         ws.send(JSON.stringify({ type: "join", playerId: myPlayerIdRef.current, playerName: player.name || "Trainer", code: (code ?? "").toUpperCase() }));
       }
@@ -893,6 +923,14 @@ export default function App() {
         }
         case "joined": {
           const hostName = (msg["hostName"] as string) || "Host";
+          // Mirror the host's canonical battle settings so this joiner plays
+          // by exactly the same rules as the room creator.
+          const hostSettings = msg["settings"] as typeof bbSettings | null | undefined;
+          if (hostSettings && typeof hostSettings === "object") {
+            activeSettings = { ...activeSettings, ...hostSettings };
+            setBbSettings((s) => ({ ...s, ...hostSettings }));
+            addLog("Synced battle settings from host.", "#60a5fa");
+          }
           setBbRoom((prev) => prev ? { ...prev, status: "ready", opponent: hostName } : prev);
           sendTeam();
           break;
@@ -3601,24 +3639,26 @@ export default function App() {
       for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
       return s;
     }
-    function buildMyTeam(): Mon[] {
-      if (bbMode === "random") {
-        return Array.from({ length: bbSettings.teamSize }, () => {
-          const pool = bbSettings.allowLegendaries ? ALL_POKEMON : ALL_POKEMON.filter((p) => !ALL_LEGENDARY_IDS.has(p.id));
+    // Build a team using the EFFECTIVE settings (host's own settings, or the
+    // host's settings synced down to the joiner via the WebSocket).
+    function buildTeamWith(mode: "ranked" | "unranked" | "random", s: typeof bbSettings): Mon[] {
+      if (mode === "random") {
+        return Array.from({ length: s.teamSize }, () => {
+          const pool = s.allowLegendaries ? ALL_POKEMON : ALL_POKEMON.filter((p) => !ALL_LEGENDARY_IDS.has(p.id));
           const tpl = pool[Math.floor(Math.random() * pool.length)];
-          const lv = bbSettings.randomLevelMin + Math.floor(Math.random() * (bbSettings.randomLevelMax - bbSettings.randomLevelMin + 1));
+          const lv = s.randomLevelMin + Math.floor(Math.random() * (s.randomLevelMax - s.randomLevelMin + 1));
           return makeMon(tpl, lv);
         });
       }
-      return team.slice(0, bbSettings.teamSize);
+      return team.slice(0, s.teamSize);
     }
     function startHostRoom(mode: "ranked" | "unranked" | "random") {
       sfx.menuOpen();
       setBbMode(mode);
       setBbRoom({ code: "…", isHost: true, status: "waiting" });
-      const myTeam = buildMyTeam();
-      if (myTeam.length === 0) { addLog("You need at least 1 Pokémon to battle!", "#F44336"); setBbRoom(null); setBbMode(null); return; }
-      pvpConnect(true, undefined, mode, myTeam);
+      // Host: use my own settings as the canonical settings. They get shipped
+      // to the server and from there to whoever joins.
+      pvpConnect(true, undefined, mode, bbSettings, (s) => buildTeamWith(mode, s));
     }
     function joinRoom(mode: "ranked" | "unranked" | "random") {
       if (bbJoinCode.trim().length < 4) { addLog("Enter a valid room code.", "#F44336"); return; }
@@ -3626,9 +3666,10 @@ export default function App() {
       setBbMode(mode);
       const code = bbJoinCode.trim().toUpperCase();
       setBbRoom({ code, isHost: false, status: "waiting" });
-      const myTeam = buildMyTeam();
-      if (myTeam.length === 0) { addLog("You need at least 1 Pokémon to battle!", "#F44336"); setBbRoom(null); setBbMode(null); return; }
-      pvpConnect(false, code, mode, myTeam);
+      // Joiner: pass our own settings as a placeholder; pvpConnect will replace
+      // them with the host's canonical settings when "joined" arrives, then
+      // build our team using the synced settings.
+      pvpConnect(false, code, mode, bbSettings, (s) => buildTeamWith(mode, s));
     }
     function leaveRoom() {
       sfx.menuBack();
@@ -4298,10 +4339,42 @@ export default function App() {
     };
 
     const evolveMon = () => {
-      // Candy is no longer required to evolve — just confirm and go.
-      const nextId = m.id + 1;
+      // Use the species template's canEvolve / evolveAt fields (Dex-based) so
+      // evolution only triggers when the proper conditions are met.
+      const curTpl = ALL_POKEMON.find((p) => p.id === m.id);
+      const nextId = curTpl?.canEvolve;
+      // No next stage at all → final form, cannot evolve.
+      if (!curTpl || !nextId) {
+        if (typeof window !== "undefined") {
+          window.alert(`${m.nickname ?? m.name} cannot evolve any further — it is already in its final form.`);
+        }
+        addLog(`${m.nickname ?? m.name} cannot evolve any further.`, "#F44336");
+        return;
+      }
       const nextTpl = ALL_POKEMON.find((p) => p.id === nextId);
-      if (!nextTpl) { addLog(`${m.name} cannot evolve further.`, "#F44336"); return; }
+      if (!nextTpl) {
+        if (typeof window !== "undefined") {
+          window.alert(`${m.nickname ?? m.name} cannot evolve any further.`);
+        }
+        addLog(`${m.nickname ?? m.name} cannot evolve any further.`, "#F44336");
+        return;
+      }
+      // Level-based evolution gate (Dex evolveAt).
+      const requiredLevel = curTpl.evolveAt ?? null;
+      if (requiredLevel != null && m.level < requiredLevel) {
+        const need = requiredLevel - m.level;
+        if (typeof window !== "undefined") {
+          window.alert(
+            `Conditions to evolve ${m.nickname ?? m.name} have not been met.\n\n` +
+            `Required: Level ${requiredLevel}\n` +
+            `Current:  Level ${m.level}\n` +
+            `Train ${need} more level${need === 1 ? "" : "s"} for ${m.name} to evolve into ${nextTpl.name}.`
+          );
+        }
+        addLog(`${m.nickname ?? m.name} needs Lv ${requiredLevel} to evolve (currently Lv ${m.level}).`, "#F44336");
+        return;
+      }
+      // All conditions met — confirm and evolve.
       if (typeof window !== "undefined" && !window.confirm(`Evolve ${m.nickname ?? m.name} into ${nextTpl.name}?`)) return;
       const evolved = makeMon(nextTpl, m.level, "evolve");
       evolved.uid = m.uid;

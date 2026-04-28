@@ -8,7 +8,7 @@ import {
 } from "./battle-rooms";
 
 type IncomingMessage =
-  | { type: "host"; playerId: string; playerName: string; turnTimerSec?: number }
+  | { type: "host"; playerId: string; playerName: string; turnTimerSec?: number; settings?: Record<string, unknown> }
   | { type: "join"; playerId: string; playerName: string; code: string }
   | { type: "team"; playerId: string; team: unknown[] }
   | { type: "action"; playerId: string; action: { kind: "move"; moveIdx: number } | { kind: "switch"; toIdx: number } }
@@ -44,7 +44,13 @@ export function attachBattleWs(httpServer: Server) {
           send(ws, "pong", { ts: Date.now() });
           return;
         case "host": {
-          const code = hostRoom(msg.playerId, msg.playerName, ws, msg.turnTimerSec ?? 60);
+          const code = hostRoom(
+            msg.playerId,
+            msg.playerName,
+            ws,
+            msg.turnTimerSec ?? 60,
+            msg.settings ?? null,
+          );
           myPlayerId = msg.playerId;
           myRoomCode = code;
           send(ws, "hosted", { code });
@@ -55,8 +61,14 @@ export function attachBattleWs(httpServer: Server) {
           if (!r.ok) { send(ws, "error", { reason: r.reason }); return; }
           myPlayerId = msg.playerId;
           myRoomCode = r.room.code;
-          // Notify both sides.
-          send(ws, "joined", { code: r.room.code, hostName: r.room.clients.get(r.room.hostId)?.playerName });
+          // Notify both sides. Send the host's canonical battle settings to the
+          // joiner so their client can mirror the rules (team size, level cap,
+          // legendaries allowed, random level range, turn timer).
+          send(ws, "joined", {
+            code: r.room.code,
+            hostName: r.room.clients.get(r.room.hostId)?.playerName,
+            settings: r.room.settings ?? null,
+          });
           const hostMeta = r.room.clients.get(r.room.hostId);
           if (hostMeta) send(hostMeta.ws, "opponent_joined", { joinerName: msg.playerName });
           return;

@@ -32,6 +32,9 @@ export type Room = {
   turnTimer: NodeJS.Timeout | null;
   awaitingForceSwitch: { side: 0 | 1; pid: string }[];
   createdAt: number;
+  // Host's full battle settings — broadcast to the joiner so both sides
+  // play with the exact same rules (team size, level cap, legendaries, etc.).
+  settings: Record<string, unknown> | null;
 };
 
 const ROOMS: Map<string, Room> = new Map();
@@ -79,7 +82,13 @@ function anyOpponentPicked(room: Room, myPid: string): boolean {
 
 // ---------- Public room ops ----------
 
-export function hostRoom(playerId: string, playerName: string, ws: WebSocket, turnTimerSec = 60): string {
+export function hostRoom(
+  playerId: string,
+  playerName: string,
+  ws: WebSocket,
+  turnTimerSec = 60,
+  settings: Record<string, unknown> | null = null,
+): string {
   const code = makeRoomCode();
   const room: Room = {
     code,
@@ -92,6 +101,7 @@ export function hostRoom(playerId: string, playerName: string, ws: WebSocket, tu
     turnTimer: null,
     awaitingForceSwitch: [],
     createdAt: Date.now(),
+    settings,
   };
   room.clients.set(playerId, { ws, playerName, team: null, pendingAction: null, pendingForceSwitchIdx: null });
   ROOMS.set(code, room);
