@@ -3481,13 +3481,11 @@ export default function App() {
           {/* Action buttons */}
           <div style={{ display: "flex", gap: 12 }}>
             <button className="hunt-act-btn hunt-go" onClick={rescout}>
-              <i className="fa-solid fa-shoe-prints hunt-act-icon" style={{ fontSize: 22 }} />
               <span className="hunt-act-label">HUNT</span>
             </button>
             <button className="hunt-act-btn hunt-bt"
               disabled={!scoutedWild}
               onClick={captureScouted}>
-              <i className="fa-solid fa-bolt hunt-act-icon" style={{ fontSize: 22 }} />
               <span className="hunt-act-label">BATTLE</span>
             </button>
           </div>
