@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toucannon Stats</title>
+    <style>
+        :root {
+            --bg-dark: #000000;
+            --bg-panel: #222224;
+            --bg-black-panel: #050505;
+            --text-main: #ffffff;
+            --text-muted: #8e8e93;
+            --cyan: #32d4e5;
+            --type-normal: #c5c1a7;
+            --type-flying: #a78df0;
+            --btn-dark: #1c1c1e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--bg-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 100px; 
+            position: relative;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            position: relative;
+        }
+
+        .back-btn {
+            background-color: var(--bg-panel);
+            color: var(--text-muted);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .header-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: monospace;
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+
+        /* Sprite Display Area */
+        .sprite-display {
+            background-color: var(--bg-panel);
+            margin: 0 16px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 0 16px 0;
+            position: relative;
+        }
+
+        .sprite-img {
+            height: 120px;
+            image-rendering: pixelated;
+        }
+
+        .play-cry {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .play-cry svg {
+            width: 14px;
+            height: 14px;
+            fill: var(--text-muted);
+        }
+
+        /* Title and Types Box */
+        .title-box {
+            background-color: var(--bg-black-panel);
+            margin: 16px 16px 0 16px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #1a1a1a;
+        }
+
+        .title-box h1 {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .types {
+            display: flex;
+            gap: 8px;
+        }
+
+        .type-badge {
+            padding: 4px 12px;
+            border-radius: 6px; /* Rectangle with curved edges */
+            font-size: 11px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .type-normal { background-color: var(--type-normal); }
+        .type-flying { background-color: var(--type-flying); color: #fff; }
+
+        /* Stats Content */
+        .stats-content {
+            background-color: var(--bg-black-panel); /* Black background */
+            margin: 16px 16px 0 16px; /* Added top margin since it's below the title box now */
+            padding: 16px;
+            border-radius: 12px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-main);
+            border: 1px solid #1a1a1a;
+        }
+
+        .stats-content span.label {
+            color: var(--text-muted);
+        }
+
+        .stats-content b {
+            font-weight: normal;
+            color: var(--text-main);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background-color: #1a1a2e;
+            border-radius: 3px;
+            margin: 12px 0;
+            border: 1px solid #2a2a4a;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 2%;
+            background-color: #3b3b6d;
+        }
+
+        .footer-stats {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin: 16px;
+        }
+
+        .tab {
+            flex: 1;
+            background-color: transparent;
+            border: 1px solid #333;
+            color: var(--text-muted);
+            padding: 8px 0;
+            border-radius: 8px; /* Rectangle with curved edges */
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .tab.active {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background-color: rgba(50, 212, 229, 0.05);
+        }
+
+        /* Fixed Bottom Actions */
+        .bottom-actions {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--bg-dark);
+            display: flex;
+            gap: 8px;
+            padding: 16px;
+            border-top: 1px solid #1a1a1a;
+            z-index: 100;
+        }
+
+        .action-btn {
+            flex: 1;
+            background-color: var(--btn-dark);
+            border: 1px solid #222;
+            color: var(--text-main);
+            border-radius: 8px;
+            padding: 12px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .action-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .icon-purple { fill: #b678ff; }
+        .icon-yellow { fill: #fdd835; }
+        .icon-red { fill: #ff5252; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <button class="back-btn">
+            <svg width="8" height="10" viewBox="0 0 8 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 1L2 5L7 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            BACK
+        </button>
+        <div class="header-title">Toucannon</div>
+    </header>
+
+    <div class="sprite-display">
+        <img class="sprite-img" src="https://play.pokemonshowdown.com/sprites/ani/toucannon.gif" alt="Toucannon Sprite">
+        <div class="play-cry">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </svg>
+            Tap to play cry
+        </div>
+    </div>
+
+    <div class="title-box">
+        <h1>Toucannon</h1>
+        <div class="types">
+            <span class="type-badge type-normal">Normal</span>
+            <span class="type-badge type-flying">Flying</span>
+        </div>
+    </div>
+
+    <div class="stats-content">
+        <span class="label">Level: </span><b>31</b> | <span class="label">Nature: </span><b>Lax</b><br>
+        <span class="label">Types: </span><b>Normal / Flying</b><br>
+        <span class="label">Gender: </span><b>Male</b><br>
+        <span class="label">Ability: </span><b>—</b><br>
+        <span class="label">Tera Type: </span><b>Normal</b><br>
+        <span class="label">EXP: </span><b>0</b><br>
+        <span class="label">Need To Next Level: </span><b>1,153</b>
+        
+        <div class="progress-container">
+            <div class="progress-bar"></div>
+        </div>
+        
+        <div class="footer-stats">
+            Caught: 4/28/2026 • Origin: evolve
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active">Info</button>
+        <button class="tab">Stats</button>
+        <button class="tab">IVs/EVs</button>
+        <button class="tab">Moveset</button>
+    </div>
+
+    <div class="bottom-actions">
+        <button class="action-btn">
+            <svg class="icon-purple" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+            </svg>
+            Nickname
+        </button>
+        <button class="action-btn">
+            <svg class="icon-yellow" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+                <circle cx="16" cy="18" r="1.5"/><circle cx="20" cy="18" r="1.5"/><circle cx="12" cy="18" r="1.5"/><circle cx="8" cy="18" r="1.5"/>
+            </svg>
+            Evolve
+        </button>
+        <button class="action-btn">
+            <svg class="icon-red" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+            </svg>
+            Release
+        </button>
+    </div>
+</div>
+
+</body>
+</html>

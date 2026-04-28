@@ -4339,91 +4339,214 @@ export default function App() {
 
     const moveset = (m.moves && m.moves.length > 0 ? m.moves : ["Tackle", "Growl"]).slice(0, 4);
 
+    // ---- New Mons stats UI (matches the iOS-style mockup) ----
+    const FONT_BASE = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    const FONT_MONO = "'Courier New', Courier, monospace";
+    const C = {
+      bgDark: "#000000",
+      bgPanel: "#222224",
+      bgBlackPanel: "#050505",
+      textMain: "#ffffff",
+      textMuted: "#8e8e93",
+      cyan: "#32d4e5",
+      btnDark: "#1c1c1e",
+      borderDim: "#1a1a1a",
+      borderTab: "#333333",
+    };
+
+    const typeBadge = (t: string) => {
+      const bg = TYPE_COLORS[t] ?? "#999";
+      // Pick a readable text color: light bg → black text, dark bg → white text.
+      const lightTypes = new Set(["Normal", "Electric", "Ice", "Ground", "Bug", "Steel", "Fairy"]);
+      const fg = lightTypes.has(t) ? "#000" : "#fff";
+      return (
+        <span key={t} style={{
+          padding: "4px 12px",
+          borderRadius: 6,
+          fontSize: 11,
+          fontWeight: 600,
+          background: bg,
+          color: fg,
+          fontFamily: FONT_BASE,
+        }}>{t}</span>
+      );
+    };
+
+    const typeText = m.type1 + (m.type2 ? ` / ${m.type2}` : "");
+    const expPct = Math.min(100, (m.exp / Math.max(1, m.expNeeded)) * 100);
+    const needNext = Math.max(0, m.expNeeded - m.exp);
+    const gender = m.id % 8 === 0 ? "Genderless" : m.id % 2 === 0 ? "Female" : "Male";
+
+    // Sprite URL for the new UI — animated showdown gif if available.
+    const spriteUrl = `https://play.pokemonshowdown.com/sprites/ani/${(m.sprite || m.name).toLowerCase()}.gif`;
+
+    // Stat row used in the Stats tab — keeps the new monochrome look.
+    const newStatRow = (label: string, val: number, max: number) => (
+      <div key={label} style={{ marginBottom: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+          <span style={{ color: C.textMuted }}>{label}</span>
+          <span style={{ color: C.textMain, fontWeight: 600 }}>{val}</span>
+        </div>
+        <div style={{ width: "100%", height: 6, background: "#1a1a2e", borderRadius: 3, border: "1px solid #2a2a4a", overflow: "hidden" }}>
+          <div style={{ width: `${Math.min(100, (val / max) * 100)}%`, height: "100%", background: C.cyan }} />
+        </div>
+      </div>
+    );
+
     return (
-      <div style={S.root}><style>{css}</style>
-        <div style={S.wrap}>
-          <div style={S.header}>
-            <span style={{ fontSize: 9, color: "#26A69A" }}><i className="fa-solid fa-paw" /> {m.nickname ?? m.name}</span>
-            <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("mons")}>◀ BACK</button>
-          </div>
+      <div style={{ background: C.bgDark, minHeight: "100vh", display: "flex", justifyContent: "center", color: C.textMain, fontFamily: FONT_BASE }}>
+        <div style={{
+          width: "100%",
+          maxWidth: 400,
+          background: C.bgDark,
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          paddingBottom: 100,
+          position: "relative",
+        }}>
+          {/* Header */}
+          <header style={{ display: "flex", alignItems: "center", padding: 16, position: "relative" }}>
+            <button
+              onClick={() => { sfx.menuBack(); setScreen("mons"); }}
+              style={{
+                background: C.bgPanel,
+                color: C.textMuted,
+                border: "none",
+                padding: "6px 12px",
+                borderRadius: 6,
+                fontSize: 12,
+                fontWeight: "bold",
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                cursor: "pointer",
+                fontFamily: FONT_BASE,
+              }}
+            >
+              <svg width="8" height="10" viewBox="0 0 8 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 1L2 5L7 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              BACK
+            </button>
+            <div style={{
+              position: "absolute",
+              left: "50%",
+              transform: "translateX(-50%)",
+              fontFamily: FONT_MONO,
+              fontSize: 16,
+              letterSpacing: 1,
+              color: C.textMain,
+            }}>{m.nickname ?? m.name}</div>
+          </header>
 
+          {/* Sprite display */}
           <div style={{
-            margin: "10px 12px 8px", padding: 12, borderRadius: 12,
-            background: `linear-gradient(135deg, ${TYPE_COLORS[m.type1]}25, ${TYPE_COLORS[m.type2 ?? m.type1]}10)`,
-            border: `2px solid ${TYPE_COLORS[m.type1]}66`,
-            display: "flex", gap: 12, alignItems: "center",
+            background: C.bgPanel,
+            margin: "0 16px",
+            borderRadius: 12,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            padding: "40px 0 16px 0",
           }}>
-            <div style={{ width: 96, height: 96, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.25)", borderRadius: 10 }}>
-              <MonSprite sprite={m.sprite} size={88} className="" />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, color: "#fff", fontWeight: 800 }}>{m.nickname ?? m.name}</div>
-              {m.nickname && <div style={{ fontSize: 8, color: "#aaa" }}>({m.name})</div>}
-              <div style={{ fontSize: 9, color: "#FFD700", marginTop: 2 }}>#{String(m.id).padStart(3, "0")} · CP {cp}</div>
-              <div style={{ display: "flex", gap: 4, marginTop: 4 }}>{typeTag(m.type1)}{m.type2 && typeTag(m.type2)}</div>
-              <div style={{ fontSize: 8, color: "#aaa", marginTop: 4 }}>
-                Lv {m.level} · HP {m.currentHp}/{m.maxHp} · IV {iv}%
-              </div>
-              <div style={{ fontSize: 7, color: "#6b7896", marginTop: 2 }}>
-                {found.inBox ? "📦 In your collection" : `★ In team: ${teams[found.teamIdx]?.name ?? "—"}`}
-              </div>
+            <img
+              src={spriteUrl}
+              alt={`${m.name} sprite`}
+              style={{ height: 120, imageRendering: "pixelated" }}
+              onError={(e) => {
+                const t = e.currentTarget;
+                if (!t.dataset.fallback) {
+                  t.dataset.fallback = "1";
+                  t.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${m.id}.png`;
+                }
+              }}
+            />
+            <div
+              onClick={() => sfx.click()}
+              style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 6, color: C.textMuted, fontSize: 12, cursor: "pointer" }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill={C.textMuted}>
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+              </svg>
+              Tap to play cry
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 4, padding: "0 12px 8px" }}>
-            {tabs.map((t) => (
-              <button key={t.key} className="btn"
-                onClick={() => setMonDetailTab(t.key)}
-                style={{
-                  flex: 1, padding: "6px 4px", fontSize: 9, fontWeight: 700,
-                  border: `1.5px solid ${monDetailTab === t.key ? "#26A69A" : "#2a3148"}`,
-                  background: monDetailTab === t.key ? "#0d2a26" : "#0d1322",
-                  color: monDetailTab === t.key ? "#26A69A" : "#aaa",
-                  borderRadius: 8, cursor: "pointer",
-                }}>
-                {t.label}
-              </button>
-            ))}
+          {/* Title + types box */}
+          <div style={{
+            background: C.bgBlackPanel,
+            margin: "16px 16px 0 16px",
+            padding: "12px 16px",
+            borderRadius: 8,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            border: `1px solid ${C.borderDim}`,
+          }}>
+            <h1 style={{ fontSize: 24, fontWeight: "bold", margin: 0, color: C.textMain, fontFamily: FONT_BASE }}>
+              {m.nickname ?? m.name}
+            </h1>
+            <div style={{ display: "flex", gap: 8 }}>
+              {typeBadge(m.type1)}
+              {m.type2 && typeBadge(m.type2)}
+            </div>
           </div>
 
-          <div style={{ flex: 1, overflowY: "auto", padding: "0 12px" }}>
+          {/* Tab content panel (matches the .stats-content black panel) */}
+          <div style={{
+            background: C.bgBlackPanel,
+            margin: "16px 16px 0 16px",
+            padding: 16,
+            borderRadius: 12,
+            fontFamily: FONT_MONO,
+            fontSize: 13,
+            lineHeight: 1.6,
+            color: C.textMain,
+            border: `1px solid ${C.borderDim}`,
+          }}>
             {monDetailTab === "info" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 10, color: "#fff" }}>
-                <div><span style={{ color: "#aaa" }}>Level:</span> {m.level} <span style={{ color: "#666" }}>|</span> <span style={{ color: "#aaa" }}>Nature:</span> {m.nature ?? "Hardy"}</div>
-                <div><span style={{ color: "#aaa" }}>Types:</span> {m.type1}{m.type2 ? ` / ${m.type2}` : ""}</div>
-                <div><span style={{ color: "#aaa" }}>Gender:</span> {m.id % 8 === 0 ? "Genderless" : m.id % 2 === 0 ? "Female" : "Male"}</div>
-                <div><span style={{ color: "#aaa" }}>Ability:</span> {(m as any).ability ?? "—"}</div>
-                <div><span style={{ color: "#aaa" }}>Tera Type:</span> {m.type1}</div>
-                <div><span style={{ color: "#aaa" }}>EXP:</span> {m.exp.toLocaleString()}</div>
-                <div><span style={{ color: "#aaa" }}>Need To Next Level:</span> {Math.max(0, m.expNeeded - m.exp).toLocaleString()}</div>
-                <div style={{ marginTop: 6, height: 8, background: "#0d1322", border: "1px solid #2a3148", borderRadius: 4, overflow: "hidden" }}>
-                  <div style={{ width: `${Math.min(100, (m.exp / Math.max(1, m.expNeeded)) * 100)}%`, height: "100%", background: "linear-gradient(90deg, #26A69A, #4ade80)" }} />
+              <>
+                <span style={{ color: C.textMuted }}>Level: </span><b style={{ fontWeight: "normal" }}>{m.level}</b> | <span style={{ color: C.textMuted }}>Nature: </span><b style={{ fontWeight: "normal" }}>{m.nature ?? "Hardy"}</b><br />
+                <span style={{ color: C.textMuted }}>Types: </span><b style={{ fontWeight: "normal" }}>{typeText}</b><br />
+                <span style={{ color: C.textMuted }}>Gender: </span><b style={{ fontWeight: "normal" }}>{gender}</b><br />
+                <span style={{ color: C.textMuted }}>Ability: </span><b style={{ fontWeight: "normal" }}>{(m as any).ability ?? "—"}</b><br />
+                <span style={{ color: C.textMuted }}>Tera Type: </span><b style={{ fontWeight: "normal" }}>{m.type1}</b><br />
+                <span style={{ color: C.textMuted }}>EXP: </span><b style={{ fontWeight: "normal" }}>{m.exp.toLocaleString()}</b><br />
+                <span style={{ color: C.textMuted }}>Need To Next Level: </span><b style={{ fontWeight: "normal" }}>{needNext.toLocaleString()}</b>
+                <div style={{ width: "100%", height: 6, background: "#1a1a2e", borderRadius: 3, margin: "12px 0", border: "1px solid #2a2a4a", position: "relative", overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${Math.max(2, expPct)}%`, background: "#3b3b6d" }} />
                 </div>
-                <div style={{ fontSize: 8, color: "#888" }}>Caught: {m.caughtAt ? new Date(m.caughtAt).toLocaleDateString() : "—"} · Origin: {m.origin ?? "—"}</div>
-              </div>
+                <div style={{ fontSize: 11, color: C.textMuted, marginTop: 4 }}>
+                  Caught: {m.caughtAt ? new Date(m.caughtAt).toLocaleDateString() : "—"} • Origin: {m.origin ?? "—"}
+                </div>
+              </>
             )}
 
             {monDetailTab === "stats" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "#aaa", borderBottom: "1px dashed #2a3148", paddingBottom: 4, marginBottom: 4 }}>
-                  <span>Stats</span><span>Points</span>
+              <div style={{ fontFamily: FONT_BASE }}>
+                {newStatRow("HP", m.maxHp, 400)}
+                {newStatRow("Attack", m.atk, 250)}
+                {newStatRow("Defense", m.def, 250)}
+                {newStatRow("Sp. Attack", m.spa, 250)}
+                {newStatRow("Sp. Defense", m.spd, 250)}
+                {newStatRow("Speed", m.spe, 250)}
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: C.cyan, marginTop: 8, paddingTop: 10, borderTop: "1px solid #1a1a2e" }}>
+                  <span>Total</span>
+                  <span style={{ fontWeight: 700 }}>{m.maxHp + m.atk + m.def + m.spa + m.spd + m.spe}</span>
                 </div>
-                <StatRow label="HP" val={m.maxHp} max={400} />
-                <StatRow label="Attack" val={m.atk} max={250} />
-                <StatRow label="Defense" val={m.def} max={250} />
-                <StatRow label="Sp. Attack" val={m.spa} max={250} />
-                <StatRow label="Sp. Defense" val={m.spd} max={250} />
-                <StatRow label="Speed" val={m.spe} max={250} />
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#FFD700", marginTop: 6, paddingTop: 6, borderTop: "1px dashed #2a3148" }}>
-                  <span>Total</span><span>{m.maxHp + m.atk + m.def + m.spa + m.spd + m.spe}</span>
+                <div style={{ fontSize: 11, color: C.textMuted, marginTop: 8 }}>
+                  CP {cp} • IV Avg {iv}%
                 </div>
               </div>
             )}
 
             {monDetailTab === "iv" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 10, color: "#fff" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 60px 60px", fontSize: 9, color: "#aaa", borderBottom: "1px dashed #2a3148", paddingBottom: 4 }}>
-                  <span>Stat</span><span style={{ textAlign: "right" }}>IV</span><span style={{ textAlign: "right" }}>EV</span>
+              <div style={{ fontFamily: FONT_BASE }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 70px 70px", fontSize: 12, color: C.textMuted, paddingBottom: 8, borderBottom: "1px solid #1a1a2e", marginBottom: 8 }}>
+                  <span>Stat</span>
+                  <span style={{ textAlign: "right" }}>IV</span>
+                  <span style={{ textAlign: "right" }}>EV</span>
                 </div>
                 {([
                   ["HP", m.ivHp ?? 0, m.evHp ?? 0],
@@ -4433,58 +4556,139 @@ export default function App() {
                   ["Sp. Defense", m.ivSpd ?? 0, m.evSpd ?? 0],
                   ["Speed", m.ivSpe ?? 0, m.evSpe ?? 0],
                 ] as [string, number, number][]).map(([label, ivv, evv]) => (
-                  <div key={label} style={{ display: "grid", gridTemplateColumns: "1fr 60px 60px", padding: "3px 0" }}>
-                    <span style={{ color: "#aaa" }}>{label}</span>
-                    <span style={{ textAlign: "right", color: ivv >= 31 ? "#FFD700" : ivv >= 25 ? "#4ade80" : "#fff" }}>{ivv}</span>
-                    <span style={{ textAlign: "right", color: "#26A69A" }}>{evv}</span>
+                  <div key={label} style={{ display: "grid", gridTemplateColumns: "1fr 70px 70px", padding: "6px 0", fontSize: 13 }}>
+                    <span style={{ color: C.textMuted }}>{label}</span>
+                    <span style={{ textAlign: "right", color: ivv >= 31 ? C.cyan : C.textMain, fontWeight: ivv >= 31 ? 700 : 400 }}>{ivv}</span>
+                    <span style={{ textAlign: "right", color: C.textMain }}>{evv}</span>
                   </div>
                 ))}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 60px 60px", marginTop: 6, paddingTop: 6, borderTop: "1px dashed #2a3148", color: "#FFD700", fontWeight: 700 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 70px 70px", marginTop: 8, paddingTop: 10, borderTop: "1px solid #1a1a2e", color: C.cyan, fontWeight: 700 }}>
                   <span>Total</span>
                   <span style={{ textAlign: "right" }}>{ivT}</span>
-                  <span style={{ textAlign: "right", color: "#26A69A" }}>{evT}</span>
+                  <span style={{ textAlign: "right" }}>{evT}</span>
                 </div>
               </div>
             )}
 
             {monDetailTab === "moves" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, fontFamily: FONT_BASE }}>
                 {moveset.map((mv, i) => {
                   const mt = moveTypeOf(mv);
-                  const color = MOVE_TYPE_COLOR[mt] ?? "#888";
+                  const moveColor = MOVE_TYPE_COLOR[mt] ?? "#888";
                   return (
                     <div key={`${mv}-${i}`} style={{
-                      padding: "8px 10px", borderRadius: 8,
-                      background: `${color}15`, border: `1.5px solid ${color}66`,
-                      display: "flex", justifyContent: "space-between", alignItems: "center",
+                      padding: "10px 12px",
+                      borderRadius: 8,
+                      background: C.btnDark,
+                      border: `1px solid ${C.borderDim}`,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
                     }}>
-                      <span style={{ fontSize: 11, color: "#fff", fontWeight: 700 }}>{mv}</span>
-                      <span style={{ fontSize: 8, color, padding: "2px 8px", border: `1px solid ${color}`, borderRadius: 999, background: `${color}22` }}>
-                        {mt.toUpperCase()}
-                      </span>
+                      <span style={{ fontSize: 13, color: C.textMain, fontWeight: 600 }}>{mv}</span>
+                      <span style={{
+                        fontSize: 10,
+                        color: "#000",
+                        padding: "3px 10px",
+                        borderRadius: 6,
+                        background: moveColor,
+                        fontWeight: 600,
+                      }}>{mt.toUpperCase()}</span>
                     </div>
                   );
                 })}
-                {moveset.length === 0 && <div style={{ color: "#666", fontSize: 9, textAlign: "center", padding: 20 }}>No moves learned yet.</div>}
+                {moveset.length === 0 && (
+                  <div style={{ color: C.textMuted, fontSize: 12, textAlign: "center", padding: 20 }}>
+                    No moves learned yet.
+                  </div>
+                )}
               </div>
             )}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, padding: "10px 12px 14px", borderTop: "1px solid #2a3148" }}>
-            <button className="btn"
+          {/* Tabs */}
+          <div style={{ display: "flex", gap: 8, margin: 16 }}>
+            {tabs.map((t) => {
+              const active = monDetailTab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => { sfx.click(); setMonDetailTab(t.key); }}
+                  style={{
+                    flex: 1,
+                    background: active ? "rgba(50, 212, 229, 0.05)" : "transparent",
+                    border: `1px solid ${active ? C.cyan : C.borderTab}`,
+                    color: active ? C.cyan : C.textMuted,
+                    padding: "8px 0",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: FONT_BASE,
+                  }}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Fixed bottom actions */}
+          <div style={{
+            position: "fixed",
+            bottom: 0,
+            width: "100%",
+            maxWidth: 400,
+            background: C.bgDark,
+            display: "flex",
+            gap: 8,
+            padding: 16,
+            borderTop: `1px solid ${C.borderDim}`,
+            zIndex: 100,
+            boxSizing: "border-box",
+          }}>
+            <button
               onClick={renameMon}
-              style={{ padding: "10px 6px", border: "1.5px solid #a855f7", background: "#1a0a2a", color: "#c084fc", borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
-              <i className="fa-solid fa-pen" style={{ marginRight: 4 }} /> Nickname
+              style={{
+                flex: 1, background: C.btnDark, border: `1px solid #222`, color: C.textMain,
+                borderRadius: 8, padding: "12px 0", display: "flex", flexDirection: "column",
+                alignItems: "center", gap: 6, fontSize: 11, fontWeight: 500, cursor: "pointer",
+                fontFamily: FONT_BASE,
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#b678ff">
+                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+              </svg>
+              Nickname
             </button>
-            <button className="btn"
+            <button
               onClick={evolveMon}
-              style={{ padding: "10px 6px", border: "1.5px solid #FFD700", background: "#1a1808", color: "#FFD700", borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
-              <i className="fa-solid fa-wand-magic-sparkles" style={{ marginRight: 4 }} /> Evolve
+              style={{
+                flex: 1, background: C.btnDark, border: `1px solid #222`, color: C.textMain,
+                borderRadius: 8, padding: "12px 0", display: "flex", flexDirection: "column",
+                alignItems: "center", gap: 6, fontSize: 11, fontWeight: 500, cursor: "pointer",
+                fontFamily: FONT_BASE,
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#fdd835">
+                <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" />
+                <circle cx="16" cy="18" r="1.5" /><circle cx="20" cy="18" r="1.5" /><circle cx="12" cy="18" r="1.5" /><circle cx="8" cy="18" r="1.5" />
+              </svg>
+              Evolve
             </button>
-            <button className="btn"
+            <button
               onClick={releaseMon}
-              style={{ padding: "10px 6px", border: "1.5px solid #F44336", background: "#1a0a14", color: "#F44336", borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
-              <i className="fa-solid fa-trash" style={{ marginRight: 4 }} /> Release
+              style={{
+                flex: 1, background: C.btnDark, border: `1px solid #222`, color: C.textMain,
+                borderRadius: 8, padding: "12px 0", display: "flex", flexDirection: "column",
+                alignItems: "center", gap: 6, fontSize: 11, fontWeight: 500, cursor: "pointer",
+                fontFamily: FONT_BASE,
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#ff5252">
+                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+              </svg>
+              Release
             </button>
           </div>
         </div>
