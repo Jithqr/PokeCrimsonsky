@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { sfx, playMoveSfx, moveTypeOf, TYPE_COLOR as MOVE_TYPE_COLOR } from "./sfx";
-import { ALL_POKEMON, TOTAL_POKEMON, GEN_NAMES, type PokemonTemplate } from "./lib/pokemon-data";
+import { ALL_POKEMON, TOTAL_POKEMON, GEN_NAMES, movesForLevel, type PokemonTemplate } from "./lib/pokemon-data";
 import { tmStoreItems } from "./lib/tm-data";
 import { PokeTalesDex } from "./components/PokeTalesDex";
 import { SplashLoader } from "./components/SplashLoader";
@@ -176,8 +176,13 @@ function makeMon(template: PokemonTemplate, level: number, origin: Mon["origin"]
   const s = level / 50;
   const maxHp = Math.floor(template.hp * s * 2 + level + 10);
   const ivs = generateIvs();
+  // Strip the bulky learnset off each Mon instance and pick moves the species
+  // could ACTUALLY know at this level (fixes Bulbasaur-knows-Solar-Beam bug).
+  const { learn: _learn, moves: _ignoreMoves, ...rest } = template;
+  const moves = movesForLevel(template, level);
   return {
-    ...template,
+    ...rest,
+    moves,
     uid: makeUid(),
     level,
     maxHp,

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ALL_POKEMON, PokemonTemplate, TOTAL_POKEMON } from "../lib/pokemon-data";
+import { ALL_POKEMON, type PokemonTemplate } from "../lib/pokemon-data";
+import { getMove } from "../lib/move-data";
 
+// ---------- Constants ----------
 const TYPE_COLORS: Record<string, string> = {
   Normal: "#A8A77A", Fire: "#EE8130", Water: "#6390F0", Electric: "#F7D02C",
   Grass: "#7AC74C", Ice: "#96D9D6", Fighting: "#C22E28", Poison: "#A33EA1",
@@ -8,12 +10,10 @@ const TYPE_COLORS: Record<string, string> = {
   Rock: "#B6A136", Ghost: "#735797", Dragon: "#6F35FC", Dark: "#705746",
   Steel: "#B7B7CE", Fairy: "#D685AD",
 };
-
 const STAT_BAR_COLORS: Record<string, string> = {
   hp: "#ef4444", atk: "#f97316", def: "#eab308",
   spa: "#3b82f6", spd: "#22c55e", spe: "#ec4899",
 };
-
 const NATURES = [
   "Hardy", "Lonely", "Brave", "Adamant", "Naughty",
   "Bold", "Docile", "Relaxed", "Impish", "Lax",
@@ -21,7 +21,6 @@ const NATURES = [
   "Modest", "Mild", "Quiet", "Bashful", "Rash",
   "Calm", "Gentle", "Sassy", "Careful", "Quirky",
 ];
-
 const NATURE_MOD: Record<string, { plus?: string; minus?: string }> = {
   Hardy: {}, Lonely: { plus: "atk", minus: "def" }, Brave: { plus: "atk", minus: "spe" },
   Adamant: { plus: "atk", minus: "spa" }, Naughty: { plus: "atk", minus: "spd" },
@@ -36,136 +35,61 @@ const NATURE_MOD: Record<string, { plus?: string; minus?: string }> = {
 };
 
 const CUSTOM_SPRITES: Record<string, string> = {
-  irontreads: "sprites/custom/irontreads.gif",
-  ironbundle: "sprites/custom/ironbundle.gif",
-  ironhands: "sprites/custom/ironhands.gif",
-  ironjugulis: "sprites/custom/ironjugulis.gif",
-  ironmoth: "sprites/custom/ironmoth.gif",
-  ironthorns: "sprites/custom/ironthorns.gif",
-  wochien: "sprites/custom/wochien.gif",
-  chienpao: "sprites/custom/chienpao.gif",
-  tinglu: "sprites/custom/tinglu.gif",
-  chiyu: "sprites/custom/chiyu.gif",
-  ironvaliant: "sprites/custom/ironvaliant.gif",
-  miraidon: "sprites/custom/miraidon.gif",
-  ironleaves: "sprites/custom/ironleaves.gif",
-  okidogi: "sprites/custom/okidogi.gif",
-  munkidori: "sprites/custom/munkidori.gif",
-  fezandipiti: "sprites/custom/fezandipiti.gif",
-  ogerpon: "sprites/custom/ogerpon.gif",
-  ironboulder: "sprites/custom/ironboulder.gif",
-  ironcrown: "sprites/custom/ironcrown.gif",
-  terapagos: "sprites/custom/terapagos.gif",
+  irontreads: "sprites/custom/irontreads.gif", ironbundle: "sprites/custom/ironbundle.gif",
+  ironhands: "sprites/custom/ironhands.gif", ironjugulis: "sprites/custom/ironjugulis.gif",
+  ironmoth: "sprites/custom/ironmoth.gif", ironthorns: "sprites/custom/ironthorns.gif",
+  wochien: "sprites/custom/wochien.gif", chienpao: "sprites/custom/chienpao.gif",
+  tinglu: "sprites/custom/tinglu.gif", chiyu: "sprites/custom/chiyu.gif",
+  ironvaliant: "sprites/custom/ironvaliant.gif", miraidon: "sprites/custom/miraidon.gif",
+  ironleaves: "sprites/custom/ironleaves.gif", okidogi: "sprites/custom/okidogi.gif",
+  munkidori: "sprites/custom/munkidori.gif", fezandipiti: "sprites/custom/fezandipiti.gif",
+  ogerpon: "sprites/custom/ogerpon.gif", ironboulder: "sprites/custom/ironboulder.gif",
+  ironcrown: "sprites/custom/ironcrown.gif", terapagos: "sprites/custom/terapagos.gif",
   pecharunt: "sprites/custom/pecharunt.gif",
 };
-
 function spriteUrl(name: string) {
   const clean = name.toLowerCase().replace(/[^a-z0-9-]/g, "");
   if (CUSTOM_SPRITES[clean]) return `${import.meta.env.BASE_URL}${CUSTOM_SPRITES[clean]}`;
   return `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
 }
-
 function spriteAniUrl(name: string) {
   const clean = name.toLowerCase().replace(/[^a-z0-9-]/g, "");
   if (CUSTOM_SPRITES[clean]) return `${import.meta.env.BASE_URL}${CUSTOM_SPRITES[clean]}`;
   return `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`;
 }
 
-function fmtName(s: string) {
-  return s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 function calcStat(base: number, ev: number, iv: number, level: number, isHP: boolean, natureMul = 1) {
-  if (isHP) {
-    return Math.floor(((2 * base + iv + Math.floor(ev / 4)) * level) / 100) + level + 10;
-  }
+  if (isHP) return Math.floor(((2 * base + iv + Math.floor(ev / 4)) * level) / 100) + level + 10;
   const v = Math.floor(((2 * base + iv + Math.floor(ev / 4)) * level) / 100) + 5;
   return Math.floor(v * natureMul);
 }
 
-const detailCache = new Map<number, any>();
-const evoCache = new Map<string, any>();
-
-async function fetchDetail(id: number) {
-  if (detailCache.has(id)) return detailCache.get(id);
-  const [p, s] = await Promise.all([
-    fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then((r) => r.json()),
-    fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`).then((r) => r.json()),
-  ]);
-  let chain: any = null;
-  if (s.evolution_chain?.url) {
-    if (evoCache.has(s.evolution_chain.url)) {
-      chain = evoCache.get(s.evolution_chain.url);
-    } else {
-      chain = await fetch(s.evolution_chain.url).then((r) => r.json());
-      evoCache.set(s.evolution_chain.url, chain);
-    }
-  }
-  const abilityDetails = await Promise.all(
-    p.abilities.map(async (a: any) => {
-      try {
-        const ad = await fetch(a.ability.url).then((r) => r.json());
-        const en = ad.effect_entries?.find((e: any) => e.language.name === "en");
-        const flav = ad.flavor_text_entries?.find((e: any) => e.language.name === "en");
-        return {
-          name: fmtName(a.ability.name),
-          is_hidden: a.is_hidden,
-          short: en?.short_effect || flav?.flavor_text || "",
-          full: en?.effect || flav?.flavor_text || "",
-        };
-      } catch {
-        return { name: fmtName(a.ability.name), is_hidden: a.is_hidden, short: "", full: "" };
-      }
-    })
-  );
-  const data = {
-    pokemon: p,
-    species: s,
-    chain,
-    abilityDetails,
-    height: p.height / 10,
-    weight: p.weight / 10,
-    baseExp: p.base_experience ?? 0,
-  };
-  detailCache.set(id, data);
-  return data;
-}
-
-function flattenChain(chain: any): { name: string; id: number; minLevel: number | null; trigger: string }[] {
-  const out: { name: string; id: number; minLevel: number | null; trigger: string }[] = [];
-  function walk(node: any, parentTrigger = "") {
-    const url: string = node.species.url;
-    const m = url.match(/\/pokemon-species\/(\d+)\/?$/);
-    const id = m ? parseInt(m[1], 10) : 0;
-    out.push({
-      name: fmtName(node.species.name),
-      id,
-      minLevel: parentTrigger || node.evolution_details?.[0]?.min_level || null,
-      trigger: parentTrigger,
-    });
-    for (const ev of node.evolves_to ?? []) {
-      const det = ev.evolution_details?.[0];
-      const trig = det?.min_level
-        ? `Level ${det.min_level}`
-        : det?.item
-        ? `Use ${fmtName(det.item.name)}`
-        : det?.trigger?.name === "trade"
-        ? "Trade"
-        : det?.min_happiness
-        ? "High Friendship"
-        : det?.trigger?.name
-        ? fmtName(det.trigger.name)
-        : "";
-      walk(ev, trig);
-    }
-  }
-  if (chain?.chain) walk(chain.chain);
-  return out;
+// ---------- Lazy dex-extras loader ----------
+type DexExtra = {
+  id: number; name: string; genus: string; flavor: string;
+  height: number; weight: number; baseExp: number; cry: string;
+  abilities: { name: string; hidden: boolean; short: string; full: string }[];
+  tm: string[]; egg: string[]; tutor: string[];
+  chain?: { id: number; name: string }[];
+};
+let dexCache: Record<string, DexExtra> | null = null;
+let dexLoading: Promise<Record<string, DexExtra>> | null = null;
+async function loadDex(): Promise<Record<string, DexExtra>> {
+  if (dexCache) return dexCache;
+  if (dexLoading) return dexLoading;
+  dexLoading = import("../lib/dex-data.json").then((m) => {
+    dexCache = (m as any).default || (m as any);
+    return dexCache!;
+  });
+  return dexLoading;
 }
 
 type Tab = "level-up" | "machine" | "egg" | "tutor";
 
-export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: () => void }) {
+// ============================================================
+// Crimson Sky Dex – grid view
+// ============================================================
+export function PokeTalesDex({ onBack: _onBack, onHome }: { onBack: () => void; onHome: () => void }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<PokemonTemplate | null>(null);
 
@@ -173,7 +97,7 @@ export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: (
     const q = query.trim().toLowerCase();
     if (!q) return ALL_POKEMON;
     return ALL_POKEMON.filter(
-      (p) => p.name.toLowerCase().includes(q) || String(p.id).padStart(3, "0").includes(q)
+      (p) => p.name.toLowerCase().includes(q) || String(p.id).padStart(4, "0").includes(q),
     );
   }, [query]);
 
@@ -217,7 +141,7 @@ export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: (
         <div style={S.grid}>
           {filtered.map((p) => (
             <button key={p.id} style={S.card} onClick={() => setSelected(p)}>
-              <div style={S.cardId}>#{String(p.id).padStart(3, "0")}</div>
+              <div style={S.cardId}>#{String(p.id).padStart(4, "0")}</div>
               <div style={S.cardSpriteBox}>
                 <img
                   src={spriteUrl(p.sprite)}
@@ -239,6 +163,9 @@ export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: (
   );
 }
 
+// ============================================================
+// Dex – detail panel (matches the Crimson Sky design spec)
+// ============================================================
 function DexDetail({
   mon,
   onBack,
@@ -250,9 +177,7 @@ function DexDetail({
   onHome: () => void;
   onJump: (id: number) => void;
 }) {
-  const [data, setData] = useState<any | null>(detailCache.get(mon.id) ?? null);
-  const [loading, setLoading] = useState(!detailCache.has(mon.id));
-  const [error, setError] = useState<string | null>(null);
+  const [extra, setExtra] = useState<DexExtra | null>(dexCache?.[String(mon.id)] || null);
   const [evoOpen, setEvoOpen] = useState(false);
   const [openAbility, setOpenAbility] = useState<number | null>(null);
   const [moveTab, setMoveTab] = useState<Tab>("level-up");
@@ -262,49 +187,56 @@ function DexDetail({
   const [evs, setEvs] = useState<Record<string, number>>({ hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 });
   const [ivs, setIvs] = useState<Record<string, number>>({ hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 });
   const scrollRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Lazy-load the bundled extras (abilities, height, weight, full move pools, etc.)
   useEffect(() => {
     let cancelled = false;
-    if (detailCache.has(mon.id)) {
-      setData(detailCache.get(mon.id));
-      setLoading(false);
-    } else {
-      setLoading(true);
-      fetchDetail(mon.id)
-        .then((d) => {
-          if (!cancelled) {
-            setData(d);
-            setLoading(false);
-          }
-        })
-        .catch((e) => {
-          if (!cancelled) {
-            setError(String(e?.message || e));
-            setLoading(false);
-          }
-        });
-    }
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
     setEvoOpen(false);
     setOpenAbility(null);
-    return () => {
-      cancelled = true;
-    };
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    const cached = dexCache?.[String(mon.id)];
+    if (cached) {
+      setExtra(cached);
+    } else {
+      setExtra(null);
+      loadDex().then((all) => {
+        if (!cancelled) setExtra(all[String(mon.id)] || null);
+      });
+    }
+    return () => { cancelled = true; };
   }, [mon.id]);
 
+  // Build a dedicated audio element for the cry.
+  useEffect(() => {
+    if (!extra?.cry) { audioRef.current = null; return; }
+    const a = new Audio(extra.cry);
+    a.volume = 0.35;
+    audioRef.current = a;
+    return () => { a.pause(); audioRef.current = null; };
+  }, [extra?.cry]);
+
+  const playCry = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    a.currentTime = 0;
+    a.play().catch(() => {});
+  };
+
   const stats: Record<string, { base: number; label: string }> = {
-    hp: { base: mon.hp, label: "HP" },
+    hp:  { base: mon.hp,  label: "HP" },
     atk: { base: mon.atk, label: "Attack" },
     def: { base: mon.def, label: "Defense" },
-    spa: { base: mon.spa, label: "Sp. Atk" },
-    spd: { base: mon.spd, label: "Sp. Def" },
+    spa: { base: mon.spa, label: "Sp. Attack" },
+    spd: { base: mon.spd, label: "Sp. Defense" },
     spe: { base: mon.spe, label: "Speed" },
   };
   const total = mon.hp + mon.atk + mon.def + mon.spa + mon.spd + mon.spe;
-  const evLeft = 510 - Object.values(evs).reduce((a, b) => a + b, 0);
+  const totalEv = Object.values(evs).reduce((a, b) => a + b, 0);
+  const evLeft = 510 - totalEv;
   const natMod = NATURE_MOD[nature] ?? {};
 
-  const chainList = data?.chain ? flattenChain(data.chain) : [];
+  const chainList = extra?.chain ?? [];
   const myStageIdx = chainList.findIndex((c) => c.id === mon.id);
   const stageLabel = chainList.length > 0
     ? `Stage ${Math.max(1, myStageIdx + 1)}/${chainList.length}`
@@ -312,27 +244,29 @@ function DexDetail({
 
   const types = [mon.type1, mon.type2].filter(Boolean) as string[];
 
-  const moves: any[] = data?.pokemon?.moves ?? [];
-  const movesByMethod = useMemo(() => {
-    const buckets: Record<Tab, any[]> = { "level-up": [], machine: [], egg: [], tutor: [] };
-    for (const m of moves) {
-      const latest = m.version_group_details?.[m.version_group_details.length - 1];
-      const method = latest?.move_learn_method?.name;
-      if (method === "level-up") buckets["level-up"].push({ ...m, level: latest.level_learned_at });
-      else if (method === "machine") buckets.machine.push(m);
-      else if (method === "egg") buckets.egg.push(m);
-      else if (method === "tutor") buckets.tutor.push(m);
-    }
-    buckets["level-up"].sort((a, b) => (a.level || 0) - (b.level || 0));
-    return buckets;
-  }, [moves]);
+  // Build move buckets from bundled data.
+  const moveBuckets = useMemo(() => {
+    const lvl = mon.learn.map((m) => ({ name: m.n, level: m.l }));
+    const tm  = (extra?.tm    ?? []).map((n) => ({ name: n, level: 0 }));
+    const egg = (extra?.egg   ?? []).map((n) => ({ name: n, level: 0 }));
+    const tut = (extra?.tutor ?? []).map((n) => ({ name: n, level: 0 }));
+    return { "level-up": lvl, machine: tm, egg, tutor: tut } as Record<Tab, { name: string; level: number }[]>;
+  }, [mon.learn, extra?.tm, extra?.egg, extra?.tutor]);
 
   const filteredMoves = useMemo(() => {
     const q = moveQuery.trim().toLowerCase();
-    const list = movesByMethod[moveTab] ?? [];
+    const list = moveBuckets[moveTab] ?? [];
     if (!q) return list;
-    return list.filter((m) => m.move.name.toLowerCase().includes(q));
-  }, [moveQuery, moveTab, movesByMethod]);
+    return list.filter((m) => m.name.toLowerCase().includes(q));
+  }, [moveQuery, moveTab, moveBuckets]);
+
+  const evEv = (k: string, v: number) => {
+    const n = Math.max(0, Math.min(252, v));
+    const others = totalEv - evs[k];
+    const allowedMax = Math.min(252, 510 - others);
+    setEvs({ ...evs, [k]: Math.min(n, allowedMax) });
+  };
+  const setIv = (k: string, v: number) => setIvs({ ...ivs, [k]: Math.max(0, Math.min(31, v)) });
 
   return (
     <div style={S.root}>
@@ -342,62 +276,56 @@ function DexDetail({
           <i className="fa-solid fa-arrow-left" />
         </button>
         <div style={S.topTitle}>Crimson Sky Dex</div>
-        <div style={{ display: "flex", gap: 4 }}>
-          <button style={S.iconBtn}>
-            <i className="fa-solid fa-chevron-down" />
-          </button>
-          <button style={S.iconBtn}>
-            <i className="fa-solid fa-ellipsis-vertical" />
-          </button>
-        </div>
+        <button style={S.iconBtn} onClick={onHome} aria-label="Home">
+          <i className="fa-solid fa-house" />
+        </button>
       </div>
 
       <div style={S.scroll} ref={scrollRef}>
-        <div style={{ height: 2, background: "linear-gradient(90deg, transparent, #ef4444, transparent)" }} />
+        {/* Red glow accent */}
+        <div style={S.redGlow} />
 
-        <div style={S.detailTopRow}>
-          <button style={S.linkBack} onClick={onBack}>
-            <i className="fa-solid fa-chevron-left" /> Back to Dex
-          </button>
-          <button style={S.homeBtn} onClick={onHome}>
-            <i className="fa-solid fa-house" /> Home
-          </button>
-        </div>
-
-        <div style={S.spriteCard}>
+        {/* Hero sprite – tap to play cry */}
+        <div style={S.spriteCard} onClick={playCry} title="Tap to play cry">
           <img
             src={spriteAniUrl(mon.sprite)}
             alt={mon.name}
             style={{ width: 200, height: 200, imageRendering: "pixelated", objectFit: "contain" }}
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = spriteUrl(mon.sprite);
-            }}
+            onError={(e) => { (e.target as HTMLImageElement).src = spriteUrl(mon.sprite); }}
           />
+          <div style={S.cryHint}>
+            <i className="fa-solid fa-volume-high" /> Tap to play cry
+          </div>
         </div>
 
+        {/* Metadata grid */}
         <div style={S.metaGrid}>
           <div style={S.metaItem}>
             <span style={S.metaLab}>Height:</span>
-            <span style={S.metaVal}>{loading ? "…" : `${data?.height ?? "?"} m`}</span>
+            <span style={S.metaVal}>{extra ? `${(extra.height / 10).toFixed(1)} m` : "…"}</span>
           </div>
           <div style={S.metaItem}>
             <span style={S.metaLab}>Weight:</span>
-            <span style={S.metaVal}>{loading ? "…" : `${data?.weight ?? "?"} kg`}</span>
+            <span style={S.metaVal}>{extra ? `${(extra.weight / 10).toFixed(1)} kg` : "…"}</span>
           </div>
           <div style={S.metaItem}>
-            <span style={S.metaLab}>Base Experience:</span>
-            <span style={S.metaVal}>{loading ? "…" : data?.baseExp ?? "?"}</span>
+            <span style={S.metaLab}>Base Exp:</span>
+            <span style={S.metaVal}>{extra?.baseExp ?? "…"}</span>
           </div>
           <div style={S.metaItem}>
             <span style={S.metaLab}>ID:</span>
-            <span style={S.metaVal}>#{String(mon.id).padStart(3, "0")}</span>
+            <span style={S.metaVal}>#{String(mon.id).padStart(4, "0")}</span>
           </div>
         </div>
 
+        {/* Title */}
         <div style={S.bigName}>{mon.name}</div>
+        {extra?.genus && <div style={S.subGenus}>{extra.genus}</div>}
+        {extra?.flavor && <div style={S.flavor}>{extra.flavor}</div>}
 
+        {/* Evolution + types */}
         {chainList.length > 0 && (
-          <div style={{ marginBottom: 14 }}>
+          <div style={{ marginTop: 14, marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
               <span style={{ color: "#9ca3af", fontSize: 13 }}>Evolution:</span>
               <button style={S.evoBtn} onClick={() => setEvoOpen(!evoOpen)}>
@@ -408,29 +336,21 @@ function DexDetail({
               <div style={S.evoPanel}>
                 <div style={S.evoTitle}>Evolution Chain</div>
                 {chainList.map((c, i) => (
-                  <div key={c.id}>
+                  <div key={`${c.id}-${i}`}>
                     <button
-                      style={{
-                        ...S.evoRow,
-                        ...(c.id === mon.id ? S.evoRowActive : {}),
-                      }}
+                      style={{ ...S.evoRow, ...(c.id === mon.id ? S.evoRowActive : {}) }}
                       onClick={() => onJump(c.id)}
                     >
                       <span style={{ color: c.id === mon.id ? "#fff" : "#9ca3af", fontSize: 12 }}>
-                        #{String(c.id).padStart(3, "0")}
+                        #{String(c.id).padStart(4, "0")}
                       </span>
-                      <span style={{ color: c.id === mon.id ? "#fff" : "#e5e7eb", fontSize: 14, fontWeight: 600, flex: 1 }}>
+                      <span style={{ color: c.id === mon.id ? "#fff" : "#e5e7eb", fontSize: 14, fontWeight: 600, flex: 1, textTransform: "capitalize" }}>
                         {c.name}
                       </span>
                       {c.id === mon.id && <i className="fa-solid fa-check" style={{ color: "#fff" }} />}
                     </button>
                     {i < chainList.length - 1 && (
-                      <div style={{ textAlign: "center", color: "#6b7280", fontSize: 14, padding: "4px 0" }}>
-                        ↓
-                        {chainList[i + 1].trigger && (
-                          <div style={{ fontSize: 11, color: "#6b7280" }}>{chainList[i + 1].trigger}</div>
-                        )}
-                      </div>
+                      <div style={{ textAlign: "center", color: "#6b7280", fontSize: 14, padding: "4px 0" }}>↓</div>
                     )}
                   </div>
                 ))}
@@ -441,39 +361,37 @@ function DexDetail({
 
         <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
           {types.map((t) => (
-            <span key={t} style={{ ...S.typePill, background: TYPE_COLORS[t] || "#666" }}>
-              {t}
-            </span>
+            <span key={t} style={{ ...S.typePill, background: TYPE_COLORS[t] || "#666" }}>{t}</span>
           ))}
         </div>
 
+        {/* Abilities */}
         <div style={S.sectionHeader}>
           <i className="fa-solid fa-bullseye" style={{ color: "#ef4444" }} />
           <span style={{ fontSize: 18, fontWeight: 700 }}>Abilities</span>
-          {data && (
-            <span style={{ color: "#9ca3af", fontSize: 13 }}>({data.abilityDetails.length} abilities)</span>
-          )}
+          {extra && <span style={{ color: "#9ca3af", fontSize: 13 }}>({extra.abilities.length} abilities)</span>}
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }}>
-          {loading && <div style={S.loadingBox}>Loading abilities…</div>}
-          {data?.abilityDetails.map((a: any, i: number) => (
+          {!extra && <div style={S.loadingBox}>Loading abilities…</div>}
+          {extra?.abilities.map((a, i) => (
             <div key={i} style={S.abilityCard}>
               <button style={S.abilityHead} onClick={() => setOpenAbility(openAbility === i ? null : i)}>
                 <span style={{ fontSize: 16, fontWeight: 600, color: "#fff" }}>{a.name}</span>
-                {a.is_hidden && <span style={S.hiddenPill}>Hidden</span>}
+                {a.hidden && <span style={S.hiddenPill}>Hidden</span>}
                 <span style={{ flex: 1 }} />
                 <i className={`fa-solid fa-chevron-${openAbility === i ? "up" : "down"}`} style={{ color: "#9ca3af" }} />
               </button>
-              <div style={S.abilityDesc}>{a.short || a.full || "—"}</div>
+              <div style={S.abilityDesc}>{(openAbility === i ? a.full : a.short) || a.full || a.short || "—"}</div>
             </div>
           ))}
         </div>
         <div style={S.tipBox}>
           <i className="fa-solid fa-lightbulb" style={{ color: "#fbbf24", marginRight: 6 }} />
-          Tip: Click on an ability to see its full battle effects and description. Hidden abilities are marked with a red badge and are harder to obtain.
+          Tip: Click on an ability to see its full battle effects. Hidden abilities are marked with a red badge and are harder to obtain.
         </div>
 
-        <div style={{ ...S.sectionHeader, marginTop: 6 }}>
+        {/* Base Stats */}
+        <div style={{ ...S.sectionHeader, marginTop: 16 }}>
           <span style={{ fontSize: 18, fontWeight: 700 }}>Base Stats</span>
         </div>
         <div style={S.statsCard}>
@@ -482,13 +400,7 @@ function DexDetail({
               <div style={{ width: 90, color: "#9ca3af", fontSize: 13 }}>{v.label}</div>
               <div style={{ width: 36, color: "#fff", fontSize: 14, fontWeight: 600 }}>{v.base}</div>
               <div style={S.statBarBg}>
-                <div
-                  style={{
-                    ...S.statBarFill,
-                    width: `${Math.min(100, (v.base / 255) * 100)}%`,
-                    background: STAT_BAR_COLORS[k],
-                  }}
-                />
+                <div style={{ ...S.statBarFill, width: `${Math.min(100, (v.base / 255) * 100)}%`, background: STAT_BAR_COLORS[k] }} />
               </div>
               <div style={{ width: 40, textAlign: "right", color: "#9ca3af", fontSize: 12 }}>
                 {Math.round((v.base / 255) * 100)}%
@@ -501,13 +413,14 @@ function DexDetail({
           </div>
         </div>
 
+        {/* Stat Calculator */}
         <div style={S.calcCard}>
           <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 12 }}>Stat Calculator</div>
-          <div style={{ display: "flex", gap: 16, marginBottom: 10, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 16, marginBottom: 14, flexWrap: "wrap" }}>
             <label style={S.calcLab}>
               Lv:
               <select value={level} onChange={(e) => setLevel(Number(e.target.value))} style={S.calcInput}>
-                {[1, 5, 25, 50, 75, 100].map((l) => (
+                {Array.from({ length: 100 }, (_, i) => i + 1).map((l) => (
                   <option key={l} value={l}>{l}</option>
                 ))}
               </select>
@@ -515,101 +428,62 @@ function DexDetail({
             <label style={S.calcLab}>
               Nature:
               <select value={nature} onChange={(e) => setNature(e.target.value)} style={S.calcInput}>
-                {NATURES.map((n) => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
+                {NATURES.map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             </label>
           </div>
-          <div style={{ color: "#9ca3af", fontSize: 12, marginBottom: 8, display: "flex", justifyContent: "space-between" }}>
-            <span>EVs: {510 - evLeft}/510</span>
-            <span>Left: {evLeft}</span>
+          <div style={{ color: "#9ca3af", fontSize: 12, marginBottom: 14, display: "flex", justifyContent: "space-between", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600 }}>
+            <span>EVs: <span style={{ color: "#e5e7eb" }}>{totalEv}</span>/510</span>
+            <span>Left: <span style={{ color: "#e5e7eb" }}>{evLeft}</span></span>
           </div>
           {Object.entries(stats).map(([k, v]) => {
             const isHP = k === "hp";
             const mult = isHP ? 1 : natMod.plus === k ? 1.1 : natMod.minus === k ? 0.9 : 1;
             const finalVal = calcStat(v.base, evs[k], ivs[k], level, isHP, mult);
             return (
-              <div key={k} style={{ marginBottom: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <span style={{ color: "#9ca3af", fontSize: 13 }}>
+              <div key={k} style={{ marginBottom: 18 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                  <span style={{ color: "#e5e7eb", fontSize: 13, fontWeight: 600 }}>
                     {v.label} <span style={{ fontSize: 11, color: "#6b7280" }}>({v.base})</span>
                     {natMod.plus === k && <span style={{ color: "#22c55e", marginLeft: 4 }}>+</span>}
                     {natMod.minus === k && <span style={{ color: "#ef4444", marginLeft: 4 }}>−</span>}
                   </span>
-                  <span style={{ color: "#fff", fontSize: 16, fontWeight: 700 }}>{finalVal}</span>
+                  <span style={{ color: "#fff", fontSize: 18, fontWeight: 700 }}>{finalVal}</span>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-                      <span style={{ color: "#9ca3af", fontSize: 11 }}>EV</span>
-                      <input
-                        type="number"
-                        min={0}
-                        max={252}
-                        value={evs[k]}
-                        onChange={(e) => {
-                          const n = Math.max(0, Math.min(252, Number(e.target.value) || 0));
-                          setEvs({ ...evs, [k]: n });
-                        }}
-                        style={S.numInput}
-                      />
-                    </div>
-                    <input
-                      type="range"
-                      min={0}
-                      max={252}
-                      value={evs[k]}
-                      onChange={(e) => setEvs({ ...evs, [k]: Number(e.target.value) })}
-                      className="range-red"
-                      style={{ width: "100%" }}
-                    />
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ color: "#6b7280", fontSize: 11, fontWeight: 600, width: 16 }}>EV</span>
+                    <input type="range" min={0} max={252} value={evs[k]}
+                      onChange={(e) => evEv(k, Number(e.target.value))}
+                      className="range-red" style={{ flex: 1 }} />
+                    <input type="number" min={0} max={252} value={evs[k]}
+                      onChange={(e) => evEv(k, Number(e.target.value) || 0)}
+                      style={S.numInput} />
                   </div>
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-                      <span style={{ color: "#9ca3af", fontSize: 11 }}>IV</span>
-                      <input
-                        type="number"
-                        min={0}
-                        max={31}
-                        value={ivs[k]}
-                        onChange={(e) => {
-                          const n = Math.max(0, Math.min(31, Number(e.target.value) || 0));
-                          setIvs({ ...ivs, [k]: n });
-                        }}
-                        style={S.numInput}
-                      />
-                    </div>
-                    <input
-                      type="range"
-                      min={0}
-                      max={31}
-                      value={ivs[k]}
-                      onChange={(e) => setIvs({ ...ivs, [k]: Number(e.target.value) })}
-                      className="range-blue"
-                      style={{ width: "100%" }}
-                    />
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ color: "#6b7280", fontSize: 11, fontWeight: 600, width: 16 }}>IV</span>
+                    <input type="range" min={0} max={31} value={ivs[k]}
+                      onChange={(e) => setIv(k, Number(e.target.value))}
+                      className="range-blue" style={{ flex: 1 }} />
+                    <input type="number" min={0} max={31} value={ivs[k]}
+                      onChange={(e) => setIv(k, Number(e.target.value) || 0)}
+                      style={S.numInput} />
                   </div>
                 </div>
               </div>
             );
           })}
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button style={S.smallBtn} onClick={() => setEvs({ hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 })}>
-              Reset EVs
-            </button>
-            <button style={S.smallBtn} onClick={() => setIvs({ hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 })}>
-              Max IVs
-            </button>
-            <button style={S.smallBtn} onClick={() => setIvs({ hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 })}>
-              Min IVs
-            </button>
+          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+            <button style={S.smallBtn} onClick={() => setEvs({ hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 })}>Reset EVs</button>
+            <button style={S.smallBtn} onClick={() => setIvs({ hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 })}>Max IVs</button>
+            <button style={S.smallBtn} onClick={() => setIvs({ hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 })}>Min IVs</button>
           </div>
         </div>
 
+        {/* Moves */}
         <div style={S.movesCard}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-            <span style={{ fontSize: 18 }}>⚔️</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <i className="fa-solid fa-khanda" style={{ color: "#9ca3af", fontSize: 18 }} />
             <span style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>Moves</span>
           </div>
           <div style={S.searchWrap}>
@@ -621,45 +495,63 @@ function DexDetail({
               onChange={(e) => setMoveQuery(e.target.value)}
             />
           </div>
-          <div style={{ display: "flex", gap: 4, marginBottom: 12, flexWrap: "wrap" }}>
+          <div style={S.tabRow}>
             {(["level-up", "machine", "egg", "tutor"] as Tab[]).map((t) => {
               const lab = t === "level-up" ? "Level Up" : t === "machine" ? "TM/HM" : t === "egg" ? "Egg" : "Tutor";
-              const count = movesByMethod[t]?.length ?? 0;
+              const count = moveBuckets[t]?.length ?? 0;
               const active = moveTab === t;
               return (
-                <button
-                  key={t}
-                  style={{ ...S.tab, ...(active ? S.tabActive : {}) }}
-                  onClick={() => setMoveTab(t)}
-                >
-                  {lab} <span style={{ color: active ? "#fff" : "#6b7280", marginLeft: 4 }}>({count})</span>
+                <button key={t} style={{ ...S.tab, ...(active ? S.tabActive : {}) }} onClick={() => setMoveTab(t)}>
+                  {lab} <span style={{ color: active ? "#fca5a5" : "#6b7280", marginLeft: 4, fontSize: 11 }}>({count})</span>
+                  {active && <div style={S.tabUnderline} />}
                 </button>
               );
             })}
           </div>
-          {loading && <div style={S.loadingBox}>Loading moves…</div>}
-          {error && <div style={{ ...S.loadingBox, color: "#ef4444" }}>Failed to load: {error}</div>}
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {filteredMoves.map((m: any, i: number) => (
-              <div key={i} style={S.moveCard}>
-                <div style={S.moveTopRow}>
-                  {moveTab === "level-up" ? (
-                    <span style={S.lvPill}>Lv {m.level}</span>
-                  ) : (
-                    <span style={{ ...S.lvPill, background: "#374151" }}>—</span>
-                  )}
-                  <span style={{ flex: 1, color: "#fff", fontSize: 15, fontWeight: 600 }}>
-                    {fmtName(m.move.name)}
-                  </span>
-                  <span style={{ ...S.tagPill, background: "#374151", color: "#9ca3af", fontSize: 11 }}>
-                    {moveTab === "machine" ? "Machine" : moveTab === "egg" ? "Egg" : moveTab === "tutor" ? "Tutor" : ""}
-                  </span>
+          {!extra && moveTab !== "level-up" && <div style={S.loadingBox}>Loading {moveTab.replace("-", " ")} moves…</div>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {filteredMoves.map((m, i) => {
+              const def = getMove(m.name);
+              const cat = def.category;
+              return (
+                <div key={`${m.name}-${i}`} style={S.moveCard}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                    <div>
+                      {moveTab === "level-up" && (
+                        <div style={S.lvLabel}>LEVEL {m.level}</div>
+                      )}
+                      <div style={{ color: "#fff", fontSize: 16, fontWeight: 600 }}>{m.name}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6 }}>
+                        {cat === "Physical" && <span style={{ color: "#fb923c" }} title="Physical">●</span>}
+                        {cat === "Special"  && <span style={{ color: "#60a5fa" }} title="Special">◆</span>}
+                        {cat === "Status"   && <i className="fa-solid fa-rotate" style={{ color: "#9ca3af", fontSize: 12 }} />}
+                        <span style={{ color: "#9ca3af", fontSize: 12 }}>{cat}</span>
+                      </div>
+                    </div>
+                    <span style={{ ...S.typePill, background: TYPE_COLORS[def.type] || "#666", padding: "4px 12px", fontSize: 11 }}>
+                      {def.type}
+                    </span>
+                  </div>
+                  <div style={S.moveStatsGrid}>
+                    <div style={S.moveStatBox}>
+                      <div style={S.moveStatLab}>Power</div>
+                      <div style={S.moveStatVal}>{def.power || "—"}</div>
+                    </div>
+                    <div style={S.moveStatBox}>
+                      <div style={S.moveStatLab}>Accuracy</div>
+                      <div style={S.moveStatVal}>{def.accuracy ? `${def.accuracy}%` : "—"}</div>
+                    </div>
+                    <div style={S.moveStatBox}>
+                      <div style={S.moveStatLab}>PP</div>
+                      <div style={S.moveStatVal}>{def.pp || "—"}</div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
-            {!loading && filteredMoves.length === 0 && (
-              <div style={{ color: "#6b7280", textAlign: "center", padding: 24, fontSize: 13 }}>
-                No moves in this category.
+              );
+            })}
+            {extra && filteredMoves.length === 0 && (
+              <div style={{ color: "#6b7280", textAlign: "center", padding: 32, fontSize: 13 }}>
+                No {moveTab.replace("-", " ")} moves available
               </div>
             )}
           </div>
@@ -671,297 +563,172 @@ function DexDetail({
   );
 }
 
+// ---------- Styles ----------
 const S: Record<string, React.CSSProperties> = {
   root: {
-    position: "absolute",
-    inset: 0,
-    background: "#0a0a0a",
+    position: "absolute", inset: 0,
+    background: "#000",
     color: "#e5e7eb",
     fontFamily: "Inter, system-ui, sans-serif",
-    display: "flex",
-    flexDirection: "column",
+    display: "flex", flexDirection: "column",
   },
   topBar: {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
+    display: "flex", alignItems: "center", gap: 8,
     padding: "12px 14px",
-    background: "#0a0a0a",
-    borderBottom: "1px solid #1f1f1f",
+    background: "#000",
     flexShrink: 0,
   },
-  topTitle: { flex: 1, fontSize: 16, fontWeight: 600, color: "#fff" },
+  topTitle: { flex: 1, fontSize: 16, fontWeight: 600, color: "#fff", textAlign: "center" },
   iconBtn: {
-    background: "transparent",
-    border: "none",
-    color: "#fff",
-    fontSize: 16,
-    cursor: "pointer",
-    padding: 8,
-    borderRadius: 6,
+    background: "#1c1c1e", border: "1px solid #2a2a2d",
+    color: "#fff", fontSize: 14, cursor: "pointer",
+    padding: "8px 10px", borderRadius: 8, minWidth: 38,
   },
-  scroll: { flex: 1, overflowY: "auto", padding: "10px 14px 20px" },
+  scroll: { flex: 1, overflowY: "auto", padding: "0 14px 20px" },
+  redGlow: {
+    height: 2, width: "100%",
+    background: "linear-gradient(90deg, transparent, #dc2626, transparent)",
+    boxShadow: "0 0 8px rgba(220,38,38,0.6)",
+    marginBottom: 18,
+  },
   heroTitle: {
-    fontFamily: "'Press Start 2P', monospace",
-    fontSize: 18,
-    color: "#ef4444",
-    textAlign: "center",
-    margin: "16px 0 18px",
-    letterSpacing: 1,
-    textShadow: "2px 2px 0 #1a1a1a",
-    lineHeight: 1.4,
+    fontFamily: "'Press Start 2P', monospace", fontSize: 18, color: "#ef4444",
+    textAlign: "center", margin: "16px 0 18px", letterSpacing: 1,
+    textShadow: "2px 2px 0 #1a1a1a", lineHeight: 1.4,
   },
   searchWrap: {
-    background: "#1a1a1a",
-    border: "1px solid #2a2a2a",
-    borderRadius: 8,
-    padding: "10px 12px",
-    display: "flex",
-    alignItems: "center",
-    marginBottom: 14,
+    background: "#000", border: "1px solid #27272a", borderRadius: 12,
+    padding: "12px 14px", display: "flex", alignItems: "center",
+    marginBottom: 18,
   },
-  searchInput: {
-    flex: 1,
-    background: "transparent",
-    border: "none",
-    outline: "none",
-    color: "#fff",
-    fontSize: 14,
-  },
+  searchInput: { flex: 1, background: "transparent", border: "none", outline: "none", color: "#fff", fontSize: 14 },
   grid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 },
   card: {
-    background: "#1a1a1a",
-    border: "1px solid #2a2a2a",
-    borderRadius: 12,
-    padding: 10,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "stretch",
-    cursor: "pointer",
-    color: "#fff",
-    textAlign: "left",
+    background: "#1c1c1e", border: "1px solid #27272a", borderRadius: 14,
+    padding: 12, display: "flex", flexDirection: "column",
+    cursor: "pointer", color: "#fff", textAlign: "left",
   },
   cardId: { color: "#6b7280", fontSize: 12, marginBottom: 4 },
   cardSpriteBox: {
-    background: "#0f0f0f",
-    borderRadius: 8,
-    height: 130,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 8,
+    background: "#0a0a0a", borderRadius: 10, height: 130,
+    display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8,
   },
   cardName: { color: "#e5e7eb", fontSize: 15, fontWeight: 500, textAlign: "center", paddingBottom: 4 },
-  detailTopRow: { display: "flex", justifyContent: "space-between", alignItems: "center", margin: "12px 0 14px" },
-  linkBack: {
-    background: "transparent",
-    border: "none",
-    color: "#9ca3af",
-    cursor: "pointer",
-    fontSize: 14,
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    padding: 0,
-  },
-  homeBtn: {
-    background: "#1a1a1a",
-    border: "1px solid #2a2a2a",
-    color: "#fff",
-    padding: "8px 14px",
-    borderRadius: 8,
-    fontSize: 13,
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-  },
+
   spriteCard: {
-    background: "#1a1a1a",
-    border: "1px solid #2a2a2a",
-    borderRadius: 12,
-    height: 230,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 14,
+    background: "#1c1c1e", borderRadius: 16, padding: 32,
+    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+    height: 240, cursor: "pointer", marginBottom: 18, position: "relative",
   },
-  metaGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 },
-  metaItem: { display: "flex", gap: 6, alignItems: "baseline" },
-  metaLab: { color: "#9ca3af", fontSize: 13 },
-  metaVal: { color: "#fff", fontSize: 14, fontWeight: 500 },
-  bigName: { fontSize: 32, fontWeight: 700, color: "#fff", marginBottom: 14 },
+  cryHint: { position: "absolute", bottom: 10, color: "#6b7280", fontSize: 11, display: "flex", alignItems: "center", gap: 6 },
+
+  metaGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 18 },
+  metaItem: { display: "flex", alignItems: "center", gap: 6, fontSize: 13 },
+  metaLab: { color: "#9ca3af" },
+  metaVal: { color: "#f3f4f6", fontWeight: 600 },
+
+  bigName: { fontSize: 36, fontWeight: 700, color: "#fff", letterSpacing: -0.5, marginBottom: 4 },
+  subGenus: { color: "#9ca3af", fontSize: 13, fontStyle: "italic", marginBottom: 8 },
+  flavor: { color: "#a1a1aa", fontSize: 13, lineHeight: 1.55, marginBottom: 12 },
+
   evoBtn: {
-    background: "transparent",
-    border: "1px solid #ef4444",
-    color: "#fff",
-    padding: "6px 14px",
-    borderRadius: 6,
-    fontSize: 13,
-    cursor: "pointer",
-    display: "inline-flex",
-    alignItems: "center",
+    background: "transparent", border: "1px solid #ef4444", borderRadius: 8,
+    padding: "6px 12px", color: "#fff", fontSize: 13, cursor: "pointer",
+    display: "flex", alignItems: "center",
   },
-  evoPanel: {
-    background: "#1a1a1a",
-    border: "1px solid #2a2a2a",
-    borderRadius: 12,
-    padding: 14,
-  },
-  evoTitle: { color: "#9ca3af", fontSize: 12, marginBottom: 10 },
+  evoPanel: { background: "#1c1c1e", border: "1px solid #27272a", borderRadius: 12, padding: 12 },
+  evoTitle: { color: "#9ca3af", fontSize: 12, fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 },
   evoRow: {
-    width: "100%",
-    background: "transparent",
-    border: "none",
-    padding: "10px 12px",
-    borderRadius: 8,
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    color: "#e5e7eb",
-    textAlign: "left",
+    width: "100%", display: "flex", alignItems: "center", gap: 10,
+    background: "#0a0a0a", border: "1px solid #27272a", borderRadius: 8,
+    padding: "10px 12px", cursor: "pointer", color: "#e5e7eb",
   },
-  evoRowActive: { background: "#ef4444" },
-  typePill: {
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: 600,
-    padding: "5px 14px",
-    borderRadius: 16,
-  },
-  sectionHeader: { display: "flex", alignItems: "center", gap: 8, marginBottom: 12, color: "#fff" },
-  abilityCard: {
-    background: "#1a1a1a",
-    border: "1px solid #2a2a2a",
-    borderRadius: 12,
-    padding: 14,
-  },
+  evoRowActive: { background: "#dc2626", borderColor: "#dc2626" },
+  typePill: { padding: "5px 14px", borderRadius: 999, fontSize: 12, fontWeight: 700, color: "#fff", textTransform: "capitalize" },
+
+  sectionHeader: { display: "flex", alignItems: "center", gap: 8, color: "#fff", marginBottom: 14 },
+
+  abilityCard: { background: "#121212", border: "1px solid #27272a", borderRadius: 12, overflow: "hidden" },
   abilityHead: {
-    width: "100%",
-    background: "transparent",
-    border: "none",
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    cursor: "pointer",
-    padding: 0,
-    marginBottom: 6,
+    width: "100%", display: "flex", alignItems: "center", gap: 8,
+    background: "transparent", border: "none", color: "#fff",
+    padding: "12px 14px", cursor: "pointer", textAlign: "left",
   },
-  abilityDesc: { color: "#9ca3af", fontSize: 13, lineHeight: 1.5 },
-  hiddenPill: {
-    background: "#ef4444",
-    color: "#fff",
-    fontSize: 11,
-    fontWeight: 600,
-    padding: "2px 8px",
-    borderRadius: 10,
-  },
+  hiddenPill: { background: "#dc2626", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, letterSpacing: 0.5, textTransform: "uppercase" },
+  abilityDesc: { color: "#a1a1aa", fontSize: 13, lineHeight: 1.55, padding: "0 14px 12px" },
   tipBox: {
-    background: "#1a1a1a",
-    border: "1px solid #2a2a2a",
-    borderRadius: 8,
-    padding: 12,
-    color: "#9ca3af",
-    fontSize: 12,
-    lineHeight: 1.5,
-    marginBottom: 16,
+    background: "#121212", border: "1px solid #27272a", borderRadius: 12,
+    padding: 12, color: "#a1a1aa", fontSize: 13, lineHeight: 1.5,
   },
-  statsCard: {
-    background: "#1a1a1a",
-    border: "1px solid #2a2a2a",
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 14,
-  },
-  statRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 10 },
-  statBarBg: { flex: 1, height: 6, background: "#2a2a2a", borderRadius: 4, overflow: "hidden" },
-  statBarFill: { height: "100%", borderRadius: 4 },
-  totalRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: 10,
-    borderTop: "1px solid #2a2a2a",
-    marginTop: 4,
-  },
-  calcCard: {
-    background: "#1a1a1a",
-    border: "1px solid #2a2a2a",
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 14,
-  },
-  calcLab: { display: "flex", alignItems: "center", gap: 8, color: "#9ca3af", fontSize: 13 },
+
+  statsCard: { background: "#121212", border: "1px solid #27272a", borderRadius: 16, padding: "20px 18px" },
+  statRow: { display: "flex", alignItems: "center", gap: 14, marginBottom: 12 },
+  statBarBg: { flex: 1, height: 6, background: "#0a0a0a", borderRadius: 3, overflow: "hidden" },
+  statBarFill: { height: "100%", borderRadius: 3, transition: "width .3s" },
+  totalRow: { display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 14, marginTop: 6, borderTop: "1px solid #27272a" },
+
+  calcCard: { background: "#121212", border: "1px solid #27272a", borderRadius: 16, padding: 20, marginTop: 18 },
+  calcLab: { display: "flex", alignItems: "center", gap: 6, color: "#9ca3af", fontSize: 13, fontWeight: 500 },
   calcInput: {
-    background: "#0f0f0f",
-    border: "1px solid #2a2a2a",
-    color: "#fff",
-    padding: "5px 8px",
-    borderRadius: 6,
-    fontSize: 13,
+    background: "#000", border: "1px solid #27272a", color: "#fff",
+    padding: "5px 8px", borderRadius: 6, fontSize: 13,
   },
   numInput: {
-    background: "#0f0f0f",
-    border: "1px solid #2a2a2a",
-    color: "#fff",
-    padding: "3px 6px",
-    borderRadius: 4,
-    fontSize: 12,
-    width: 50,
-    textAlign: "center",
+    background: "#000", border: "1px solid #27272a", color: "#fff",
+    padding: "4px 6px", borderRadius: 4, fontSize: 12, width: 50, textAlign: "center",
   },
   smallBtn: {
-    background: "#0f0f0f",
-    border: "1px solid #2a2a2a",
-    color: "#fff",
-    padding: "6px 12px",
-    borderRadius: 6,
-    fontSize: 12,
-    cursor: "pointer",
+    flex: 1, background: "#000", border: "1px solid #27272a", color: "#d4d4d8",
+    padding: "8px 0", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer",
   },
-  movesCard: {
-    background: "#1a1a1a",
-    border: "1px solid #2a2a2a",
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 14,
-  },
+
+  movesCard: { background: "#121212", border: "1px solid #27272a", borderRadius: 16, padding: 20, marginTop: 18 },
+  tabRow: { display: "flex", overflowX: "auto", gap: 4, marginBottom: 18, borderBottom: "1px solid #27272a", paddingBottom: 0 },
   tab: {
-    background: "transparent",
-    border: "none",
-    color: "#9ca3af",
-    padding: "8px 14px",
-    borderRadius: 18,
-    fontSize: 13,
-    cursor: "pointer",
-    fontWeight: 600,
+    background: "transparent", border: "none", color: "#9ca3af",
+    padding: "10px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer",
+    position: "relative", whiteSpace: "nowrap",
   },
-  tabActive: { background: "#ef4444", color: "#fff" },
-  moveCard: {
-    background: "#0f0f0f",
-    border: "1px solid #2a2a2a",
-    borderRadius: 8,
-    padding: 12,
+  tabActive: { color: "#ef4444" },
+  tabUnderline: { position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "#ef4444", borderRadius: "2px 2px 0 0" },
+
+  moveCard: { background: "#0f0f0f", border: "1px solid #27272a", borderRadius: 12, padding: 14 },
+  lvLabel: { color: "#71717a", fontSize: 11, fontWeight: 700, letterSpacing: 1, marginBottom: 2 },
+  moveStatsGrid: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 },
+  moveStatBox: {
+    background: "rgba(0,0,0,0.5)", border: "1px solid rgba(39,39,42,0.6)",
+    borderRadius: 8, padding: "8px 6px",
+    display: "flex", flexDirection: "column", alignItems: "center",
   },
-  moveTopRow: { display: "flex", alignItems: "center", gap: 10 },
-  lvPill: {
-    background: "#ef4444",
-    color: "#fff",
-    fontSize: 11,
-    fontWeight: 700,
-    padding: "3px 10px",
-    borderRadius: 10,
-  },
-  tagPill: { padding: "3px 10px", borderRadius: 10, fontWeight: 500 },
+  moveStatLab: { color: "#71717a", fontSize: 10, fontWeight: 700, letterSpacing: 1, marginBottom: 4, textTransform: "uppercase" },
+  moveStatVal: { color: "#e5e7eb", fontSize: 14, fontWeight: 600 },
+
   loadingBox: { color: "#9ca3af", textAlign: "center", padding: 16, fontSize: 13 },
 };
 
 const CSS = `
-  .range-red { -webkit-appearance: none; appearance: none; height: 4px; background: #2a2a2a; border-radius: 2px; outline: none; }
-  .range-red::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #ef4444; cursor: pointer; border: 2px solid #fff; }
-  .range-red::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #ef4444; cursor: pointer; border: 2px solid #fff; }
-  .range-blue { -webkit-appearance: none; appearance: none; height: 4px; background: #2a2a2a; border-radius: 2px; outline: none; }
-  .range-blue::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid #fff; }
-  .range-blue::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid #fff; }
+  .range-red, .range-blue {
+    -webkit-appearance: none; appearance: none;
+    height: 4px; background: #27272a; border-radius: 2px; outline: none;
+  }
+  .range-red::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #ef4444; cursor: pointer; border: 2px solid #000;
+  }
+  .range-red::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #ef4444; cursor: pointer; border: 2px solid #000;
+  }
+  .range-blue::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #3b82f6; cursor: pointer; border: 2px solid #000;
+  }
+  .range-blue::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #3b82f6; cursor: pointer; border: 2px solid #000;
+  }
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 `;

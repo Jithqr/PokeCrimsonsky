@@ -1,0 +1,597 @@
+```react
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { 
+  ChevronDown, ChevronUp, Play, 
+  Search, Swords, Activity, RefreshCw, ChevronLeft, Home, Target
+} from 'lucide-react';
+
+// --- API Cache to prevent redundant requests ---
+const apiCache = {};
+const fetchWithCache = async (url) => {
+  if (apiCache[url]) return apiCache[url];
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    apiCache[url] = data;
+    return data;
+  } catch (err) {
+    console.error(`Failed to fetch ${url}`, err);
+    return null;
+  }
+};
+
+// --- Constants & Helpers ---
+const TYPE_COLORS = {
+  normal: 'bg-[#A8A878]', fire: 'bg-[#F08030]', water: 'bg-[#6890F0]', electric: 'bg-[#F8D030] text-black',
+  grass: 'bg-[#78C850]', ice: 'bg-[#98D8D8] text-black', fighting: 'bg-[#C03028]', poison: 'bg-[#A040A0]',
+  ground: 'bg-[#E0C068]', flying: 'bg-[#A890F0]', psychic: 'bg-[#F85888]', bug: 'bg-[#A8B820]',
+  rock: 'bg-[#B8A038]', ghost: 'bg-[#705898]', dragon: 'bg-[#7038F8]', dark: 'bg-[#705848]',
+  steel: 'bg-[#B8B8D0] text-black', fairy: 'bg-[#EE99AC] text-black'
+};
+
+const STAT_COLORS = {
+  hp: 'bg-red-500', attack: 'bg-orange-400', defense: 'bg-yellow-400',
+  'special-attack': 'bg-blue-400', 'special-defense': 'bg-green-400', speed: 'bg-pink-400'
+};
+
+const STAT_LABELS = {
+  hp: 'HP', attack: 'Attack', defense: 'Defense',
+  'special-attack': 'Sp. Attack', 'special-defense': 'Sp. Defense', speed: 'Speed'
+};
+
+const NATURES = {
+  Hardy: { up: null, down: null }, Lonely: { up: 'attack', down: 'defense' },
+  Brave: { up: 'attack', down: 'speed' }, Adamant: { up: 'attack', down: 'special-attack' },
+  Naughty: { up: 'attack', down: 'special-defense' }, Bold: { up: 'defense', down: 'attack' },
+  Docile: { up: null, down: null }, Relaxed: { up: 'defense', down: 'speed' },
+  Impish: { up: 'defense', down: 'special-attack' }, Lax: { up: 'defense', down: 'special-defense' },
+  Timid: { up: 'speed', down: 'attack' }, Hasty: { up: 'speed', down: 'defense' },
+  Serious: { up: null, down: null }, Jolly: { up: 'speed', down: 'special-attack' },
+  Naive: { up: 'speed', down: 'special-defense' }, Modest: { up: 'special-attack', down: 'attack' },
+  Mild: { up: 'special-attack', down: 'defense' }, Quiet: { up: 'special-attack', down: 'speed' },
+  Bashful: { up: null, down: null }, Rash: { up: 'special-attack', down: 'special-defense' },
+  Calm: { up: 'special-defense', down: 'attack' }, Gentle: { up: 'special-defense', down: 'defense' },
+  Sassy: { up: 'special-defense', down: 'speed' }, Careful: { up: 'special-defense', down: 'special-attack' },
+  Quirky: { up: null, down: null },
+};
+
+const calculateStat = (base, iv, ev, level, nature, statName) => {
+  if (statName === 'hp') {
+    return Math.floor(((2 * base + iv + Math.floor(ev / 4)) * level) / 100) + level + 10;
+  }
+  let natureMod = 1;
+  if (NATURES[nature]?.up === statName) natureMod = 1.1;
+  if (NATURES[nature]?.down === statName) natureMod = 0.9;
+  
+  const rawStat = Math.floor(((2 * base + iv + Math.floor(ev / 4)) * level) / 100) + 5;
+  return Math.floor(rawStat * natureMod);
+};
+
+// --- Components ---
+
+const AbilityCard = ({ abilityInfo }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [details, setDetails] = useState(null);
+
+  useEffect(() => {
+    // Pre-fetch ability data so quick summary is available immediately if we want it,
+    // but here we match the design which shows the summary even when collapsed (or we expand it by default)
+    fetchWithCache(abilityInfo.ability.url).then(setDetails);
+  }, [abilityInfo.ability.url]);
+
+  const getEnglishEntry = (entries, key = 'flavor_text') => {
+    if (!entries) return 'Loading...';
+    const entry = entries.find(e => e.language.name === 'en');
+    return entry ? entry[key].replace(/\f/g, ' ') : 'No description available.';
+  };
+
+  return (
+    <div className="bg-[#121212] border border-zinc-800 rounded-xl mb-3 overflow-hidden transition-all">
+      <button 
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-start justify-between p-4 focus:outline-none text-left"
+      >
+        <div className="pr-4">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-zinc-100 font-semibold capitalize text-base">
+              {abilityInfo.ability.name.replace('-', ' ')}
+            </span>
+            {abilityInfo.is_hidden && (
+              <span className="bg-red-500/90 text-white text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wide font-bold">
+                Hidden
+              </span>
+            )}
+          </div>
+          <p className="text-zinc-400 text-sm leading-snug line-clamp-2">
+            {details ? getEnglishEntry(details.flavor_text_entries) : 'Loading ability info...'}
+          </p>
+        </div>
+        <div className="mt-1">
+          {expanded ? <ChevronUp size={18} className="text-zinc-500" /> : <ChevronDown size={18} className="text-zinc-500" />}
+        </div>
+      </button>
+
+      {expanded && details && (
+        <div className="px-4 pb-4 border-t border-zinc-800/50 pt-3">
+          <h4 className="text-red-500 text-xs uppercase font-semibold mb-1 tracking-wider">Detailed Effect</h4>
+          <p className="text-zinc-300 text-sm leading-relaxed">
+            {getEnglishEntry(details.effect_entries, 'effect')}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const MoveCard = ({ moveInfo, levelLearned }) => {
+  const [details, setDetails] = useState(null);
+
+  useEffect(() => {
+    fetchWithCache(moveInfo.move.url).then(setDetails);
+  }, [moveInfo.move.url]);
+
+  if (!details) {
+    return (
+      <div className="bg-[#121212] border border-zinc-800 rounded-xl p-4 mb-3 animate-pulse">
+        <div className="h-5 bg-zinc-800 w-1/3 rounded mb-2"></div>
+        <div className="h-4 bg-zinc-800 w-1/4 rounded"></div>
+      </div>
+    );
+  }
+
+  const category = details.damage_class.name;
+
+  return (
+    <div className="bg-[#121212] border border-zinc-800 rounded-xl p-4 mb-3">
+      <div className="flex justify-between items-start mb-3">
+        <div>
+          {levelLearned > 0 && <div className="text-[11px] text-zinc-500 font-semibold mb-0.5 tracking-wider uppercase">Level {levelLearned}</div>}
+          <h3 className="text-zinc-100 font-semibold text-base capitalize">{details.name.replace('-', ' ')}</h3>
+          <div className="flex items-center gap-1.5 mt-1.5">
+            {category === 'physical' && <span className="text-orange-400" title="Physical">💥</span>}
+            {category === 'special' && <span className="text-blue-400" title="Special">✨</span>}
+            {category === 'status' && <RefreshCw size={13} className="text-zinc-400" title="Status" />}
+            <span className="text-zinc-400 text-xs capitalize">{category}</span>
+          </div>
+        </div>
+        <span className={`${TYPE_COLORS[details.type.name] || 'bg-zinc-600'} text-white text-xs px-2.5 py-1 rounded-full font-semibold capitalize tracking-wide`}>
+          {details.type.name}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 mt-4">
+        <div className="bg-black/40 border border-zinc-800/50 rounded-lg flex flex-col items-center justify-center py-2">
+          <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider mb-1">Power</span>
+          <span className="text-zinc-200 font-semibold text-sm">{details.power || '—'}</span>
+        </div>
+        <div className="bg-black/40 border border-zinc-800/50 rounded-lg flex flex-col items-center justify-center py-2">
+          <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider mb-1">Accuracy</span>
+          <span className="text-zinc-200 font-semibold text-sm">{details.accuracy ? `${details.accuracy}%` : '—'}</span>
+        </div>
+        <div className="bg-black/40 border border-zinc-800/50 rounded-lg flex flex-col items-center justify-center py-2">
+          <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider mb-1">PP</span>
+          <span className="text-zinc-200 font-semibold text-sm">{details.pp || '—'}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default function App() {
+  const [pokemon, setPokemon] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Stat Calc State
+  const [level, setLevel] = useState(100);
+  const [nature, setNature] = useState('Hardy');
+  const [evs, setEvs] = useState({ hp: 0, attack: 0, defense: 0, 'special-attack': 0, 'special-defense': 0, speed: 0 });
+  const [ivs, setIvs] = useState({ hp: 31, attack: 31, defense: 31, 'special-attack': 31, 'special-defense': 31, speed: 31 });
+
+  // Moves State
+  const [activeMoveTab, setActiveMoveTab] = useState('level-up');
+  const [moveSearch, setMoveSearch] = useState('');
+
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    const fetchPokemon = async () => {
+      try {
+        // Changed to Bulbasaur to match the requested design reference exactly
+        const data = await fetchWithCache('https://pokeapi.co/api/v2/pokemon/bulbasaur');
+        setPokemon(data);
+        if (data.cries?.latest) {
+          audioRef.current = new Audio(data.cries.latest);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPokemon();
+  }, []);
+
+  const playCry = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play();
+    }
+  };
+
+  const handleEvChange = (stat, value) => {
+    const newVal = parseInt(value) || 0;
+    const currentTotal = Object.values(evs).reduce((a, b) => a + b, 0);
+    const totalWithoutCurrent = currentTotal - evs[stat];
+    const allowedMax = Math.min(252, 510 - totalWithoutCurrent);
+    const finalVal = Math.min(newVal, allowedMax);
+    setEvs(prev => ({ ...prev, [stat]: finalVal }));
+  };
+
+  const handleIvChange = (stat, value) => {
+    setIvs(prev => ({ ...prev, [stat]: Math.min(31, Math.max(0, parseInt(value) || 0)) }));
+  };
+
+  const resetEvs = () => setEvs({ hp: 0, attack: 0, defense: 0, 'special-attack': 0, 'special-defense': 0, speed: 0 });
+  const maxIvs = () => setIvs({ hp: 31, attack: 31, defense: 31, 'special-attack': 31, 'special-defense': 31, speed: 31 });
+  const minIvs = () => setIvs({ hp: 0, attack: 0, defense: 0, 'special-attack': 0, 'special-defense': 0, speed: 0 });
+
+  const groupedMoves = useMemo(() => {
+    if (!pokemon) return {};
+    const groups = { 'level-up': [], machine: [], egg: [], tutor: [] };
+    
+    pokemon.moves.forEach(m => {
+      const details = m.version_group_details.find(v => ['level-up', 'machine', 'egg', 'tutor'].includes(v.move_learn_method.name));
+      if (details) {
+        const method = details.move_learn_method.name;
+        groups[method].push({
+          move: m.move,
+          level: details.level_learned_at
+        });
+      }
+    });
+
+    groups['level-up'].sort((a, b) => a.level - b.level);
+    ['machine', 'egg', 'tutor'].forEach(method => {
+      groups[method].sort((a, b) => a.move.name.localeCompare(b.move.name));
+    });
+
+    return groups;
+  }, [pokemon]);
+
+  if (loading || !pokemon) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center text-white">
+        <Activity className="animate-spin text-red-600 mb-4" size={48} />
+      </div>
+    );
+  }
+
+  const currentTotalEvs = Object.values(evs).reduce((a, b) => a + b, 0);
+
+  return (
+    <div className="min-h-screen bg-black text-zinc-200 font-sans pb-20 max-w-2xl mx-auto shadow-2xl overflow-hidden relative">
+      
+      {/* App Header */}
+      <header className="bg-black px-4 py-4 flex items-center justify-between relative">
+        <button className="flex items-center gap-2 text-zinc-100 hover:text-white transition-colors">
+          <ChevronLeft size={22} />
+          <span className="font-semibold text-base">Back to Dex</span>
+        </button>
+        <button className="flex items-center gap-2 bg-[#1C1C1E] hover:bg-[#2A2A2D] text-zinc-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors">
+          <Home size={16} />
+          <span>Home</span>
+        </button>
+      </header>
+
+      {/* Red Glow Accent Line */}
+      <div className="h-[2px] w-full bg-gradient-to-r from-black via-red-600 to-black opacity-80 shadow-[0_0_8px_rgba(220,38,38,0.6)] mb-6"></div>
+
+      <main className="px-4 space-y-6">
+        
+        {/* Hero Section */}
+        <div 
+          className="bg-[#1C1C1E] rounded-2xl p-8 flex flex-col items-center justify-center relative w-full h-[240px] cursor-pointer hover:bg-[#252528] transition-colors"
+          onClick={playCry}
+        >
+          {/* Sprite - Using pixelated scaling for authentic retro look */}
+          <img 
+            src={pokemon.sprites.versions['generation-v']['black-white'].animated.front_default || pokemon.sprites.front_default} 
+            alt={pokemon.name}
+            className="w-40 h-40 object-contain pixelated drop-shadow-2xl scale-125"
+            style={{ imageRendering: 'pixelated' }}
+            onError={(e) => {
+              e.target.src = pokemon.sprites.front_default;
+            }}
+          />
+        </div>
+
+        {/* Metadata Grid */}
+        <div className="grid grid-cols-2 gap-y-3 px-1 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-zinc-400">Height:</span>
+            <span className="text-zinc-100 font-semibold">{pokemon.height / 10} m</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-zinc-400">Weight:</span>
+            <span className="text-zinc-100 font-semibold">{pokemon.weight / 10} kg</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-zinc-400">Base Experience:</span>
+            <span className="text-zinc-100 font-semibold">{pokemon.base_experience}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-zinc-400">ID:</span>
+            <span className="text-zinc-100 font-semibold">#{pokemon.id.toString().padStart(3, '0')}</span>
+          </div>
+        </div>
+
+        {/* Title & Evolution */}
+        <div className="px-1">
+          <h2 className="text-4xl font-bold text-white capitalize mb-4 tracking-tight">{pokemon.name}</h2>
+          
+          <div className="flex items-center gap-3 mb-6">
+            <span className="text-zinc-400 text-sm">Evolution:</span>
+            <button className="flex items-center gap-2 bg-transparent border border-red-500 rounded-lg px-3 py-1.5 focus:outline-none">
+              <span className="text-zinc-100 text-sm font-medium">Stage 1/3</span>
+              <ChevronDown size={16} className="text-zinc-400" />
+            </button>
+          </div>
+
+          <div className="flex gap-2">
+            {pokemon.types.map(t => (
+              <span key={t.type.name} className={`${TYPE_COLORS[t.type.name]} px-4 py-1 rounded-full text-[13px] font-bold capitalize text-white tracking-wide`}>
+                {t.type.name}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Abilities */}
+        <section className="pt-2">
+          <div className="flex items-center gap-2 mb-4 px-1">
+            <Target className="text-red-500" size={20} />
+            <h3 className="text-xl font-bold text-white tracking-wide">Abilities <span className="text-zinc-500 text-sm font-normal ml-1">({pokemon.abilities.length} abilities)</span></h3>
+          </div>
+          
+          <div>
+            {pokemon.abilities.map(a => (
+              <AbilityCard key={a.ability.name} abilityInfo={a} />
+            ))}
+          </div>
+          
+          <div className="bg-[#121212] border border-zinc-800/80 p-4 rounded-xl flex gap-3 items-start mt-2">
+            <span className="text-yellow-400 text-lg leading-none pt-0.5">💡</span>
+            <p className="text-sm text-zinc-400 leading-relaxed">
+              Tip: Click on an ability to see its full battle effects and description. Hidden abilities are marked with a red badge and are harder to obtain.
+            </p>
+          </div>
+        </section>
+
+        {/* Base Stats */}
+        <section className="pt-4">
+          <h3 className="text-xl font-bold text-white mb-4 px-1">Base Stats</h3>
+          <div className="bg-[#121212] rounded-2xl p-5 py-6 border border-zinc-800 space-y-4">
+            {pokemon.stats.map(s => (
+              <div key={s.stat.name} className="flex items-center gap-4">
+                <span className="w-24 text-sm text-zinc-400 font-medium capitalize">{STAT_LABELS[s.stat.name] || s.stat.name}</span>
+                <span className="w-8 text-sm text-white font-bold text-right">{s.base_stat}</span>
+                <div className="flex-1 h-1.5 bg-black rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full ${STAT_COLORS[s.stat.name]}`}
+                    style={{ width: `${Math.min(100, (s.base_stat / 255) * 100)}%` }}
+                  />
+                </div>
+                <span className="w-10 text-[11px] text-zinc-500 text-right">{Math.round((s.base_stat/255)*100)}%</span>
+              </div>
+            ))}
+            <div className="pt-5 mt-2 border-t border-zinc-800/80 flex justify-between items-center">
+              <span className="text-zinc-300 font-bold">Total</span>
+              <span className="text-red-500 font-bold text-lg">
+                {pokemon.stats.reduce((acc, s) => acc + s.base_stat, 0)}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* Stat Calculator */}
+        <section className="bg-[#121212] border border-zinc-800 rounded-2xl overflow-hidden mt-6">
+          <div className="p-5 border-b border-zinc-800/80">
+            <h3 className="text-lg font-bold text-white mb-4">Stat Calculator</h3>
+            <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-zinc-400 font-medium">Lv:</label>
+                <select 
+                  value={level} 
+                  onChange={(e) => setLevel(Number(e.target.value))}
+                  className="bg-black border border-zinc-700 text-white rounded-md px-2 py-1 text-sm focus:outline-none focus:border-red-500 font-medium"
+                >
+                  {[...Array(100)].map((_, i) => (
+                    <option key={i+1} value={i+1}>{i+1}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-zinc-400 font-medium">Nature:</label>
+                <select 
+                  value={nature} 
+                  onChange={(e) => setNature(e.target.value)}
+                  className="bg-black border border-zinc-700 text-white rounded-md px-2 py-1 text-sm focus:outline-none focus:border-red-500 font-medium"
+                >
+                  {Object.keys(NATURES).map(n => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5">
+            <div className="flex justify-between text-xs text-zinc-400 font-medium mb-6 uppercase tracking-wider">
+              <span>EVs: <span className="text-zinc-200">{currentTotalEvs}</span>/510</span>
+              <span>Left: <span className="text-zinc-200">{510 - currentTotalEvs}</span></span>
+            </div>
+
+            <div className="space-y-7">
+              {pokemon.stats.map(s => {
+                const statName = s.stat.name;
+                const base = s.base_stat;
+                const currentEv = evs[statName];
+                const currentIv = ivs[statName];
+                const calculated = calculateStat(base, currentIv, currentEv, level, nature, statName);
+
+                return (
+                  <div key={statName} className="relative">
+                    <div className="flex justify-between items-end mb-2.5">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-sm font-semibold text-zinc-200 w-24">{STAT_LABELS[statName] || statName}</span>
+                        <span className="text-xs text-zinc-500">({base})</span>
+                      </div>
+                      <span className="text-xl font-bold text-white">{calculated}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-5 text-xs text-zinc-400">
+                      <div className="flex-1 flex items-center gap-2">
+                        <span className="font-semibold text-zinc-500 w-4">EV</span>
+                        <input 
+                          type="range" min="0" max="252" 
+                          value={currentEv} 
+                          onChange={(e) => handleEvChange(statName, e.target.value)}
+                          className="w-full h-1 bg-black rounded-lg appearance-none cursor-pointer accent-red-500 border border-zinc-800"
+                        />
+                        <input 
+                          type="number" value={currentEv}
+                          onChange={(e) => handleEvChange(statName, e.target.value)}
+                          className="w-12 bg-black border border-zinc-700 rounded px-1 py-1 text-center text-white outline-none font-medium text-xs"
+                        />
+                      </div>
+                      <div className="flex-1 flex items-center gap-2">
+                        <span className="font-semibold text-zinc-500 w-4">IV</span>
+                        <input 
+                          type="range" min="0" max="31" 
+                          value={currentIv}
+                          onChange={(e) => handleIvChange(statName, e.target.value)}
+                          className="w-full h-1 bg-black rounded-lg appearance-none cursor-pointer accent-blue-500 border border-zinc-800"
+                        />
+                        <input 
+                          type="number" value={currentIv}
+                          onChange={(e) => handleIvChange(statName, e.target.value)}
+                          className="w-10 bg-black border border-zinc-700 rounded px-1 py-1 text-center text-white outline-none font-medium text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex gap-2 mt-8">
+              <button onClick={resetEvs} className="flex-1 bg-black border border-zinc-800 hover:bg-zinc-900 text-zinc-300 py-2 rounded-lg text-sm font-medium transition">Reset EVs</button>
+              <button onClick={maxIvs} className="flex-1 bg-black border border-zinc-800 hover:bg-zinc-900 text-zinc-300 py-2 rounded-lg text-sm font-medium transition">Max IVs</button>
+              <button onClick={minIvs} className="flex-1 bg-black border border-zinc-800 hover:bg-zinc-900 text-zinc-300 py-2 rounded-lg text-sm font-medium transition">Min IVs</button>
+            </div>
+          </div>
+        </section>
+
+        {/* Moves */}
+        <section className="bg-[#121212] border border-zinc-800 rounded-2xl p-5 mt-6">
+          <div className="flex items-center gap-2 mb-5">
+            <Swords className="text-zinc-500" size={22} />
+            <h3 className="text-xl font-bold text-white tracking-wide">Moves</h3>
+          </div>
+
+          <div className="relative mb-6">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+            <input 
+              type="text" 
+              placeholder="Search moves..." 
+              value={moveSearch}
+              onChange={(e) => setMoveSearch(e.target.value)}
+              className="w-full bg-black border border-zinc-800 rounded-xl pl-11 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 transition-colors text-sm"
+            />
+          </div>
+
+          <div className="flex overflow-x-auto hide-scrollbar gap-2 mb-6 pb-2 border-b border-zinc-800/50">
+            {[
+              { id: 'level-up', label: 'Level Up', count: groupedMoves['level-up']?.length || 0 },
+              { id: 'machine', label: 'TM/HM', count: groupedMoves.machine?.length || 0 },
+              { id: 'egg', label: 'Egg', count: groupedMoves.egg?.length || 0 },
+              { id: 'tutor', label: 'Tutor', count: groupedMoves.tutor?.length || 0 }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveMoveTab(tab.id)}
+                className={`whitespace-nowrap px-4 py-2 text-sm font-semibold transition-colors relative ${
+                  activeMoveTab === tab.id 
+                    ? 'text-red-500' 
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                {tab.label} <span className={`ml-1 text-[11px] ${activeMoveTab === tab.id ? 'text-red-400/80' : 'text-zinc-600'}`}>({tab.count})</span>
+                {activeMoveTab === tab.id && (
+                  <div className="absolute bottom-0 left-0 w-full h-[2px] bg-red-500 rounded-t-full"></div>
+                )}
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-3">
+            {groupedMoves[activeMoveTab]
+              ?.filter(m => m.move.name.includes(moveSearch.toLowerCase()))
+              .map((m, i) => (
+                <MoveCard key={`${m.move.name}-${i}`} moveInfo={m} levelLearned={m.level} />
+              ))}
+            
+            {groupedMoves[activeMoveTab]?.length === 0 && (
+              <div className="text-center text-zinc-600 py-12 text-sm font-medium">
+                No {activeMoveTab.replace('-', ' ')} moves available
+              </div>
+            )}
+          </div>
+        </section>
+
+      </main>
+      
+      {/* Global styles */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .pixelated {
+          image-rendering: pixelated;
+          image-rendering: -moz-crisp-edges;
+          image-rendering: crisp-edges;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          height: 16px;
+          width: 16px;
+          border-radius: 50%;
+          cursor: pointer;
+          margin-top: -6px;
+          border: 2px solid #000;
+        }
+        input[type=range].accent-red-500::-webkit-slider-thumb { background: #ef4444; }
+        input[type=range].accent-blue-500::-webkit-slider-thumb { background: #3b82f6; }
+        
+        input[type=range]::-webkit-slider-runnable-track {
+          width: 100%;
+          height: 4px;
+          cursor: pointer;
+          background: #27272a;
+          border-radius: 2px;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Disable number input arrows */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+          -webkit-appearance: none; 
+          margin: 0; 
+        }
+      `}} />
+    </div>
+  );
+}
+
+
+
+```
