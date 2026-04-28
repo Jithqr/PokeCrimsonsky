@@ -4,6 +4,7 @@ import { ALL_POKEMON, TOTAL_POKEMON, GEN_NAMES, movesForLevel, type PokemonTempl
 import { tmStoreItems } from "./lib/tm-data";
 import { PokeTalesDex } from "./components/PokeTalesDex";
 import { SplashLoader } from "./components/SplashLoader";
+import { StoryIntro } from "./components/StoryIntro";
 import BattleArena from "./components/BattleArena";
 import TrainingZone from "./components/TrainingZone";
 import LeagueScreen from "./components/LeagueScreen";
@@ -371,7 +372,7 @@ function loadSave(): SaveData | null {
 export default function App() {
   const initial = typeof window !== "undefined" ? loadSave() : null;
   const [splashDone, setSplashDone] = useState(false);
-  const [screen, setScreen] = useState<string>(initial ? (initial.screen === "battle" || initial.screen === "hunt" || initial.screen === "title" ? "world" : initial.screen) : "nameInput");
+  const [screen, setScreen] = useState<string>(initial ? (initial.screen === "battle" || initial.screen === "hunt" || initial.screen === "title" ? "world" : (initial.screen === "nameInput" || initial.screen === "starter") ? "story" : initial.screen) : "story");
   const [player, setPlayer] = useState<Player>(initial?.player ?? {
     name: "Trainer",
     hometown: "Nuvema Town",
@@ -1859,6 +1860,28 @@ export default function App() {
     return <SplashLoader onDone={() => setSplashDone(true)} />;
   }
 
+  if (screen === "story") {
+    return (
+      <StoryIntro
+        onComplete={({ name, starterId }) => {
+          const p = getPokemon(starterId);
+          if (!p) {
+            setScreen("world");
+            return;
+          }
+          const mon = makeMon(p, 5, "starter");
+          setPlayer((prev) => ({ ...prev, name }));
+          setTeam([mon]);
+          setCaught(new Set([p.id]));
+          addLog(`You chose ${p.name}! Your adventure begins!`, "#FFD700");
+          setScreen("world");
+        }}
+      />
+    );
+  }
+
+  // Legacy fallback (unused) — keeps the old name input around in case anything
+  // routes back to it. The main flow now goes through the "story" screen.
   if (screen === "nameInput") {
     const submitName = () => {
       const el = document.getElementById("nf") as HTMLInputElement | null;
