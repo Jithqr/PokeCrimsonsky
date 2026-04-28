@@ -1016,6 +1016,46 @@ export default function App() {
 
   function getPokemon(id: number) { return ALL_POKEMON.find((p) => p.id === id)!; }
 
+  // Map: speciesId -> level at which its PRE-evolution evolves into it.
+  // Computed once. Used so that, say, Ivysaur only spawns at lvl 16+ (Bulbasaur's evolveAt),
+  // and Venusaur only spawns at lvl 32+ (Ivysaur's evolveAt).
+  const PRE_EVOLVE_AT = useMemo(() => {
+    const m = new Map<number, number>();
+    for (const p of ALL_POKEMON) {
+      if (p.canEvolve && p.evolveAt) {
+        m.set(p.canEvolve, p.evolveAt);
+      }
+    }
+    return m;
+  }, []);
+
+  // Compute the wild level range for a given species:
+  //   - min = pre-evolution's evolveAt (so the species would already be evolved by then)
+  //          or 1 if it's a base form WITH a future evolution (e.g. Bulbasaur 1-16)
+  //          or 32 if it has NO pre-evolution AND NO future evolution (legendaries / standalone mons)
+  //   - max = its own evolveAt - 1 (so it doesn't appear at a level where it would have evolved)
+  //          or 79 if it has no further evolution.
+  function levelRangeFor(template: PokemonTemplate): { min: number; max: number } {
+    const preLv = PRE_EVOLVE_AT.get(template.id);
+    const ownEvo = template.evolveAt;
+    let min: number;
+    if (preLv !== undefined) {
+      min = preLv;
+    } else if (ownEvo !== undefined) {
+      min = 1; // base form with a future evolution
+    } else {
+      min = 32; // standalone / legendary species
+    }
+    const max = ownEvo !== undefined ? Math.max(min, ownEvo) : 79;
+    return { min, max };
+  }
+
+  function pickWildLevel(template: PokemonTemplate): number {
+    const { min, max } = levelRangeFor(template);
+    if (max <= min) return min;
+    return min + Math.floor(Math.random() * (max - min + 1));
+  }
+
   function spawnWild(forceLegendary = false): Mon | null {
     const region = REGIONS[player.macroRegion] ?? REGIONS[0];
     const pool = REGION_POOLS[region.gen] ?? [];
@@ -1039,11 +1079,9 @@ export default function App() {
       setHuntCount((c) => c + 1);
     }
     const template = getPokemon(id);
-    // Wild Pokémon levels are now completely random across the whole 5–89 range,
-    // independent of the player's region. Legendary still gets a small boost.
-    const lv = isLegend
-      ? Math.min(99, 60 + Math.floor(Math.random() * 30))
-      : 5 + Math.floor(Math.random() * 85);
+    // Wild Pokémon levels are now bounded by their evolution stage:
+    //   Bulbasaur 1–16, Ivysaur 16–32, Venusaur 32–79, Mewtwo (no pre/post) 32–79.
+    const lv = pickWildLevel(template);
     return makeMon(template, lv);
   }
 
@@ -1064,11 +1102,9 @@ export default function App() {
       ? legends[Math.floor(Math.random() * legends.length)]
       : pool[Math.floor(Math.random() * pool.length)];
     if (!id) return null;
-    // Levels are random across the entire 5–89 range — no per-region cap.
-    const lv = isLegend
-      ? Math.min(99, 60 + Math.floor(Math.random() * 30))
-      : 5 + Math.floor(Math.random() * 85);
-    return makeMon(getPokemon(id), lv);
+    // Levels are now bounded by the species' evolution stage (see levelRangeFor).
+    const tpl = getPokemon(id);
+    return makeMon(tpl, pickWildLevel(tpl));
   }
 
   function enterSafari() {
@@ -1118,9 +1154,7 @@ export default function App() {
     const id = useLegend
       ? legends[Math.floor(Math.random() * legends.length)]
       : pool[Math.floor(Math.random() * pool.length)];
-    const sm = id ? makeMon(getPokemon(id), useLegend
-      ? Math.min(99, 60 + Math.floor(Math.random() * 30))
-      : 5 + Math.floor(Math.random() * 85)) : null;
+    const sm = id ? (() => { const tpl = getPokemon(id); return makeMon(tpl, pickWildLevel(tpl)); })() : null;
     setSafariEnc(sm);
     if (sm) setSeen((prev) => prev.has(sm.id) ? prev : new Set(prev).add(sm.id));
     setSafariCounter(1);
