@@ -9,7 +9,7 @@ import TrainingZone from "./components/TrainingZone";
 import LeagueScreen from "./components/LeagueScreen";
 import safariForestBg from "@assets/6155a54f-3b2d-4298-911f-596582b8196c_1777290294414.jpeg";
 import huntForestBg from "@assets/0d36e278-0668-4064-8738-4427560706e9_1777293871555.jpeg";
-import battleArenaBg from "@assets/images_(5)_1777294187407.jpeg";
+import battleArenaBg from "@assets/battle_arena_meadow.jpeg";
 import { GYM_LEADERS, ELITE_FOUR, npcMonToAppMon, type NpcTrainer } from "./lib/league-data";
 import {
   fromAppMon, makeBattleState, resolveTurn, forceSwitch, calcMaxHp,
