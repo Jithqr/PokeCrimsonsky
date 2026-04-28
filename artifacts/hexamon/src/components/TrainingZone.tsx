@@ -310,18 +310,31 @@ function PaidZone({ mon, money, onBack, onCommitEv, onMutateMon, onSpendMoney, t
     if (!tplCur) return;
     const newEvents: AnyEvent[] = [];
     let lvl = mon.level;
-    let knownMoves = [...(mon.moves ?? [])];
+    const knownMoves = new Set((mon.moves ?? []).map((m) => m.toLowerCase()));
     let speciesTpl = tplCur;
     let evolutionOffered = false;
+
     for (let i = 0; i < n; i++) {
-      lvl = Math.min(100, lvl + 1);
-      const candidates = (speciesTpl.moves ?? []).filter((mv) => !knownMoves.includes(mv));
-      if (candidates.length > 0 && lvl % 2 === 0) {
-        const pick = candidates[Math.floor(Math.random() * candidates.length)];
-        newEvents.push({ type: "learn", move: pick });
-        if (knownMoves.length < 4) knownMoves.push(pick);
+      if (lvl >= 100) break;
+      lvl += 1;
+
+      // Only offer moves the *current* species actually learns at exactly this level.
+      // A move is queued at most once (the level it's learned at). If the player
+      // skips it, it simply won't appear again because we never re-scan past levels.
+      const learnAtThisLevel = (speciesTpl.learn ?? []).filter((e) => e.l === lvl);
+      for (const entry of learnAtThisLevel) {
+        if (knownMoves.has(entry.n.toLowerCase())) continue;
+        newEvents.push({ type: "learn", move: entry.n });
+        knownMoves.add(entry.n.toLowerCase());
       }
-      if (!evolutionOffered && speciesTpl.canEvolve != null && speciesTpl.evolveAt != null && lvl >= speciesTpl.evolveAt) {
+
+      // Evolution offer (one per session).
+      if (
+        !evolutionOffered &&
+        speciesTpl.canEvolve != null &&
+        speciesTpl.evolveAt != null &&
+        lvl >= speciesTpl.evolveAt
+      ) {
         const evTpl = ALL_POKEMON.find((p) => p.id === speciesTpl.canEvolve!);
         if (evTpl) {
           newEvents.push({ type: "evolve", toId: evTpl.id, toName: evTpl.name, toSprite: evTpl.sprite });
@@ -330,6 +343,7 @@ function PaidZone({ mon, money, onBack, onCommitEv, onMutateMon, onSpendMoney, t
         }
       }
     }
+
     onMutateMon(mon.uid, { level: lvl });
     toast(`Lv ${mon.level} → Lv ${lvl}`, "#5dc26b");
     if (newEvents.length > 0) setEventQueue((q) => [...q, ...newEvents]);
