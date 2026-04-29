@@ -1265,13 +1265,27 @@ export default function App() {
     const lvPenalty = Math.max(0, (safariEnc.level - 20) * 0.01);
     const rate = Math.max(0.05, baseRate - lvPenalty);
     const success = Math.random() < rate;
-    setSafariThrowAnim("throw");
-    // Animate the "You threw a Safari" message with growing star tier ★ → ★★ → ★★★
-    setSafariStatusMsg({ kind: "throw", text: "You threw a Safari", stars: 1 });
-    setTimeout(() => setSafariStatusMsg({ kind: "throw", text: "You threw a Safari", stars: 2 }), 250);
-    setTimeout(() => setSafariStatusMsg({ kind: "throw", text: "You threw a Safari", stars: 3 }), 500);
-    setTimeout(() => setSafariThrowAnim("wobble"), 500);
+    // On a successful catch we always animate the full ★ → ★★ → ★★★ sequence.
+    // On a failed throw we stop at a random 1, 2, or 3 stars before fleeing.
+    const finalStars = success ? 3 : 1 + Math.floor(Math.random() * 3);
     const encName = safariEnc.name;
+
+    setSafariThrowAnim("throw");
+    // Show the throw text immediately with no stars yet, then add one star
+    // every 500ms up to finalStars (max 3).
+    setSafariStatusMsg({ kind: "throw", text: "You Threw A Safari Ball!", stars: 0 });
+    const starTimers: ReturnType<typeof setTimeout>[] = [];
+    for (let s = 1; s <= finalStars; s++) {
+      starTimers.push(setTimeout(() => {
+        setSafariStatusMsg({ kind: "throw", text: "You Threw A Safari Ball!", stars: s });
+      }, s * 500));
+    }
+    // The wobble animation kicks in once the first star appears.
+    setTimeout(() => setSafariThrowAnim("wobble"), 500);
+
+    // Resolve the throw 700ms after the LAST star appears, so the player
+    // gets a beat to read the star count before the result text takes over.
+    const resolveDelay = finalStars * 500 + 700;
     setTimeout(() => {
       if (success) {
         setSafariThrowAnim("stars");
@@ -1294,7 +1308,10 @@ export default function App() {
         setSafariThrowAnim(null);
         safariNext(ballsLeft);
       }, 1400);
-    }, 1500);
+    }, resolveDelay);
+    // (Star timers are intentionally fire-and-forget — the encounter cleanup
+    // resets safariStatusMsg so any late ones become harmless no-ops.)
+    void starTimers;
   }
 
   function safariRun() {
