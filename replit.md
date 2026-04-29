@@ -48,6 +48,21 @@ Pokémon-style React + Vite + TS web game. Major in-game systems:
 - **TYPE_COLORS includes Dark** — `Dark: "#705848"` added so dark-type moves/badges render properly.
 - **Auto-heal after every battle** — wild battle (run/win/black-out), league battle exit, and PvP battle exit all reset every team mon's `currentHp` to `maxHp` and clear `status`.
 - **Evolve has no candy cost** — `evolveMon` in `monDetail` simply confirms and evolves; candy-related logic was removed.
+- **Audio assets (PokeRogue, beta branch of `pagefaultgames/pokerogue-assets`)** bundled at `artifacts/hexamon/public/audio/`:
+  - `cry/` — all 1200 species cries (m4a, named by national dex id)
+  - `se/` — 37 sound effects (hit, faint, pb_throw, pb_catch, level_up, exp, shine, etc.)
+  - `ui/` — 3 UI sounds (select, menu_open, error)
+  - `battle_anims/` — 1310 move SFX (Fire1-4, Water1-5, PRSFX-* per-move clips)
+  - `bgm/` — curated 16 tracks (title, battle_wild, battle_trainer, battle_kanto_gym, battle_kanto_champion, battle_legendary_kanto, town, meadow, grass, menu, end, etc.). Most BGM was skipped to keep the bundle small.
+- **Audio service** lives in `src/audio-assets.ts` (real-asset playback, BGM singleton with loop, master/sfx/music volumes, `playCry(dexId)`, `playMusic(track)`, `stopMusic()`, `playMoveByName(move,type)` with curated per-move and type-fallback maps). `src/sfx.ts` keeps its existing exported `sfx` API (`click`/`hit`/`faint`/`ballThrow`/...) but each helper now plays the matching real wav/m4a and falls back to the original Web Audio synth on failure, so the ~50 existing call sites in App.tsx work unchanged.
+- **Battle audio hooks in App.tsx**:
+  - Wild battle entry (~L1355): plays the wild Pokémon's cry, then loops `battle_wild`.
+  - Wild battle exit (catch / flee / blackout): `sfx.stopMusic()` before screen change.
+  - League battle entry (~L810): plays opponent lead's cry + loops `battle_trainer` (or `battle_kanto_champion` for E4).
+  - League battle exit (~L5440): `sfx.stopMusic()`.
+  - Switch-in (`pickSwitchTo` ~L1467): plays the new active Pokémon's cry.
+  - Mon Detail playCry button: now plays `/audio/cry/{id}.m4a` first, with PokéAPI as a remote fallback.
+- **Move SFX**: `playMoveSfx(move)` in `sfx.ts` now tries `playMoveByName(move,type)` first (real PokeRogue clip from `battle_anims/`) and falls back to the synth move sound if no asset is mapped.
 - **Remove-from-team / Reset-Team return mons to box** — pulling a Pokémon out of a team (or resetting a team) now pushes it into `box` (the Mons collection) instead of releasing it forever.
 - **Empty-team popup on creation** — `emptyTeamWarning` state shows a fixed modal reminding the trainer to add at least 1 Pokémon to a freshly created team before battling.
 - **Safari encounter status box** — fixed-height (64px) banner under the encounter sprite. Replaces "appeared!/watches you carefully..." with three states: "You threw a Safari ★/★★/★★★" (animated), "You Caught A Wild X" (green), "Your Safari Failed And wild X Has fled." (red). Driven by `safariStatusMsg` state set in `safariThrow`.

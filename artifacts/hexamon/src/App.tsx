@@ -806,6 +806,10 @@ export default function App() {
     setLeagueResultBanner(null);
     setScreen("leagueBattle");
     sfx.menuOpen();
+    // Trainer battle audio: opponent's lead Pokémon cry + trainer theme.
+    const oppLead = oppBattleMons[0];
+    if (oppLead) sfx.playCry(oppLead.speciesId);
+    sfx.playMusic(opts.isE4 ? "battle_kanto_champion" : "battle_trainer");
   }, [team, player.name, addLog]);
 
   // When player submits an action, the bot picks one and we resolve.
@@ -1350,6 +1354,9 @@ export default function App() {
     setBattle({ wild: scoutedWild, pMon, phase: "choose", turnCount: 0, canCatch: true, ballsThrown: 0, selectedBall: "Poké Ball", fleeThreshold });
     setScoutedWild(null);
     setScreen("battle");
+    // Wild encounter audio: opponent's cry, then loop the wild battle theme.
+    sfx.playCry(scoutedWild.id);
+    sfx.playMusic("battle_wild");
   }
 
   function doPlayerMove(move: string) {
@@ -1429,6 +1436,7 @@ export default function App() {
         addLog("All your Pokémon fainted! You blacked out...", "#F44336");
         setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })));
         addLog("Your team was fully healed!", "#4CAF50");
+        sfx.stopMusic();
         setBattle(null);
         setScreen("world");
         return;
@@ -1458,6 +1466,7 @@ export default function App() {
     if (target.currentHp <= 0) return;
     if (target.id === pMon.id && target.level === pMon.level) { setShowSwitchPicker(false); return; }
     const next = { ...target };
+    sfx.playCry(next.id);
     setTeam((prev) => {
       const newTeam = [...prev];
       const idx = newTeam.findIndex((m) => m.id === pMon.id && m.level === pMon.level);
@@ -1550,6 +1559,7 @@ export default function App() {
         addLog("Your team was fully healed!", "#4CAF50");
         setTimeout(() => {
           setBallAnim(null);
+          sfx.stopMusic();
           setBattle(null);
           setScreen("hunt");
         }, 900);
@@ -1569,7 +1579,7 @@ export default function App() {
             const shouldFlee = thrown >= threshold;
             if (shouldFlee) {
               addLog(`💨 Wild ${wild.name} fled!`, "#FF9800");
-              setTimeout(() => { setBattle(null); setScreen("hunt"); }, 700);
+              setTimeout(() => { sfx.stopMusic(); setBattle(null); setScreen("hunt"); }, 700);
             }
             return prev;
           });
@@ -4495,25 +4505,24 @@ export default function App() {
     // Sprite URL for the new UI — animated showdown gif if available.
     const spriteUrl = `https://play.pokemonshowdown.com/sprites/ani/${(m.sprite || m.name).toLowerCase()}.gif`;
 
-    // Plays this Pokémon's actual cry. Tries the modern PokéAPI cry first
-    // (covers all 1000+ species), then falls back to the older "legacy"
-    // cry recording, then to Showdown's mp3 by name as a last resort.
+    // Plays this Pokémon's cry from the bundled PokeRogue assets, falling
+    // back to PokéAPI's cries CDN if the local file is missing.
     const playCry = () => {
       sfx.click();
-      const sources = [
-        `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${m.id}.ogg`,
-        `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/legacy/${m.id}.ogg`,
-        `https://play.pokemonshowdown.com/audio/cries/${(m.sprite || m.name).toLowerCase().replace(/[^a-z0-9]/g, "")}.mp3`,
-      ];
-      let i = 0;
-      const tryNext = () => {
-        if (i >= sources.length) return;
-        const a = new Audio(sources[i++]);
-        a.volume = 0.5;
-        a.onerror = tryNext;
-        a.play().catch(tryNext);
+      const localUrl = `/audio/cry/${m.id}.m4a`;
+      const remoteFallback = `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${m.id}.ogg`;
+      const a = new Audio(localUrl);
+      a.volume = 0.6;
+      a.onerror = () => {
+        const b = new Audio(remoteFallback);
+        b.volume = 0.5;
+        b.play().catch(() => {});
       };
-      tryNext();
+      a.play().catch(() => {
+        const b = new Audio(remoteFallback);
+        b.volume = 0.5;
+        b.play().catch(() => {});
+      });
     };
 
     // Stat row used in the Stats tab — keeps the new monochrome look.
@@ -5424,6 +5433,7 @@ export default function App() {
               mons: g.mons.map((m) => ({ ...m, currentHp: m.maxHp, status: null })),
             })));
             addLog("Your team was fully healed!", "#4CAF50");
+            sfx.stopMusic();
             setLeagueBattle(null);
             setScreen("league");
           }}
