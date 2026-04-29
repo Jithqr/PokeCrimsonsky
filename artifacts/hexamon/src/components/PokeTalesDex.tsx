@@ -89,7 +89,7 @@ type Tab = "level-up" | "machine" | "egg" | "tutor";
 // ============================================================
 // Crimson Sky Dex – grid view
 // ============================================================
-export function PokeTalesDex({ onBack: _onBack, onHome }: { onBack: () => void; onHome: () => void }) {
+export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: () => void }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<PokemonTemplate | null>(null);
 
@@ -119,10 +119,11 @@ export function PokeTalesDex({ onBack: _onBack, onHome }: { onBack: () => void; 
     <div style={S.root}>
       <style>{CSS}</style>
       <div style={S.topBar}>
-        <button style={S.iconBtn} onClick={onHome} aria-label="Home">
-          <i className="fa-solid fa-house" />
+        <button style={S.backBtn} onClick={onBack} aria-label="Back">
+          <span style={{ fontSize: 10, lineHeight: 1, marginRight: 6 }}>◀</span>BACK
         </button>
         <div style={S.topTitle}>Crimson Sky Dex</div>
+        <div style={{ width: 80 }} />
       </div>
 
       <div style={S.scroll}>
@@ -272,8 +273,8 @@ function DexDetail({
     <div style={S.root}>
       <style>{CSS}</style>
       <div style={S.topBar}>
-        <button style={S.iconBtn} onClick={onBack} aria-label="Back">
-          <i className="fa-solid fa-arrow-left" />
+        <button style={S.backBtn} onClick={onBack} aria-label="Back">
+          <span style={{ fontSize: 10, lineHeight: 1, marginRight: 6 }}>◀</span>BACK
         </button>
         <div style={S.topTitle}>Crimson Sky Dex</div>
         <button style={S.iconBtn} onClick={onHome} aria-label="Home">
@@ -583,6 +584,23 @@ const S: Record<string, React.CSSProperties> = {
     background: "#1c1c1e", border: "1px solid #2a2a2d",
     color: "#fff", fontSize: 14, cursor: "pointer",
     padding: "8px 10px", borderRadius: 8, minWidth: 38,
+  },
+  // Unified BACK pill — matches the design used everywhere else in the app.
+  backBtn: {
+    background: "#1c1c1e",
+    border: "1px solid #2a2a2d",
+    color: "#ffffff",
+    padding: "8px 14px",
+    borderRadius: 10,
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: 1,
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+    fontFamily:
+      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    flexShrink: 0,
   },
   scroll: { flex: 1, overflowY: "auto", padding: "0 14px 20px" },
   redGlow: {

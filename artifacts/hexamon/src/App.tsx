@@ -23,6 +23,38 @@ const SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/ani/$
 const SPRITE_BACK = (name: string) => `https://play.pokemonshowdown.com/sprites/ani-back/${name.replace(/[^a-z0-9]/g, "")}.gif`;
 const TRAINER_SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/trainers/${name}.png`;
 
+// ----------------------------------------------------------------
+// Unified BACK button — every screen's back control should use this
+// so the look (dark pill with "◀ BACK") is identical everywhere and
+// the button always sits on the LEFT side of its header.
+// ----------------------------------------------------------------
+export const BACK_BTN_STYLE: React.CSSProperties = {
+  background: "#1c1c1e",
+  border: "1px solid #2a2a2d",
+  color: "#ffffff",
+  padding: "8px 14px",
+  borderRadius: 10,
+  fontSize: 12,
+  fontWeight: 700,
+  letterSpacing: 1,
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  fontFamily:
+    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+  flexShrink: 0,
+};
+
+export function BackBtn({ onClick, label = "BACK" }: { onClick: () => void; label?: string }) {
+  return (
+    <button type="button" style={BACK_BTN_STYLE} onClick={onClick} aria-label={label}>
+      <span style={{ fontSize: 10, lineHeight: 1 }}>◀</span>
+      {label}
+    </button>
+  );
+}
+
 const CUSTOM_SPRITES: Record<string, string> = {
   irontreads: "sprites/custom/irontreads.gif",
   ironbundle: "sprites/custom/ironbundle.gif",
@@ -2483,8 +2515,9 @@ export default function App() {
     <div style={S.root}><style>{css}</style>
       <div style={S.wrap}>
         <div style={S.header}>
+          <BackBtn onClick={() => setScreen("world")} />
           <span style={{ fontSize: 9, color: "#E91E63" }}>🪪 EDIT CARD</span>
-          <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
+          <div style={{ width: 88 }} />
         </div>
 
         {/* Full-size preview */}
@@ -2956,8 +2989,9 @@ export default function App() {
     <div style={S.root}><style>{css}</style>
       <div style={S.wrap}>
         <div style={S.header}>
+          <BackBtn onClick={() => setScreen("world")} />
           <span style={{ fontSize: 9, color: "#FF9800" }}>🎒 MY TEAMS ({team.length}/6)</span>
-          <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
+          <div style={{ width: 88 }} />
         </div>
         <div style={{ padding: "10px 12px 6px", display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
           {teams.map((t, i) => {
@@ -3366,8 +3400,9 @@ export default function App() {
     <div style={S.root}><style>{css}</style>
       <div style={S.wrap}>
         <div style={S.header}>
+          <BackBtn onClick={() => setScreen("world")} />
           <span style={{ fontSize: 9, color: "#607D8B" }}>👜 BAG</span>
-          <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
+          <div style={{ width: 88 }} />
         </div>
         {(() => {
           const bagCats = [
@@ -3486,11 +3521,7 @@ export default function App() {
 
           {/* Header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-            <button
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "#f0f0f0", padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer", backdropFilter: "blur(4px)" }}
-              onClick={() => { setScoutedWild(null); setScreen("world"); }}>
-              ◀ BACK
-            </button>
+            <BackBtn onClick={() => { setScoutedWild(null); setScreen("world"); }} />
             <div style={{ fontSize: 14, letterSpacing: 2, fontWeight: 700, color: "#f0f0f0" }}>wild hunt</div>
             <div style={{ width: 50 }} />
           </div>
@@ -3693,11 +3724,7 @@ export default function App() {
       <div style={S.root}><style>{css}</style>
         <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid var(--m-border)" }}>
-            <button className="btn"
-              style={{ border: "1px solid var(--m-border)", color: "var(--m-muted)", padding: "6px 12px", borderRadius: 8, background: "transparent", fontSize: 11, fontWeight: 600 }}
-              onClick={() => { sfx.menuBack(); if (bbRoom) { setBbRoom(null); setBbMode(null); } else { setScreen("world"); } }}>
-              ◀ BACK
-            </button>
+            <BackBtn onClick={() => { sfx.menuBack(); if (bbRoom) { setBbRoom(null); setBbMode(null); } else { setScreen("world"); } }} />
             <div style={{ fontSize: 13, fontWeight: 700, color: "var(--m-pink)", letterSpacing: 1.5 }}>BATTLE BOX</div>
             <button className="btn"
               style={{ border: "1px solid var(--m-border)", color: "var(--m-muted)", padding: "6px 10px", borderRadius: 8, background: "transparent", fontSize: 11, fontWeight: 600 }}
@@ -3927,11 +3954,7 @@ export default function App() {
       <div style={S.root}><style>{css}</style>
         <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid var(--m-border)" }}>
-            <button className="btn"
-              style={{ border: "1px solid var(--m-border)", color: "var(--m-muted)", padding: "6px 12px", borderRadius: 8, background: "transparent", fontSize: 11, fontWeight: 600 }}
-              onClick={() => { sfx.menuBack(); setScreen("profile"); }}>
-              ◀ BACK
-            </button>
+            <BackBtn onClick={() => { sfx.menuBack(); setScreen("profile"); }} />
             <div style={{ fontSize: 13, fontWeight: 700, color: "var(--m-pink)", letterSpacing: 1.5 }}>POKÉMON CAUGHT</div>
             <div style={{ width: 60 }} />
           </div>
@@ -4093,8 +4116,9 @@ export default function App() {
       <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           <div style={S.header}>
+            <BackBtn onClick={() => setScreen("world")} />
             <span style={{ fontSize: 9, color: "#26A69A" }}><i className="fa-solid fa-paw" /> MY MONS</span>
-            <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
+            <div style={{ width: 88 }} />
           </div>
 
           <div style={{ padding: "10px 12px 4px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -4291,8 +4315,9 @@ export default function App() {
         <div style={S.root}><style>{css}</style>
           <div style={S.wrap}>
             <div style={S.header}>
+              <BackBtn onClick={() => setScreen("mons")} />
               <span style={{ fontSize: 9, color: "#26A69A" }}>POKÉMON</span>
-              <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("mons")}>◀ BACK</button>
+              <div style={{ width: 88 }} />
             </div>
             <div style={{ padding: 30, textAlign: "center", color: "#888", fontSize: 10 }}>This Pokémon is no longer in your collection.</div>
           </div>
@@ -4480,28 +4505,7 @@ export default function App() {
         }}>
           {/* Header */}
           <header style={{ display: "flex", alignItems: "center", padding: 16, position: "relative" }}>
-            <button
-              onClick={() => { sfx.menuBack(); setScreen("mons"); }}
-              style={{
-                background: C.bgPanel,
-                color: C.textMuted,
-                border: "none",
-                padding: "6px 12px",
-                borderRadius: 6,
-                fontSize: 12,
-                fontWeight: "bold",
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                cursor: "pointer",
-                fontFamily: FONT_BASE,
-              }}
-            >
-              <svg width="8" height="10" viewBox="0 0 8 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M7 1L2 5L7 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              BACK
-            </button>
+            <BackBtn onClick={() => { sfx.menuBack(); setScreen("mons"); }} />
             <div style={{
               position: "absolute",
               left: "50%",
@@ -4616,7 +4620,7 @@ export default function App() {
 
             {monDetailTab === "iv" && (
               <div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 70px 70px", fontSize: 12, color: C.textMuted, paddingBottom: 8, borderBottom: "1px solid #1a1a2e", marginBottom: 8 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 70px 70px", fontSize: 12, color: C.textMuted, paddingBottom: 4, borderBottom: "1px solid #1a1a2e", marginBottom: 4 }}>
                   <span>Stat</span>
                   <span style={{ textAlign: "right" }}>IV</span>
                   <span style={{ textAlign: "right" }}>EV</span>
@@ -4629,13 +4633,13 @@ export default function App() {
                   ["Sp. Defense", m.ivSpd ?? 0, m.evSpd ?? 0],
                   ["Speed", m.ivSpe ?? 0, m.evSpe ?? 0],
                 ] as [string, number, number][]).map(([label, ivv, evv]) => (
-                  <div key={label} style={{ display: "grid", gridTemplateColumns: "1fr 70px 70px", padding: "6px 0", fontSize: 13 }}>
+                  <div key={label} style={{ display: "grid", gridTemplateColumns: "1fr 70px 70px", padding: "2px 0", fontSize: 13, lineHeight: 1.3 }}>
                     <span style={{ color: C.textMuted }}>{label}</span>
                     <span style={{ textAlign: "right", color: ivv >= 31 ? C.cyan : C.textMain, fontWeight: ivv >= 31 ? 700 : 400 }}>{ivv}</span>
                     <span style={{ textAlign: "right", color: C.textMain }}>{evv}</span>
                   </div>
                 ))}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 70px 70px", marginTop: 8, paddingTop: 10, borderTop: "1px solid #1a1a2e", color: C.cyan, fontWeight: 700 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 70px 70px", marginTop: 4, paddingTop: 4, borderTop: "1px solid #1a1a2e", color: C.cyan, fontWeight: 700, lineHeight: 1.3 }}>
                   <span>Total</span>
                   <span style={{ textAlign: "right" }}>{ivT}</span>
                   <span style={{ textAlign: "right" }}>{evT}</span>
@@ -4837,16 +4841,9 @@ export default function App() {
       <div style={S.root}><style>{css}</style>
         <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
           <div className="m-mkt-head" style={{ position: "relative" }}>
-            <button className="btn"
-              style={{
-                position: "absolute", left: 12, top: 14,
-                border: "1px solid var(--m-border)", color: "var(--m-muted)",
-                padding: "6px 10px", borderRadius: 8, background: "transparent",
-                fontSize: 11, fontWeight: 600,
-              }}
-              onClick={() => { sfx.menuBack(); setScreen("world"); }}>
-              <i className="fa-solid fa-chevron-left" style={{ fontSize: 9, marginRight: 4 }} />BACK
-            </button>
+            <div style={{ position: "absolute", left: 12, top: 14 }}>
+              <BackBtn onClick={() => { sfx.menuBack(); setScreen("world"); }} />
+            </div>
             <h1 className="m-mkt-title">Crimson Sky Marketplace</h1>
             <div style={{ marginTop: 6, display: "flex", justifyContent: "center", gap: 14, alignItems: "center" }}>
               <span style={{ fontSize: 12, color: "var(--m-yellow)", fontWeight: 600 }}>
@@ -5040,11 +5037,7 @@ export default function App() {
 
           {/* Header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-            <button
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "#f0f0f0", padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer", backdropFilter: "blur(4px)" }}
-              onClick={() => { setScreen("world"); }}>
-              ◀
-            </button>
+            <BackBtn onClick={() => { setScreen("world"); }} />
             <div style={{ fontSize: 14, letterSpacing: 2, fontWeight: 700, color: "#f0f0f0" }}>safari zone</div>
             <div style={{ width: 50 }} />
           </div>
@@ -5219,9 +5212,7 @@ export default function App() {
       <div className="m-app" style={{ ...S.root, background: "var(--m-bg)" }}><style>{css}</style>
         <div style={{ ...S.wrap, background: "var(--m-bg)", fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid var(--m-border)" }}>
-            <button className="btn"
-              style={{ border: "1.5px solid #f87171", color: "#f87171", padding: "5px 12px", borderRadius: 8, background: "transparent", fontSize: 11, fontWeight: 600 }}
-              onClick={() => setScreen("world")}>◀ BACK</button>
+            <BackBtn onClick={() => setScreen("world")} />
             <div style={{ fontSize: 13, fontWeight: 700, color: "var(--m-blue)", letterSpacing: 2 }}>SELECT REGION</div>
             <div style={{ width: 60 }} />
           </div>
@@ -5281,8 +5272,9 @@ export default function App() {
       <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           <div style={S.header}>
+            <BackBtn onClick={() => setScreen("world")} />
             <span style={{ fontSize: 9, color: "#9C27B0" }}>📖 POKÉDEX ({seen.size}/{TOTAL_POKEMON} seen • {caught.size} caught)</span>
-            <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "5px 10px" }} onClick={() => setScreen("world")}>◀ BACK</button>
+            <div style={{ width: 88 }} />
           </div>
           <div style={{ padding: "8px 10px 4px", overflowX: "auto", display: "flex", gap: 4 }}>
             <button className="btn"
