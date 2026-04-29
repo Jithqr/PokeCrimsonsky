@@ -95,7 +95,7 @@ export const sfx = {
   // UI
   click: () => { /* button click sounds disabled */ },
   menuOpen: () => asset("/audio/ui/menu_open.wav", () => seq([{ f: 660, d: 0.05 }, { f: 990, d: 0.05 }]), 0.6),
-  menuBack: () => asset("/audio/ui/error.wav", () => seq([{ f: 660, d: 0.05 }, { f: 440, d: 0.05 }]), 0.5),
+  menuBack: () => { /* back-button sounds disabled */ },
 
   // Combat
   hit: () => asset("/audio/se/hit.wav", () => { noise(0.08, 0.06, 1500); slide(220, 110, 0.1, "square", 0.05); }),
