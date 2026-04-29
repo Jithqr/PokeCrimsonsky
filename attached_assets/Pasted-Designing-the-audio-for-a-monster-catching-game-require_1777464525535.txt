@@ -1,0 +1,62 @@
+Designing the audio for a monster-catching game requires a solid mix of atmospheric music and highly responsive feedback sounds. To keep the gameplay engaging, you need distinct audio cues for navigation, battling, and rewards.
+​Here is a comprehensive breakdown of the essential background music (BGM) and sound effects (SFX) you will need:
+​Background Music (BGM)
+​Music sets the tone for the entire adventure. You generally need loops that can play endlessly without becoming grating.
+​Title Screen / Main Menu: An inviting, adventurous theme to start the game.
+​Overworld Exploration: Distinct tracks for different environments (Routes, Towns, Forests, Caves, Surfing/Water).
+​Encounters: Short, high-energy intro tracks when a wild encounter or trainer battle is triggered.
+​Battle Themes: * Wild encounter theme.
+​Standard trainer theme.
+​Boss/Gym Leader theme.
+​Legendary encounter theme.
+​Victory Fanfares: Short celebratory tracks for defeating a wild monster or a trainer.
+​Special Events: * Evolution theme.
+​Healing theme (the classic quick melody at a healing center).
+​Game Over / Blackout theme.
+​User Interface (UI) Sound Effects
+​These are the most frequently heard sounds in the game and should be snappy, satisfying, and unobtrusive.
+​Cursor Move: A soft click or subtle blip when navigating menus.
+​Select/Confirm: A slightly higher-pitched, positive chime.
+​Cancel/Back: A lower-pitched or softer swoosh.
+​Error/Invalid: A dull thud or buzzer for when an action cannot be performed (e.g., trying to use an item when you can't).
+​Open/Close Menu: A mechanical or sweeping sound to indicate a screen transition.
+​Overworld & Exploration Sound Effects
+​These ground the player in the environment and provide feedback for physical actions.
+​Footsteps: Variations for different terrains (grass, dirt, hard floor).
+​Collision: A distinct "bump" sound when walking into a wall or solid object.
+​Ledge Jump: A short hop sound.
+​Item Pickup: A rewarding chime for finding an item on the ground.
+​Alert: A sharp, sudden sound (like the classic "!" noise) when spotted by an NPC or when wild grass rustles.
+​Battle Sound Effects
+​Combat relies heavily on audio feedback to make hits feel impactful and to communicate game state without forcing the player to read every text box.
+​Battle Transition: A dramatic swoosh or shattering sound as the screen transitions into the battle arena.
+​Entering Combat:
+​Pokéball throw (whoosh sound).
+​Pokéball opening (an energetic pop/flash).
+​Monster cries (a unique roar or digital chirp for each species as they enter).
+​Attacks & Damage:
+​Generic physical hit (smack/punch).
+​Generic special hit (energy beam/magic chime).
+​Effectiveness modifiers: Distinct sounds for "Super Effective" (sharp, heavy crash) and "Not Very Effective" (dull, resisted thud).
+​Critical hit (a piercing, highly noticeable strike).
+​Stat Changes & Status:
+​Stat increase (an ascending, positive tone).
+​Stat decrease (a descending, negative tone).
+​Status afflictions (e.g., a toxic sizzle for poison, a crackle for paralysis).
+​Health Indicators:
+​HP bar draining (a rapid ticking noise).
+​Low HP alarm (a continuous, urgent beeping).
+​Fainting (a descending, defeated slide as the monster drops off-screen).
+​Catching & Progression Sound Effects
+​These are the core reward sounds of the genre and need to feel incredibly satisfying.
+​Catching Sequence:
+​Item thrown (whoosh).
+​Ball closing on the monster (snap).
+​Ball shaking (a heavy, metallic wobble—usually plays up to 3 times).
+​Catch success (a bright, locking click followed by a short victory jingle).
+​Catch failure (a burst or shattering sound as the monster breaks out).
+​Progression:
+​Experience bar filling (rapid ticking, similar to HP but higher pitched).
+​Level up (an instantaneous, triumphant chime).
+​Evolution sequence (a sustained, building magical hum that crescendos into a bright flash).
+​Are you aiming for a retro 8-bit chip-tune style for your audio, or are you planning a more modern, fully orchestrated soundscape?
