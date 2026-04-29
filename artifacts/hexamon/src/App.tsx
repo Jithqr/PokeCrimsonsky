@@ -18,6 +18,7 @@ import {
 } from "./lib/battle-engine";
 import { chooseBotAction, pickBotForceSwitch } from "./lib/bot-ai";
 import { getMove } from "./lib/move-data";
+import { typeMultiplier, type PType } from "./lib/type-chart";
 
 const SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/ani/${name.replace(/[^a-z0-9]/g, "")}.gif`;
 const SPRITE_BACK = (name: string) => `https://play.pokemonshowdown.com/sprites/ani-back/${name.replace(/[^a-z0-9]/g, "")}.gif`;
@@ -752,6 +753,7 @@ export default function App() {
   const spendMoney = useCallback((cost: number): boolean => {
     if ((player.money ?? 0) < cost) return false;
     setPlayer((p) => ({ ...p, money: p.money - cost }));
+    sfx.itemPickup();
     return true;
   }, [player.money]);
 
@@ -862,7 +864,7 @@ export default function App() {
     const isE4 = leagueBattle.isE4;
     const e4Idx = leagueBattle.e4Idx;
     if (won) {
-      sfx.victory();
+      sfx.trainerVictory();
       const reward = 1000 + 200 * (npc.team[npc.team.length - 1]?.level ?? 30);
       setPlayer((p) => ({ ...p, money: p.money + reward, wins: (p.wins ?? 0) + 1 }));
       addLog(`🏆 Defeated ${npc.name}! +₽${reward}`, "#4ade80");
@@ -1068,6 +1070,64 @@ export default function App() {
 
   // Cleanup WS on unmount.
   useEffect(() => () => { try { wsRef.current?.close(); } catch { /* ignore */ } }, []);
+
+  // ----- Music: title screen and overworld town BGM. Battle screens manage
+  // their own music explicitly (cry → battle BGM, then stopMusic on exit).
+  useEffect(() => {
+    if (screen === "story") sfx.playMusic("title");
+    else if (screen === "world") sfx.playMusic("town");
+  }, [screen]);
+
+  // ----- Low-HP alarm. Plays a single beep when the active mon's HP first
+  // crosses below 20 % during a wild or league battle. Resets on switch / new
+  // battle so the same mon can re-trigger after healing above the threshold.
+  const lowHpTriggeredRef = useRef<string | null>(null);
+  useEffect(() => {
+    let cur: { uid: string; hp: number; max: number } | null = null;
+    if (battle?.pMon) {
+      const m = battle.pMon;
+      cur = { uid: `wild:${m.id}:${m.level}`, hp: m.currentHp, max: m.maxHp };
+    } else if (leagueBattle?.state) {
+      const lm = leagueBattle.state.teams[0].mons[leagueBattle.state.teams[0].activeIdx];
+      if (lm) cur = { uid: `lg:${lm.speciesId}:${lm.level}`, hp: lm.currentHp, max: calcMaxHp(lm) };
+    }
+    if (!cur) { lowHpTriggeredRef.current = null; return; }
+    if (lowHpTriggeredRef.current !== cur.uid) {
+      lowHpTriggeredRef.current = cur.uid;
+      return; // first observation of this mon, don't fire
+    }
+    const ratio = cur.hp / Math.max(1, cur.max);
+    if (ratio > 0 && ratio < 0.2) {
+      const key = cur.uid + ":low";
+      if (lowHpTriggeredRef.current !== key) {
+        lowHpTriggeredRef.current = key;
+        sfx.lowHp();
+      }
+    } else if (ratio >= 0.25) {
+      // Re-arm once the mon recovers above 25 %.
+      lowHpTriggeredRef.current = cur.uid;
+    }
+  }, [battle?.pMon?.currentHp, battle?.pMon?.id, battle?.pMon?.level, leagueBattle?.state]);
+
+  // ----- League battle log watcher: scan new entries for engine-emitted
+  // strings and play the matching SFX (super-effective, not-very-effective,
+  // critical hit, stat up, stat down).
+  const lastLeagueLogLenRef = useRef(0);
+  useEffect(() => {
+    const log = leagueBattle?.state.log;
+    if (!log) { lastLeagueLogLenRef.current = 0; return; }
+    const start = lastLeagueLogLenRef.current;
+    lastLeagueLogLenRef.current = log.length;
+    if (log.length <= start) return;
+    for (let i = start; i < log.length; i++) {
+      const t = log[i]?.text ?? "";
+      if (/critical hit/i.test(t)) setTimeout(() => sfx.crit(), 60);
+      else if (/super effective/i.test(t)) setTimeout(() => sfx.superEffective(), 100);
+      else if (/not very effective/i.test(t)) setTimeout(() => sfx.notVeryEffective(), 100);
+      else if (/\brose\.$/.test(t)) sfx.statUp();
+      else if (/\bfell\.$/.test(t)) sfx.statDown();
+    }
+  }, [leagueBattle?.state.log.length, leagueBattle?.state.log]);
   // Memoize for key derivation; avoids unused-var warnings in some builds.
   const _leagueBgUnused = useMemo(() => null, []); void _leagueBgUnused;
 
@@ -1211,6 +1271,7 @@ export default function App() {
       addLog("Used 1 Safari Pass!", "#26C6DA");
     }
     setPlayer((p) => ({ ...p, money: p.money - 100 }));
+    sfx.itemPickup();
     setSafariRegion(regionIdx);
     setShowSafariRegionPicker(false);
     setSafariBalls(30);
@@ -1377,12 +1438,24 @@ export default function App() {
     if (!hit) {
       logs.push([`💨 ${pMon.name}'s ${move} missed!`, "#FFB74D"]);
     } else {
-      const dmg = calcDmg(pMon.atk, wild.def, pwr);
+      // Type-effectiveness multiplier vs the wild's type(s).
+      const wTypes = [wild.type1, wild.type2].filter(Boolean) as PType[];
+      const eff = pwr > 0 ? typeMultiplier(moveTypeOf(move) as PType, wTypes) : 1;
+      // Crit roll (1/24, vanilla rate).
+      const isCrit = pwr > 0 && Math.random() < 1 / 24;
+      const dmg = Math.floor(calcDmg(pMon.atk, wild.def, pwr) * eff * (isCrit ? 1.5 : 1));
       if (dmg > 0) {
         wild.currentHp = Math.max(0, wild.currentHp - dmg);
         setShakeE(true); setTimeout(() => setShakeE(false), 350);
         setTimeout(() => sfx.hit(), 250);
-        logs.push([`⚔️ ${pMon.name} used ${move}! (${dmg} dmg)`, "#81D4FA"]);
+        if (isCrit) setTimeout(() => sfx.crit(), 320);
+        if (eff > 1) setTimeout(() => sfx.superEffective(), 380);
+        else if (eff > 0 && eff < 1) setTimeout(() => sfx.notVeryEffective(), 380);
+        const tag = isCrit ? " 🎯CRIT" : "";
+        const effTag = eff > 1 ? " (super effective!)" : eff === 0 ? " (no effect)" : eff < 1 ? " (not very effective…)" : "";
+        logs.push([`⚔️ ${pMon.name} used ${move}! (${dmg} dmg${tag})${effTag}`, "#81D4FA"]);
+      } else if (eff === 0) {
+        logs.push([`✨ ${move} had no effect on ${wild.name}…`, "#aaa"]);
       } else {
         logs.push([`✨ ${pMon.name} used ${move}!`, "#aaa"]);
       }
@@ -1412,12 +1485,22 @@ export default function App() {
     if (!eHit) {
       logs.push([`💨 ${wild.name}'s ${eMove} missed!`, "#FFB74D"]);
     } else {
-      const eDmg = calcDmg(wild.atk, pMon.def, ePwr);
+      const pTypes = [pMon.type1, pMon.type2].filter(Boolean) as PType[];
+      const eEff = ePwr > 0 ? typeMultiplier(moveTypeOf(eMove) as PType, pTypes) : 1;
+      const eCrit = ePwr > 0 && Math.random() < 1 / 24;
+      const eDmg = Math.floor(calcDmg(wild.atk, pMon.def, ePwr) * eEff * (eCrit ? 1.5 : 1));
       if (eDmg > 0) {
         pMon.currentHp = Math.max(0, pMon.currentHp - eDmg);
         setShakeP(true); setTimeout(() => setShakeP(false), 350);
         setTimeout(() => sfx.hurt(), 950);
-        logs.push([`💢 ${wild.name} used ${eMove}! (${eDmg} dmg)`, "#FF7043"]);
+        if (eCrit) setTimeout(() => sfx.crit(), 1020);
+        if (eEff > 1) setTimeout(() => sfx.superEffective(), 1080);
+        else if (eEff > 0 && eEff < 1) setTimeout(() => sfx.notVeryEffective(), 1080);
+        const tag = eCrit ? " 🎯CRIT" : "";
+        const effTag = eEff > 1 ? " (super effective!)" : eEff === 0 ? " (no effect)" : eEff < 1 ? " (not very effective…)" : "";
+        logs.push([`💢 ${wild.name} used ${eMove}! (${eDmg} dmg${tag})${effTag}`, "#FF7043"]);
+      } else if (eEff === 0) {
+        logs.push([`${eMove} had no effect on ${pMon.name}…`, "#aaa"]);
       } else {
         logs.push([`${wild.name} used ${eMove}!`, "#aaa"]);
       }
@@ -1435,7 +1518,7 @@ export default function App() {
       if (aliveOthers.length === 0) {
         addLog("All your Pokémon fainted! You blacked out...", "#F44336");
         setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })));
-        addLog("Your team was fully healed!", "#4CAF50");
+        sfx.heal(); addLog("Your team was fully healed!", "#4CAF50");
         sfx.stopMusic();
         setBattle(null);
         setScreen("world");
@@ -1556,7 +1639,7 @@ export default function App() {
           addLog(`Team is full (${TEAM_MAX}/${TEAM_MAX}) — ${caughtMon.name} sent to your Mons collection.`, "#FF9800");
         }
         awardCatchRewards(wild.id, q.mult, q.xp);
-        addLog("Your team was fully healed!", "#4CAF50");
+        sfx.heal(); addLog("Your team was fully healed!", "#4CAF50");
         setTimeout(() => {
           setBallAnim(null);
           sfx.stopMusic();
@@ -1625,7 +1708,7 @@ export default function App() {
       const newTeam = prev.map((m) => m.id === mon.id ? mon : m);
       return newTeam.map((m) => ({ ...m, currentHp: m.maxHp, status: null }));
     });
-    addLog("Your team was fully healed!", "#4CAF50");
+    sfx.heal(); addLog("Your team was fully healed!", "#4CAF50");
     setCaught((prev) => new Set([...prev, mon.id]));
     setBattle(null);
 
@@ -2629,7 +2712,7 @@ export default function App() {
       sfx.menuBack();
       addLog("Got away safely!", "#aaa");
       setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })));
-      addLog("Your team was fully healed!", "#4CAF50");
+      sfx.heal(); addLog("Your team was fully healed!", "#4CAF50");
       setBattle(null);
       setScreen("hunt");
     };
@@ -5029,7 +5112,7 @@ export default function App() {
                         }}
                         onClick={() => {
                           if (!canAfford) return;
-                          sfx.click();
+                          sfx.itemPickup();
                           if (isStardustCat) {
                             setPlayer((p) => ({ ...p, stardust: (p.stardust ?? 0) - it.price }));
                           } else {
@@ -5432,7 +5515,7 @@ export default function App() {
               ...g,
               mons: g.mons.map((m) => ({ ...m, currentHp: m.maxHp, status: null })),
             })));
-            addLog("Your team was fully healed!", "#4CAF50");
+            sfx.heal(); addLog("Your team was fully healed!", "#4CAF50");
             sfx.stopMusic();
             setLeagueBattle(null);
             setScreen("league");
@@ -5466,7 +5549,7 @@ export default function App() {
               ...g,
               mons: g.mons.map((m) => ({ ...m, currentHp: m.maxHp, status: null })),
             })));
-            addLog("Your team was fully healed!", "#4CAF50");
+            sfx.heal(); addLog("Your team was fully healed!", "#4CAF50");
             setPvpBattle(null);
             setPvpBanner(null);
             setBbRoom(null);

@@ -111,7 +111,23 @@ export const sfx = {
   // Progress
   levelUp: () => asset("/audio/se/level_up.wav", () => seq([{ f: 523, d: 0.1, t: "triangle", v: 0.1 }, { f: 659, d: 0.1, t: "triangle", v: 0.1 }, { f: 784, d: 0.1, t: "triangle", v: 0.1 }, { f: 1047, d: 0.18, t: "triangle", v: 0.1 }])),
   victory: () => asset("/audio/se/exp.wav", () => seq([{ f: 523, d: 0.12 }, { f: 659, d: 0.12 }, { f: 784, d: 0.12 }, { f: 1047, d: 0.12 }, { f: 1319, d: 0.25 }])),
+  trainerVictory: () => asset("/audio/se/shing.wav", () => seq([{ f: 659, d: 0.1, t: "triangle", v: 0.1 }, { f: 784, d: 0.1, t: "triangle", v: 0.1 }, { f: 988, d: 0.1, t: "triangle", v: 0.1 }, { f: 1319, d: 0.25, t: "triangle", v: 0.1 }]), 0.8),
   evolve: () => asset("/audio/se/shine.wav", () => { for (let i = 0; i < 10; i++) setTimeout(() => tone(330 + i * 50, 0.08, "triangle", 0.06), i * 90); }, 0.7),
+
+  // Battle feedback
+  superEffective: () => asset("/audio/se/hit_strong.wav", () => { noise(0.12, 0.08, 1800); slide(330, 110, 0.15, "sawtooth", 0.07); }, 0.85),
+  notVeryEffective: () => asset("/audio/se/hit_weak.wav", () => { noise(0.05, 0.04, 800); }, 0.6),
+  crit: () => asset("/audio/se/sparkle.wav", () => seq([{ f: 1760, d: 0.05, t: "square", v: 0.07 }, { f: 2200, d: 0.07, t: "square", v: 0.07 }]), 0.85),
+
+  // Stat changes
+  statUp: () => asset("/audio/se/stat_up.wav", () => seq([{ f: 523, d: 0.06, t: "triangle", v: 0.07 }, { f: 784, d: 0.08, t: "triangle", v: 0.07 }]), 0.7),
+  statDown: () => asset("/audio/se/stat_down.wav", () => seq([{ f: 523, d: 0.06, t: "sawtooth", v: 0.07 }, { f: 330, d: 0.1, t: "sawtooth", v: 0.07 }]), 0.7),
+
+  // Health & rewards
+  lowHp: () => asset("/audio/se/low_hp.wav", () => { for (let i = 0; i < 3; i++) setTimeout(() => tone(880, 0.08, "square", 0.06), i * 120); }, 0.5),
+  heal: () => asset("/audio/se/restore.wav", () => seq([{ f: 660, d: 0.08, t: "triangle", v: 0.07 }, { f: 880, d: 0.08, t: "triangle", v: 0.07 }, { f: 1100, d: 0.12, t: "triangle", v: 0.07 }]), 0.8),
+  itemPickup: () => asset("/audio/se/buy.wav", () => seq([{ f: 880, d: 0.06, t: "square", v: 0.06 }, { f: 1320, d: 0.08, t: "square", v: 0.06 }]), 0.7),
+  alert: () => asset("/audio/se/danger.wav", () => seq([{ f: 1760, d: 0.06, t: "square", v: 0.07 }, { f: 1320, d: 0.06, t: "square", v: 0.07 }]), 0.7),
 
   // Move-type generic SFX (kept for older call sites — playMoveSfx below
   // is the preferred entry point because it can use real per-move assets).
