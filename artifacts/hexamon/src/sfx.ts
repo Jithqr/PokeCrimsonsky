@@ -93,7 +93,7 @@ export const sfx = {
   isMuted() { return muted; },
 
   // UI
-  click: () => asset("/audio/ui/select.wav", () => tone(880, 0.04, "square", 0.04), 0.6),
+  click: () => { /* button click sounds disabled */ },
   menuOpen: () => asset("/audio/ui/menu_open.wav", () => seq([{ f: 660, d: 0.05 }, { f: 990, d: 0.05 }]), 0.6),
   menuBack: () => asset("/audio/ui/error.wav", () => seq([{ f: 660, d: 0.05 }, { f: 440, d: 0.05 }]), 0.5),
 
