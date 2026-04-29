@@ -244,17 +244,7 @@ export function StoryIntro({ onComplete }: { onComplete: (r: StoryResult) => voi
                 width: "100%",
                 height: "100%",
                 objectFit: "cover",
-                opacity: 0.7,
-                mixBlendMode: "luminosity",
                 transition: "all 0.7s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.opacity = "1";
-                e.currentTarget.style.mixBlendMode = "normal";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.opacity = "0.7";
-                e.currentTarget.style.mixBlendMode = "luminosity";
               }}
             />
             <div
