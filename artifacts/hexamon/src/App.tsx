@@ -1735,10 +1735,14 @@ export default function App() {
         setEvolving({ from: ev.from.name, to: ev.to.name, sprite: ev.to.sprite });
         addLog(`✨ ${ev.from.name} evolved into ${ev.to.name}!`, "#CE93D8");
         setTimeout(() => setEvolving(null), 3000);
-        setScreen("world");
+        // Return to the hunt screen so the player can immediately keep hunting
+        // in the same region instead of being kicked back to the world map.
+        setScreen("hunt");
       }, 500);
     } else {
-      setScreen("world");
+      // Return to the hunt screen after defeating a wild so the player can
+      // press HUNT again and continue searching the same region.
+      setScreen("hunt");
     }
   }
 
