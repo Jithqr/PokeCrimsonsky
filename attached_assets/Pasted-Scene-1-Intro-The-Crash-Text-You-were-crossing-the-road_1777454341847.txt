@@ -1,0 +1,51 @@
+Scene 1: Intro (The Crash)
+​Text: "You were crossing the road, minding your own business, when suddenly blinding headlights illuminated the asphalt. A massive truck hurtled toward you at full speed. There was a deafening crash, and then... nothing."
+Image Idea: Blinding headlights on a dark road, or a first-person view of a truck approaching.
+​Scene 2: The Void & The Voice
+​Text: "You are floating in an endless, dark void. A strange, echoing voice reverberates in your mind...
+​"Human... you shall bring change to this world. Serve your purpose. Fulfill your destiny.""
+Image Idea: A dark, starry void, abstract space, or a shadowy, glowing silhouette of Giratina.
+​Scene 3: Waking Up
+​Text: "You gasp for air and sit up rapidly. You're lying in a lush, green field under a bright sky. You look down at your hands and realize you have been reincarnated into the body of a 17-year-old boy.
+​The world around you feels different... vibrant, almost animated. You are in the world of Pokémon."
+Image Idea: A bright, vibrant anime-style grassy field under a blue sky, perhaps with a Pidgey flying in the distance.
+​Scene 4: The Crossroads
+​Text: "You walk along a dirt trail and soon come across a fork in the road. Two distinct paths lie before you."
+Image Idea: A dirt path splitting in two directions. One side could look bright and sunny, the other darker and foreboding.
+​Scene 5: Meeting Professor Oak
+​Text: "You take the left path and soon bump into an older man wearing a white lab coat.
+​"Hello there! Welcome to the world of Pokémon! I am Professor Oak. I haven't seen you around these parts before. What is your name?""
+Image Idea: Professor Oak, or just an older man in a lab coat in a bright, friendly setting.
+​Scene 6: Meeting Giovanni
+​Text: "You take the right path. Suddenly, you are surrounded by grunts in black uniforms bearing a red 'R'. A man in a sharp suit steps forward from the shadows.
+​"I am Giovanni. You look lost, kid. Who exactly are you?""
+Image Idea: Giovanni from Team Rocket, or a man in a sharp suit standing in shadows with grunts behind him.
+​Scene 7: Explaining to Oak
+​Text: ""Nice to meet you, {name}," Professor Oak says warmly.
+​You explain to him that you don't remember anything from your past life—only a strange voice echoing in the void telling you to serve your purpose."
+Image Idea: Professor Oak looking thoughtful or concerned, perhaps inside a rustic lab setting.
+​Scene 8: Explaining to Giovanni
+​Text: "Giovanni narrows his eyes calculatingly. "{name}..."
+​You explain that you have no memories of your past life—only a mysterious voice in the void speaking of a grand purpose and destiny."
+Image Idea: Giovanni looking intrigued or villainous, sitting in a dark, high-tech office.
+​Scene 9: Oak's Realization (Giratina)
+​Text: "Professor Oak rubs his chin in deep thought.
+​"A voice from the void? Destiny? That sounds remarkably like Giratina, the legendary Pokémon that governs dimensions. Fascinating... Well, you are welcome here. Come to my lab in the Kanto region. You'll need a partner for your journey.""
+Image Idea: An old book showing a sketch of Giratina, or Professor Oak gesturing towards a Pokémon lab.
+​Scene 10: Giovanni's Realization (Giratina)
+​Text: "Giovanni smirks, a glint of ambition flashing in his eyes.
+​"A voice from the void? Governing dimensions? That is undoubtedly Giratina, a legendary Pokémon of immense power. You are an interesting anomaly, {name}. Come to our Kanto region base. If you have a destiny, Team Rocket will help you seize it.""
+Image Idea: The Team Rocket logo glowing in the dark, or a shadowy, imposing high-tech base.
+​Scene 11: Choosing Oak's Starter
+​Text: "You arrive at Professor Oak's lab. Three Pokéballs sit neatly on a high-tech table.
+​"Choose your first Pokémon, {name}!""
+Image Idea: Three classic red-and-white Pokéballs sitting on a clean, bright laboratory table.
+
+​Scene 12: Choosing Giovanni's Starter
+​Text: "You arrive at Team Rocket's underground Kanto base. Three dark Pokéballs are presented to you in a metallic case.
+​"Choose your first Pokémon, {name}. Make it count.""
+Image Idea: Three dark, sinister-looking Pokéballs (maybe Premier Balls or Dusk Balls) in a dimly lit, metallic briefcase.
+​Scene 13: Epilogue (The Journey Begins)
+​Text: "With your new partner, {starter}, by your side, you look out at the vast, untamed world of Kanto.
+​The strange voice of Giratina still lingers in the back of your mind. You step forward, officially beginning your journey to find your origins, fulfill your purpose, and gain back the memories of your past life."
+Image Idea: A silhouetted figure standing on a cliffside looking out over a vast Pokémon landscape (mountains, forests, maybe a town in the distance).

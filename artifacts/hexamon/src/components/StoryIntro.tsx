@@ -22,22 +22,22 @@ type SceneId =
 const STORY: Record<SceneId, Scene> = {
   intro1: {
     text: "You were crossing the road, minding your own business, when suddenly blinding headlights illuminated the asphalt. A massive truck hurtled toward you at full speed. There was a deafening crash, and then... nothing.",
-    image: "https://images.unsplash.com/photo-1610448169999-90656fbfeff6?q=80&w=800&auto=format&fit=crop",
+    image: "/plot/scene-1.jpg",
     choices: [{ label: "Continue", next: "intro2" }],
   },
   intro2: {
     text: "You are floating in an endless, dark void. A strange, echoing voice reverberates in your mind...\n\n\"Human... you shall bring change to this world. Serve your purpose. Fulfill your destiny.\"",
-    image: "https://images.unsplash.com/photo-1475274047050-1d0c0975c63e?q=80&w=800&auto=format&fit=crop",
+    image: "/plot/scene-2.jpg",
     choices: [{ label: "Wake up", next: "wakeup" }],
   },
   wakeup: {
     text: "You gasp for air and sit up rapidly. You're lying in a lush, green field under a bright sky. You look down at your hands and realize you have been reincarnated into the body of a 17-year-old boy.\n\nThe world around you feels different... vibrant, almost animated. You are in the world of Pokémon.",
-    image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=800&auto=format&fit=crop",
+    image: "/plot/scene-3.jpg",
     choices: [{ label: "Stand up and look around", next: "crossroads" }],
   },
   crossroads: {
     text: "You walk along a dirt trail and soon come across a fork in the road. Two distinct paths lie before you.",
-    image: "https://images.unsplash.com/photo-1503751071777-d2980b61c713?q=80&w=800&auto=format&fit=crop",
+    image: "/plot/scene-4.jpg",
     choices: [
       { label: "Take the left path towards a peaceful town", next: "meet_oak" },
       { label: "Take the right path descending towards a shadowy facility", next: "meet_gio" },
@@ -45,37 +45,37 @@ const STORY: Record<SceneId, Scene> = {
   },
   meet_oak: {
     text: "You take the left path and soon bump into an older man wearing a white lab coat.\n\n\"Hello there! Welcome to the world of Pokémon! I am Professor Oak. I haven't seen you around these parts before. What is your name?\"",
-    image: "https://images.unsplash.com/photo-1581093450021-4a7360e9a6b5?q=80&w=800&auto=format&fit=crop",
+    image: "/plot/scene-5.jpg",
     choices: [{ label: "Tell him your name", action: "ASK_NAME", path: "oak" }],
   },
   meet_gio: {
     text: "You take the right path. Suddenly, you are surrounded by grunts in black uniforms bearing a red 'R'. A man in a sharp suit steps forward from the shadows.\n\n\"I am Giovanni. You look lost, kid. Who exactly are you?\"",
-    image: "https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=800&auto=format&fit=crop",
+    image: "/plot/scene-6.jpg",
     choices: [{ label: "Tell him your name", action: "ASK_NAME", path: "gio" }],
   },
   explain_oak: {
     text: "\"Nice to meet you, {name},\" Professor Oak says warmly.\n\nYou explain to him that you don't remember anything from your past life—only a strange voice echoing in the void telling you to serve your purpose.",
-    image: "https://images.unsplash.com/photo-1581093450021-4a7360e9a6b5?q=80&w=800&auto=format&fit=crop",
+    image: "/plot/scene-7.jpg",
     choices: [{ label: "Continue", next: "giratina_oak" }],
   },
   explain_gio: {
     text: "Giovanni narrows his eyes calculatingly. \"{name}...\"\n\nYou explain that you have no memories of your past life—only a mysterious voice in the void speaking of a grand purpose and destiny.",
-    image: "https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=800&auto=format&fit=crop",
+    image: "/plot/scene-8.jpg",
     choices: [{ label: "Continue", next: "giratina_gio" }],
   },
   giratina_oak: {
     text: "Professor Oak rubs his chin in deep thought.\n\n\"A voice from the void? Destiny? That sounds remarkably like Giratina, the legendary Pokémon that governs dimensions. Fascinating... Well, you are welcome here. Come to my lab in the Kanto region. You'll need a partner for your journey.\"",
-    image: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?q=80&w=800&auto=format&fit=crop",
+    image: "/plot/scene-9.jpg",
     choices: [{ label: "Go to Professor Oak's Lab", next: "choose_oak" }],
   },
   giratina_gio: {
     text: "Giovanni smirks, a glint of ambition flashing in his eyes.\n\n\"A voice from the void? Governing dimensions? That is undoubtedly Giratina, a legendary Pokémon of immense power. You are an interesting anomaly, {name}. Come to our Kanto region base. If you have a destiny, Team Rocket will help you seize it.\"",
-    image: "https://images.unsplash.com/photo-1614036417651-1d41870bb8ce?q=80&w=800&auto=format&fit=crop",
+    image: "/plot/scene-10.jpg",
     choices: [{ label: "Go to the Team Rocket Base", next: "choose_gio" }],
   },
   choose_oak: {
     text: "You arrive at Professor Oak's lab. Three Pokéballs sit neatly on a high-tech table.\n\n\"Choose your first Pokémon, {name}!\"",
-    image: "https://images.unsplash.com/photo-1605370258074-1dd05c14d7d1?q=80&w=800&auto=format&fit=crop",
+    image: "/plot/scene-11.jpg",
     choices: [
       { label: "Bulbasaur (Grass/Poison)", action: "CHOOSE_STARTER", starter: "Bulbasaur", starterId: 1 },
       { label: "Charmander (Fire)", action: "CHOOSE_STARTER", starter: "Charmander", starterId: 4 },
@@ -84,7 +84,7 @@ const STORY: Record<SceneId, Scene> = {
   },
   choose_gio: {
     text: "You arrive at Team Rocket's underground Kanto base. Three dark Pokéballs are presented to you in a metallic case.\n\n\"Choose your first Pokémon, {name}. Make it count.\"",
-    image: "https://images.unsplash.com/photo-1596726615968-3e4b486985fa?q=80&w=800&auto=format&fit=crop",
+    image: "/plot/scene-12.jpg",
     choices: [
       { label: "Zubat (Poison/Flying)", action: "CHOOSE_STARTER", starter: "Zubat", starterId: 41 },
       { label: "Koffing (Poison)", action: "CHOOSE_STARTER", starter: "Koffing", starterId: 109 },
@@ -93,7 +93,7 @@ const STORY: Record<SceneId, Scene> = {
   },
   epilogue: {
     text: "With your new partner, {starter}, by your side, you look out at the vast, untamed world of Kanto.\n\nThe strange voice of Giratina still lingers in the back of your mind. You step forward, officially beginning your journey to find your origins, fulfill your purpose, and gain back the memories of your past life.",
-    image: "https://images.unsplash.com/photo-1497436072909-60f360e1d4b1?q=80&w=800&auto=format&fit=crop",
+    image: "/plot/scene-13.jpg",
     choices: [{ label: "Begin your Journey", action: "RESTART" }],
   },
 };
