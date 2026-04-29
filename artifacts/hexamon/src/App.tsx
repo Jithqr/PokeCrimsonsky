@@ -4478,6 +4478,27 @@ export default function App() {
     // Sprite URL for the new UI — animated showdown gif if available.
     const spriteUrl = `https://play.pokemonshowdown.com/sprites/ani/${(m.sprite || m.name).toLowerCase()}.gif`;
 
+    // Plays this Pokémon's actual cry. Tries the modern PokéAPI cry first
+    // (covers all 1000+ species), then falls back to the older "legacy"
+    // cry recording, then to Showdown's mp3 by name as a last resort.
+    const playCry = () => {
+      sfx.click();
+      const sources = [
+        `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${m.id}.ogg`,
+        `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/legacy/${m.id}.ogg`,
+        `https://play.pokemonshowdown.com/audio/cries/${(m.sprite || m.name).toLowerCase().replace(/[^a-z0-9]/g, "")}.mp3`,
+      ];
+      let i = 0;
+      const tryNext = () => {
+        if (i >= sources.length) return;
+        const a = new Audio(sources[i++]);
+        a.volume = 0.5;
+        a.onerror = tryNext;
+        a.play().catch(tryNext);
+      };
+      tryNext();
+    };
+
     // Stat row used in the Stats tab — keeps the new monochrome look.
     const newStatRow = (label: string, val: number, max: number) => (
       <div key={label} style={{ marginBottom: 4 }}>
@@ -4517,20 +4538,26 @@ export default function App() {
             }}>{m.nickname ?? m.name}</div>
           </header>
 
-          {/* Sprite display */}
-          <div style={{
-            background: C.bgPanel,
-            margin: "0 16px",
-            borderRadius: 12,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            padding: "40px 0 16px 0",
-          }}>
+          {/* Sprite display — entire panel is tappable to play the Pokémon's cry */}
+          <div
+            onClick={playCry}
+            title="Tap to play cry"
+            style={{
+              background: C.bgPanel,
+              margin: "0 16px",
+              borderRadius: 12,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              padding: "40px 0 16px 0",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+          >
             <img
               src={spriteUrl}
               alt={`${m.name} sprite`}
-              style={{ height: 120, imageRendering: "pixelated" }}
+              style={{ height: 120, imageRendering: "pixelated", pointerEvents: "none" }}
               onError={(e) => {
                 const t = e.currentTarget;
                 if (!t.dataset.fallback) {
@@ -4539,10 +4566,7 @@ export default function App() {
                 }
               }}
             />
-            <div
-              onClick={() => sfx.click()}
-              style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 6, color: C.textMuted, fontSize: 12, cursor: "pointer" }}
-            >
+            <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 6, color: C.textMuted, fontSize: 12 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill={C.textMuted}>
                 <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
               </svg>
