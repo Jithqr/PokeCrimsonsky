@@ -464,10 +464,15 @@ export default function App() {
   const [redeemInput, setRedeemInput] = useState<string>("");
   const [redeemMsg, setRedeemMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [lastSpinTs, setLastSpinTs] = useState<number>(initial?.lastSpinTs ?? 0);
-  const [lastSafariDayByRegion, setLastSafariDayByRegion] = useState<Record<number, string>>(
-    initial?.lastSafariDayByRegion ??
-      (initial?.lastSafariDay ? { [initial?.safariRegion ?? 0]: initial.lastSafariDay } : {})
-  );
+  // Global daily Safari limit: ONE run per day across all regions. Older saves
+  // may carry a per-region map (`lastSafariDayByRegion`); migrate by treating
+  // it as "used today" if any region's date matches today.
+  const [lastSafariDay, setLastSafariDay] = useState<string>(() => {
+    if (initial?.lastSafariDay) return initial.lastSafariDay;
+    const today = todayStr();
+    const map = initial?.lastSafariDayByRegion ?? {};
+    return Object.values(map).some((d) => d === today) ? today : "";
+  });
   const [safariRegion, setSafariRegion] = useState<number>(initial?.safariRegion ?? 0);
   const [showSafariRegionPicker, setShowSafariRegionPicker] = useState(false);
   const [lastSpinDay, setLastSpinDay] = useState<string>(initial?.lastSpinDay ?? "");
@@ -558,12 +563,12 @@ export default function App() {
         caught: Array.from(caught), seen: Array.from(seen), muted,
         candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay,
         safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught,
-        lastSafariDayByRegion, safariRegion, lastSpinDay, battleBoxHistory,
+        lastSafariDay, safariRegion, lastSpinDay, battleBoxHistory,
         badges, e4Cleared, e4Streak,
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch { /* ignore quota errors */ }
-  }, [screen, player, teams, activeTeamIdx, box, inventory, caught, seen, muted, candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDayByRegion, safariRegion, lastSpinDay, battleBoxHistory, badges, e4Cleared, e4Streak]);
+  }, [screen, player, teams, activeTeamIdx, box, inventory, caught, seen, muted, candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, safariRegion, lastSpinDay, battleBoxHistory, badges, e4Cleared, e4Streak]);
 
   // Buddy walking — buddy earns 1 candy every 30s
   useEffect(() => {
@@ -1254,10 +1259,11 @@ export default function App() {
 
   function startSafariInRegion(regionIdx: number) {
     const today = todayStr();
-    const usedToday = lastSafariDayByRegion[regionIdx] === today;
+    // Global daily limit: one Safari run per day, no matter which region.
+    const usedToday = lastSafariDay === today;
     const hasPass = inventoryQty("Safari Pass") > 0;
     if (usedToday && !hasPass) {
-      addLog(`You've already entered the ${REGIONS[regionIdx].name} Safari today. Use a Safari Pass or come back tomorrow!`, "#F44336");
+      addLog("You've already done your Safari run today. Use a Safari Pass or come back tomorrow!", "#F44336");
       sfx.menuBack();
       return;
     }
@@ -1301,7 +1307,7 @@ export default function App() {
       addLog(`Safari ended! You caught ${safariCaught} Pokémon.`, "#FFD700");
       setSafariEnc(null);
       setSafariStatusMsg(null);
-      setLastSafariDayByRegion((prev) => ({ ...prev, [safariRegion]: todayStr() }));
+      setLastSafariDay(todayStr());
       setScreen("world");
       return;
     }
@@ -2432,7 +2438,8 @@ export default function App() {
                       { icon: "fa-mountain-sun",  color: "var(--m-brown)" },
                     ];
                     return REGIONS.map((r, i) => {
-                      const usedToday = lastSafariDayByRegion[i] === todayStr();
+                      // Global daily limit shared across regions.
+                      const usedToday = lastSafariDay === todayStr();
                       const hasPass = inventoryQty("Safari Pass") > 0;
                       const blocked = usedToday && !hasPass;
                       const meta = safariRegionMeta[i] ?? { icon: "fa-map", color: "var(--m-teal)" };
