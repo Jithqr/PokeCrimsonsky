@@ -2,6 +2,8 @@
 // Includes the full level-up learnset per species so makeMon() can pick
 // moves appropriate to the Pokémon's CURRENT level (no more Bulbasaur-knows-Solar-Beam).
 
+import { getMove } from "./move-data";
+
 export type LearnEntry = { n: string; l: number };
 
 export type PokemonTemplate = {
@@ -1045,12 +1047,64 @@ export const ALL_POKEMON: PokemonTemplate[] = [
 export const TOTAL_POKEMON = ALL_POKEMON.length;
 export const GEN_NAMES: Record<number,string> = { 1:'Kanto',2:'Johto',3:'Hoenn',4:'Sinnoh',5:'Unova',6:'Kalos',7:'Alola',8:'Galar',9:'Paldea' };
 
-// Pick up to 4 moves available at the given level, preferring the highest-level ones.
-// Falls back to the lowest-level moves so a level-1 mon still has at least one attack.
+// Smart moveset selection for wild encounters and freshly generated mons.
+//
+// Rule: from the species' level-up learnset (entries learnable at <= level),
+// pick the 3 strongest DAMAGING moves (by base power) plus the 1 most-recently
+// learned STATUS move. Backfill if either pool is empty so we always return up
+// to 4 unique moves. Falls back to the lowest-level moves for level-1 species
+// without an eligible learnset, and to "Tackle" as the absolute last resort.
 export function movesForLevel(t: PokemonTemplate, level: number): string[] {
   const eligible = t.learn.filter((x) => x.l <= level);
-  const picked = eligible.length
-    ? [...eligible].sort((a, b) => b.l - a.l).slice(0, 4).map((x) => x.n)
-    : [...t.learn].slice(0, 4).map((x) => x.n);
-  return picked.length ? Array.from(new Set(picked)) : ['Tackle'];
+  if (eligible.length === 0) {
+    const fallback = [...t.learn].slice(0, 4).map((x) => x.n);
+    return fallback.length ? Array.from(new Set(fallback)) : ["Tackle"];
+  }
+
+  // Dedupe by move name; for repeats keep the highest learned-at level.
+  const byName = new Map<string, { n: string; l: number }>();
+  for (const e of eligible) {
+    const prev = byName.get(e.n);
+    if (!prev || e.l > prev.l) byName.set(e.n, { n: e.n, l: e.l });
+  }
+  const learn = Array.from(byName.values());
+
+  const damaging: { n: string; l: number; power: number }[] = [];
+  const status: { n: string; l: number }[] = [];
+  for (const e of learn) {
+    const md = getMove(e.n);
+    if (md.category === "Status" || md.power <= 0) {
+      status.push({ n: e.n, l: e.l });
+    } else {
+      damaging.push({ n: e.n, l: e.l, power: md.power });
+    }
+  }
+
+  // 3 strongest damaging (ties broken by latest learned).
+  damaging.sort((a, b) => (b.power - a.power) || (b.l - a.l));
+  const topDamaging = damaging.slice(0, 3).map((d) => d.n);
+
+  // 1 latest status move.
+  status.sort((a, b) => b.l - a.l);
+  const latestStatus = status[0]?.n;
+
+  const out: string[] = [...topDamaging];
+  if (latestStatus) out.push(latestStatus);
+
+  // Backfill to 4: extra damaging if no status (or no extras), then extra status.
+  if (out.length < 4) {
+    for (const d of damaging.slice(3)) {
+      if (out.length >= 4) break;
+      if (!out.includes(d.n)) out.push(d.n);
+    }
+  }
+  if (out.length < 4) {
+    for (const s of status.slice(1)) {
+      if (out.length >= 4) break;
+      if (!out.includes(s.n)) out.push(s.n);
+    }
+  }
+
+  const dedup = Array.from(new Set(out));
+  return dedup.length ? dedup : ["Tackle"];
 }

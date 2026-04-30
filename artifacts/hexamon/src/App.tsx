@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { sfx, playMoveSfx, moveTypeOf, TYPE_COLOR as MOVE_TYPE_COLOR } from "./sfx";
 import { ALL_POKEMON, TOTAL_POKEMON, GEN_NAMES, movesForLevel, type PokemonTemplate } from "./lib/pokemon-data";
+import { rankFromExp, rankProgress, rankTier, MAX_RANK } from "./lib/rank-system";
+import {
+  loadFriends, saveFriends, addFriend as addFriendOp, removeFriend as removeFriendOp,
+  encodeMyCard, decodeFriendCode, type Friend,
+} from "./lib/friends";
+import { natureMult } from "./lib/natures";
 import { tmStoreItems } from "./lib/tm-data";
 import { PokeTalesDex } from "./components/PokeTalesDex";
 import { SplashLoader } from "./components/SplashLoader";
@@ -206,31 +212,75 @@ function generateIvs(): { ivHp: number; ivAtk: number; ivDef: number; ivSpa: num
   return { ivHp: buckets[0], ivAtk: buckets[1], ivDef: buckets[2], ivSpa: buckets[3], ivSpd: buckets[4], ivSpe: buckets[5] };
 }
 
+// Standard Gen 3+ stat formula. Used to seed every Mon's cached stat fields
+// (atk/def/spa/spd/spe) so they reflect the species base + IVs + EVs + level +
+// nature, not just a level-scaled base. The battle engine uses the same formula
+// internally; this keeps in-app displays consistent.
+function calcAppStat(
+  base: number,
+  iv: number,
+  ev: number,
+  level: number,
+  nature: string | undefined,
+  stat: "atk" | "def" | "spa" | "spd" | "spe",
+): number {
+  const raw = Math.floor(((2 * base + iv + Math.floor(ev / 4)) * level) / 100) + 5;
+  return Math.max(1, Math.floor(raw * natureMult(nature, stat)));
+}
+function calcAppMaxHp(base: number, iv: number, ev: number, level: number): number {
+  return Math.floor(((2 * base + iv + Math.floor(ev / 4)) * level) / 100) + level + 10;
+}
+
+// Refresh every cached stat on a Mon from its template + ivs/evs/level/nature.
+// Preserves currentHp ratio when maxHp shifts.
+function refreshMonStats(m: Mon, tpl?: PokemonTemplate): Mon {
+  const t = tpl ?? ALL_POKEMON.find((p) => p.id === m.id);
+  if (!t) return m;
+  const lv = m.level;
+  const nat = m.nature;
+  const newMax = calcAppMaxHp(t.hp, m.ivHp ?? 0, m.evHp ?? 0, lv);
+  const ratio = m.maxHp > 0 ? Math.min(1, m.currentHp / m.maxHp) : 1;
+  return {
+    ...m,
+    atk: calcAppStat(t.atk, m.ivAtk ?? 0, m.evAtk ?? 0, lv, nat, "atk"),
+    def: calcAppStat(t.def, m.ivDef ?? 0, m.evDef ?? 0, lv, nat, "def"),
+    spa: calcAppStat(t.spa, m.ivSpa ?? 0, m.evSpa ?? 0, lv, nat, "spa"),
+    spd: calcAppStat(t.spd, m.ivSpd ?? 0, m.evSpd ?? 0, lv, nat, "spd"),
+    spe: calcAppStat(t.spe, m.ivSpe ?? 0, m.evSpe ?? 0, lv, nat, "spe"),
+    maxHp: newMax,
+    currentHp: Math.max(1, Math.round(newMax * ratio)),
+  };
+}
+
 function makeMon(template: PokemonTemplate, level: number, origin: Mon["origin"] = "wild"): Mon {
-  const s = level / 50;
-  const maxHp = Math.floor(template.hp * s * 2 + level + 10);
   const ivs = generateIvs();
   // Strip the bulky learnset off each Mon instance and pick moves the species
   // could ACTUALLY know at this level (fixes Bulbasaur-knows-Solar-Beam bug).
   const { learn: _learn, moves: _ignoreMoves, ...rest } = template;
   const moves = movesForLevel(template, level);
+  const nature = randomNature();
+  // Standard Gen 3+ stat math: ((2*B + IV + floor(EV/4)) * L) / 100 + 5)*nature.
+  const evHp = 0, evAtk = 0, evDef = 0, evSpa = 0, evSpd = 0, evSpe = 0;
+  const maxHp = calcAppMaxHp(template.hp, ivs.ivHp, evHp, level);
   return {
     ...rest,
+    learn: [],
     moves,
     uid: makeUid(),
     level,
     maxHp,
     currentHp: maxHp,
-    atk: Math.max(5, Math.floor(template.atk * s + 5)),
-    def: Math.max(5, Math.floor(template.def * s + 5)),
-    spa: Math.max(5, Math.floor(template.spa * s + 5)),
-    spe: Math.max(5, Math.floor(template.spe * s + 5)),
+    atk: calcAppStat(template.atk, ivs.ivAtk, evAtk, level, nature, "atk"),
+    def: calcAppStat(template.def, ivs.ivDef, evDef, level, nature, "def"),
+    spa: calcAppStat(template.spa, ivs.ivSpa, evSpa, level, nature, "spa"),
+    spd: calcAppStat(template.spd, ivs.ivSpd, evSpd, level, nature, "spd"),
+    spe: calcAppStat(template.spe, ivs.ivSpe, evSpe, level, nature, "spe"),
     exp: 0,
     expNeeded: Math.floor(level * level * 1.2),
     status: null,
     ...ivs,
-    evHp: 0, evAtk: 0, evDef: 0, evSpa: 0, evSpd: 0, evSpe: 0,
-    nature: randomNature(),
+    evHp, evAtk, evDef, evSpa, evSpd, evSpe,
+    nature,
     caughtAt: Date.now(),
     origin,
   };
@@ -407,34 +457,65 @@ function loadSave(): SaveData | null {
   } catch { return null; }
 }
 
+// Migration: previous versions stored Mon stats from a broken `base*level/50+5`
+// formula and tracked player EXP per-tier (subtracted on level-up). Normalize
+// both on load so the new Trainer Rank system + correct stat formula reflect
+// what the player has earned without invalidating their save.
+function migrateMonsForRefresh(mons: Mon[] | undefined): Mon[] {
+  if (!mons || mons.length === 0) return [];
+  return mons.map((m) => {
+    const tpl = ALL_POKEMON.find((p) => p.id === m.id);
+    if (!tpl) return m;
+    return refreshMonStats(m, tpl);
+  });
+}
+
+// Bootstrap player.exp into cumulative form for the new rank table when the
+// save file predates it. We approximate by treating "level" (the legacy
+// trainer level) as a milestone the player already crossed and using the new
+// table to pick the lowest matching milestone. New saves are unaffected.
+function migratePlayerExp(p: Player): Player {
+  if (!p) return p;
+  const safeExp = Math.max(0, Math.floor(p.exp ?? 0));
+  // If their per-tier exp already exceeds Rank 2's milestone OR they're past
+  // Rank 1, treat the existing value as "close enough" and just keep it.
+  // Otherwise leave at 0. This is intentionally conservative — the only
+  // real cost is needing to re-earn EXP up to the next visible milestone.
+  return { ...p, exp: safeExp, expNeeded: p.expNeeded ?? 100 };
+}
+
 export default function App() {
   const initial = typeof window !== "undefined" ? loadSave() : null;
   const [splashDone, setSplashDone] = useState(false);
   const [screen, setScreen] = useState<string>(initial ? (initial.screen === "battle" || initial.screen === "hunt" || initial.screen === "title" ? "world" : (initial.screen === "nameInput" || initial.screen === "starter") ? "story" : initial.screen) : "story");
-  const [player, setPlayer] = useState<Player>(initial?.player ?? {
-    name: "Trainer",
-    hometown: "Nuvema Town",
-    money: 3000,
-    stardust: 0,
-    macroRegion: 0,
-    region: 0,
-    level: 1,
-    exp: 0,
-    expNeeded: 100,
-    sprite: "hilbert",
-    id: makePlayerId(),
-    rank: 1000,
-    wins: 0,
-    losses: 0,
-    adventureStarted: todayStr(),
-  });
+  const [player, setPlayer] = useState<Player>(
+    initial?.player ? migratePlayerExp(initial.player) : {
+      name: "Trainer",
+      hometown: "Nuvema Town",
+      money: 3000,
+      stardust: 0,
+      macroRegion: 0,
+      region: 0,
+      level: 1,
+      exp: 0,
+      expNeeded: 100,
+      sprite: "hilbert",
+      id: makePlayerId(),
+      rank: 1000,
+      wins: 0,
+      losses: 0,
+      adventureStarted: todayStr(),
+    }
+  );
   const [teams, setTeams] = useState<TeamGroup[]>(() => {
-    if (initial?.teams && initial.teams.length > 0) return initial.teams;
-    const legacy = initial?.team ?? [];
+    if (initial?.teams && initial.teams.length > 0) {
+      return initial.teams.map((t) => ({ ...t, mons: migrateMonsForRefresh(t.mons) }));
+    }
+    const legacy = migrateMonsForRefresh(initial?.team ?? []);
     return [{ id: `t-${Date.now()}`, name: "Main", mons: legacy }];
   });
   const [activeTeamIdx, setActiveTeamIdx] = useState<number>(initial?.activeTeamIdx ?? 0);
-  const [box, setBox] = useState<Mon[]>(initial?.box ?? []);
+  const [box, setBox] = useState<Mon[]>(() => migrateMonsForRefresh(initial?.box ?? []));
   const [monsSearch, setMonsSearch] = useState<string>("");
   const [monsView, setMonsView] = useState<"grid" | "list">("grid");
   const [monsSortKey, setMonsSortKey] = useState<string>("ivTotal");
@@ -455,7 +536,29 @@ export default function App() {
   const [bagCat, setBagCat] = useState<string>("balls");
   const [scoutedWild, setScoutedWild] = useState<Mon | null>(null);
   const [moveAnim, setMoveAnim] = useState<{ target: "enemy" | "player"; type: string; key: number } | null>(null);
-  const [muted, setMuted] = useState<boolean>(initial?.muted ?? false);
+  // BGM mute state. Persisted to a dedicated localStorage key so it survives
+  // page refreshes (and even brand-new sessions before any save data exists).
+  const [muted, setMuted] = useState<boolean>(() => {
+    try {
+      const v = localStorage.getItem("hexamon:bgmMuted");
+      if (v != null) return v === "1";
+    } catch { /* ignore */ }
+    return initial?.muted ?? false;
+  });
+  useEffect(() => {
+    try { localStorage.setItem("hexamon:bgmMuted", muted ? "1" : "0"); } catch { /* ignore */ }
+    // Also forward to the audio engine so refreshing into a muted state
+    // immediately silences any auto-played BGM/SFX.
+    sfx.setMuted(muted);
+  }, [muted]);
+  // Local friends list. Stored in its own localStorage key (independent of the
+  // main save) so adding/removing friends survives Reset Save and is shared
+  // across save slots if the player ever has multiple.
+  const [friends, setFriends] = useState<Friend[]>(() => loadFriends());
+  useEffect(() => { saveFriends(friends); }, [friends]);
+  const [friendInput, setFriendInput] = useState<string>("");
+  const [friendMsg, setFriendMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
   const [caught, setCaught] = useState<Set<number>>(new Set(initial?.caught ?? []));
   const [seen, setSeen] = useState<Set<number>>(new Set(initial?.seen ?? initial?.caught ?? []));
   const [candies, setCandies] = useState<Record<number, number>>(initial?.candies ?? {});
@@ -615,7 +718,23 @@ export default function App() {
   }
 
   function awardCatchRewards(_speciesId: number, _mult: number, xpBonus: number) {
-    setPlayer((p) => ({ ...p, exp: p.exp + xpBonus }));
+    setPlayer((p) => {
+      const beforeRank = rankFromExp(p.exp);
+      const newExp = (p.exp ?? 0) + xpBonus;
+      const afterRank = rankFromExp(newExp);
+      if (afterRank > beforeRank) {
+        for (let r = beforeRank + 1; r <= afterRank; r++) {
+          addLog(`🆙 You reached Trainer Rank ${r}!`, "#FF9800");
+        }
+      }
+      const prog = rankProgress(newExp);
+      return {
+        ...p,
+        exp: newExp,
+        level: afterRank,
+        expNeeded: prog.isMax ? Math.max(1, prog.totalExp) : prog.needed,
+      };
+    });
   }
 
   function powerUp(teamIdx: number) {
@@ -706,15 +825,9 @@ export default function App() {
         }
         m.evHp = cur.evHp; m.evAtk = cur.evAtk; m.evDef = cur.evDef;
         m.evSpa = cur.evSpa; m.evSpd = cur.evSpd; m.evSpe = cur.evSpe;
-        // Recompute maxHp based on the engine formula; preserve current HP ratio.
-        const tpl = ALL_POKEMON.find((p) => p.id === m.id);
-        if (tpl) {
-          const newMax = calcMaxHp({ baseStats: { hp: tpl.hp }, ivs: { hp: m.ivHp ?? 0 }, evs: { hp: m.evHp ?? 0 }, level: m.level });
-          const ratio = m.maxHp > 0 ? m.currentHp / m.maxHp : 1;
-          m.maxHp = newMax;
-          m.currentHp = Math.max(1, Math.round(newMax * ratio));
-        }
-        g.mons[idx] = m;
+        // Recompute every cached stat (HP/Atk/Def/SpA/SpD/Spe) using the
+        // standard Gen 3+ formula now that EVs have changed.
+        g.mons[idx] = refreshMonStats(m);
         result = { ok: true, wasted };
         break;
       }
@@ -742,14 +855,8 @@ export default function App() {
         cur[stat] = Math.min(252, Math.max(0, value));
         m.evHp = cur.evHp; m.evAtk = cur.evAtk; m.evDef = cur.evDef;
         m.evSpa = cur.evSpa; m.evSpd = cur.evSpd; m.evSpe = cur.evSpe;
-        const tpl = ALL_POKEMON.find((p) => p.id === m.id);
-        if (tpl) {
-          const newMax = calcMaxHp({ baseStats: { hp: tpl.hp }, ivs: { hp: m.ivHp ?? 0 }, evs: { hp: m.evHp ?? 0 }, level: m.level });
-          const ratio = m.maxHp > 0 ? m.currentHp / m.maxHp : 1;
-          m.maxHp = newMax;
-          m.currentHp = Math.max(1, Math.round(newMax * ratio));
-        }
-        g.mons[idx] = m;
+        // Recompute every cached stat using the standard Gen 3+ formula.
+        g.mons[idx] = refreshMonStats(m);
         result = { ok: true };
         return next;
       }
@@ -776,27 +883,21 @@ export default function App() {
         if (m.uid !== uid) return m;
         const speciesChanged = patch.id != null && patch.id !== m.id;
         let next: Mon = { ...m, ...patch };
-        if (speciesChanged) {
-          const tpl = ALL_POKEMON.find((p) => p.id === next.id);
-          if (tpl) {
-            next.name = tpl.name;
-            next.sprite = tpl.sprite;
-            next.type1 = tpl.type1;
-            next.type2 = tpl.type2;
-            next.hp = tpl.hp; next.atk = tpl.atk; next.def = tpl.def;
-            next.spa = tpl.spa; (next as any).spd = (tpl as any).spd ?? tpl.spa; next.spe = tpl.spe;
-            next.canEvolve = tpl.canEvolve;
-            next.evolveAt = tpl.evolveAt;
-          }
-        }
         const tplFinal = ALL_POKEMON.find((p) => p.id === next.id);
+        if (speciesChanged && tplFinal) {
+          next.name = tplFinal.name;
+          next.sprite = tplFinal.sprite;
+          next.type1 = tplFinal.type1;
+          next.type2 = tplFinal.type2;
+          next.hp = tplFinal.hp;
+          next.canEvolve = tplFinal.canEvolve;
+          next.evolveAt = tplFinal.evolveAt;
+        }
         if (tplFinal) {
-          const newMax = calcMaxHp({ baseStats: { hp: tplFinal.hp }, ivs: { hp: next.ivHp ?? 0 }, evs: { hp: next.evHp ?? 0 }, level: next.level });
-          const ratio = m.maxHp > 0 ? Math.min(1, m.currentHp / m.maxHp) : 1;
-          next.maxHp = newMax;
-          // Heal to full whenever level changed or species changed; otherwise keep ratio.
-          if (next.level !== m.level || speciesChanged) next.currentHp = newMax;
-          else next.currentHp = Math.max(1, Math.round(newMax * ratio));
+          // Recompute every stat with the canonical Gen 3+ formula. We then
+          // override currentHp to "full" when the level or species changed.
+          next = refreshMonStats(next, tplFinal);
+          if (next.level !== m.level || speciesChanged) next.currentHp = next.maxHp;
         }
         return next;
       }),
@@ -1722,13 +1823,25 @@ export default function App() {
 
     setPlayer((prev) => {
       const p = { ...prev };
+      const beforeRank = rankFromExp(p.exp);
+      // Cumulative EXP. The Trainer Rank (1..10) is derived from this via
+      // EXP_MILESTONES; we never subtract from p.exp anymore.
       p.exp += playerExpGain;
-      while (p.exp >= p.expNeeded) {
-        p.level += 1;
-        p.exp -= p.expNeeded;
-        p.expNeeded = Math.floor(p.level * p.level * 15);
-        addLog(`🆙 You leveled up to Trainer Rank ${p.level}!`, "#FF9800");
+      const afterRank = rankFromExp(p.exp);
+      if (afterRank > beforeRank) {
+        for (let r = beforeRank + 1; r <= afterRank; r++) {
+          addLog(`🆙 You reached Trainer Rank ${r}!`, "#FF9800");
+        }
+        // Keep legacy `level` mirrored to rank for any UI that still reads it.
+        p.level = afterRank;
+      } else {
+        // Make sure legacy level always reflects the current rank.
+        if (p.level !== afterRank) p.level = afterRank;
       }
+      // Mirror "expNeeded" so legacy bars (still using exp/expNeeded) at least
+      // animate sensibly toward the next milestone.
+      const prog = rankProgress(p.exp);
+      p.expNeeded = prog.isMax ? Math.max(1, prog.totalExp) : prog.needed;
       return p;
     });
 
@@ -2227,7 +2340,8 @@ export default function App() {
 
   if (screen === "world") {
     const region = REGIONS[player.macroRegion] ?? REGIONS[0];
-    const expPct = Math.min(100, (player.exp / player.expNeeded) * 100);
+    const rankProg = rankProgress(player.exp);
+    const expPct = rankProg.pct;
     type MenuBtn = { label: string; icon: string; color: string; action?: () => void; locked?: boolean };
     const menuPage1: MenuBtn[] = [
       { label: "Hunt",   icon: "fa-dragon",          color: "var(--m-green)",  action: openHunt },
@@ -2244,7 +2358,7 @@ export default function App() {
       { label: "Battle Box",    icon: "fa-shield-halved", color: "var(--m-pink)",   action: () => { setBbMode(null); setBbRoom(null); setScreen("battleBox"); } },
       { label: "Training Zone", icon: "fa-dumbbell",      color: "var(--m-orange)", action: () => { setScreen("training"); } },
       { label: "League",        icon: "fa-trophy",        color: "var(--m-yellow)", action: () => { setScreen("league"); } },
-      { label: "Referrals",     icon: "fa-user-plus",     color: "var(--m-green)",  action: () => addLog("Referrals coming soon!", "#9C27B0"), locked: true },
+      { label: "Friends",       icon: "fa-user-plus",     color: "var(--m-green)",  action: () => { setFriendInput(""); setFriendMsg(null); setScreen("friends"); } },
       { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
       { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
       { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
@@ -2271,7 +2385,7 @@ export default function App() {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span className="m-pill" style={{ cursor: "pointer" }}
-                onClick={() => { const m = !muted; setMuted(m); sfx.setMuted(m); if (!m) sfx.click(); }}>
+                onClick={() => { const m = !muted; setMuted(m); if (!m) sfx.click(); }}>
                 <i className={`fa-solid ${muted ? "fa-volume-xmark" : "fa-volume-high"}`} style={{ color: muted ? "var(--m-muted)" : "var(--m-yellow)" }} />
               </span>
               <span className="m-pill"><i className="fa-solid fa-bullhorn" /> Caught: {caught.size}/{TOTAL_POKEMON}</span>
@@ -2288,7 +2402,7 @@ export default function App() {
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "1px solid #5e2c73", paddingBottom: 10, marginBottom: 12 }}>
               <div style={{ fontSize: 14, color: "#fff", textShadow: "1px 1px #000", letterSpacing: 1 }}>TRAINER CARD</div>
-              <div style={{ fontSize: 11, color: "#ddd" }}>Rank {player.level}</div>
+              <div style={{ fontSize: 11, color: "#ddd" }}>Rank {rankProg.rank} / {MAX_RANK}{rankProg.isMax ? " ★" : ""}</div>
             </div>
             <div style={{ fontSize: 9, color: "#bbb", marginBottom: 14, letterSpacing: 0.5 }}>
               {player.hometown} • {player.name}
@@ -2299,8 +2413,8 @@ export default function App() {
               </div>
               <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                 {[
-                  { label: "EXP. POINTS", val: player.exp.toLocaleString(), col: "#fff" },
-                  { label: "TO NEXT RANK", val: Math.max(0, player.expNeeded - player.exp).toLocaleString(), col: "#fff" },
+                  { label: "EXP. POINTS", val: rankProg.totalExp.toLocaleString(), col: "#fff" },
+                  { label: rankProg.isMax ? "MAX RANK" : "TO NEXT RANK", val: rankProg.isMax ? "★" : rankProg.toNext.toLocaleString(), col: rankProg.isMax ? "#FFD700" : "#fff" },
                   { label: "WINS", val: player.wins, col: "#4CAF50" },
                   { label: "LOSSES", val: player.losses, col: "#F44336" },
                 ].map((stat, i) => (
@@ -2313,10 +2427,12 @@ export default function App() {
             </div>
             <div style={{ marginBottom: 12 }}>
               <div style={{ fontSize: 7, color: "#bbb", marginBottom: 6, letterSpacing: 0.5 }}>
-                EXP PROGRESS ({player.exp} / {player.expNeeded})
+                {rankProg.isMax
+                  ? `MAX RANK — ${rankProg.totalExp.toLocaleString()} EXP`
+                  : `RANK ${rankProg.rank} → ${rankProg.rank + 1} (${rankProg.current.toLocaleString()} / ${rankProg.needed.toLocaleString()})`}
               </div>
               <div style={{ background: "#222", height: 10, border: "1px solid #5e2c73", borderRadius: 2, overflow: "hidden" }}>
-                <div style={{ width: `${expPct}%`, background: "#9c27b0", height: "100%", transition: "width 0.3s" }} />
+                <div style={{ width: `${expPct}%`, background: rankProg.isMax ? "#FFD700" : "#9c27b0", height: "100%", transition: "width 0.3s" }} />
               </div>
             </div>
             <div style={{ borderTop: "1px solid #312440", paddingTop: 8, textAlign: "right", fontSize: 7, color: "#aaa" }}>
@@ -2570,7 +2686,7 @@ export default function App() {
             <div className="m-balance" style={{ background: "linear-gradient(180deg,#7e3aed,#4c1d95)" }}>
               <i className="fa-solid fa-wand-sparkles" style={{ fontSize: 12 }} /> {(player.stardust ?? 0).toLocaleString()}
             </div>
-            <span className="m-level-badge">Lvl {player.level}</span>
+            <span className="m-level-badge">Rank {rankFromExp(player.exp)} / {MAX_RANK}</span>
           </div>
           <h2 className="m-section-h">Redeem Centre</h2>
           <div style={{ padding: "0 16px", marginBottom: 14 }}>
@@ -2626,7 +2742,7 @@ export default function App() {
             </div>
             <div className="m-statc">
               <div className="m-stat-ic"><i className="fa-solid fa-shield" /></div>
-              <div><div className="m-stat-lab">Rank</div><div className="m-stat-val">{player.level >= 30 ? "Gold" : player.level >= 15 ? "Silver" : "Bronze"}</div></div>
+              <div><div className="m-stat-lab">Rank Tier</div><div className="m-stat-val">{rankTier(rankFromExp(player.exp))}</div></div>
             </div>
             <div className="m-statc">
               <div className="m-stat-ic"><i className="fa-solid fa-book-open" /></div>
@@ -2673,7 +2789,7 @@ export default function App() {
           </div>
           <h2 className="m-section-h">Preferences</h2>
           <div className="m-list">
-            <div className="m-li" onClick={() => { const m = !muted; setMuted(m); sfx.setMuted(m); if (!m) sfx.click(); }}>
+            <div className="m-li" onClick={() => { const m = !muted; setMuted(m); if (!m) sfx.click(); }}>
               <span className="m-li-tt">Sound</span>
               <div className="m-pill-drop">{muted ? "off" : "on"} <i className="fa-solid fa-chevron-down" style={{ fontSize: 10 }} /></div>
             </div>
@@ -2724,6 +2840,133 @@ export default function App() {
     );
   }
 
+  if (screen === "friends") {
+    const myCardCode = encodeMyCard({
+      id: player.id,
+      name: player.name,
+      hometown: player.hometown,
+      sprite: player.sprite,
+      rank: rankFromExp(player.exp),
+    });
+    const showMsg = (text: string, ok: boolean) => {
+      setFriendMsg({ text, ok });
+      setTimeout(() => setFriendMsg(null), 4000);
+    };
+    const handleAdd = () => {
+      sfx.click();
+      const decoded = decodeFriendCode(friendInput);
+      if (!decoded) { showMsg("Invalid friend code or trainer ID.", false); return; }
+      const result = addFriendOp(friends, decoded, player.id);
+      if (!result.ok || !result.friend) { showMsg(result.reason ?? "Could not add friend.", false); return; }
+      setFriends((prev) => [...prev, result.friend!]);
+      setFriendInput("");
+      showMsg(`Added ${result.friend.name} to your friends!`, true);
+      addLog(`👋 Added ${result.friend.name} (#${result.friend.id}) to friends.`, "#4ade80");
+    };
+    const handleCopy = async () => {
+      sfx.click();
+      try {
+        if (navigator?.clipboard?.writeText) {
+          await navigator.clipboard.writeText(myCardCode);
+          showMsg("Friend code copied!", true);
+        } else {
+          showMsg(myCardCode, true);
+        }
+      } catch {
+        showMsg(myCardCode, true);
+      }
+    };
+    const handleRemove = (id: number, name: string) => {
+      sfx.click();
+      setFriends((prev) => removeFriendOp(prev, id));
+      addLog(`🗑️ Removed ${name} from friends.`, "#F44336");
+    };
+    return (
+      <div style={S.root}><style>{css}</style>
+        <div style={S.wrap}>
+          <div style={S.header}>
+            <BackBtn onClick={() => { sfx.menuBack(); setScreen("world"); }} />
+            <span style={{ fontSize: 9, color: "#4ade80" }}>👥 FRIENDS</span>
+            <div style={{ width: 88 }} />
+          </div>
+
+          {/* Your friend card */}
+          <div style={{ margin: 16, background: "#0d0d1a", border: "2px solid #4ade80", borderRadius: 12, padding: 14 }}>
+            <div style={{ fontSize: 9, color: "#4ade80", marginBottom: 8, letterSpacing: 1 }}>YOUR FRIEND CODE</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+              <img src={TRAINER_SPRITE(player.sprite)} alt="me" style={{ width: 56, height: 56, imageRendering: "pixelated" }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 11, color: "#fff", fontWeight: 700 }}>{player.name}</div>
+                <div style={{ fontSize: 8, color: "#aaa", marginTop: 2 }}>#{player.id} • Rank {rankFromExp(player.exp)}</div>
+                <div style={{ fontSize: 7, color: "#888", marginTop: 2 }}>{player.hometown}</div>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <code style={{ flex: 1, minWidth: 0, fontSize: 9, color: "#9ca3af", background: "#181820", border: "1px solid #2a2a32", padding: "8px 10px", borderRadius: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "ui-monospace, Menlo, monospace" }}>{myCardCode}</code>
+              <button onClick={handleCopy} className="btn" style={{ padding: "8px 14px", borderRadius: 6, background: "#4ade80", color: "#062b16", fontWeight: 700, fontSize: 11, border: "none" }}>
+                <i className="fa-solid fa-copy" /> Copy
+              </button>
+            </div>
+            <div style={{ fontSize: 7, color: "#777", marginTop: 6 }}>Share this code with another HexaMon trainer to add each other.</div>
+          </div>
+
+          {/* Add a friend */}
+          <div style={{ margin: "0 16px 16px", background: "#15151b", border: "1px solid #26262d", borderRadius: 12, padding: 12 }}>
+            <div style={{ fontSize: 9, color: "#bbb", marginBottom: 8 }}>ADD A FRIEND</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                value={friendInput}
+                onChange={(e) => setFriendInput(e.target.value)}
+                placeholder="Paste friend code or Trainer ID"
+                style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #2a2a32", background: "#0d0d12", color: "#fff", fontSize: 12, outline: "none", borderRadius: 6 }}
+              />
+              <button onClick={handleAdd} className="btn" style={{ padding: "10px 16px", borderRadius: 6, background: "#2f7bff", color: "#fff", fontWeight: 700, fontSize: 12, border: "none" }}>
+                <i className="fa-solid fa-plus" /> Add
+              </button>
+            </div>
+            {friendMsg && (
+              <div style={{ marginTop: 8, fontSize: 10, color: friendMsg.ok ? "#4ade80" : "#f87171", fontWeight: 600 }}>
+                {friendMsg.text}
+              </div>
+            )}
+          </div>
+
+          {/* Friends list */}
+          <div style={{ padding: "0 16px 24px", flex: 1, overflowY: "auto" }}>
+            <div style={{ fontSize: 10, color: "#bbb", marginBottom: 8, letterSpacing: 0.5 }}>
+              YOUR FRIENDS ({friends.length})
+            </div>
+            {friends.length === 0 ? (
+              <div style={{ background: "#15151b", border: "1px dashed #2a2a32", borderRadius: 12, padding: 20, textAlign: "center", color: "#777", fontSize: 11 }}>
+                No friends yet. Share your friend code to get started!
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {friends.map((f) => (
+                  <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "#15151b", border: "1px solid #26262d", borderRadius: 10, padding: 10 }}>
+                    <img src={TRAINER_SPRITE(f.sprite || "hilbert")} alt={f.name} style={{ width: 44, height: 44, imageRendering: "pixelated", opacity: f.sprite ? 1 : 0.6 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, color: "#fff", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</div>
+                      <div style={{ fontSize: 9, color: "#9ca3af", marginTop: 2 }}>
+                        #{f.id}{f.rank ? ` • Rank ${f.rank}` : ""}{f.hometown ? ` • ${f.hometown}` : ""}
+                      </div>
+                      <div style={{ fontSize: 7, color: "#666", marginTop: 2 }}>
+                        Added {new Date(f.addedAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <button onClick={() => handleRemove(f.id, f.name)} className="btn" style={{ padding: "6px 10px", borderRadius: 6, background: "#7f1d1d", color: "#fff", fontSize: 10, border: "none" }}>
+                      <i className="fa-solid fa-trash" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (screen === "card") return (
     <div style={S.root}><style>{css}</style>
       <div style={S.wrap}>
@@ -2738,39 +2981,48 @@ export default function App() {
           <div style={{ textAlign: "right", fontSize: 8, color: "#888", marginBottom: 6, letterSpacing: 1 }}>
             IDNo. {player.id}
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "2px solid #5e2c73", paddingBottom: 10, marginBottom: 14 }}>
-            <div style={{ fontSize: 16, color: "#fff", textShadow: "1px 1px #000" }}>TRAINER CARD</div>
-            <div style={{ fontSize: 12, color: "#ddd" }}>Rank {player.level}</div>
-          </div>
-          <div style={{ fontSize: 9, color: "#aaa", marginBottom: 16, letterSpacing: 0.5 }}>
-            {player.hometown} • {player.name}
-          </div>
-          <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
-            <div style={{ width: 90, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <img src={TRAINER_SPRITE(player.sprite)} alt="Trainer" style={{ width: "100%", imageRendering: "pixelated" }} />
-            </div>
-            <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {[
-                { label: "EXP. POINTS", val: player.exp.toLocaleString(), col: "#fff" },
-                { label: "TO NEXT RANK", val: Math.max(0, player.expNeeded - player.exp).toLocaleString(), col: "#fff" },
-                { label: "WINS", val: player.wins, col: "#4CAF50" },
-                { label: "LOSSES", val: player.losses, col: "#F44336" },
-              ].map((stat, i) => (
-                <div key={i} style={{ background: "#171022", border: "1px solid #312440", padding: 10, borderRadius: 4 }}>
-                  <div style={{ fontSize: 6, color: "#888", marginBottom: 8 }}>{stat.label}</div>
-                  <div style={{ fontSize: 9, color: stat.col }}>{stat.val}</div>
+          {(() => {
+            const cardProg = rankProgress(player.exp);
+            return (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "2px solid #5e2c73", paddingBottom: 10, marginBottom: 14 }}>
+                  <div style={{ fontSize: 16, color: "#fff", textShadow: "1px 1px #000" }}>TRAINER CARD</div>
+                  <div style={{ fontSize: 12, color: "#ddd" }}>Rank {cardProg.rank} / {MAX_RANK}{cardProg.isMax ? " ★" : ""}</div>
                 </div>
-              ))}
-            </div>
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 7, color: "#aaa", marginBottom: 8 }}>
-              EXP PROGRESS ({player.exp} / {player.expNeeded})
-            </div>
-            <div style={{ background: "#222", height: 12, border: "1px solid #5e2c73", borderRadius: 2, overflow: "hidden" }}>
-              <div style={{ width: `${Math.min(100, (player.exp / player.expNeeded) * 100)}%`, background: "#9c27b0", height: "100%" }} />
-            </div>
-          </div>
+                <div style={{ fontSize: 9, color: "#aaa", marginBottom: 16, letterSpacing: 0.5 }}>
+                  {player.hometown} • {player.name} • {rankTier(cardProg.rank)}
+                </div>
+                <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
+                  <div style={{ width: 90, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <img src={TRAINER_SPRITE(player.sprite)} alt="Trainer" style={{ width: "100%", imageRendering: "pixelated" }} />
+                  </div>
+                  <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {[
+                      { label: "EXP. POINTS", val: cardProg.totalExp.toLocaleString(), col: "#fff" },
+                      { label: cardProg.isMax ? "MAX RANK" : "TO NEXT RANK", val: cardProg.isMax ? "★" : cardProg.toNext.toLocaleString(), col: cardProg.isMax ? "#FFD700" : "#fff" },
+                      { label: "WINS", val: player.wins, col: "#4CAF50" },
+                      { label: "LOSSES", val: player.losses, col: "#F44336" },
+                    ].map((stat, i) => (
+                      <div key={i} style={{ background: "#171022", border: "1px solid #312440", padding: 10, borderRadius: 4 }}>
+                        <div style={{ fontSize: 6, color: "#888", marginBottom: 8 }}>{stat.label}</div>
+                        <div style={{ fontSize: 9, color: stat.col }}>{stat.val}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 7, color: "#aaa", marginBottom: 8 }}>
+                    {cardProg.isMax
+                      ? `MAX RANK — ${cardProg.totalExp.toLocaleString()} EXP`
+                      : `RANK ${cardProg.rank} → ${cardProg.rank + 1} (${cardProg.current.toLocaleString()} / ${cardProg.needed.toLocaleString()})`}
+                  </div>
+                  <div style={{ background: "#222", height: 12, border: "1px solid #5e2c73", borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{ width: `${cardProg.pct}%`, background: cardProg.isMax ? "#FFD700" : "#9c27b0", height: "100%" }} />
+                  </div>
+                </div>
+              </>
+            );
+          })()}
           <div style={{ borderTop: "1px solid #312440", paddingTop: 10, textAlign: "right", fontSize: 7, color: "#777" }}>
             Adventure started: {player.adventureStarted}
           </div>
