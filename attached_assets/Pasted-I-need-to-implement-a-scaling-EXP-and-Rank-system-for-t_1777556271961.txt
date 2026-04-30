@@ -1,0 +1,58 @@
+I need to implement a scaling EXP and Rank system for the Trainer Card. The maximum rank is Rank 10, which requires a total of 1,000,000 EXP. The EXP required between levels should scale up exponentially.
+​Please implement the following logic in the backend to calculate the player's rank, and send the correct variables to the frontend to update the Trainer Card UI:
+​1. The EXP Milestone Table:
+Use this exact dictionary/array to define the total lifetime EXP required to reach each rank:
+
+
+EXP_MILESTONES = {
+    1: 0,
+    2: 1000,        # +1,000 EXP needed from Rank 1
+    3: 4000,        # +3,000 EXP needed from Rank 2
+    4: 12000,       # +8,000 EXP needed from Rank 3
+    5: 30000,       # +18,000 EXP needed from Rank 4
+    6: 70000,       # +40,000 EXP needed from Rank 5
+    7: 150000,      # +80,000 EXP needed from Rank 6
+    8: 300000,      # +150,000 EXP needed from Rank 7
+    9: 600000,      # +300,000 EXP needed from Rank 8
+    10: 1000000     # +400,000 EXP needed from Rank 9
+}
+
+want to add a comprehensive 'Friends' system to the game. Please implement this feature in three phases: Database, Backend Logic, and Frontend UI. Ensure all new UI elements match the existing dark, glassmorphic design of the game.
+​Phase 1: Database Updates
+​Friendships Table: Create a new table to track relationships. It should include user_id, friend_id, and status (which can be 'pending' or 'accepted').
+​Online Status Tracking: Update the main User model to include a last_seen timestamp. Update this timestamp in the database every time the user makes an API request so we can track if they are currently online. (Consider a user 'Online' if last_seen is within the last 5 minutes).
+​Phase 2: Backend API Routes (Flask/Python)
+Create the following endpoints:
+​/search_user (POST): Accepts a search query (Username or ID). Returns a list of matching users (excluding the current user).
+​/send_friend_request (POST): Accepts a target_user_id. Creates a new row in the friendships table with status 'pending'.
+​/accept_friend_request (POST): Accepts a requester_id. Updates the friendship status to 'accepted'.
+​/get_friends (GET): Returns a JSON list of the current user's accepted friends, including their username, ID, avatar, and an is_online boolean (calculated using the last_seen timestamp). Also return a separate list of 'pending' incoming requests.
+​/get_user_profile/<user_id> (GET): Returns the public stats (Rank, Total EXP, Avatar, joined date) to populate the target user's Trainer Card profile.
+​Phase 3: Frontend UI Elements
+​The Friends Button: Add a 'Friends' button to the main navigation or main menu grid. It should use an appropriate icon (like two people).
+​The Friends Modal: When clicked, open a glassmorphic modal with two main tabs: 'My Friends' and 'Add Friend'. 
+​My Friends Tab: Displays a list of accepted friends. Show a green dot next to their name if is_online is true, and a gray dot if offline. Show any pending incoming requests at the top with an 'Accept' button.
+​Add Friend Tab: Contains a search input bar. When a user searches, display the results with an 'Add Friend' button next to their name.
+​View Profile: In the 'My Friends' list, make each friend's name/row clickable. When clicked, it should open a read-only version of their Trainer Card showing their rank and stats."
+
+I need to fix an issue with the background music mute button. Currently, if a player mutes the music, it unmutes itself automatically the next time they open the game or refresh the page.
+​Please update the frontend JavaScript logic to make the mute state persist using localStorage.
+​Implement the following steps:
+​On Button Click: When the user clicks the mute/unmute button, toggle the audio state and immediately save that state to local storage (e.g., localStorage.setItem('bgmMuted', 'true') or 'false').
+​On Game Load: When the game or page first loads, before attempting to play the background music, check localStorage.getItem('bgmMuted').
+​Apply State: * If the stored value is 'true', ensure the background audio remains muted/paused, and set the UI mute button to show the 'muted' icon. 
+​If the stored value is 'false' (or if it doesn't exist yet), allow the music to play normally and show the 'unmuted' icon."
+
+I need to write the backend logic for generating the initial moveset of newly caught wild Pokémon. If a player catches a high-level Pokémon (e.g., a Lv 58 Venusaur), it needs to automatically equip the best available moves it would have learned up to that level.
+​Please implement the following logic when spawning a wild Pokémon:
+​Fetch Learnset: Retrieve all the level-up moves this specific Pokémon learns from Level 1 up to its current wild level.
+​Sort by Strength: Sort these available moves to find the 'best' ones. The primary sorting criteria should be the move's Power and Accuracy.
+​The Status Move Exception: Because status/support moves (like Sleep Powder) have 0 Power, a strict Power sort will exclude them. To fix this, allocate the moves like this: 
+​Take the 3 highest Power damaging moves from the list.
+​Take the 1 most recently learned Status/Non-damaging move from the list.
+​(If the Pokémon has no status moves in its learnset by that level, just take the 4th highest power move instead).
+​Assign: Save these 4 calculated moves to the generated Pokémon's active moveset in the database."
+
+​"I have a critical bug in my Pokémon stat calculation logic. While the HP stat is calculating correctly, the other 5 stats (Attack, Defense, Sp. Attack, Sp. Defense, Speed) are currently just returning the Base Stat + IV. They are completely ignoring the Level scaling, the EVs, and the Nature multipliers.
+​Please update the stat calculation function in the backend using the official Pokémon stat formulas.
+​Here are the formulas you must implement. Use math.floor to round down after every division and multiplication step, just like the official games:
