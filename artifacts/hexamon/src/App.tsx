@@ -475,6 +475,10 @@ export default function App() {
   });
   const [safariRegion, setSafariRegion] = useState<number>(initial?.safariRegion ?? 0);
   const [showSafariRegionPicker, setShowSafariRegionPicker] = useState(false);
+  // When the daily limit is hit and the player owns a Safari Pass, clicking
+  // "Use Safari Pass" flips this on so the region list re-appears (the pass
+  // is consumed when they pick a region inside `startSafariInRegion`).
+  const [safariBypassWithPass, setSafariBypassWithPass] = useState(false);
   const [lastSpinDay, setLastSpinDay] = useState<string>(initial?.lastSpinDay ?? "");
   const [battleBoxHistory, setBattleBoxHistory] = useState<{ mode: string; result: "W" | "L"; opponent: string; delta: number; ts: number }[]>(initial?.battleBoxHistory ?? []);
   const [bbMode, setBbMode] = useState<"ranked" | "unranked" | "random" | null>(null);
@@ -2409,74 +2413,144 @@ export default function App() {
 
           <BottomNav active="home" go={setScreen} />
 
-          {showSafariRegionPicker && (
-            <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }}
-              onClick={() => { sfx.menuBack(); setShowSafariRegionPicker(false); }}>
-              <div onClick={(e) => e.stopPropagation()}
-                style={{ background: "var(--m-card)", border: "2px solid #26A69A", borderRadius: 16, padding: 18, width: "100%", maxWidth: 360, maxHeight: "85vh", overflow: "auto" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                  <div style={{ color: "#26A69A", fontWeight: 700, fontSize: 14, letterSpacing: 1 }}>SAFARI ZONE</div>
-                  <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "4px 10px", borderRadius: 6, fontSize: 11 }}
-                    onClick={() => { sfx.menuBack(); setShowSafariRegionPicker(false); }}>✕</button>
-                </div>
-                <div style={{ fontSize: 11, color: "var(--m-muted)", marginBottom: 14, lineHeight: 1.5 }}>
-                  Pick a region for today's Safari run. Each region can only be visited once per day (use a Safari Pass to retry). Entry costs ₽100.
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {(() => {
-                    // Reuse the same icon palette as the WORLD region picker so
-                    // both screens stay visually consistent (no more emojis).
-                    const safariRegionMeta: { icon: string; color: string }[] = [
-                      { icon: "fa-fire",          color: "var(--m-orange)" },
-                      { icon: "fa-droplet",       color: "var(--m-cyan)" },
-                      { icon: "fa-leaf",          color: "var(--m-green)" },
-                      { icon: "fa-snowflake",     color: "var(--m-blue)" },
-                      { icon: "fa-bolt",          color: "var(--m-yellow)" },
-                      { icon: "fa-crown",         color: "var(--m-pink)" },
-                      { icon: "fa-umbrella-beach",color: "var(--m-teal)" },
-                      { icon: "fa-chess-rook",    color: "var(--m-purple)" },
-                      { icon: "fa-mountain-sun",  color: "var(--m-brown)" },
-                    ];
-                    return REGIONS.map((r, i) => {
-                      // Global daily limit shared across regions.
-                      const usedToday = lastSafariDay === todayStr();
-                      const hasPass = inventoryQty("Safari Pass") > 0;
-                      const blocked = usedToday && !hasPass;
-                      const meta = safariRegionMeta[i] ?? { icon: "fa-map", color: "var(--m-teal)" };
-                      return (
-                        <button key={i} className="btn"
-                          disabled={blocked}
-                          onClick={() => startSafariInRegion(i)}
+          {showSafariRegionPicker && (() => {
+            const usedToday = lastSafariDay === todayStr();
+            const passQty = inventoryQty("Safari Pass");
+            const hasPass = passQty > 0;
+            // When the daily run is gone we replace the region list with a
+            // "wardens are resting" message + Safari Pass CTA. The list only
+            // re-appears once the player chooses to spend a pass.
+            const showRegions = !usedToday || safariBypassWithPass;
+            const closePicker = () => {
+              sfx.menuBack();
+              setShowSafariRegionPicker(false);
+              setSafariBypassWithPass(false);
+            };
+            return (
+              <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }}
+                onClick={closePicker}>
+                <div onClick={(e) => e.stopPropagation()}
+                  style={{ background: "var(--m-card)", border: "2px solid #26A69A", borderRadius: 16, padding: 18, width: "100%", maxWidth: 360, maxHeight: "85vh", overflow: "auto" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div style={{ color: "#26A69A", fontWeight: 700, fontSize: 14, letterSpacing: 1 }}>SAFARI ZONE</div>
+                    <button className="btn" style={{ border: "1px solid #555", color: "#888", padding: "4px 10px", borderRadius: 6, fontSize: 11 }}
+                      onClick={closePicker}>✕</button>
+                  </div>
+
+                  {showRegions ? (
+                    <>
+                      <div style={{ fontSize: 11, color: "var(--m-muted)", marginBottom: 14, lineHeight: 1.5 }}>
+                        {safariBypassWithPass
+                          ? `Pick a region — your Safari Pass (×${passQty}) will be spent when you enter. Entry still costs ₽100.`
+                          : "Pick a region for today's Safari run. One run per day across all regions (use a Safari Pass to retry). Entry costs ₽100."}
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {(() => {
+                          const safariRegionMeta: { icon: string; color: string }[] = [
+                            { icon: "fa-fire",          color: "var(--m-orange)" },
+                            { icon: "fa-droplet",       color: "var(--m-cyan)" },
+                            { icon: "fa-leaf",          color: "var(--m-green)" },
+                            { icon: "fa-snowflake",     color: "var(--m-blue)" },
+                            { icon: "fa-bolt",          color: "var(--m-yellow)" },
+                            { icon: "fa-crown",         color: "var(--m-pink)" },
+                            { icon: "fa-umbrella-beach",color: "var(--m-teal)" },
+                            { icon: "fa-chess-rook",    color: "var(--m-purple)" },
+                            { icon: "fa-mountain-sun",  color: "var(--m-brown)" },
+                          ];
+                          return REGIONS.map((r, i) => {
+                            const meta = safariRegionMeta[i] ?? { icon: "fa-map", color: "var(--m-teal)" };
+                            return (
+                              <button key={i} className="btn"
+                                onClick={() => { setSafariBypassWithPass(false); startSafariInRegion(i); }}
+                                style={{
+                                  display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+                                  border: "1.5px solid #26A69A", background: "#0d2018",
+                                  borderRadius: 12, color: "#fff", textAlign: "left", cursor: "pointer",
+                                }}>
+                                <span style={{
+                                  width: 32, height: 32, borderRadius: "50%",
+                                  background: `${meta.color}22`,
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  color: meta.color, fontSize: 14, flexShrink: 0,
+                                }}>
+                                  <i className={`fa-solid ${meta.icon}`} />
+                                </span>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ fontSize: 13, fontWeight: 700 }}>{r.name}</div>
+                                  <div style={{ fontSize: 9, color: "var(--m-muted)" }}>Gen {r.gen}</div>
+                                </div>
+                                <div style={{ fontSize: 10, color: safariBypassWithPass ? "#06b6d4" : "#4ade80", fontWeight: 700 }}>
+                                  {safariBypassWithPass ? "USE PASS" : "AVAILABLE"}
+                                </div>
+                              </button>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </>
+                  ) : (
+                    // Daily limit reached — show the wardens-resting panel.
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "12px 4px 4px" }}>
+                      <div style={{
+                        width: 64, height: 64, borderRadius: "50%",
+                        background: "rgba(38,166,154,0.12)",
+                        border: "1px solid rgba(38,166,154,0.4)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: "#26A69A", fontSize: 26,
+                      }}>
+                        <i className="fa-solid fa-moon" />
+                      </div>
+                      <div style={{ fontSize: 13, color: "#f0f0f0", textAlign: "center", lineHeight: 1.6, padding: "0 6px" }}>
+                        <div style={{ fontWeight: 700, marginBottom: 6, color: "#26A69A", fontSize: 14 }}>
+                          The Safari wardens are resting!
+                        </div>
+                        You've reached your daily Safari entry limit.
+                        {hasPass
+                          ? <> Present a Safari Pass to re-enter the Safari Zone.</>
+                          : <> Pick up a Safari Pass at the Pokestore to re-enter today.</>}
+                      </div>
+
+                      {hasPass ? (
+                        <button className="btn"
+                          onClick={() => { sfx.itemPickup(); setSafariBypassWithPass(true); }}
                           style={{
-                            display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-                            border: `1.5px solid ${blocked ? "#3a3a3a" : "#26A69A"}`,
-                            background: blocked ? "#161616" : "#0d2018",
-                            borderRadius: 12, color: "#fff", textAlign: "left",
-                            opacity: blocked ? 0.5 : 1, cursor: blocked ? "not-allowed" : "pointer",
+                            width: "100%", padding: "12px 14px", borderRadius: 12,
+                            background: "linear-gradient(180deg,#26A69A,#0f766e)",
+                            border: "1px solid #26A69A", color: "#fff",
+                            fontSize: 13, fontWeight: 700, letterSpacing: 0.5,
+                            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                            cursor: "pointer",
                           }}>
-                          <span style={{
-                            width: 32, height: 32, borderRadius: "50%",
-                            background: blocked ? "#222" : `${meta.color}22`,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            color: blocked ? "#555" : meta.color, fontSize: 14, flexShrink: 0,
-                          }}>
-                            <i className={`fa-solid ${meta.icon}`} />
-                          </span>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 13, fontWeight: 700 }}>{r.name}</div>
-                            <div style={{ fontSize: 9, color: "var(--m-muted)" }}>Gen {r.gen}</div>
-                          </div>
-                          <div style={{ fontSize: 10, color: usedToday ? (hasPass ? "#06b6d4" : "#f87171") : "#4ade80", fontWeight: 700 }}>
-                            {usedToday ? (hasPass ? "USE PASS" : "USED TODAY") : "AVAILABLE"}
-                          </div>
+                          <i className="fa-solid fa-ticket" />
+                          Use Safari Pass <span style={{ opacity: 0.7, fontWeight: 500 }}>(×{passQty})</span>
                         </button>
-                      );
-                    });
-                  })()}
+                      ) : (
+                        <button className="btn"
+                          onClick={() => {
+                            sfx.click();
+                            setShowSafariRegionPicker(false);
+                            setSafariBypassWithPass(false);
+                            setStoreCat("balls");
+                            setScreen("store");
+                          }}
+                          style={{
+                            width: "100%", padding: "12px 14px", borderRadius: 12,
+                            background: "linear-gradient(180deg,#facc15,#a16207)",
+                            border: "1px solid #facc15", color: "#1a1a1a",
+                            fontSize: 13, fontWeight: 700, letterSpacing: 0.5,
+                            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                            cursor: "pointer",
+                          }}>
+                          <i className="fa-solid fa-cart-shopping" />
+                          Buy Safari Pass at Pokestore
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       </div>
     );
