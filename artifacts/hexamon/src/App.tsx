@@ -8,6 +8,12 @@ import {
 } from "./lib/friends";
 import { natureMult } from "./lib/natures";
 import { tmStoreItems } from "./lib/tm-data";
+import {
+  fetchGlobalMarket, buyGlobalItem,
+  fetchUserListings, createUserListing, buyUserListing, cancelUserListing,
+  fetchPendingEarnings, claimPendingEarnings,
+  type GlobalMarketItem, type UserListing,
+} from "./lib/marketApi";
 import { PokeTalesDex } from "./components/PokeTalesDex";
 import { SplashLoader } from "./components/SplashLoader";
 import { StoryIntro } from "./components/StoryIntro";
@@ -532,6 +538,16 @@ export default function App() {
   const [inventory, setInventory] = useState<{ name: string; qty: number }[]>(initial?.inventory ?? []);
   const [storeCat, setStoreCat] = useState<string | null>(null);
   const [tmSearch, setTmSearch] = useState("");
+  // Marketplace state — Global Listings, User Listings, and the seller modal.
+  type MarketTab = "global" | "user" | "items" | "stardust";
+  const [marketTab, setMarketTab] = useState<MarketTab>("global");
+  const [globalMarket, setGlobalMarket] = useState<GlobalMarketItem[]>([]);
+  const [userListings, setUserListings] = useState<UserListing[]>([]);
+  const [myListingIds, setMyListingIds] = useState<number[]>([]);
+  const [marketLoading, setMarketLoading] = useState(false);
+  const [marketError, setMarketError] = useState<string | null>(null);
+  const [marketBusyId, setMarketBusyId] = useState<string | null>(null);
+  const [sellModal, setSellModal] = useState<{ uid: string; price: string; submitting: boolean } | null>(null);
   const [menuPage, setMenuPage] = useState(0);
   const [bagCat, setBagCat] = useState<string>("balls");
   const [scoutedWild, setScoutedWild] = useState<Mon | null>(null);
@@ -556,6 +572,45 @@ export default function App() {
   // across save slots if the player ever has multiple.
   const [friends, setFriends] = useState<Friend[]>(() => loadFriends());
   useEffect(() => { saveFriends(friends); }, [friends]);
+
+  // Marketplace data loader — runs whenever the store screen opens. Also
+  // auto-claims any pending earnings the player accrued while offline.
+  const refreshMarket = useCallback(async () => {
+    setMarketLoading(true);
+    setMarketError(null);
+    try {
+      const [g, l, e] = await Promise.all([
+        fetchGlobalMarket(player.id),
+        fetchUserListings(player.id),
+        fetchPendingEarnings(player.id),
+      ]);
+      setGlobalMarket(g.items);
+      setUserListings(l.listings);
+      setMyListingIds(l.mine);
+      if (e.total > 0) {
+        try {
+          const claim = await claimPendingEarnings(player.id);
+          if (claim.total > 0) {
+            setPlayer((pl) => ({ ...pl, money: pl.money + claim.total }));
+            addLog(`Claimed ₽${claim.total.toLocaleString()} from market sales while you were away!`, "#4ade80");
+          }
+        } catch {
+          /* ignore claim failure — earnings stay pending */
+        }
+      }
+    } catch (err) {
+      setMarketError(err instanceof Error ? err.message : "Couldn't reach the marketplace.");
+    } finally {
+      setMarketLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player.id]);
+
+  useEffect(() => {
+    if (screen !== "store") return;
+    refreshMarket();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen]);
   const [friendInput, setFriendInput] = useState<string>("");
   const [friendMsg, setFriendMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
@@ -2024,6 +2079,32 @@ export default function App() {
     .m-price { font-size:12px; color: var(--m-yellow); font-weight:500; }
     .m-rare { box-shadow: 0 0 15px rgba(236,72,153,0.18); border-color: rgba(236,72,153,0.35); }
     .m-legend { box-shadow: 0 0 15px rgba(234,179,8,0.18); border-color: rgba(234,179,8,0.35); }
+    .m-pcard.sold { opacity: 0.4; cursor: not-allowed; }
+    .m-pcard.sold .m-price { color: #fca5a5; }
+    .m-soldout { position:absolute; top:8px; right:8px; background:#dc2626; color:#fff; padding:3px 8px; border-radius:6px; font-size:9px; font-weight:700; letter-spacing:1px; z-index:3; }
+    .m-mine-tag { position:absolute; top:8px; left:8px; background: rgba(167,139,250,0.95); color:#1e1b4b; padding:3px 8px; border-radius:6px; font-size:9px; font-weight:700; letter-spacing:0.5px; z-index:3; }
+    .m-seller { font-size:9px; color:#a78bfa; background: rgba(167,139,250,0.12); padding:2px 6px; border-radius:6px; max-width: 90%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .m-mkt-status { padding: 24px 16px; text-align:center; color: var(--m-muted); font-size:13px; }
+    .m-mkt-empty { margin: 0 16px; padding: 28px 16px; text-align:center; color: var(--m-muted); font-size:13px; background: var(--m-card); border: 1px dashed var(--m-border); border-radius: 16px; }
+    .m-earn-banner { margin: 0 16px 12px; padding: 11px 14px; background: linear-gradient(90deg, rgba(74,222,128,0.18), rgba(74,222,128,0.04)); border: 1px solid rgba(74,222,128,0.35); border-radius: 14px; color:#bbf7d0; font-size:12px; display:flex; gap:10px; align-items:center; }
+    .m-mkt-refresh { background: var(--m-card); border:1px solid var(--m-border); color: var(--m-muted); border-radius: 16px; padding: 6px 12px; font-size: 11px; cursor: pointer; display:inline-flex; align-items:center; gap:6px; }
+    .m-mkt-refresh:hover { color: var(--m-text); }
+    .m-modal-back { position:fixed; inset:0; background: rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:1000; padding: 20px; }
+    .m-modal { background: var(--m-card); border:1px solid var(--m-border); border-radius: 18px; padding: 22px; width: 100%; max-width: 380px; }
+    .m-modal h3 { margin: 0 0 6px; font-size: 16px; font-weight: 600; color: var(--m-text); }
+    .m-modal p { margin: 0 0 14px; color: var(--m-muted); font-size: 12px; }
+    .m-modal input { width: 100%; box-sizing: border-box; background: var(--m-input); border: 1px solid var(--m-border); border-radius: 10px; padding: 10px 12px; color: var(--m-text); font-size: 14px; outline: none; font-family: inherit; }
+    .m-modal input:focus { border-color: var(--m-blue); }
+    .m-modal-row { display:flex; gap:10px; margin-top: 16px; }
+    .m-btn-primary { flex:1; background: var(--m-bluebg); border:none; color:#fff; padding: 10px 0; border-radius: 10px; font-weight:600; font-size: 13px; cursor:pointer; }
+    .m-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .m-btn-ghost { flex:1; background: transparent; border:1px solid var(--m-border); color: var(--m-text); padding: 10px 0; border-radius: 10px; font-weight:500; font-size: 13px; cursor:pointer; }
+    .m-action-btn { background: var(--m-bluebg); color:#fff; border:none; padding: 6px 14px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; }
+    .m-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .m-cancel-btn { background: rgba(220,38,38,0.18); color:#fca5a5; border:1px solid rgba(220,38,38,0.35); padding: 6px 14px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; }
+    .m-cancel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .m-card-actions { display:flex; gap:6px; margin-top: 4px; padding: 0 8px; }
+    .m-mkt-error { margin: 0 16px 12px; padding: 10px 14px; background: rgba(220,38,38,0.12); border: 1px solid rgba(220,38,38,0.35); border-radius: 12px; color: #fca5a5; font-size: 12px; display:flex; gap:10px; align-items:center; justify-content:space-between; }
 
     /* Profile */
     .m-cover { height:140px; background: linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.75)), linear-gradient(135deg, #5e2c73 0%, #1d4ed8 50%, #ec4899 100%); width:100%; }
@@ -5242,6 +5323,28 @@ export default function App() {
               Evolve
             </button>
             <button
+              onClick={() => {
+                if (!m.uid) { addLog("This Pokémon can't be listed yet.", "#F44336"); return; }
+                if (!found.inBox && (teams[found.teamIdx]?.mons.length ?? 0) <= TEAM_MIN) {
+                  addLog(`Team must keep at least ${TEAM_MIN} Pokémon. Move ${m.nickname ?? m.name} to your collection first.`, "#F44336");
+                  return;
+                }
+                sfx.menuOpen();
+                setMarketTab("user");
+                setSellModal({ uid: m.uid, price: "", submitting: false });
+                setScreen("store");
+              }}
+              style={{
+                flex: 1, background: C.btnDark, border: `1px solid #222`, color: C.textMain,
+                borderRadius: 8, padding: "12px 0", display: "flex", flexDirection: "column",
+                alignItems: "center", gap: 6, fontSize: 11, fontWeight: 500, cursor: "pointer",
+                fontFamily: FONT_BASE,
+              }}
+            >
+              <i className="fa-solid fa-tag" style={{ fontSize: 18, color: "#a78bfa" }} />
+              Sell on Market
+            </button>
+            <button
               onClick={releaseMon}
               style={{
                 flex: 1, background: C.btnDark, border: `1px solid #222`, color: C.textMain,
@@ -5262,21 +5365,107 @@ export default function App() {
   }
 
   if (screen === "store") {
-    const NATURES = ["Jolly", "Timid", "Modest", "Adamant", "Bold", "Calm", "Brave"];
-    const RARE_IDS = new Set([6, 9, 12, 15, 18, 25]);
-    const LEGEND_IDS = new Set<number>();
-    function priceFor(p: PokemonTemplate) {
-      const base = (p.hp + p.atk + p.def + p.spa + p.spd + p.spe);
-      const tier = LEGEND_IDS.has(p.id) ? 200 : RARE_IDS.has(p.id) ? 60 : 30;
-      return base * tier;
-    }
     const stardustCats = new Set(["dust-balls", "dust-passes"]);
     const itemsCats = new Set(["balls", "boost", "tms"]);
-    const marketTab: "pokemons" | "items" | "stardust" =
-      stardustCats.has(storeCat ?? "") ? "stardust"
-      : itemsCats.has(storeCat ?? "") ? "items"
-      : "pokemons";
-    const marketMons = ALL_POKEMON.slice(0, 12);
+    // Keep legacy Items/Stardust selection in sync with the inner item category.
+    if ((marketTab === "items" || marketTab === "stardust") && !storeCat) {
+      // no-op; categories component handles initial selection
+    }
+
+    // --- Global Market handlers ---
+    const handleBuyGlobal = async (item: GlobalMarketItem) => {
+      if (item.isSold) return;
+      if (player.money < item.price) { addLog("Not enough Pokédollars!", "#F44336"); return; }
+      if (marketBusyId) return;
+      setMarketBusyId(`g-${item.id}`);
+      try {
+        const result = await buyGlobalItem(player.id, item.id);
+        sfx.menuOpen();
+        // Build the Mon locally from species template + server-rolled stats.
+        const tpl = getPokemon(result.item.pokemonId);
+        const mon = makeMon(tpl, result.item.level, "store");
+        mon.nature = result.item.nature;
+        mon.ivHp = result.item.ivHp;
+        mon.ivAtk = result.item.ivAtk;
+        mon.ivDef = result.item.ivDef;
+        mon.ivSpa = result.item.ivSpa;
+        mon.ivSpd = result.item.ivSpd;
+        mon.ivSpe = result.item.ivSpe;
+        setPlayer((pl) => ({ ...pl, money: pl.money - item.price }));
+        if (team.length < TEAM_MAX) {
+          setTeam((t) => t.length < TEAM_MAX ? [...t, mon] : t);
+          addLog(`Purchased ${tpl.name}! Added to team.`, "#FFD700");
+        } else {
+          setBox((bx) => [...bx, mon]);
+          addLog(`Purchased ${tpl.name}! Team full — sent to Mons collection.`, "#FFD700");
+        }
+        setCaught((c) => new Set([...c, tpl.id]));
+        setGlobalMarket((prev) => prev.map((it) => it.id === item.id ? result.item : it));
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Purchase failed.";
+        if ((err as { status?: number })?.status === 409) {
+          addLog("Too slow! Another trainer just bought it.", "#F44336");
+          setGlobalMarket((prev) => prev.map((it) => it.id === item.id ? { ...it, isSold: true } : it));
+        } else {
+          addLog(msg, "#F44336");
+        }
+      } finally {
+        setMarketBusyId(null);
+      }
+    };
+
+    // --- User Listings handlers ---
+    const handleBuyListing = async (listing: UserListing) => {
+      if (player.money < listing.price) { addLog("Not enough Pokédollars!", "#F44336"); return; }
+      if (marketBusyId) return;
+      setMarketBusyId(`u-${listing.id}`);
+      try {
+        const result = await buyUserListing(player.id, listing.id);
+        sfx.menuOpen();
+        const monPayload = result.mon as Mon;
+        const incoming: Mon = { ...monPayload, uid: monPayload.uid ?? `${monPayload.id}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` };
+        setPlayer((pl) => ({ ...pl, money: pl.money - listing.price }));
+        if (team.length < TEAM_MAX) {
+          setTeam((t) => t.length < TEAM_MAX ? [...t, incoming] : t);
+          addLog(`Bought ${incoming.nickname ?? incoming.name} from ${listing.sellerName}!`, "#FFD700");
+        } else {
+          setBox((bx) => [...bx, incoming]);
+          addLog(`Bought ${incoming.nickname ?? incoming.name}! Team full — sent to Mons collection.`, "#FFD700");
+        }
+        setCaught((c) => new Set([...c, incoming.id]));
+        setUserListings((prev) => prev.filter((l) => l.id !== listing.id));
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Purchase failed.";
+        addLog(msg, "#F44336");
+        if ((err as { status?: number })?.status === 404 || (err as { status?: number })?.status === 409) {
+          setUserListings((prev) => prev.filter((l) => l.id !== listing.id));
+        }
+      } finally {
+        setMarketBusyId(null);
+      }
+    };
+
+    const handleCancelListing = async (listing: UserListing) => {
+      if (marketBusyId) return;
+      setMarketBusyId(`u-${listing.id}`);
+      try {
+        const result = await cancelUserListing(player.id, listing.id);
+        const monPayload = result.mon as Mon;
+        const returned: Mon = { ...monPayload, uid: monPayload.uid ?? `${monPayload.id}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` };
+        if (team.length < TEAM_MAX) {
+          setTeam((t) => t.length < TEAM_MAX ? [...t, returned] : t);
+        } else {
+          setBox((bx) => [...bx, returned]);
+        }
+        setUserListings((prev) => prev.filter((l) => l.id !== listing.id));
+        setMyListingIds((prev) => prev.filter((id) => id !== listing.id));
+        addLog(`Listing for ${returned.nickname ?? returned.name} cancelled.`, "#a78bfa");
+      } catch (err) {
+        addLog(err instanceof Error ? err.message : "Cancel failed.", "#F44336");
+      } finally {
+        setMarketBusyId(null);
+      }
+    };
     const categories = [
       { key: "balls", label: "POKÉ BALLS", emoji: "🔴", color: "#F44336", desc: "Catch wild Pokémon",
         items: [
@@ -5340,57 +5529,122 @@ export default function App() {
 
           <div className="m-toggle-wrap">
             <div className="m-toggle">
-              <div className={`m-toggle-btn ${marketTab === "pokemons" ? "active" : ""}`}
-                onClick={() => { sfx.click(); setStoreCat(null); }}>Pokémons</div>
+              <div className={`m-toggle-btn ${marketTab === "global" ? "active" : ""}`}
+                onClick={() => { sfx.click(); setMarketTab("global"); setStoreCat(null); }}>Global</div>
+              <div className={`m-toggle-btn ${marketTab === "user" ? "active" : ""}`}
+                onClick={() => { sfx.click(); setMarketTab("user"); setStoreCat(null); }}>User</div>
               <div className={`m-toggle-btn ${marketTab === "items" ? "active" : ""}`}
-                onClick={() => { sfx.click(); setStoreCat("balls"); }}>Items</div>
+                onClick={() => { sfx.click(); setMarketTab("items"); setStoreCat("balls"); }}>Items</div>
               <div className={`m-toggle-btn ${marketTab === "stardust" ? "active" : ""}`}
-                onClick={() => { sfx.click(); setStoreCat("dust-balls"); }}>Stardust</div>
+                onClick={() => { sfx.click(); setMarketTab("stardust"); setStoreCat("dust-balls"); }}>Stardust</div>
             </div>
           </div>
 
-          {marketTab === "pokemons" && (
+          {marketError && (
+            <div className="m-mkt-error">
+              <span><i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 6 }} />{marketError}</span>
+              <button className="m-mkt-refresh" onClick={() => { sfx.click(); refreshMarket(); }}>
+                <i className="fa-solid fa-rotate" /> Retry
+              </button>
+            </div>
+          )}
+
+          {marketTab === "global" && (
             <>
-              <div className="m-search-row">
-                <div className="m-search">
-                  <i className="fa-solid fa-magnifying-glass" />
-                  <input type="text" placeholder="Search" />
-                </div>
-                <button className="m-icon-btn"><i className="fa-solid fa-filter" /></button>
-                <button className="m-icon-btn"><i className="fa-solid fa-bars-staggered" /></button>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 16px 10px" }}>
+                <span style={{ fontSize: 11, color: "var(--m-muted)" }}>
+                  <i className="fa-solid fa-clock-rotate-left" style={{ marginRight: 6 }} />
+                  Daily rotation — 50 wild trades, refreshes every 24h
+                </span>
+                <button className="m-mkt-refresh" onClick={() => { sfx.click(); refreshMarket(); }} disabled={marketLoading}>
+                  <i className={`fa-solid fa-rotate ${marketLoading ? "fa-spin" : ""}`} /> Refresh
+                </button>
               </div>
-              <div className="m-grid">
-                {marketMons.map((p, i) => {
-                  const price = priceFor(p);
-                  const nature = NATURES[i % NATURES.length];
-                  const cls = LEGEND_IDS.has(p.id) ? "m-legend" : RARE_IDS.has(p.id) ? "m-rare" : "";
-                  const canAfford = player.money >= price;
-                  return (
-                    <div key={p.id} className={`m-pcard ${cls}`}
-                      onClick={() => {
-                        if (!canAfford) { addLog("Not enough Pokédollars!", "#F44336"); return; }
-                        sfx.menuOpen();
-                        const mon = makeMon(p, 5, "store");
-                        setPlayer((pl) => ({ ...pl, money: pl.money - price }));
-                        if (team.length < TEAM_MAX) {
-                          setTeam((t) => t.length < TEAM_MAX ? [...t, mon] : t);
-                          addLog(`Purchased ${p.name}! Added to team.`, "#FFD700");
-                        } else {
-                          setBox((bx) => [...bx, mon]);
-                          addLog(`Purchased ${p.name}! Team full — sent to Mons collection.`, "#FFD700");
-                        }
-                        setCaught((c) => new Set([...c, p.id]));
-                      }}>
-                      <img src={SPRITE(p.sprite)} alt={p.name} />
-                      <div className="ovr">
-                        <span className="m-nature">{nature}</span>
-                        <span className="m-pname">{p.name}{RARE_IDS.has(p.id) ? " ★" : ""}</span>
-                        <span className="m-price">₽ {price.toLocaleString()}</span>
+              {marketLoading && globalMarket.length === 0 ? (
+                <div className="m-mkt-status"><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: 8 }} />Loading marketplace…</div>
+              ) : globalMarket.length === 0 ? (
+                <div className="m-mkt-empty">No items in the global market right now.</div>
+              ) : (
+                <div className="m-grid">
+                  {globalMarket.map((it) => {
+                    const busy = marketBusyId === `g-${it.id}`;
+                    const sold = it.isSold;
+                    return (
+                      <div key={it.id} className={`m-pcard ${sold ? "sold" : ""}`}
+                        onClick={() => { if (!sold && !busy) handleBuyGlobal(it); }}>
+                        {sold && <span className="m-soldout">SOLD OUT</span>}
+                        <img src={SPRITE(it.pokemonSprite)} alt={it.pokemonName} />
+                        <div className="ovr">
+                          <span className="m-nature">Lv {it.level} · {it.nature}</span>
+                          <span className="m-pname">{it.pokemonName}</span>
+                          <span className="m-price">
+                            <i className="fa-solid fa-coins" style={{ marginRight: 4, fontSize: 10 }} />
+                            ₽{it.price.toLocaleString()}
+                            {busy && <i className="fa-solid fa-spinner fa-spin" style={{ marginLeft: 6 }} />}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+
+          {marketTab === "user" && (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 16px 10px" }}>
+                <span style={{ fontSize: 11, color: "var(--m-muted)" }}>
+                  <i className="fa-solid fa-handshake" style={{ marginRight: 6 }} />
+                  Player listings — sellers receive 95% (5% market tax)
+                </span>
+                <button className="m-mkt-refresh" onClick={() => { sfx.click(); refreshMarket(); }} disabled={marketLoading}>
+                  <i className={`fa-solid fa-rotate ${marketLoading ? "fa-spin" : ""}`} /> Refresh
+                </button>
               </div>
+              {marketLoading && userListings.length === 0 ? (
+                <div className="m-mkt-status"><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: 8 }} />Loading listings…</div>
+              ) : userListings.length === 0 ? (
+                <div className="m-mkt-empty">
+                  No active listings. Visit a Pokémon's detail screen and tap <strong>Sell on Market</strong> to list one.
+                </div>
+              ) : (
+                <div className="m-grid">
+                  {userListings.map((l) => {
+                    const mine = myListingIds.includes(l.id) || l.sellerId === String(player.id);
+                    const busy = marketBusyId === `u-${l.id}`;
+                    return (
+                      <div key={l.id} className="m-pcard"
+                        style={{ cursor: mine ? "default" : "pointer" }}
+                        onClick={() => { if (!mine && !busy) handleBuyListing(l); }}>
+                        {mine && <span className="m-mine-tag">MINE</span>}
+                        <img src={SPRITE(l.pokemonSprite)} alt={l.pokemonName} />
+                        <div className="ovr">
+                          <span className="m-seller"><i className="fa-solid fa-user" style={{ marginRight: 4, fontSize: 8 }} />{l.sellerName}</span>
+                          <span className="m-pname">{l.pokemonName}</span>
+                          <span className="m-nature">Lv {l.level} · {l.nature}</span>
+                          <span className="m-price">
+                            <i className="fa-solid fa-coins" style={{ marginRight: 4, fontSize: 10 }} />
+                            ₽{l.price.toLocaleString()}
+                          </span>
+                          {mine ? (
+                            <button
+                              className="m-cancel-btn"
+                              disabled={busy}
+                              onClick={(e) => { e.stopPropagation(); sfx.click(); handleCancelListing(l); }}
+                              style={{ marginTop: 4 }}
+                            >
+                              {busy ? <><i className="fa-solid fa-spinner fa-spin" /> Cancelling…</> : <><i className="fa-solid fa-xmark" /> Cancel</>}
+                            </button>
+                          ) : (
+                            busy && <span style={{ fontSize: 10, color: "#fff" }}><i className="fa-solid fa-spinner fa-spin" /> Buying…</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </>
           )}
 
@@ -5485,6 +5739,82 @@ export default function App() {
 
           <BottomNav active="market" go={setScreen} />
         </div>
+        {sellModal && (() => {
+          const target = [...box, ...teams.flatMap((t) => t.mons)].find((m) => m.uid === sellModal.uid);
+          if (!target) return null;
+          const priceNum = Number(sellModal.price);
+          const valid = Number.isInteger(priceNum) && priceNum >= 10 && priceNum <= 10_000_000;
+          const tax = valid ? Math.floor(priceNum * 0.05) : 0;
+          const sellerTake = valid ? priceNum - tax : 0;
+          const submitSale = async () => {
+            if (!valid || sellModal.submitting) return;
+            setSellModal({ ...sellModal, submitting: true });
+            try {
+              await createUserListing(player.id, {
+                sellerName: player.name,
+                mon: target,
+                price: priceNum,
+              });
+              // Remove from local team/box (also handles team-min guard).
+              const inTeamIdx = teams.findIndex((t) => t.mons.some((m) => m.uid === target.uid));
+              if (inTeamIdx >= 0) {
+                const teamMons = teams[inTeamIdx].mons;
+                if (teamMons.length <= TEAM_MIN) {
+                  addLog(`Team must keep at least ${TEAM_MIN} Pokémon. Move ${target.nickname ?? target.name} first.`, "#F44336");
+                  // Best-effort: cancel the listing we just created.
+                  setSellModal(null);
+                  return;
+                }
+                setTeams((prev) => prev.map((t, ti) => ti !== inTeamIdx ? t : { ...t, mons: t.mons.filter((m) => m.uid !== target.uid) }));
+                if (inTeamIdx === activeTeamIdx) {
+                  const monIdx = teamMons.findIndex((m) => m.uid === target.uid);
+                  if (buddyIdx === monIdx) setBuddyIdx(-1);
+                  else if (buddyIdx > monIdx) setBuddyIdx(buddyIdx - 1);
+                }
+              } else {
+                setBox((prev) => prev.filter((m) => m.uid !== target.uid));
+              }
+              addLog(`Listed ${target.nickname ?? target.name} for ₽${priceNum.toLocaleString()}.`, "#a78bfa");
+              setSellModal(null);
+              refreshMarket();
+              setMarketTab("user");
+            } catch (err) {
+              addLog(err instanceof Error ? err.message : "Could not create listing.", "#F44336");
+              setSellModal({ ...sellModal, submitting: false });
+            }
+          };
+          return (
+            <div className="m-modal-back" onClick={() => { if (!sellModal.submitting) setSellModal(null); }}>
+              <div className="m-modal" onClick={(e) => e.stopPropagation()}>
+                <h3>Sell {target.nickname ?? target.name}</h3>
+                <p>Lv {target.level} · {target.nature ?? "Hardy"} · Set a price between ₽10 and ₽10,000,000.</p>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={10}
+                  max={10_000_000}
+                  placeholder="Price (₽)"
+                  value={sellModal.price}
+                  onChange={(e) => setSellModal({ ...sellModal, price: e.target.value })}
+                  autoFocus
+                />
+                <p style={{ marginTop: 10, marginBottom: 0, fontSize: 11 }}>
+                  {valid ? (
+                    <>5% market tax: ₽{tax.toLocaleString()} · You receive: <strong style={{ color: "var(--m-yellow)" }}>₽{sellerTake.toLocaleString()}</strong></>
+                  ) : (
+                    <span style={{ color: "#fca5a5" }}>Enter a whole number between 10 and 10,000,000.</span>
+                  )}
+                </p>
+                <div className="m-modal-row">
+                  <button className="m-btn-ghost" onClick={() => setSellModal(null)} disabled={sellModal.submitting}>Cancel</button>
+                  <button className="m-btn-primary" onClick={submitSale} disabled={!valid || sellModal.submitting}>
+                    {sellModal.submitting ? <><i className="fa-solid fa-spinner fa-spin" /> Listing…</> : "List for sale"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     );
   }

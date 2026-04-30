@@ -1,0 +1,63 @@
+I want to overhaul the Pokémon tab in the Crimson Sky Marketplace. It should become a Global Daily Rotating Shop.
+​Every 24 hours, the app should generate exactly 50 random Pokémon with randomized levels, natures, IVs, and dynamic prices. This pool of 50 Pokémon is shared across all players. If one player buys a specific Pokémon, it becomes 'Sold Out' globally for the rest of the day.
+​Please implement this using the following 4-step logic:
+​1. Database Updates:
+Create a new database table/model called GlobalMarketItem. It needs the following columns:
+​id (Primary Key)
+​pokemon_species (String/ID)
+​level (Integer)
+​nature (String)
+​ivs (JSON/Dictionary of the 6 stats)
+​price (Integer - calculated based on base stat total, level, and IV quality)
+​is_sold (Boolean, default: False)
+​date_generated (Date)
+​2. The 24-Hour 'Lazy Refresh' Logic (Backend):
+When the /get_market_pokemon route is called, the backend should do the following:
+​Check the date_generated of the items in the GlobalMarketItem table.
+​If the date is older than today (or the table is empty): Delete all existing rows. Run a loop 50 times to generate 50 new random Pokémon, calculate a fair price for each, and insert them into the database with today's date.
+​If the date is today: Simply query and return the 50 current items.
+​3. Purchase Logic & Concurrency (Backend):
+Create a /buy_market_pokemon route. When a user tries to buy a Pokémon:
+​Query the exact GlobalMarketItem by ID.
+​Check if item.is_sold == True: -> Return an error: 'Too slow! Another trainer already bought this Pokémon.'
+​Check if the user has enough currency.
+​Transaction: Deduct the user's currency, mark the GlobalMarketItem's is_sold to True, and generate this exact Pokémon in the user's personal inventory.
+​4. Frontend UI Updates:
+​Render the 50 Pokémon returned from the backend.
+​If is_sold is False, display the price and allow the item to be clicked/purchased.
+​If is_sold is True, gray out the Pokémon card (reduce opacity), change the price tag to a red 'SOLD OUT' badge, and disable the click event."
+​Why this approach is best:
+​The "Lazy Refresh" prevents you from having to set up complicated Cron jobs on Replit that might fail if your server sleeps. It just checks the date whenever someone opens the shop.
+​Concurrency Protection is handled in Step 3. If two players click "Buy" on the exact same Charizard at the same time, the server checks the database first. The first one gets it, and the second one gets the "Too slow!" message.
+
+"I want to expand the Marketplace to include a player-to-player economy. Please change the current 'Pokémons' tab name to Global Listings, and create a brand new tab next to it called User Listings.
+​Please implement the 'User Listings' feature with the following logic:
+​1. Database Updates:
+Create a UserListing table with the following columns:
+​id (Primary Key)
+​seller_id (Foreign Key linking to the User)
+​pokemon_id (Foreign Key linking to the specific Pokémon in the user's inventory)
+​price (Integer - set by the player)
+​date_listed (Timestamp)
+​Crucial DB Logic: When a Pokémon is listed, it must be flagged as 'on_market' or temporarily moved out of the player's active storage so they cannot use it in battle, evolve it, or release it while it is listed for sale.
+​2. Backend API Routes (Flask/Python):
+Create the following endpoints:
+​/list_pokemon (POST): Accepts pokemon_id and price. Verifies the user owns the Pokémon, flags it as listed, and creates a row in UserListing.
+​/get_user_listings (GET): Returns all active UserListing rows (excluding the user's own listings if you want, or just displaying them with a 'Cancel' button instead of 'Buy'). Include the seller's username, the Pokémon's stats (Level, Nature, IVs), and the price.
+​/buy_user_listing (POST): Accepts the listing_id. 
+​Verify the buyer has enough funds.
+​Deduct the price from the buyer.
+​Add the price to the seller_id's bank.
+​Transfer the pokemon_id ownership to the buyer.
+​Remove the UserListing row.
+​/cancel_listing (POST): Allows the seller to remove their listing and un-flags the Pokémon, returning it to their usable inventory.
+​3. Frontend UI Updates (Glassmorphic Theme):
+​Marketplace Navigation: Rename the 'Pokémons' tab button to 'Global Listings'. Add a 'User Listings' tab next to it.
+​User Listings UI: Display the player-listed Pokémon similarly to the Global Market cards, but add a small badge showing the Seller's Username.
+​Sell Button: In the player's personal Pokémon Box/Inventory screen (where they currently view stats or release Pokémon), add a new 'Sell on Market' button. Clicking this should open a modal asking them to input a Price, then trigger the /list_pokemon route."
+​A Quick Game Design Tip:
+​In most MMOs with player markets (like Pokémon MMOs or standard RPGs), the game takes a "Market Tax" (usually 5% to 10%) on every player-to-player sale. For example, if I sell a Bulbasaur for 10,000 Pokédollars, I only receive 9,000, and the game deletes the other 1,000.
+ 
+
+
+* Except trainer card I don't need pixelated text and emojis anywhere, use standard text and icons 

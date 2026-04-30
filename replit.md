@@ -38,6 +38,11 @@ Pokémon-style React + Vite + TS web game. Major in-game systems:
 - **Save schema** (`SAVE_KEY = "hexamon:save:v2"` in `App.tsx`) now also persists `badges: string[]`, `e4Cleared: boolean`, `e4Streak: number`.
 - **Mon→engine adapter**: in-app `Mon` objects store level-scaled stats; converting to engine-shape requires the species' base stats. `toShippableMon(m)` in `App.tsx` (and the same idea in `npcMonToAppMon`) does this lookup before `fromAppMon`.
 - **PP system removed** (battle-engine.ts ~L249) — moves are unlimited use; no PP enforcement, no Struggle fallback.
+- **Marketplace** — server-driven Crimson Sky Marketplace with four tabs (Global / User / Items / Stardust):
+  - **Global Listings**: 50 random mons, lazily refreshed every 24h (UTC). Backed by `globalMarketItems` (Drizzle schema in `lib/db/src/schema/marketplace.ts`). Routes: `GET /api/market/global`, `POST /api/market/global/buy` (atomic `UPDATE ... WHERE is_sold=false` for sold-out concurrency). Pricing is `bst * (0.5 + level/60) * (0.5 + ivAvg/31) * tier` (tier 200/60/30 by BST band), rounded to nearest 10.
+  - **User Listings**: player-to-player trading. `userListings` table stores full mon JSON. Routes: `POST/GET /api/market/listings`, `POST /api/market/listings/:id/buy` (5% market tax → seller gets 95% via `pendingEarnings` inbox), `POST /api/market/listings/:id/cancel` (returns mon JSON).
+  - **Pending Earnings inbox**: `pendingEarnings` table queues seller payouts; offline players auto-claim on next market open via `GET/POST /api/market/earnings(/claim)`.
+  - Frontend client: `artifacts/hexamon/src/lib/marketApi.ts` (sends `x-player-id` header). Vite proxy in `vite.config.ts` forwards `/api → :8080` in dev. Sell flow: button on mon detail screen opens a price modal; on success, mon is removed locally (cancellation re-adds it). Buying race conflicts surface as a `Too slow!` toast.
 - **Mon generation (`makeMon` in App.tsx ~L174)** — every spawn (wild, marketplace, NPC) gets:
   - `nature`: random from 25 standard natures via `randomNature()`.
   - **Weighted IVs (per-stat 0–31, total cap 186)**: `rollTotalIv()` picks a target Total IV by tier (170–186: 7.4%, 160–169: 14.8%, 150–159: 18.5%, 130–149: 25.9%, 0–129: 33.4%), then `generateIvs()` distributes that total across 6 stats respecting the per-stat cap.
