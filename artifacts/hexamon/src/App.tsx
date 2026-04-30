@@ -541,7 +541,7 @@ export default function App() {
   // Status banner shown inside the safari encounter screen. Replaces the old
   // "A wild X appears" caption with the throw / catch / fled flow.
   const [safariStatusMsg, setSafariStatusMsg] = useState<{
-    kind: "throw" | "caught" | "fled";
+    kind: "throw" | "caught" | "fled" | "broke";
     text: string;
     stars?: number;          // 1..3 stars for "throw" animation
   } | null>(null);
@@ -1324,20 +1324,27 @@ export default function App() {
     if (!safariEnc || safariBalls <= 0 || safariThrowAnim) return;
     const ballsLeft = safariBalls - 1;
     setSafariBalls(ballsLeft);
-    sfx.click();
+    sfx.ballThrow();
     const isLegend = ALL_LEGENDARY_IDS.has(safariEnc.id);
+
+    // ---- Step 1: roll the catch ----
     const baseRate = isLegend ? 0.18 : 0.55;
     const lvPenalty = Math.max(0, (safariEnc.level - 20) * 0.01);
-    const rate = Math.max(0.05, baseRate - lvPenalty);
-    const success = Math.random() < rate;
-    // On a successful catch we always animate the full ★ → ★★ → ★★★ sequence.
-    // On a failed throw we stop at a random 1, 2, or 3 stars before fleeing.
-    const finalStars = success ? 3 : 1 + Math.floor(Math.random() * 3);
+    const catchRate = Math.max(0.05, baseRate - lvPenalty);
+    const caught = Math.random() < catchRate;
+
+    // ---- Step 2: only if catch failed, roll the flee chance (~18 %) ----
+    // Legendaries are slightly more skittish but still mostly stick around so
+    // the player can keep throwing balls.
+    const fleeRate = isLegend ? 0.25 : 0.18;
+    const fled = !caught && Math.random() < fleeRate;
+    // ---- Step 3: otherwise, the Pokémon "broke free" and stays put ----
+
+    // Star animation: full 3-star sweep on a catch, partial on miss.
+    const finalStars = caught ? 3 : 1 + Math.floor(Math.random() * 3);
     const encName = safariEnc.name;
 
     setSafariThrowAnim("throw");
-    // Show the throw text immediately with no stars yet, then add one star
-    // every 500ms up to finalStars (max 3).
     setSafariStatusMsg({ kind: "throw", text: "You Threw A Safari Ball!", stars: 0 });
     const starTimers: ReturnType<typeof setTimeout>[] = [];
     for (let s = 1; s <= finalStars; s++) {
@@ -1345,14 +1352,13 @@ export default function App() {
         setSafariStatusMsg({ kind: "throw", text: "You Threw A Safari Ball!", stars: s });
       }, s * 500));
     }
-    // The wobble animation kicks in once the first star appears.
+    // Wobble starts once the first star appears.
     setTimeout(() => setSafariThrowAnim("wobble"), 500);
 
-    // Resolve the throw 700ms after the LAST star appears, so the player
-    // gets a beat to read the star count before the result text takes over.
+    // Resolve 700 ms after the last star so the player can read the count.
     const resolveDelay = finalStars * 500 + 700;
     setTimeout(() => {
-      if (success) {
+      if (caught) {
         setSafariThrowAnim("stars");
         const caughtMon = safariEnc;
         sfx.victory();
@@ -1365,17 +1371,31 @@ export default function App() {
         }
         setSafariCaught((c) => c + 1);
         setSafariStatusMsg({ kind: "caught", text: `You Caught A Wild ${encName}` });
-      } else {
+        setTimeout(() => {
+          setSafariThrowAnim(null);
+          safariNext(ballsLeft);
+        }, 1400);
+      } else if (fled) {
         setSafariThrowAnim("burst");
+        sfx.faint();
         setSafariStatusMsg({ kind: "fled", text: `Your Safari Failed And wild ${encName} Has fled.` });
-      }
-      setTimeout(() => {
+        setTimeout(() => {
+          setSafariThrowAnim(null);
+          safariNext(ballsLeft);
+        }, 1400);
+      } else {
+        // Broke free — keep the encounter alive so the player can try again.
         setSafariThrowAnim(null);
-        safariNext(ballsLeft);
-      }, 1400);
+        sfx.catchFail();
+        setSafariStatusMsg({ kind: "broke", text: `Argh! ${encName} broke free!` });
+        // Out of balls? End the encounter the same way safariNext(0) would.
+        if (ballsLeft <= 0) {
+          setTimeout(() => safariNext(ballsLeft), 1400);
+        }
+      }
     }, resolveDelay);
-    // (Star timers are intentionally fire-and-forget — the encounter cleanup
-    // resets safariStatusMsg so any late ones become harmless no-ops.)
+    // (Star timers are fire-and-forget — encounter cleanup resets the status
+    // message so any late ones become harmless no-ops.)
     void starTimers;
   }
 
@@ -5251,6 +5271,7 @@ export default function App() {
             border: `1px solid ${
               safariStatusMsg?.kind === "caught" ? "#4ade80" :
               safariStatusMsg?.kind === "fled"   ? "#f87171" :
+              safariStatusMsg?.kind === "broke"  ? "#facc15" :
               "rgba(255,255,255,0.08)"
             }`,
             padding: 16,
@@ -5261,6 +5282,7 @@ export default function App() {
             backdropFilter: "blur(10px)",
             color: safariStatusMsg?.kind === "caught" ? "#4ade80" :
                    safariStatusMsg?.kind === "fled"   ? "#f87171" :
+                   safariStatusMsg?.kind === "broke"  ? "#facc15" :
                    "#f0f0f0",
             minHeight: 56,
             display: "flex",
