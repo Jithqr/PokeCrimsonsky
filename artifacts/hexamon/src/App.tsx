@@ -1421,10 +1421,6 @@ export default function App() {
     if (w) {
       setScoutedWild(w);
       setSeen((prev) => prev.has(w.id) ? prev : new Set(prev).add(w.id));
-      // Hunting reward — small XP & coin per scout
-      const reward = 5 + Math.floor(Math.random() * 10);
-      setPlayer((p) => ({ ...p, money: p.money + reward, exp: p.exp + 5 }));
-      addLog(`🔍 Hunt reward: +₽${reward}, +5 XP`, "#26A69A");
     }
   }
 
@@ -1494,7 +1490,9 @@ export default function App() {
     if (wild.currentHp <= 0) {
       const expGain = Math.floor(wild.level * (wild.atk + wild.def) / 8);
       pMon.exp += expGain;
-      logs.push([`⭐ Wild ${wild.name} fainted! +${expGain} EXP`, "#F44336"]);
+      const killReward = 40 + Math.floor(Math.random() * 51); // 40–90 ₽
+      setPlayer((p) => ({ ...p, money: p.money + killReward }));
+      logs.push([`⭐ Wild ${wild.name} fainted! +${expGain} EXP, +₽${killReward}`, "#F44336"]);
       logs.forEach(([m, c]) => addLog(m, c));
       setTimeout(() => sfx.faint(), 400);
       setTimeout(() => sfx.victory(), 1100);
@@ -2243,9 +2241,9 @@ export default function App() {
       { label: "Mons",   icon: "fa-paw",             color: "var(--m-cyan)",   action: () => setScreen("mons") },
     ];
     const menuPage2: MenuBtn[] = [
-      { label: "Battle Box",    icon: "fa-shield-halved", color: "var(--m-pink)",   action: () => { sfx.menuOpen(); setBbMode(null); setBbRoom(null); setScreen("battleBox"); } },
-      { label: "Training Zone", icon: "fa-dumbbell",      color: "var(--m-orange)", action: () => { sfx.menuOpen(); setScreen("training"); } },
-      { label: "League",        icon: "fa-trophy",        color: "var(--m-yellow)", action: () => { sfx.menuOpen(); setScreen("league"); } },
+      { label: "Battle Box",    icon: "fa-shield-halved", color: "var(--m-pink)",   action: () => { setBbMode(null); setBbRoom(null); setScreen("battleBox"); } },
+      { label: "Training Zone", icon: "fa-dumbbell",      color: "var(--m-orange)", action: () => { setScreen("training"); } },
+      { label: "League",        icon: "fa-trophy",        color: "var(--m-yellow)", action: () => { setScreen("league"); } },
       { label: "Referrals",     icon: "fa-user-plus",     color: "var(--m-green)",  action: () => addLog("Referrals coming soon!", "#9C27B0"), locked: true },
       { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
       { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
@@ -5044,11 +5042,6 @@ export default function App() {
         ] },
       { key: "boost", label: "BOOST ITEMS", emoji: "💊", color: "#4CAF50", desc: "Heal & power up",
         items: [
-          { name: "Potion", price: 300, info: "Restore 20 HP" },
-          { name: "Super Potion", price: 700, info: "Restore 50 HP" },
-          { name: "Hyper Potion", price: 1500, info: "Restore 200 HP" },
-          { name: "Revive", price: 1500, info: "Revive fainted" },
-          { name: "X Attack", price: 500, info: "+ATK in battle" },
           { name: "Rare Candy", price: 4800, info: "+1 Level" },
         ] },
       { key: "tms", label: "TMs", emoji: "💿", color: "#9C27B0", desc: "Teach new moves",

@@ -711,7 +711,10 @@ function LearnMovePopup({ mon, newMove, onLearn, onSkip }: {
 function Header({ onBack, title }: { onBack: () => void; title: string }) {
   return (
     <div style={{ position: "sticky", top: 0, zIndex: 1, padding: "12px 14px", background: "rgba(0,0,0,0.55)", borderBottom: "1px solid rgba(255,255,255,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center", backdropFilter: "blur(6px)" }}>
-      <button onClick={onBack} style={{ background: "transparent", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 12 }}>← Back</button>
+      <button onClick={onBack} style={{ background: "transparent", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 12, fontWeight: 700, letterSpacing: 0.5, display: "inline-flex", alignItems: "center", gap: 6 }} aria-label="BACK">
+        <span style={{ fontSize: 10, lineHeight: 1 }}>◀</span>
+        BACK
+      </button>
       <div style={{ fontWeight: 800, fontSize: 14, textAlign: "center", flex: 1, padding: "0 8px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</div>
       <div style={{ width: 60 }} />
     </div>
