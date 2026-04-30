@@ -151,32 +151,11 @@ export const sfx = {
   stopMusic: () => assetsStopMusic(),
 };
 
-export const MOVE_TYPE: Record<string, string> = {
-  Tackle: "normal", Scratch: "normal", Slash: "normal", "Quick Attack": "normal",
-  "Hyper Fang": "normal", "Super Fang": "normal", Bite: "normal",
-  "Vine Whip": "grass", "Razor Leaf": "grass", "Sleep Powder": "grass", "Solar Beam": "grass",
-  Ember: "fire", Flamethrower: "fire", "Fire Blast": "fire",
-  "Water Gun": "water", "Bubble Beam": "water", Surf: "water", "Hydro Pump": "water", Withdraw: "water",
-  "Thunder Shock": "electric", Thunderbolt: "electric", Thunder: "electric", "Thunder Wave": "electric",
-  Gust: "flying", "Wing Attack": "flying", "Air Slash": "flying", Tailwind: "flying",
-  "Sand Attack": "ground", Earthquake: "ground",
-  "Poison Sting": "poison", "Poison Powder": "poison", "Poison Jab": "poison",
-  "Pin Missile": "bug", Twineedle: "bug", "String Shot": "bug",
-  Confusion: "psychic", Psybeam: "psychic",
-  "Ice Beam": "ice",
-  "Dragon Rage": "dragon",
-  Agility: "normal", Harden: "normal", Protect: "normal",
-};
-
-export const TYPE_COLOR: Record<string, string> = {
-  normal: "#A8A878", grass: "#78C850", fire: "#F08030", water: "#6890F0",
-  electric: "#F8D030", flying: "#A890F0", ground: "#E0C068", poison: "#A040A0",
-  bug: "#A8B820", psychic: "#F85888", ice: "#98D8D8", dragon: "#7038F8",
-};
-
-export function moveTypeOf(move: string): string {
-  return MOVE_TYPE[move] ?? "normal";
-}
+// Move-type lookup + 18-type color palette live in their own module so the
+// table can be shared without bloating this file. We re-export them here
+// so existing imports from "./sfx" keep working unchanged.
+import { TYPE_COLOR, moveTypeOf } from "./lib/move-types";
+export { TYPE_COLOR, moveTypeOf };
 
 // Tries to play the real PokeRogue per-move SFX (or a type-grouped one);
 // falls back to the synth move sound if no asset is mapped.
