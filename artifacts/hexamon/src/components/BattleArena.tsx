@@ -72,29 +72,29 @@ function NamePlate({
       border: "2px solid #2a2618", borderRadius: 6,
       boxShadow: side === "me" ? "3px 3px 0 #2a2618" : "-3px 3px 0 #2a2618",
       padding: "6px 8px", color: "#231d10", minWidth: 168, maxWidth: 200,
-      fontFamily: "'Press Start 2P', monospace",
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
       transform: side === "me" ? "skew(-6deg, 0)" : "skew(-6deg, 0)",
     }}>
       <div style={{ transform: "skew(6deg, 0)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 9, lineHeight: 1.2 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, lineHeight: 1.2 }}>
           <span style={{ display: "flex", alignItems: "center", gap: 3, fontWeight: 700 }}>
             <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 100, textTransform: "uppercase" }}>{mon.name}</span>
-            {mon.status && <span title={mon.status} style={{ background: STATUS_COLORS[mon.status] ?? "#555", color: "#fff", padding: "1px 3px", borderRadius: 2, fontSize: 7 }}>{mon.status.slice(0,3).toUpperCase()}</span>}
+            {mon.status && <span title={mon.status} style={{ background: STATUS_COLORS[mon.status] ?? "#555", color: "#fff", padding: "1px 3px", borderRadius: 2, fontSize: 11 }}>{mon.status.slice(0,3).toUpperCase()}</span>}
           </span>
-          <span style={{ fontSize: 9 }}>Lv{mon.level}</span>
+          <span style={{ fontSize: 12 }}>Lv{mon.level}</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
-          <span style={{ fontSize: 7, color: "#7a3d1f", fontWeight: 700 }}>HP</span>
+          <span style={{ fontSize: 11, color: "#7a3d1f", fontWeight: 700 }}>HP</span>
           <div style={{ flex: 1, height: 5, background: "#3b342a", borderRadius: 2, overflow: "hidden", border: "1px solid #2a2618" }}>
             <div style={{ width: `${pct}%`, height: "100%", background: hpColor, transition: "width 600ms ease, background 400ms ease" }} />
           </div>
         </div>
         {showHpNumbers && (
-          <div style={{ textAlign: "right", fontSize: 8, marginTop: 2 }}>{Math.max(0, Math.floor(mon.currentHp))}/{max}</div>
+          <div style={{ textAlign: "right", fontSize: 12, marginTop: 2 }}>{Math.max(0, Math.floor(mon.currentHp))}/{max}</div>
         )}
         {showExp && (
           <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
-            <span style={{ fontSize: 7, color: "#1f3d7a", fontWeight: 700 }}>EXP</span>
+            <span style={{ fontSize: 11, color: "#1f3d7a", fontWeight: 700 }}>EXP</span>
             <div style={{ flex: 1, height: 3, background: "#3b342a", borderRadius: 1, overflow: "hidden", border: "1px solid #2a2618" }}>
               <div style={{ width: `${(mon.level % 10) * 10}%`, height: "100%", background: "#5fa8e6" }} />
             </div>
@@ -192,13 +192,13 @@ export default function BattleArena(props: Props) {
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderBottom: "1px solid #1c1c33" }}>
           <button
             onClick={() => { if (state.finished && onExit) onExit(); else if (onForfeit) onForfeit(); else if (onExit) onExit(); }}
-            style={{ background: "#1a1a2e", color: "#cdd2e0", border: "1px solid #2a2a44", borderRadius: 8, padding: "5px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: 1, fontFamily: "'Press Start 2P', monospace" }}
+            style={{ background: "#1a1a2e", color: "#cdd2e0", border: "1px solid #2a2a44", borderRadius: 8, padding: "5px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: 1, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}
           >‹ BACK</button>
-          <div style={{ flex: 1, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, fontFamily: "'Press Start 2P', monospace", color: "#fff", textTransform: "uppercase", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <div style={{ flex: 1, fontSize: 12, fontWeight: 800, letterSpacing: 1.5, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif", color: "#fff", textTransform: "uppercase", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {headerLabel}
           </div>
           {turnTimerSec != null && (
-            <div style={{ background: turnTimerSec < 10 ? "#F44336" : "#1a1a2e", border: "1px solid #2a2a44", padding: "4px 8px", borderRadius: 8, fontWeight: 800, fontSize: 11, fontFamily: "'Press Start 2P', monospace" }}>{turnTimerSec}s</div>
+            <div style={{ background: turnTimerSec < 10 ? "#F44336" : "#1a1a2e", border: "1px solid #2a2a44", padding: "4px 8px", borderRadius: 8, fontWeight: 800, fontSize: 11, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>{turnTimerSec}s</div>
           )}
         </div>
 
@@ -396,7 +396,7 @@ function BenchCard({ mon }: { mon: BattleMon }) {
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, opacity: fainted ? 0.4 : 1, filter: fainted ? "grayscale(1)" : "none" }}>
       <img src={url} alt={mon.name} style={{ width: 54, height: 54, imageRendering: "pixelated", objectFit: "contain" }} />
       <div style={{ width: "100%" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, fontWeight: 700, color: "#fff", marginBottom: 2 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, color: "#fff", marginBottom: 2 }}>
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{mon.name}</span>
           <span>L{mon.level}</span>
         </div>
@@ -472,20 +472,20 @@ const css = `
   min-height: 56px; padding: 8px 10px;
   box-shadow: 0 3px 0 rgba(0,0,0,0.35);
 }
-.bx-dialog-text { color: #0a0a1e; font-family: 'Press Start 2P', monospace; font-size: 9px; line-height: 1.4; }
+.bx-dialog-text { color: #0a0a1e; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 9px; line-height: 1.4; }
 
 .bx-result { position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; z-index: 20; }
-.bx-result-title { font-family: 'Press Start 2P', monospace; font-size: 22px; color: #ffd54f; text-shadow: 0 3px 0 #000; letter-spacing: 2px; }
-.bx-continue { background: #4CAF50; color: #fff; border: 2px solid #2e7d32; border-radius: 10px; padding: 10px 22px; font-weight: 800; font-size: 12px; cursor: pointer; font-family: 'Press Start 2P', monospace; letter-spacing: 1.5px; }
+.bx-result-title { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 22px; color: #ffd54f; text-shadow: 0 3px 0 #000; letter-spacing: 2px; }
+.bx-continue { background: #4CAF50; color: #fff; border: 2px solid #2e7d32; border-radius: 10px; padding: 10px 22px; font-weight: 800; font-size: 12px; cursor: pointer; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; letter-spacing: 1.5px; }
 
 /* Bottom action panel */
 .bx-panel { padding: 12px; background: #0a0a1e; border-top: 1px solid #1c1c33; min-height: 230px; }
-.bx-section-h { font-family: 'Press Start 2P', monospace; font-size: 9px; color: #8794ad; letter-spacing: 1.5px; margin: 4px 4px 10px; text-transform: uppercase; }
-.bx-row-h { display:flex; align-items: center; gap: 8px; font-family: 'Press Start 2P', monospace; font-size: 9px; color: #8794ad; letter-spacing: 1.5px; margin: 0 4px 10px; }
+.bx-section-h { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 9px; color: #8794ad; letter-spacing: 1.5px; margin: 4px 4px 10px; text-transform: uppercase; }
+.bx-row-h { display:flex; align-items: center; gap: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 9px; color: #8794ad; letter-spacing: 1.5px; margin: 0 4px 10px; }
 .bx-back-mini { background: #1a1a2e; border: 1px solid #2a2a44; color: #cdd2e0; border-radius: 6px; padding: 3px 8px; cursor: pointer; font-weight: 800; }
 
 .bx-main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.bx-main-btn { background: #15172a; border: 1px solid #2a2a44; color: #fff; border-radius: 12px; padding: 14px 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-family: 'Press Start 2P', monospace; font-size: 11px; letter-spacing: 1px; transition: transform 100ms, background 150ms; }
+.bx-main-btn { background: #15172a; border: 1px solid #2a2a44; color: #fff; border-radius: 12px; padding: 14px 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; letter-spacing: 1px; transition: transform 100ms, background 150ms; }
 .bx-main-btn:hover { background: #1f223a; }
 .bx-main-btn:active { transform: scale(0.97); }
 .bx-main-fight { border-color: #e64545; background: linear-gradient(180deg,#2a1320,#15172a); }
@@ -496,8 +496,8 @@ const css = `
 .bx-move-card:hover:not(:disabled) { background: #161a36; }
 .bx-move-card:active:not(:disabled) { transform: scale(0.97); }
 .bx-move-card:disabled { cursor: not-allowed; }
-.bx-move-name { font-family: 'Press Start 2P', monospace; font-size: 11px; margin-bottom: 6px; letter-spacing: 0.5px; }
-.bx-move-sub { display: flex; justify-content: space-between; gap: 6px; font-size: 9px; color: #8794ad; font-family: 'Press Start 2P', monospace; }
+.bx-move-name { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11px; margin-bottom: 6px; letter-spacing: 0.5px; }
+.bx-move-sub { display: flex; justify-content: space-between; gap: 6px; font-size: 9px; color: #8794ad; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
 .bx-move-empty { background: rgba(255,255,255,0.03); border-radius: 10px; min-height: 64px; }
 
 .bx-bench-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }

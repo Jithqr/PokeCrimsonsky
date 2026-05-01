@@ -610,7 +610,7 @@ const S: Record<string, React.CSSProperties> = {
     marginBottom: 18,
   },
   heroTitle: {
-    fontFamily: "'Press Start 2P', monospace", fontSize: 18, color: "#ef4444",
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif", fontSize: 18, color: "#ef4444",
     textAlign: "center", margin: "16px 0 18px", letterSpacing: 1,
     textShadow: "2px 2px 0 #1a1a1a", lineHeight: 1.4,
   },

@@ -2158,14 +2158,14 @@ export default function App() {
   }
 
   const S: Record<string, React.CSSProperties> = {
-    root: { fontFamily: "'Press Start 2P',monospace", background: "#09090b", minHeight: "100vh", display: "flex", justifyContent: "center" },
+    root: { fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif", background: "#09090b", minHeight: "100vh", display: "flex", justifyContent: "center" },
     wrap: { width: "100%", maxWidth: 460, minHeight: "100vh", background: "#09090b", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" },
     header: { background: "#0a0a0a", borderBottom: "1px solid #1f1f1f", padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" },
   };
 
   function typeTag(t: string | null) {
     if (!t) return null;
-    return <span style={{ background: TYPE_COLORS[t] + "44", border: `1px solid ${TYPE_COLORS[t]}`, color: TYPE_COLORS[t], fontSize: 6, padding: "2px 5px", borderRadius: 3 }}>{t}</span>;
+    return <span style={{ background: TYPE_COLORS[t] + "44", border: `1px solid ${TYPE_COLORS[t]}`, color: TYPE_COLORS[t], fontSize: 10, padding: "2px 5px", borderRadius: 3 }}>{t}</span>;
   }
 
   function HpBar({ cur, max, height = 8 }: { cur: number; max: number; height?: number }) {
@@ -2389,7 +2389,7 @@ export default function App() {
         <div style={S.wrap}>
           <div style={{ padding: "20px 16px 10px", textAlign: "center" }}>
             <div style={{ fontSize: 11, color: "#ff6b35" }}>CHOOSE YOUR STARTER</div>
-            <div style={{ fontSize: 7, color: "#666", marginTop: 6 }}>Your journey through Kanto begins!</div>
+            <div style={{ fontSize: 11, color: "#666", marginTop: 6 }}>Your journey through Kanto begins!</div>
           </div>
           <div style={{ padding: "0 12px 20px", display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
             {starters.map((s) => {
@@ -2406,9 +2406,9 @@ export default function App() {
                   }}>
                   <MonSprite sprite={p.sprite} size={48} style={{ animation: "none" }} />
                   <div>
-                    <div style={{ color: "#fff", fontSize: 8, marginBottom: 4 }}>{p.name}</div>
+                    <div style={{ color: "#fff", fontSize: 12, marginBottom: 4 }}>{p.name}</div>
                     <div style={{ display: "flex", gap: 4, marginBottom: 6 }}>{typeTag(p.type1)}{typeTag(p.type2)}</div>
-                    <div style={{ color: "#888", fontSize: 6 }}>{s.desc}</div>
+                    <div style={{ color: "#888", fontSize: 10 }}>{s.desc}</div>
                   </div>
                 </button>
               );
@@ -2478,14 +2478,14 @@ export default function App() {
             padding: 14, boxShadow: "0 4px 10px rgba(0,0,0,0.5)", position: "relative",
             fontFamily: "'Press Start 2P', monospace",
           }}>
-            <div style={{ textAlign: "right", fontSize: 8, color: "#aaa", marginBottom: 8, letterSpacing: 1 }}>
+            <div style={{ textAlign: "right", fontSize: 12, color: "#aaa", marginBottom: 8, letterSpacing: 1 }}>
               IDNo. {player.id}
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "1px solid #5e2c73", paddingBottom: 10, marginBottom: 12 }}>
               <div style={{ fontSize: 14, color: "#fff", textShadow: "1px 1px #000", letterSpacing: 1 }}>TRAINER CARD</div>
               <div style={{ fontSize: 11, color: "#ddd" }}>Rank {rankProg.rank} / {MAX_RANK}{rankProg.isMax ? " ★" : ""}</div>
             </div>
-            <div style={{ fontSize: 9, color: "#bbb", marginBottom: 14, letterSpacing: 0.5 }}>
+            <div style={{ fontSize: 12, color: "#bbb", marginBottom: 14, letterSpacing: 0.5 }}>
               {player.hometown} • {player.name}
             </div>
             <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
@@ -2500,14 +2500,14 @@ export default function App() {
                   { label: "LOSSES", val: player.losses, col: "#F44336" },
                 ].map((stat, i) => (
                   <div key={i} style={{ background: "#171022", border: "1px solid #312440", padding: 8, borderRadius: 4 }}>
-                    <div style={{ fontSize: 6, color: "#aaa", marginBottom: 6, letterSpacing: 0.5 }}>{stat.label}</div>
-                    <div style={{ fontSize: 9, color: stat.col }}>{stat.val}</div>
+                    <div style={{ fontSize: 10, color: "#aaa", marginBottom: 6, letterSpacing: 0.5 }}>{stat.label}</div>
+                    <div style={{ fontSize: 12, color: stat.col }}>{stat.val}</div>
                   </div>
                 ))}
               </div>
             </div>
             <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 7, color: "#bbb", marginBottom: 6, letterSpacing: 0.5 }}>
+              <div style={{ fontSize: 11, color: "#bbb", marginBottom: 6, letterSpacing: 0.5 }}>
                 {rankProg.isMax
                   ? `MAX RANK — ${rankProg.totalExp.toLocaleString()} EXP`
                   : `RANK ${rankProg.rank} → ${rankProg.rank + 1} (${rankProg.current.toLocaleString()} / ${rankProg.needed.toLocaleString()})`}
@@ -2516,7 +2516,7 @@ export default function App() {
                 <div style={{ width: `${expPct}%`, background: rankProg.isMax ? "#FFD700" : "#9c27b0", height: "100%", transition: "width 0.3s" }} />
               </div>
             </div>
-            <div style={{ borderTop: "1px solid #312440", paddingTop: 8, textAlign: "right", fontSize: 7, color: "#aaa" }}>
+            <div style={{ borderTop: "1px solid #312440", paddingTop: 8, textAlign: "right", fontSize: 11, color: "#aaa" }}>
               Adventure started: {player.adventureStarted}
             </div>
           </div>
@@ -2524,7 +2524,7 @@ export default function App() {
           <div style={{ margin: "0 16px 12px", display: "flex", gap: 8 }}>
             <div style={{ flex: 1, background: "linear-gradient(135deg,#7e3aed,#4c1d95)", borderRadius: 12, padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
-                <div style={{ fontSize: 9, color: "#e9d5ff", letterSpacing: 0.5 }}>STARDUST</div>
+                <div style={{ fontSize: 12, color: "#e9d5ff", letterSpacing: 0.5 }}>STARDUST</div>
                 <div style={{ fontSize: 16, color: "#fff", fontWeight: 700 }}>✨ {(player.stardust ?? 0).toLocaleString()}</div>
               </div>
             </div>
@@ -2542,7 +2542,7 @@ export default function App() {
                 return (
                   <div onClick={ready ? spinPokestop : undefined}
                     style={{ cursor: ready ? "pointer" : "not-allowed", opacity: ready ? 1 : 0.85 }}>
-                    <div style={{ fontSize: 9, color: "#cffafe", letterSpacing: 0.5 }}>POKÉSTOP</div>
+                    <div style={{ fontSize: 12, color: "#cffafe", letterSpacing: 0.5 }}>POKÉSTOP</div>
                     <div style={{ fontSize: 14, color: "#fff", fontWeight: 700 }}>
                       {ready ? "📍 Spin!" : `⏱ ${fmt}`}
                     </div>
@@ -2672,7 +2672,7 @@ export default function App() {
                                 </span>
                                 <div style={{ flex: 1 }}>
                                   <div style={{ fontSize: 13, fontWeight: 700 }}>{r.name}</div>
-                                  <div style={{ fontSize: 9, color: "var(--m-muted)" }}>Gen {r.gen}</div>
+                                  <div style={{ fontSize: 12, color: "var(--m-muted)" }}>Gen {r.gen}</div>
                                 </div>
                                 <div style={{ fontSize: 10, color: safariBypassWithPass ? "#06b6d4" : "#4ade80", fontWeight: 700 }}>
                                   {safariBypassWithPass ? "USE PASS" : "AVAILABLE"}
@@ -2967,33 +2967,33 @@ export default function App() {
         <div style={S.wrap}>
           <div style={S.header}>
             <BackBtn onClick={() => { sfx.menuBack(); setScreen("world"); }} />
-            <span style={{ fontSize: 9, color: "#4ade80" }}>👥 FRIENDS</span>
+            <span style={{ fontSize: 12, color: "#4ade80" }}>👥 FRIENDS</span>
             <div style={{ width: 88 }} />
           </div>
 
           {/* Your friend card */}
           <div style={{ margin: 16, background: "#0d0d1a", border: "2px solid #4ade80", borderRadius: 12, padding: 14 }}>
-            <div style={{ fontSize: 9, color: "#4ade80", marginBottom: 8, letterSpacing: 1 }}>YOUR FRIEND CODE</div>
+            <div style={{ fontSize: 12, color: "#4ade80", marginBottom: 8, letterSpacing: 1 }}>YOUR FRIEND CODE</div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
               <img src={TRAINER_SPRITE(player.sprite)} alt="me" style={{ width: 56, height: 56, imageRendering: "pixelated" }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 11, color: "#fff", fontWeight: 700 }}>{player.name}</div>
-                <div style={{ fontSize: 8, color: "#aaa", marginTop: 2 }}>#{player.id} • Rank {rankFromExp(player.exp)}</div>
-                <div style={{ fontSize: 7, color: "#888", marginTop: 2 }}>{player.hometown}</div>
+                <div style={{ fontSize: 12, color: "#aaa", marginTop: 2 }}>#{player.id} • Rank {rankFromExp(player.exp)}</div>
+                <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>{player.hometown}</div>
               </div>
             </div>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <code style={{ flex: 1, minWidth: 0, fontSize: 9, color: "#9ca3af", background: "#181820", border: "1px solid #2a2a32", padding: "8px 10px", borderRadius: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "ui-monospace, Menlo, monospace" }}>{myCardCode}</code>
+              <code style={{ flex: 1, minWidth: 0, fontSize: 12, color: "#9ca3af", background: "#181820", border: "1px solid #2a2a32", padding: "8px 10px", borderRadius: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "ui-monospace, Menlo, monospace" }}>{myCardCode}</code>
               <button onClick={handleCopy} className="btn" style={{ padding: "8px 14px", borderRadius: 6, background: "#4ade80", color: "#062b16", fontWeight: 700, fontSize: 11, border: "none" }}>
                 <i className="fa-solid fa-copy" /> Copy
               </button>
             </div>
-            <div style={{ fontSize: 7, color: "#777", marginTop: 6 }}>Share this code with another HexaMon trainer to add each other.</div>
+            <div style={{ fontSize: 11, color: "#777", marginTop: 6 }}>Share this code with another HexaMon trainer to add each other.</div>
           </div>
 
           {/* Add a friend */}
           <div style={{ margin: "0 16px 16px", background: "#15151b", border: "1px solid #26262d", borderRadius: 12, padding: 12 }}>
-            <div style={{ fontSize: 9, color: "#bbb", marginBottom: 8 }}>ADD A FRIEND</div>
+            <div style={{ fontSize: 12, color: "#bbb", marginBottom: 8 }}>ADD A FRIEND</div>
             <div style={{ display: "flex", gap: 8 }}>
               <input
                 value={friendInput}
@@ -3028,10 +3028,10 @@ export default function App() {
                     <img src={TRAINER_SPRITE(f.sprite || "hilbert")} alt={f.name} style={{ width: 44, height: 44, imageRendering: "pixelated", opacity: f.sprite ? 1 : 0.6 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, color: "#fff", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</div>
-                      <div style={{ fontSize: 9, color: "#9ca3af", marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>
                         #{f.id}{f.rank ? ` • Rank ${f.rank}` : ""}{f.hometown ? ` • ${f.hometown}` : ""}
                       </div>
-                      <div style={{ fontSize: 7, color: "#666", marginTop: 2 }}>
+                      <div style={{ fontSize: 11, color: "#666", marginTop: 2 }}>
                         Added {new Date(f.addedAt).toLocaleDateString()}
                       </div>
                     </div>
@@ -3053,13 +3053,13 @@ export default function App() {
       <div style={S.wrap}>
         <div style={S.header}>
           <BackBtn onClick={() => setScreen("world")} />
-          <span style={{ fontSize: 9, color: "#E91E63" }}>🪪 EDIT CARD</span>
+          <span style={{ fontSize: 12, color: "#E91E63", fontFamily: "'Press Start 2P', monospace" }}>🪪 EDIT CARD</span>
           <div style={{ width: 88 }} />
         </div>
 
         {/* Full-size preview */}
-        <div style={{ margin: 16, background: "#0d0d1a", border: "3px solid #5e2c73", borderRadius: 12, padding: 18, boxShadow: "0 4px 15px rgba(0,0,0,0.5)" }}>
-          <div style={{ textAlign: "right", fontSize: 8, color: "#888", marginBottom: 6, letterSpacing: 1 }}>
+        <div style={{ margin: 16, background: "#0d0d1a", border: "3px solid #5e2c73", borderRadius: 12, padding: 18, boxShadow: "0 4px 15px rgba(0,0,0,0.5)", fontFamily: "'Press Start 2P', monospace" }}>
+          <div style={{ textAlign: "right", fontSize: 12, color: "#888", marginBottom: 6, letterSpacing: 1 }}>
             IDNo. {player.id}
           </div>
           {(() => {
@@ -3070,7 +3070,7 @@ export default function App() {
                   <div style={{ fontSize: 16, color: "#fff", textShadow: "1px 1px #000" }}>TRAINER CARD</div>
                   <div style={{ fontSize: 12, color: "#ddd" }}>Rank {cardProg.rank} / {MAX_RANK}{cardProg.isMax ? " ★" : ""}</div>
                 </div>
-                <div style={{ fontSize: 9, color: "#aaa", marginBottom: 16, letterSpacing: 0.5 }}>
+                <div style={{ fontSize: 12, color: "#aaa", marginBottom: 16, letterSpacing: 0.5 }}>
                   {player.hometown} • {player.name} • {rankTier(cardProg.rank)}
                 </div>
                 <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
@@ -3085,14 +3085,14 @@ export default function App() {
                       { label: "LOSSES", val: player.losses, col: "#F44336" },
                     ].map((stat, i) => (
                       <div key={i} style={{ background: "#171022", border: "1px solid #312440", padding: 10, borderRadius: 4 }}>
-                        <div style={{ fontSize: 6, color: "#888", marginBottom: 8 }}>{stat.label}</div>
-                        <div style={{ fontSize: 9, color: stat.col }}>{stat.val}</div>
+                        <div style={{ fontSize: 10, color: "#888", marginBottom: 8 }}>{stat.label}</div>
+                        <div style={{ fontSize: 12, color: stat.col }}>{stat.val}</div>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 7, color: "#aaa", marginBottom: 8 }}>
+                  <div style={{ fontSize: 11, color: "#aaa", marginBottom: 8 }}>
                     {cardProg.isMax
                       ? `MAX RANK — ${cardProg.totalExp.toLocaleString()} EXP`
                       : `RANK ${cardProg.rank} → ${cardProg.rank + 1} (${cardProg.current.toLocaleString()} / ${cardProg.needed.toLocaleString()})`}
@@ -3104,24 +3104,24 @@ export default function App() {
               </>
             );
           })()}
-          <div style={{ borderTop: "1px solid #312440", paddingTop: 10, textAlign: "right", fontSize: 7, color: "#777" }}>
+          <div style={{ borderTop: "1px solid #312440", paddingTop: 10, textAlign: "right", fontSize: 11, color: "#777" }}>
             Adventure started: {player.adventureStarted}
           </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 16, fontFamily: "'Press Start 2P', monospace" }}>
           <div>
-            <div style={{ fontSize: 7, color: "#E91E63", marginBottom: 8 }}>TRAINER NAME</div>
+            <div style={{ fontSize: 11, color: "#E91E63", marginBottom: 8 }}>TRAINER NAME</div>
             <input value={player.name} onChange={(e) => setPlayer({ ...player, name: e.target.value })} maxLength={12}
-              style={{ background: "#111", border: "1px solid #333", color: "#fff", fontFamily: "'Press Start 2P',monospace", fontSize: 8, padding: "8px", borderRadius: 4, width: "100%" }} />
+              style={{ background: "#111", border: "1px solid #333", color: "#fff", fontFamily: "'Press Start 2P',monospace", fontSize: 12, padding: "8px", borderRadius: 4, width: "100%" }} />
           </div>
           <div>
-            <div style={{ fontSize: 7, color: "#E91E63", marginBottom: 8 }}>HOMETOWN</div>
+            <div style={{ fontSize: 11, color: "#E91E63", marginBottom: 8 }}>HOMETOWN</div>
             <input value={player.hometown} onChange={(e) => setPlayer({ ...player, hometown: e.target.value })} maxLength={20}
-              style={{ background: "#111", border: "1px solid #333", color: "#fff", fontFamily: "'Press Start 2P',monospace", fontSize: 8, padding: "8px", borderRadius: 4, width: "100%" }} />
+              style={{ background: "#111", border: "1px solid #333", color: "#fff", fontFamily: "'Press Start 2P',monospace", fontSize: 12, padding: "8px", borderRadius: 4, width: "100%" }} />
           </div>
           <div>
-            <div style={{ fontSize: 7, color: "#E91E63", marginBottom: 8 }}>CHOOSE AVATAR (GEN V)</div>
+            <div style={{ fontSize: 11, color: "#E91E63", marginBottom: 8 }}>CHOOSE AVATAR (GEN V)</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
               {GEN_V_TRAINERS.map((ts) => (
                 <button key={ts} className="btn"
@@ -3250,16 +3250,16 @@ export default function App() {
                 </div>
                 <div style={{ marginBottom: 5, display: "flex", gap: 4 }}>
                   {wild.type1 && (
-                    <span style={{ display: "inline-block", padding: "1px 7px", borderRadius: 4, fontSize: 9, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", background: (TYPE_COLORS[wild.type1] ?? "#444") + "33", color: TYPE_COLORS[wild.type1] ?? "#f0f0f0", border: `1px solid ${(TYPE_COLORS[wild.type1] ?? "#444")}66` }}>{wild.type1}</span>
+                    <span style={{ display: "inline-block", padding: "1px 7px", borderRadius: 4, fontSize: 12, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", background: (TYPE_COLORS[wild.type1] ?? "#444") + "33", color: TYPE_COLORS[wild.type1] ?? "#f0f0f0", border: `1px solid ${(TYPE_COLORS[wild.type1] ?? "#444")}66` }}>{wild.type1}</span>
                   )}
                   {wild.type2 && (
-                    <span style={{ display: "inline-block", padding: "1px 7px", borderRadius: 4, fontSize: 9, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", background: (TYPE_COLORS[wild.type2] ?? "#444") + "33", color: TYPE_COLORS[wild.type2] ?? "#f0f0f0", border: `1px solid ${(TYPE_COLORS[wild.type2] ?? "#444")}66` }}>{wild.type2}</span>
+                    <span style={{ display: "inline-block", padding: "1px 7px", borderRadius: 4, fontSize: 12, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", background: (TYPE_COLORS[wild.type2] ?? "#444") + "33", color: TYPE_COLORS[wild.type2] ?? "#f0f0f0", border: `1px solid ${(TYPE_COLORS[wild.type2] ?? "#444")}66` }}>{wild.type2}</span>
                   )}
                 </div>
                 <div style={{ height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden", marginBottom: 4 }}>
                   <div style={{ height: "100%", borderRadius: 3, transition: "width 0.4s ease", width: `${wildHpPct}%`, background: wildHpClass }} />
                 </div>
-                <div style={{ fontSize: 9, color: "#888890" }}>{wild.currentHp}/{wild.maxHp}</div>
+                <div style={{ fontSize: 12, color: "#888890" }}>{wild.currentHp}/{wild.maxHp}</div>
               </div>
             </div>
 
@@ -3293,8 +3293,8 @@ export default function App() {
                   <div style={{ height: "100%", borderRadius: 3, transition: "width 0.4s ease", width: `${pHpPct}%`, background: pHpClass }} />
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 9, color: "#888890" }}>{pMon.currentHp}/{pMon.maxHp}</span>
-                  <span style={{ fontSize: 9, color: "#888890" }}>ATK: {pMon.atk}</span>
+                  <span style={{ fontSize: 12, color: "#888890" }}>{pMon.currentHp}/{pMon.maxHp}</span>
+                  <span style={{ fontSize: 12, color: "#888890" }}>ATK: {pMon.atk}</span>
                 </div>
               </div>
             </div>
@@ -3387,7 +3387,7 @@ export default function App() {
               return (
                 <button key={m} className="wb-move-btn" onClick={() => doPlayerMove(m)}>
                   <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{m}</div>
-                  <div style={{ fontSize: 9, color: "#888890", letterSpacing: 0.3 }}>
+                  <div style={{ fontSize: 12, color: "#888890", letterSpacing: 0.3 }}>
                     PWR: {md.power || "—"} · ACC: {md.accuracy}% · {md.type}
                   </div>
                 </button>
@@ -3420,7 +3420,7 @@ export default function App() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ color: "#4ade80", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>SWITCH POKÉMON</div>
                   <button className="btn"
-                    style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 9 }}
+                    style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 12 }}
                     onClick={() => setShowSwitchPicker(false)}>✕</button>
                 </div>
                 <div style={{ fontSize: 10, color: "#6b7896" }}>{teams[activeTeamIdx]?.name ?? "Team"} · choose your next fighter</div>
@@ -3444,12 +3444,12 @@ export default function App() {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: "flex", justifyContent: "space-between" }}>
                             <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>{m.name}</span>
-                            <span style={{ fontSize: 9, color: isActive ? "#FFD700" : "#888" }}>
+                            <span style={{ fontSize: 12, color: isActive ? "#FFD700" : "#888" }}>
                               {isActive ? "★ IN BATTLE" : fainted ? "FAINTED" : `Lv${m.level}`}
                             </span>
                           </div>
                           <div style={{ marginTop: 4 }}><HpBar cur={m.currentHp} max={m.maxHp} /></div>
-                          <div style={{ fontSize: 8, color: "#6b7896", marginTop: 2 }}>
+                          <div style={{ fontSize: 12, color: "#6b7896", marginTop: 2 }}>
                             HP {m.currentHp}/{m.maxHp}
                           </div>
                         </div>
@@ -3477,7 +3477,7 @@ export default function App() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ color: "#F44336", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>CHOOSE A BALL</div>
                   <button className="btn"
-                    style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 9 }}
+                    style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 12 }}
                     onClick={() => setShowBallPicker(false)}>✕</button>
                 </div>
                 <div style={{ fontSize: 10, color: "#6b7896" }}>
@@ -3513,7 +3513,7 @@ export default function App() {
                             ×{qty} · {name === "Master Ball" ? "100%" : `${mult.toFixed(2)}× now`}
                           </span>
                         </div>
-                        <div style={{ fontSize: 9, color: "#9aa0b4", marginTop: 4 }}>{BALL_BLURB[name]}</div>
+                        <div style={{ fontSize: 12, color: "#9aa0b4", marginTop: 4 }}>{BALL_BLURB[name]}</div>
                       </button>
                     );
                   })}
@@ -3536,7 +3536,7 @@ export default function App() {
       <div style={S.wrap}>
         <div style={S.header}>
           <BackBtn onClick={() => setScreen("world")} />
-          <span style={{ fontSize: 9, color: "#FF9800" }}>🎒 MY TEAMS ({team.length}/6)</span>
+          <span style={{ fontSize: 12, color: "#FF9800" }}>🎒 MY TEAMS ({team.length}/6)</span>
           <div style={{ width: 88 }} />
         </div>
         <div style={{ padding: "10px 12px 6px", display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
@@ -3549,11 +3549,11 @@ export default function App() {
                   border: `1.5px solid ${sel ? "#FF9800" : "#333"}`,
                   background: sel ? "#FF980022" : "transparent",
                   color: sel ? "#FF9800" : "#888",
-                  padding: "6px 10px", borderRadius: 999, fontSize: 9, fontWeight: 600,
+                  padding: "6px 10px", borderRadius: 999, fontSize: 12, fontWeight: 600,
                   display: "flex", alignItems: "center", gap: 6,
                 }}>
-                <i className="fa-solid fa-users" style={{ fontSize: 8 }} />
-                {t.name} <span style={{ fontSize: 7, color: sel ? "#FFB74D" : "#555" }}>{t.mons.length}/{TEAM_MAX}</span>
+                <i className="fa-solid fa-users" style={{ fontSize: 12 }} />
+                {t.name} <span style={{ fontSize: 11, color: sel ? "#FFB74D" : "#555" }}>{t.mons.length}/{TEAM_MAX}</span>
               </button>
             );
           })}
@@ -3572,10 +3572,10 @@ export default function App() {
             }}
             style={{
               border: "1.5px dashed #4ade80", background: "transparent", color: "#4ade80",
-              padding: "6px 10px", borderRadius: 999, fontSize: 9, fontWeight: 700,
+              padding: "6px 10px", borderRadius: 999, fontSize: 12, fontWeight: 700,
               display: "flex", alignItems: "center", gap: 6,
             }}>
-            <i className="fa-solid fa-plus" style={{ fontSize: 9 }} /> ADD TEAM
+            <i className="fa-solid fa-plus" style={{ fontSize: 12 }} /> ADD TEAM
           </button>
           {teams.length > 1 && (
             <button className="btn"
@@ -3605,7 +3605,7 @@ export default function App() {
               }}
               style={{
                 border: "1px solid #444", background: "transparent", color: "#777",
-                padding: "6px 8px", borderRadius: 999, fontSize: 8,
+                padding: "6px 8px", borderRadius: 999, fontSize: 12,
               }}>
               <i className="fa-solid fa-trash" />
             </button>
@@ -3629,21 +3629,21 @@ export default function App() {
               <MonSprite sprite={m.sprite} size={60} className="mon-float" />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                  <span style={{ fontSize: 9, color: "#fff" }}>{m.name}</span>
-                  <span style={{ fontSize: 7, color: i === 0 ? "#FFD700" : "#555" }}>{i === 0 ? "★ LEAD" : ""} Lv{m.level}</span>
+                  <span style={{ fontSize: 12, color: "#fff" }}>{m.name}</span>
+                  <span style={{ fontSize: 11, color: i === 0 ? "#FFD700" : "#555" }}>{i === 0 ? "★ LEAD" : ""} Lv{m.level}</span>
                 </div>
                 <div style={{ display: "flex", gap: 3, marginBottom: 5 }}>{typeTag(m.type1)}{typeTag(m.type2)}</div>
                 <HpBar cur={m.currentHp} max={m.maxHp} />
-                <div style={{ fontSize: 6, color: "#888", marginTop: 3 }}>
+                <div style={{ fontSize: 10, color: "#888", marginTop: 3 }}>
                   HP:{m.currentHp}/{m.maxHp} ATK:{m.atk} DEF:{m.def}
                 </div>
-                <div style={{ fontSize: 6, color: "#555", marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: "#555", marginTop: 2 }}>
                   {m.moves.join(" · ")}
                 </div>
               </div>
             </div>
           ))}
-          {team.length === 0 && <div style={{ textAlign: "center", color: "#333", fontSize: 8, marginTop: 40 }}>No Pokémon in team!</div>}
+          {team.length === 0 && <div style={{ textAlign: "center", color: "#333", fontSize: 12, marginTop: 40 }}>No Pokémon in team!</div>}
         </div>
 
         {showTeamTools && (() => {
@@ -3722,7 +3722,7 @@ export default function App() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ color: "#e9d5ff", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>CUSTOMIZE — {tName.toUpperCase()}</div>
                   <button className="btn"
-                    style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 9 }}
+                    style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 12 }}
                     onClick={() => setShowTeamTools(false)}>✕</button>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -3761,7 +3761,7 @@ export default function App() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ color: "#F44336", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>REMOVE POKÉMON</div>
                 <button className="btn"
-                  style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 9 }}
+                  style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 12 }}
                   onClick={() => setShowRemovePicker(false)}>✕</button>
               </div>
               <div style={{ fontSize: 10, color: "#6b7896" }}>Tap a Pokémon to send it back to your Mons collection.</div>
@@ -3788,7 +3788,7 @@ export default function App() {
                     <MonSprite sprite={m.sprite} size={36} className="" style={{ animation: "none" }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 11, fontWeight: 700 }}>{m.name}</div>
-                      <div style={{ fontSize: 8, color: "#888" }}>Lv{m.level} · HP {m.currentHp}/{m.maxHp}</div>
+                      <div style={{ fontSize: 12, color: "#888" }}>Lv{m.level} · HP {m.currentHp}/{m.maxHp}</div>
                     </div>
                     <i className="fa-solid fa-trash" style={{ color: "#F44336" }} />
                   </button>
@@ -3813,7 +3813,7 @@ export default function App() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ color: "#FFD700", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>CHANGE ORDER</div>
                 <button className="btn"
-                  style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 9 }}
+                  style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 12 }}
                   onClick={() => setShowOrderEditor(false)}>Done</button>
               </div>
               <div style={{ fontSize: 10, color: "#6b7896" }}>Lead Pokémon at top is your battle starter.</div>
@@ -3830,7 +3830,7 @@ export default function App() {
                     <MonSprite sprite={m.sprite} size={36} className="" style={{ animation: "none" }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 11, fontWeight: 700 }}>{m.name}</div>
-                      <div style={{ fontSize: 8, color: "#888" }}>Lv{m.level}{i === 0 ? " · ★ LEAD" : ""}</div>
+                      <div style={{ fontSize: 12, color: "#888" }}>Lv{m.level}{i === 0 ? " · ★ LEAD" : ""}</div>
                     </div>
                     <button className="btn"
                       disabled={i === 0}
@@ -3872,7 +3872,7 @@ export default function App() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ color: "#4ade80", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>ADD POKÉMON</div>
                 <button className="btn"
-                  style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 9 }}
+                  style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 12 }}
                   onClick={() => setShowAddMonPicker(false)}>✕</button>
               </div>
               <div style={{ fontSize: 10, color: "#6b7896" }}>
@@ -3880,7 +3880,7 @@ export default function App() {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, overflowY: "auto" }}>
                 {box.length === 0 && (
-                  <div style={{ gridColumn: "1 / -1", textAlign: "center", color: "#666", fontSize: 9, padding: 20 }}>
+                  <div style={{ gridColumn: "1 / -1", textAlign: "center", color: "#666", fontSize: 12, padding: 20 }}>
                     No Pokémon in your collection. Catch some in the wild!
                   </div>
                 )}
@@ -3903,7 +3903,7 @@ export default function App() {
                     }}>
                     <div style={{ fontSize: 5, color: "#888" }}>#{String(bm.id).padStart(3, "0")} · Lv{bm.level}</div>
                     <MonSprite sprite={bm.sprite} size={40} className="" />
-                    <div style={{ fontSize: 7, color: "#fff" }}>{bm.nickname ?? bm.name}</div>
+                    <div style={{ fontSize: 11, color: "#fff" }}>{bm.nickname ?? bm.name}</div>
                   </button>
                 ))}
               </div>
@@ -3947,7 +3947,7 @@ export default function App() {
       <div style={S.wrap}>
         <div style={S.header}>
           <BackBtn onClick={() => setScreen("world")} />
-          <span style={{ fontSize: 9, color: "#607D8B" }}>👜 BAG</span>
+          <span style={{ fontSize: 12, color: "#607D8B" }}>👜 BAG</span>
           <div style={{ width: 88 }} />
         </div>
         {(() => {
@@ -3983,16 +3983,16 @@ export default function App() {
                 })}
               </div>
               <div style={{ flex: 1, overflowY: "auto", padding: "4px 10px 10px", display: "flex", flexDirection: "column", gap: 6 }}>
-                <div style={{ fontSize: 7, color: active.color, marginBottom: 2 }}>{active.emoji} {active.label}</div>
+                <div style={{ fontSize: 11, color: active.color, marginBottom: 2 }}>{active.emoji} {active.label}</div>
                 {filtered.length === 0 && (
-                  <div style={{ textAlign: "center", color: "#333", fontSize: 8, marginTop: 30 }}>
+                  <div style={{ textAlign: "center", color: "#333", fontSize: 12, marginTop: 30 }}>
                     No {active.label.toLowerCase()} in your bag
                   </div>
                 )}
                 {filtered.map((it) => (
                   <div key={it.name} style={{ border: "2px solid #222", borderRadius: 8, padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 7, color: "#ddd" }}>{it.name}</span>
-                    <span style={{ fontSize: 7, color: "#FFC107" }}>×{it.qty}</span>
+                    <span style={{ fontSize: 11, color: "#ddd" }}>{it.name}</span>
+                    <span style={{ fontSize: 11, color: "#FFC107" }}>×{it.qty}</span>
                   </div>
                 ))}
               </div>
@@ -4162,7 +4162,7 @@ export default function App() {
                       }}
                       style={{ opacity: fainted ? 0.45 : 1 }}>
                       <MonSprite sprite={m.sprite} size={44} className="" style={{ animation: "none" }} />
-                      <span style={{ fontSize: 9, fontWeight: 600, color: "#f0f0f0", textAlign: "center", lineHeight: 1.2, maxWidth: 64, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "#f0f0f0", textAlign: "center", lineHeight: 1.2, maxWidth: 64, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
                       <span style={{ fontSize: lead ? 8 : 9, fontWeight: lead ? 700 : 400, color: lead ? "#fb923c" : "#888890", letterSpacing: lead ? 0.5 : 0 }}>
                         {lead ? "★ LEAD" : `Lv${m.level}`}
                       </span>
@@ -4281,15 +4281,15 @@ export default function App() {
 
           <div style={{ display: "flex", gap: 8, padding: "10px 16px", borderBottom: "1px solid var(--m-border)" }}>
             <div className="m-card" style={{ flex: 1, padding: 10, borderRadius: 12, textAlign: "center" }}>
-              <div style={{ fontSize: 9, color: "var(--m-muted)", letterSpacing: 1 }}>RANK</div>
+              <div style={{ fontSize: 12, color: "var(--m-muted)", letterSpacing: 1 }}>RANK</div>
               <div style={{ fontSize: 16, fontWeight: 800, color: "#FFD700" }}>{player.rank ?? 1000}</div>
             </div>
             <div className="m-card" style={{ flex: 1, padding: 10, borderRadius: 12, textAlign: "center" }}>
-              <div style={{ fontSize: 9, color: "var(--m-muted)", letterSpacing: 1 }}>WINS</div>
+              <div style={{ fontSize: 12, color: "var(--m-muted)", letterSpacing: 1 }}>WINS</div>
               <div style={{ fontSize: 16, fontWeight: 800, color: "#4ade80" }}>{player.wins}</div>
             </div>
             <div className="m-card" style={{ flex: 1, padding: 10, borderRadius: 12, textAlign: "center" }}>
-              <div style={{ fontSize: 9, color: "var(--m-muted)", letterSpacing: 1 }}>LOSSES</div>
+              <div style={{ fontSize: 12, color: "var(--m-muted)", letterSpacing: 1 }}>LOSSES</div>
               <div style={{ fontSize: 16, fontWeight: 800, color: "#f87171" }}>{player.losses}</div>
             </div>
           </div>
@@ -4326,7 +4326,7 @@ export default function App() {
                       <div key={i} className="m-card" style={{ padding: "10px 12px", borderRadius: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div>
                           <div style={{ fontSize: 12, color: "var(--m-text)", fontWeight: 600 }}>vs {h.opponent}</div>
-                          <div style={{ fontSize: 9, color: "var(--m-muted)", textTransform: "uppercase" }}>{h.mode}</div>
+                          <div style={{ fontSize: 12, color: "var(--m-muted)", textTransform: "uppercase" }}>{h.mode}</div>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           {h.delta !== 0 && (
@@ -4530,7 +4530,7 @@ export default function App() {
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
                         <span style={{ fontSize: 16 }}>{reg.emoji}</span>
                         <span style={{ fontSize: 13, fontWeight: 700, color: "var(--m-text)" }}>{reg.name}</span>
-                        <span style={{ marginLeft: "auto", fontSize: 9, color: "var(--m-muted)" }}>Gen {reg.gen}</span>
+                        <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--m-muted)" }}>Gen {reg.gen}</span>
                       </div>
                       <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
                         <span style={{ fontSize: 18, fontWeight: 800, color: got > 0 ? "var(--m-yellow)" : "var(--m-muted)" }}>{got}</span>
@@ -4569,7 +4569,7 @@ export default function App() {
                         {list.map((p) => (
                           <div key={p.id} className="m-card" style={{ padding: 8, borderRadius: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
                             <img src={SPRITE(p.sprite)} alt={p.name} style={{ width: 48, height: 48, imageRendering: "pixelated" }} />
-                            <div style={{ fontSize: 9, color: "var(--m-muted)" }}>#{String(p.id).padStart(3, "0")}</div>
+                            <div style={{ fontSize: 12, color: "var(--m-muted)" }}>#{String(p.id).padStart(3, "0")}</div>
                             <div style={{ fontSize: 10, fontWeight: 600, color: "var(--m-text)", textAlign: "center", lineHeight: 1.1 }}>{p.name}</div>
                           </div>
                         ))}
@@ -4663,13 +4663,13 @@ export default function App() {
         <div style={S.wrap}>
           <div style={S.header}>
             <BackBtn onClick={() => setScreen("world")} />
-            <span style={{ fontSize: 9, color: "#26A69A" }}><i className="fa-solid fa-paw" /> MY MONS</span>
+            <span style={{ fontSize: 12, color: "#26A69A" }}><i className="fa-solid fa-paw" /> MY MONS</span>
             <div style={{ width: 88 }} />
           </div>
 
           <div style={{ padding: "10px 12px 4px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 7, color: "#aaa" }}>{teamOwned.length} in teams · {boxOwned.length} in collection</span>
-            <span style={{ fontSize: 8, color: "#26A69A" }}>{allOwned.length} owned</span>
+            <span style={{ fontSize: 11, color: "#aaa" }}>{teamOwned.length} in teams · {boxOwned.length} in collection</span>
+            <span style={{ fontSize: 12, color: "#26A69A" }}>{allOwned.length} owned</span>
           </div>
 
           <div style={{ padding: "4px 12px", display: "flex", gap: 6, alignItems: "center" }}>
@@ -4698,27 +4698,27 @@ export default function App() {
           <div style={{ padding: "4px 12px 8px", display: "flex", gap: 6, alignItems: "center" }}>
             <button className="btn"
               onClick={() => setShowMonsSort(true)}
-              style={{ flex: 1, border: "1px solid #2a3148", background: "#0d1322", color: "#fff", padding: "6px 10px", borderRadius: 8, fontSize: 9, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}>
+              style={{ flex: 1, border: "1px solid #2a3148", background: "#0d1322", color: "#fff", padding: "6px 10px", borderRadius: 8, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}>
               <span><i className="fa-solid fa-arrow-down-wide-short" style={{ marginRight: 6, color: "#26A69A" }} /> Sort: {currentSortLabel}</span>
               <i className="fa-solid fa-caret-down" style={{ color: "#6b7896" }} />
             </button>
             <button className="btn"
               onClick={() => setMonsSortDir((d) => d === "max" ? "min" : "max")}
               title={`Direction: ${monsSortDir === "max" ? "Max First" : "Min First"}`}
-              style={{ border: "1px solid #2a3148", background: "#0d1322", color: monsSortDir === "max" ? "#FFD700" : "#26A69A", padding: "6px 10px", borderRadius: 8, fontSize: 9, cursor: "pointer", minWidth: 80 }}>
+              style={{ border: "1px solid #2a3148", background: "#0d1322", color: monsSortDir === "max" ? "#FFD700" : "#26A69A", padding: "6px 10px", borderRadius: 8, fontSize: 12, cursor: "pointer", minWidth: 80 }}>
               {monsSortDir === "max" ? "↓ Max" : "↑ Min"}
             </button>
           </div>
 
           <div style={{ flex: 1, overflowY: "auto", padding: "4px 10px 14px" }}>
             {allOwned.length === 0 && (
-              <div style={{ textAlign: "center", color: "#666", fontSize: 9, marginTop: 50, lineHeight: 2 }}>
+              <div style={{ textAlign: "center", color: "#666", fontSize: 12, marginTop: 50, lineHeight: 2 }}>
                 You don't own any Pokémon yet.<br />
-                <span style={{ fontSize: 7, color: "#444" }}>Hunt, buy, or redeem to start your collection!</span>
+                <span style={{ fontSize: 11, color: "#444" }}>Hunt, buy, or redeem to start your collection!</span>
               </div>
             )}
             {sorted.length === 0 && allOwned.length > 0 && (
-              <div style={{ textAlign: "center", color: "#666", fontSize: 9, marginTop: 30 }}>
+              <div style={{ textAlign: "center", color: "#666", fontSize: 12, marginTop: 30 }}>
                 No Pokémon match "{monsSearch}".
               </div>
             )}
@@ -4739,14 +4739,14 @@ export default function App() {
                         cursor: "pointer", position: "relative",
                       }}>
                       {o.teamIdx >= 0 && (
-                        <span style={{ position: "absolute", top: 2, right: 4, fontSize: 6, color: "#FFD700" }} title={o.teamName ?? ""}>
+                        <span style={{ position: "absolute", top: 2, right: 4, fontSize: 10, color: "#FFD700" }} title={o.teamName ?? ""}>
                           <i className="fa-solid fa-star" />
                         </span>
                       )}
                       <div style={{ fontSize: 5, color: "#888" }}>#{String(m.id).padStart(3, "0")}</div>
                       <MonSprite sprite={m.sprite} size={44} className="" />
-                      <div style={{ fontSize: 7, color: "#fff", fontWeight: 700, lineHeight: 1.2 }}>{m.nickname ?? m.name}</div>
-                      <div style={{ fontSize: 6, color: "#aaa" }}>Lv {m.level} · IV {iv}%</div>
+                      <div style={{ fontSize: 11, color: "#fff", fontWeight: 700, lineHeight: 1.2 }}>{m.nickname ?? m.name}</div>
+                      <div style={{ fontSize: 10, color: "#aaa" }}>Lv {m.level} · IV {iv}%</div>
                       <div style={{ display: "flex", gap: 2, justifyContent: "center" }}>{typeTag(m.type1)}{m.type2 && typeTag(m.type2)}</div>
                     </button>
                   );
@@ -4771,12 +4771,12 @@ export default function App() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }}>
                           <span style={{ fontSize: 10, color: "#fff", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {m.nickname ?? m.name} {o.teamIdx >= 0 && <i className="fa-solid fa-star" style={{ fontSize: 7, color: "#FFD700", marginLeft: 4 }} />}
+                            {m.nickname ?? m.name} {o.teamIdx >= 0 && <i className="fa-solid fa-star" style={{ fontSize: 11, color: "#FFD700", marginLeft: 4 }} />}
                           </span>
-                          <span style={{ fontSize: 8, color: "#FFD700" }}>CP {cp}</span>
+                          <span style={{ fontSize: 12, color: "#FFD700" }}>CP {cp}</span>
                         </div>
                         <div style={{ display: "flex", gap: 4, marginTop: 3 }}>{typeTag(m.type1)}{m.type2 && typeTag(m.type2)}</div>
-                        <div style={{ fontSize: 7, color: "#aaa", marginTop: 3 }}>
+                        <div style={{ fontSize: 11, color: "#aaa", marginTop: 3 }}>
                           #{String(m.id).padStart(3, "0")} · Lv {m.level} · IV {iv}% · HP {m.currentHp}/{m.maxHp}
                           {o.teamName && <span style={{ color: "#FFD700" }}> · {o.teamName}</span>}
                         </div>
@@ -4801,7 +4801,7 @@ export default function App() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                   <div style={{ color: "#26A69A", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>How should I sort your Pokémon?</div>
                   <button className="btn"
-                    style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 9 }}
+                    style={{ border: "1px solid #555", color: "#888", padding: "3px 8px", borderRadius: 6, fontSize: 12 }}
                     onClick={() => setShowMonsSort(false)}>✕</button>
                 </div>
                 <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: 4 }}>
@@ -4862,7 +4862,7 @@ export default function App() {
           <div style={S.wrap}>
             <div style={S.header}>
               <BackBtn onClick={() => setScreen("mons")} />
-              <span style={{ fontSize: 9, color: "#26A69A" }}>POKÉMON</span>
+              <span style={{ fontSize: 12, color: "#26A69A" }}>POKÉMON</span>
               <div style={{ width: 88 }} />
             </div>
             <div style={{ padding: 30, textAlign: "center", color: "#888", fontSize: 10 }}>This Pokémon is no longer in your collection.</div>
@@ -4967,7 +4967,7 @@ export default function App() {
       <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 10, color: "#fff", padding: "3px 0" }}>
         <span style={{ width: 70, color: "#aaa" }}>{label}</span>
         <span style={{ width: 40, textAlign: "right", fontWeight: 700 }}>{val}</span>
-        {bonus && <span style={{ fontSize: 9, color: bonus === "+" ? "#4ade80" : bonus === "-" ? "#F44336" : "#888" }}>({bonus})</span>}
+        {bonus && <span style={{ fontSize: 12, color: bonus === "+" ? "#4ade80" : bonus === "-" ? "#F44336" : "#888" }}>({bonus})</span>}
         <div style={{ flex: 1, height: 6, background: "#0d1322", border: "1px solid #2a3148", borderRadius: 4, overflow: "hidden" }}>
           <div style={{ width: `${Math.min(100, (val / max) * 100)}%`, height: "100%", background: "linear-gradient(90deg, #26A69A, #4ade80)" }} />
         </div>
@@ -5620,7 +5620,7 @@ export default function App() {
                         {mine && <span className="m-mine-tag">MINE</span>}
                         <img src={SPRITE(l.pokemonSprite)} alt={l.pokemonName} />
                         <div className="ovr">
-                          <span className="m-seller"><i className="fa-solid fa-user" style={{ marginRight: 4, fontSize: 8 }} />{l.sellerName}</span>
+                          <span className="m-seller"><i className="fa-solid fa-user" style={{ marginRight: 4, fontSize: 12 }} />{l.sellerName}</span>
                           <span className="m-pname">{l.pokemonName}</span>
                           <span className="m-nature">Lv {l.level} · {l.nature}</span>
                           <span className="m-price">
@@ -6059,9 +6059,9 @@ export default function App() {
                     }}>
                     <i className={`fa-solid ${meta.icon}`} style={{ fontSize: 22 }} />
                     <span style={{ fontSize: 12, marginTop: 2 }}>{r.name}</span>
-                    <span style={{ fontSize: 9, color: "var(--m-muted)", letterSpacing: 0.5, marginTop: 2 }}>Gen {r.gen}</span>
+                    <span style={{ fontSize: 12, color: "var(--m-muted)", letterSpacing: 0.5, marginTop: 2 }}>Gen {r.gen}</span>
                     {current && (
-                      <span style={{ position: "absolute", top: 6, right: 8, fontSize: 8, color: meta.color }}>★</span>
+                      <span style={{ position: "absolute", top: 6, right: 8, fontSize: 12, color: meta.color }}>★</span>
                     )}
                   </div>
                 );
@@ -6088,16 +6088,16 @@ export default function App() {
         <div style={S.wrap}>
           <div style={S.header}>
             <BackBtn onClick={() => setScreen("world")} />
-            <span style={{ fontSize: 9, color: "#9C27B0" }}>📖 POKÉDEX ({seen.size}/{TOTAL_POKEMON} seen • {caught.size} caught)</span>
+            <span style={{ fontSize: 12, color: "#9C27B0" }}>📖 POKÉDEX ({seen.size}/{TOTAL_POKEMON} seen • {caught.size} caught)</span>
             <div style={{ width: 88 }} />
           </div>
           <div style={{ padding: "8px 10px 4px", overflowX: "auto", display: "flex", gap: 4 }}>
             <button className="btn"
-              style={{ border: "1px solid #555", color: genFilter === 0 ? "#fff" : "#888", padding: "4px 8px", borderRadius: 4, background: genFilter === 0 ? "#fff2" : "transparent", flexShrink: 0, fontSize: 7 }}
+              style={{ border: "1px solid #555", color: genFilter === 0 ? "#fff" : "#888", padding: "4px 8px", borderRadius: 4, background: genFilter === 0 ? "#fff2" : "transparent", flexShrink: 0, fontSize: 11 }}
               onClick={() => setGenFilter(0)}>ALL GENS</button>
             {[1,2,3,4,5,6,7,8,9].map((g) => (
               <button key={g} className="btn"
-                style={{ border: "1px solid #5e2c73", color: genFilter === g ? "#FFD700" : "#aaa", padding: "4px 8px", borderRadius: 4, background: genFilter === g ? "#fff2" : "transparent", flexShrink: 0, fontSize: 7 }}
+                style={{ border: "1px solid #5e2c73", color: genFilter === g ? "#FFD700" : "#aaa", padding: "4px 8px", borderRadius: 4, background: genFilter === g ? "#fff2" : "transparent", flexShrink: 0, fontSize: 11 }}
                 onClick={() => setGenFilter(g)}>G{g} {GEN_NAMES[g]}</button>
             ))}
           </div>
@@ -6119,9 +6119,9 @@ export default function App() {
                       ? <div style={{ filter: isCaught ? "none" : "grayscale(1) brightness(0.6)" }}><MonSprite sprite={p.sprite} size={52} className="" /></div>
                       : <div style={{ width: 52, height: 52, margin: "0 auto", background: "#111", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>❓</div>
                     }
-                    {isCaught && <div style={{ position: "absolute", top: 4, right: 4, fontSize: 8, color: "#4ade80" }} title="Caught"><i className="fa-solid fa-circle-check" /></div>}
+                    {isCaught && <div style={{ position: "absolute", top: 4, right: 4, fontSize: 12, color: "#4ade80" }} title="Caught"><i className="fa-solid fa-circle-check" /></div>}
                     <div style={{ fontSize: 5, color: isSeen ? "#ddd" : "#333", marginTop: 3 }}>#{String(p.id).padStart(3, "0")}</div>
-                    <div style={{ fontSize: 6, color: isSeen ? "#fff" : "#333", marginTop: 1 }}>{isSeen ? p.name : "????"}</div>
+                    <div style={{ fontSize: 10, color: isSeen ? "#fff" : "#333", marginTop: 1 }}>{isSeen ? p.name : "????"}</div>
                     {isSeen && <div style={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 3 }}>{typeTag(p.type1)}</div>}
                   </div>
                 );

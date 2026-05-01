@@ -50,7 +50,7 @@ export function SplashLoader({ onDone }: { onDone: () => void }) {
         cursor: phase === "ready" ? "pointer" : "default",
         opacity: phase === "fading" ? 0 : 1,
         transition: "opacity 0.5s ease-out",
-        fontFamily: "'Press Start 2P', monospace",
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
       }}
     >
       <style>{CSS}</style>
