@@ -1,4 +1,6 @@
+import React from "react";
 import { GYM_LEADERS, ELITE_FOUR, type NpcTrainer } from "../lib/league-data";
+import { BackBtn } from "./BackBtn";
 
 type Props = {
   badges: string[];
@@ -14,10 +16,7 @@ export default function LeagueScreen({ badges, e4Cleared, e4Streak, onPickGym, o
   return (
     <div style={pageStyle}>
       <div style={{ position: "sticky", top: 0, zIndex: 1, padding: "12px 14px", background: "#0a0a0a", borderBottom: "1px solid #27272a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <button onClick={onBack} style={backBtn} aria-label="BACK">
-          <span style={{ fontSize: 10, lineHeight: 1 }}>◀</span>
-          BACK
-        </button>
+        <BackBtn onClick={onBack} />
         <div className="page-header-title">League</div>
         <div style={{ width: 60 }} />
       </div>
@@ -154,9 +153,3 @@ const card: React.CSSProperties = {
   borderRadius: 16, padding: 12,
 };
 const cardTitle: React.CSSProperties = { fontWeight: 800, fontSize: 14, marginBottom: 4 };
-const backBtn: React.CSSProperties = {
-  background: "#18181b", color: "#f4f4f5", border: "1px solid #27272a",
-  borderRadius: 8, padding: "6px 10px", cursor: "pointer",
-  display: "inline-flex", alignItems: "center", gap: 6,
-  fontSize: 12, fontWeight: 700, letterSpacing: 0.5,
-};

@@ -24,6 +24,7 @@ import safariForestBg from "@assets/6155a54f-3b2d-4298-911f-596582b8196c_1777290
 import huntForestBg from "@assets/0d36e278-0668-4064-8738-4427560706e9_1777293871555.jpeg";
 import battleArenaBg from "@assets/battle_arena_meadow.jpeg";
 import { GYM_LEADERS, ELITE_FOUR, npcMonToAppMon, type NpcTrainer } from "./lib/league-data";
+import { BackBtn, BACK_BTN_STYLE } from "./components/BackBtn";
 import {
   fromAppMon, makeBattleState, resolveTurn, forceSwitch, calcMaxHp,
   type Action as BAction, type BattleMon, type BattleState, type Team as BTeam,
@@ -36,37 +37,6 @@ const SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/ani/$
 const SPRITE_BACK = (name: string) => `https://play.pokemonshowdown.com/sprites/ani-back/${name.replace(/[^a-z0-9]/g, "")}.gif`;
 const TRAINER_SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/trainers/${name}.png`;
 
-// ----------------------------------------------------------------
-// Unified BACK button — every screen's back control should use this
-// so the look (dark pill with "◀ BACK") is identical everywhere and
-// the button always sits on the LEFT side of its header.
-// ----------------------------------------------------------------
-export const BACK_BTN_STYLE: React.CSSProperties = {
-  background: "#1c1c1e",
-  border: "1px solid #2a2a2d",
-  color: "#ffffff",
-  padding: "8px 14px",
-  borderRadius: 10,
-  fontSize: 12,
-  fontWeight: 700,
-  letterSpacing: 1,
-  cursor: "pointer",
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 6,
-  fontFamily:
-    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-  flexShrink: 0,
-};
-
-export function BackBtn({ onClick, label = "BACK" }: { onClick: () => void; label?: string }) {
-  return (
-    <button type="button" style={BACK_BTN_STYLE} onClick={onClick} aria-label={label}>
-      <span style={{ fontSize: 10, lineHeight: 1 }}>◀</span>
-      {label}
-    </button>
-  );
-}
 
 const CUSTOM_SPRITES: Record<string, string> = {
   irontreads: "sprites/custom/irontreads.gif",
@@ -3156,16 +3126,20 @@ export default function App() {
       <div style={{ ...S.root, background: "#0a0a0c" }}>
         <style>{css}{`
           .wb-close-btn {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.08);
-            color: #f0f0f0;
-            padding: 6px 12px;
-            border-radius: 6px;
+            background: #1c1c1e;
+            border: 1px solid #2a2a2d;
+            color: #ffffff;
+            padding: 8px 14px;
+            border-radius: 10px;
             font-size: 12px;
             font-weight: 700;
+            letter-spacing: 1px;
             cursor: pointer;
-            backdrop-filter: blur(4px);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            flex-shrink: 0;
           }
           .wb-info-card {
             background: rgba(10,10,14,0.82);
