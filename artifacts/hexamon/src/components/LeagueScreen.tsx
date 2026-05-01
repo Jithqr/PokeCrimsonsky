@@ -18,7 +18,7 @@ export default function LeagueScreen({ badges, e4Cleared, e4Streak, onPickGym, o
           <span style={{ fontSize: 10, lineHeight: 1 }}>◀</span>
           BACK
         </button>
-        <div style={{ fontWeight: 800, fontSize: 16 }}>🏆 League</div>
+        <div className="page-header-title">League</div>
         <div style={{ width: 60 }} />
       </div>
 

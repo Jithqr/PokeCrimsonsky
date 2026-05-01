@@ -2967,7 +2967,7 @@ export default function App() {
         <div style={S.wrap}>
           <div style={S.header}>
             <BackBtn onClick={() => { sfx.menuBack(); setScreen("world"); }} />
-            <span style={{ fontSize: 12, color: "#4ade80" }}>👥 FRIENDS</span>
+            <span className="page-header-title">Friends</span>
             <div style={{ width: 88 }} />
           </div>
 
@@ -3053,7 +3053,7 @@ export default function App() {
       <div style={S.wrap}>
         <div style={S.header}>
           <BackBtn onClick={() => setScreen("world")} />
-          <span style={{ fontSize: 12, color: "#E91E63", fontFamily: "'Press Start 2P', monospace" }}>🪪 EDIT CARD</span>
+          <span className="page-header-title">Edit Card</span>
           <div style={{ width: 88 }} />
         </div>
 
@@ -3223,7 +3223,7 @@ export default function App() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "2px solid #c0392b" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <button className="wb-close-btn" onClick={runAway}>◀ BACK</button>
-              <div style={{ fontSize: 14, letterSpacing: 3, fontWeight: 800, color: "#f87171" }}>WILD BATTLE</div>
+              <div className="page-header-title">Wild Battle</div>
             </div>
             <div style={{ fontSize: 12, color: "#888890", letterSpacing: 1 }}>Turn {battle.turnCount + 1}</div>
           </div>
@@ -3536,7 +3536,7 @@ export default function App() {
       <div style={S.wrap}>
         <div style={S.header}>
           <BackBtn onClick={() => setScreen("world")} />
-          <span style={{ fontSize: 12, color: "#FF9800" }}>🎒 MY TEAMS ({team.length}/6)</span>
+          <span className="page-header-title">My Teams</span>
           <div style={{ width: 88 }} />
         </div>
         <div style={{ padding: "10px 12px 6px", display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
@@ -3947,7 +3947,7 @@ export default function App() {
       <div style={S.wrap}>
         <div style={S.header}>
           <BackBtn onClick={() => setScreen("world")} />
-          <span style={{ fontSize: 12, color: "#607D8B" }}>👜 BAG</span>
+          <span className="page-header-title">Bag</span>
           <div style={{ width: 88 }} />
         </div>
         {(() => {
@@ -4068,7 +4068,7 @@ export default function App() {
           {/* Header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
             <BackBtn onClick={() => { setScoutedWild(null); setScreen("world"); }} />
-            <div style={{ fontSize: 14, letterSpacing: 2, fontWeight: 700, color: "#f0f0f0" }}>wild hunt</div>
+            <div className="page-header-title">Wild Hunt</div>
             <div style={{ width: 50 }} />
           </div>
 
@@ -4271,7 +4271,7 @@ export default function App() {
         <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid var(--m-border)" }}>
             <BackBtn onClick={() => { sfx.menuBack(); if (bbRoom) { setBbRoom(null); setBbMode(null); } else { setScreen("world"); } }} />
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--m-pink)", letterSpacing: 1.5 }}>BATTLE BOX</div>
+            <div className="page-header-title">Battle Box</div>
             <button className="btn"
               style={{ border: "1px solid var(--m-border)", color: "var(--m-muted)", padding: "6px 10px", borderRadius: 8, background: "transparent", fontSize: 11, fontWeight: 600 }}
               onClick={() => { sfx.click(); setBbShowSettings(true); }}>
@@ -4501,7 +4501,7 @@ export default function App() {
         <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid var(--m-border)" }}>
             <BackBtn onClick={() => { sfx.menuBack(); setScreen("profile"); }} />
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--m-pink)", letterSpacing: 1.5 }}>POKÉMON CAUGHT</div>
+            <div className="page-header-title">Pokémon Caught</div>
             <div style={{ width: 60 }} />
           </div>
 
@@ -4663,7 +4663,7 @@ export default function App() {
         <div style={S.wrap}>
           <div style={S.header}>
             <BackBtn onClick={() => setScreen("world")} />
-            <span style={{ fontSize: 12, color: "#26A69A" }}><i className="fa-solid fa-paw" /> MY MONS</span>
+            <span className="page-header-title">My Mons</span>
             <div style={{ width: 88 }} />
           </div>
 
@@ -4862,7 +4862,7 @@ export default function App() {
           <div style={S.wrap}>
             <div style={S.header}>
               <BackBtn onClick={() => setScreen("mons")} />
-              <span style={{ fontSize: 12, color: "#26A69A" }}>POKÉMON</span>
+              <span className="page-header-title">Pokémon</span>
               <div style={{ width: 88 }} />
             </div>
             <div style={{ padding: 30, textAlign: "center", color: "#888", fontSize: 10 }}>This Pokémon is no longer in your collection.</div>
@@ -5072,14 +5072,11 @@ export default function App() {
           {/* Header */}
           <header style={{ display: "flex", alignItems: "center", padding: 16, position: "relative" }}>
             <BackBtn onClick={() => { sfx.menuBack(); setScreen("mons"); }} />
-            <div style={{
+            <div className="page-header-title" style={{
               position: "absolute",
               left: "50%",
               transform: "translateX(-50%)",
-              fontFamily: FONT_MONO,
-              fontSize: 16,
-              letterSpacing: 1,
-              color: C.textMain,
+              flex: "unset",
             }}>{m.nickname ?? m.name}</div>
           </header>
 
@@ -5516,7 +5513,7 @@ export default function App() {
             <div style={{ position: "absolute", left: 12, top: 14 }}>
               <BackBtn onClick={() => { sfx.menuBack(); setScreen("world"); }} />
             </div>
-            <h1 className="m-mkt-title">Crimson Sky Marketplace</h1>
+            <h1 className="page-header-title" style={{ margin: 0 }}>Crimson Sky Marketplace</h1>
             <div style={{ marginTop: 6, display: "flex", justifyContent: "center", gap: 14, alignItems: "center" }}>
               <span style={{ fontSize: 12, color: "var(--m-yellow)", fontWeight: 600 }}>
                 <i className="fa-solid fa-coins" style={{ fontSize: 10, marginRight: 4 }} />₽{player.money.toLocaleString()}
@@ -5851,7 +5848,7 @@ export default function App() {
           {/* Header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
             <BackBtn onClick={() => { setScreen("world"); }} />
-            <div style={{ fontSize: 14, letterSpacing: 2, fontWeight: 700, color: "#f0f0f0" }}>safari zone</div>
+            <div className="page-header-title">Safari Zone</div>
             <div style={{ width: 50 }} />
           </div>
 
@@ -6028,7 +6025,7 @@ export default function App() {
         <div style={{ ...S.wrap, background: "var(--m-bg)", fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid var(--m-border)" }}>
             <BackBtn onClick={() => setScreen("world")} />
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--m-blue)", letterSpacing: 2 }}>SELECT REGION</div>
+            <div className="page-header-title">Select Region</div>
             <div style={{ width: 60 }} />
           </div>
 
@@ -6088,7 +6085,7 @@ export default function App() {
         <div style={S.wrap}>
           <div style={S.header}>
             <BackBtn onClick={() => setScreen("world")} />
-            <span style={{ fontSize: 12, color: "#9C27B0" }}>📖 POKÉDEX ({seen.size}/{TOTAL_POKEMON} seen • {caught.size} caught)</span>
+            <span className="page-header-title">Pokédex</span>
             <div style={{ width: 88 }} />
           </div>
           <div style={{ padding: "8px 10px 4px", overflowX: "auto", display: "flex", gap: 4 }}>

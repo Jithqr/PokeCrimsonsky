@@ -6,3 +6,14 @@ html, body, #root {
   color: #f4f4f5;
 }
 * { box-sizing: border-box; }
+
+.page-header-title {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 600;
+  color: #ffffff;
+  font-family: inherit;
+  text-align: center;
+  font-size: 14px;
+  flex: 1;
+}

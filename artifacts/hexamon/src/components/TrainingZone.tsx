@@ -715,7 +715,7 @@ function Header({ onBack, title }: { onBack: () => void; title: string }) {
         <span style={{ fontSize: 10, lineHeight: 1 }}>◀</span>
         BACK
       </button>
-      <div style={{ fontWeight: 800, fontSize: 14, textAlign: "center", flex: 1, padding: "0 8px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</div>
+      <div className="page-header-title" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</div>
       <div style={{ width: 60 }} />
     </div>
   );

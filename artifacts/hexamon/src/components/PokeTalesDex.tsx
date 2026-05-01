@@ -122,7 +122,7 @@ export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: (
         <button style={S.backBtn} onClick={onBack} aria-label="Back">
           <span style={{ fontSize: 10, lineHeight: 1, marginRight: 6 }}>◀</span>BACK
         </button>
-        <div style={S.topTitle}>Crimson Sky Dex</div>
+        <div className="page-header-title">Crimson Sky Dex</div>
         <div style={{ width: 80 }} />
       </div>
 
@@ -276,7 +276,7 @@ function DexDetail({
         <button style={S.backBtn} onClick={onBack} aria-label="Back">
           <span style={{ fontSize: 10, lineHeight: 1, marginRight: 6 }}>◀</span>BACK
         </button>
-        <div style={S.topTitle}>Crimson Sky Dex</div>
+        <div className="page-header-title">Crimson Sky Dex</div>
         <button style={S.iconBtn} onClick={onHome} aria-label="Home">
           <i className="fa-solid fa-house" />
         </button>
