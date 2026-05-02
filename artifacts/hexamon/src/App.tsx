@@ -555,11 +555,7 @@ export default function App() {
   // Notifications
   type GameNotification = { id: number; text: string; read: boolean; time: string };
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState<GameNotification[]>([
-    { id: 1, text: "Welcome to Crimson Sky! Catch your first Pokémon.", read: false, time: "Just now" },
-    { id: 2, text: "Daily rotation: 50 new market listings are available!", read: false, time: "1h ago" },
-    { id: 3, text: "Tip: Visit the Training Zone to boost your team's EVs.", read: true, time: "2h ago" },
-  ]);
+  const [notifications, setNotifications] = useState<GameNotification[]>([]);
   const unreadCount = notifications.filter((n) => !n.read).length;
   const markAllRead = () => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
 
