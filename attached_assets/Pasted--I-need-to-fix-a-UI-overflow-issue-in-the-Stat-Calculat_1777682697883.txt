@@ -1,0 +1,73 @@
+​"I need to fix a UI overflow issue in the Stat Calculator section of the Dex. Currently, the EV and IV sliders are rendering in a single, continuous horizontal row (EV [slider] [input] IV [slider] [input]), which is causing the IV section to get cut off the right side of mobile screens.
+​I want to restructure this to match a stacked 2-column layout.
+​Please update the HTML/JSX and CSS for the EV/IV rows under each stat (HP, Attack, etc.) using the following Flexbox structure:
+​1. Main Container (The Row):
+Wrap the EV and IV sections in a single flex container so they sit side-by-side.
+​display: flex;
+​justify-content: space-between;
+​gap: 15px; (to give breathing room between the EV and IV sides)
+​2. The EV / IV Blocks (The Columns):
+Make both the EV block and the IV block take up 50% of the space, and stack their contents vertically.
+​flex: 1;
+​display: flex;
+​flex-direction: column;
+​3. Inside Each Block (Label/Input on top, Slider on bottom):
+For both the EV and IV blocks, stack the elements so the text and number input are on top, and the range slider is directly underneath them.
+​Top Row (Text & Input): Create a div holding the 'EV' (or 'IV') span and the number input field. Apply display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; so the label sits on the left and the input box sits on the right.
+​Bottom Row (The Slider): Place the <input type="range"> below that top row and set it to width: 100%; so it spans the full width of its column."
+
+​"I have a batch of UI/UX improvements and feature additions to implement across the application. Please carefully apply the following 5 updates:
+​1. Marketplace Renaming:
+​Update the header text on the marketplace screen from 'CRIMSON SKY MARKETPLACE' to just 'MARKETPLACE'. Ensure it still uses the .page-header-title global class.
+​2. Trainer Card Font Fix:
+​Issue: The entire Trainer Card text has become pixelated.
+​Fix: Adjust the CSS scoping. Restrict the pixelated font-family (e.g., 'Press Start 2P' or similar) only to the specific element containing the 'TRAINER CARD' title. Reset the rest of the text inside the Trainer Card (Name, EXP, Wins/Losses, joined date) to inherit the standard, clean UI font used in the rest of the app.
+​3. Global Notifications System:
+​Add a 'Notifications' button (use a bell icon) to the main top navigation bar or the main home grid.
+​When clicked, this should open a glassmorphic modal or dropdown menu that displays a list of in-game alerts (e.g., 'Your Charizard sold for ₽30,000!', 'New Friend Request').
+​For now, create the UI shell and a dummy notification array; we will connect it to real backend triggers later.
+​4. User Listings Tools (Marketplace):
+​Copy the Search Bar, Sort Dropdown (Price, IV, Nature), and Grid/List View toggle components from the 'Global' tab and add them to the 'User' tab.
+​Hook up the frontend JavaScript so that these tools actively filter, sort, and change the layout of the userListings array exactly like they do for the Global market.
+​5. Bulk Item Purchasing (Quantity Selector):
+​Frontend: Modify the click event for all items in the 'Items', 'Stardust', and 'Passes' tabs (Exclude the 'Global' and 'User' tabs). When a player clicks to buy an item (like an Ultra Ball), open a small glassmorphic modal asking: 'How many [Item Name] would you like to buy?'.
+​Include a number input field (default 1, min 1) and display the dynamically updating total cost (quantity * item_price). Include 'Confirm' and 'Cancel' buttons.
+​Backend: Update the /buy_item API route to accept a new quantity parameter.
+​Security Check: Multiply the item's base price by the quantity to get the total_cost. Verify the user's balance against the total_cost (NOT the single item price) before deducting funds and adding the quantity of items to their inventory."
+​A Quick Security Note for Your Game:
+​In Step 5, I explicitly told Replit to calculate the total_cost on the backend. Never trust the total price sent from the frontend! A clever player could edit the frontend code in their browser to say quantity: 100 but total_cost: 1, allowing them to steal 100 Ultra Balls for 1 Pokédollar. Always have your Python backend multiply the database price by the requested quantity to keep the economy safe.
+
+​"I need to fix the UI interactions and sorting tools on the Global Marketplace page. Currently, clicking a Pokémon instantly attempts to buy it, and the sorting/view toggle buttons do not work.
+​Please implement the following changes in the frontend JavaScript and UI components:
+​Part 1: Market Details View & Purchase Confirmation
+​Change Click Behavior: Remove the instant purchase function from the Market Pokémon cards. When a card is clicked, it should open the exact same 'Pokémon Details' modal/screen used in the player's 'My Mons' inventory (showing the Info, Stats, IVs/EVs, and Moveset tabs).
+​Contextual Buttons (Market vs. Inventory): Pass a context='market' flag when opening this modal from the store. If the context is 'market', hide the 'Nickname', 'Evolve', and 'Release' buttons at the bottom.
+​The Buy Button & Confirmation: In place of those buttons (or in the top navigation bar), render a prominent 'BUY for ₽[Price]' button. When clicked, trigger a native browser confirm() or a custom glassmorphic modal asking: 'Would you like to buy this [Level] [Nature] [Pokémon] for ₽[Price]?' Only trigger the backend purchase route if the user confirms.
+​Part 2: Sorting and View Toggles
+​View Toggle (Grid vs. List): Activate the list/grid icon button next to the search bar. When clicked, toggle a CSS class on the marketplace container to switch between a CSS Grid layout (the current card view) and a horizontal Flexbox/List layout (smaller rows showing the sprite, name, price, and basic stats).
+​Sorting Logic: Activate the sort dropdown/button. Implement frontend JavaScript sorting for the array of 50 market Pokémon based on these options: 
+​Price (Low to High): marketArray.sort((a, b) => a.price - b.price)
+​IV (High to Low): Calculate the total IVs for each Pokémon (sum of HP, Atk, Def, SpA, SpD, Spe) and sort: marketArray.sort((a, b) => b.total_iv - a.total_iv)
+​Nature (A-Z): marketArray.sort((a, b) => a.nature.localeCompare(b.nature))
+​Re-render: Ensure the UI dynamically re-renders the list immediately when a new sort option is selected or the view layout is toggled."
+​A Quick Note on Movesets
+​​"To fix the potential missing moveset issue in the Marketplace details view, please reuse the auto-moveset generator function we use for wild Pokémon encounters.
+​Implement the following logic during the daily Marketplace generation:
+​Auto-Generate Moves: When the backend loop runs to generate the 50 daily GlobalMarketItem Pokémon, run each one through the existing moveset assignment function.
+​The Logic (Refresher): Check the generated Pokémon's level, pull its valid level-up learnset, and assign it the 4 best moves (prioritizing Power and Accuracy, while reserving 1 slot for the most recent Status move).
+​Save to Market DB: Store this generated array of 4 moves directly in the GlobalMarketItem database row (e.g., in a moves JSON column).
+​Pass to Frontend: Ensure that when the /get_market_pokemon route is called, these 4 moves are included in the JSON payload so the 'Moveset' tab populates correctly when a player clicks a Pokémon card in the store."
+
+​"I need to overhaul the 'Friends' system logic to use a proper request-and-accept flow, rather than instantly adding friends. Please implement the following changes across the frontend UI, backend routes, and database:
+​1. Search Bar UI Updates:
+​Change the + Add button next to the 'Paste friend code' input field to a Search icon (e.g., a magnifying glass).
+​When the user searches a code, it should NOT instantly add the friend. Instead, call a new /search_trainer backend route.
+​Search Result UI: If a match is found, display a small glassmorphic card directly below the search bar showing the target's Avatar, Username, and Rank. Next to their name, place a new + Add Friend button.
+​2. Friend Request Logic (Backend & Database):
+​Send Request: When the + Add Friend button is clicked on the search result, trigger a /send_friend_request route. This should create a 'pending' relationship in the database and push a notification to the target user's Mailbox/Notifications array. Update the UI button to say 'Request Sent' and disable it.
+​Notification System: In the target user's Notifications UI, display: 'User [Username] has sent you a friend request.' Include two buttons: [Accept] and [Reject].
+​Handle Response: * If [Accept] is clicked, trigger /accept_friend_request to change the database status to 'accepted' and add them to each other's friend lists. 
+​If [Reject] is clicked, trigger /reject_friend_request to delete the pending request.
+​3. Clickable Friend Profiles:
+​In the 'YOUR FRIENDS' list, make each friend's Avatar and Username clickable.
+​When clicked, trigger a route to fetch that user's public profile data and open a read-only version of their Trainer Card (showing their avatar, total EXP, rank, joined date, and current team) in a modal

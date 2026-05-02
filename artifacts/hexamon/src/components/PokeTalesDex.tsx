@@ -448,24 +448,28 @@ function DexDetail({
                   </span>
                   <span style={{ color: "#fff", fontSize: 18, fontWeight: 700 }}>{finalVal}</span>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ color: "#6b7280", fontSize: 11, fontWeight: 600, width: 16 }}>EV</span>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 15 }}>
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+                      <span style={{ color: "#6b7280", fontSize: 11, fontWeight: 600 }}>EV</span>
+                      <input type="number" min={0} max={252} value={evs[k]}
+                        onChange={(e) => evEv(k, Number(e.target.value) || 0)}
+                        style={S.numInput} />
+                    </div>
                     <input type="range" min={0} max={252} value={evs[k]}
                       onChange={(e) => evEv(k, Number(e.target.value))}
-                      className="range-red" style={{ flex: 1 }} />
-                    <input type="number" min={0} max={252} value={evs[k]}
-                      onChange={(e) => evEv(k, Number(e.target.value) || 0)}
-                      style={S.numInput} />
+                      className="range-red" style={{ width: "100%" }} />
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ color: "#6b7280", fontSize: 11, fontWeight: 600, width: 16 }}>IV</span>
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+                      <span style={{ color: "#6b7280", fontSize: 11, fontWeight: 600 }}>IV</span>
+                      <input type="number" min={0} max={31} value={ivs[k]}
+                        onChange={(e) => setIv(k, Number(e.target.value) || 0)}
+                        style={S.numInput} />
+                    </div>
                     <input type="range" min={0} max={31} value={ivs[k]}
                       onChange={(e) => setIv(k, Number(e.target.value))}
-                      className="range-blue" style={{ flex: 1 }} />
-                    <input type="number" min={0} max={31} value={ivs[k]}
-                      onChange={(e) => setIv(k, Number(e.target.value) || 0)}
-                      style={S.numInput} />
+                      className="range-blue" style={{ width: "100%" }} />
                   </div>
                 </div>
               </div>

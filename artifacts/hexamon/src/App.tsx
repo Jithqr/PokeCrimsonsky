@@ -518,6 +518,15 @@ export default function App() {
   const [marketError, setMarketError] = useState<string | null>(null);
   const [marketBusyId, setMarketBusyId] = useState<string | null>(null);
   const [sellModal, setSellModal] = useState<{ uid: string; price: string; submitting: boolean } | null>(null);
+  const [globalSearch, setGlobalSearch] = useState("");
+  const [globalSort, setGlobalSort] = useState<"price" | "iv" | "nature">("price");
+  const [globalView, setGlobalView] = useState<"grid" | "list">("grid");
+  const [userSearch, setUserSearch] = useState("");
+  const [userSort, setUserSort] = useState<"price" | "iv" | "nature">("price");
+  const [userView, setUserView] = useState<"grid" | "list">("grid");
+  const [buyQtyModal, setBuyQtyModal] = useState<{ name: string; price: number; isStardust: boolean; itemData: { name: string; price: number; info: string } } | null>(null);
+  const [buyQty, setBuyQty] = useState(1);
+  const [marketDetailMon, setMarketDetailMon] = useState<{ type: "global"; item: GlobalMarketItem } | { type: "user"; listing: UserListing } | null>(null);
   const [menuPage, setMenuPage] = useState(0);
   const [bagCat, setBagCat] = useState<string>("balls");
   const [scoutedWild, setScoutedWild] = useState<Mon | null>(null);
@@ -542,6 +551,17 @@ export default function App() {
   // across save slots if the player ever has multiple.
   const [friends, setFriends] = useState<Friend[]>(() => loadFriends());
   useEffect(() => { saveFriends(friends); }, [friends]);
+
+  // Notifications
+  type GameNotification = { id: number; text: string; read: boolean; time: string };
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<GameNotification[]>([
+    { id: 1, text: "Welcome to Crimson Sky! Catch your first Pokémon.", read: false, time: "Just now" },
+    { id: 2, text: "Daily rotation: 50 new market listings are available!", read: false, time: "1h ago" },
+    { id: 3, text: "Tip: Visit the Training Zone to boost your team's EVs.", read: true, time: "2h ago" },
+  ]);
+  const unreadCount = notifications.filter((n) => !n.read).length;
+  const markAllRead = () => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
 
   // Marketplace data loader — runs whenever the store screen opens. Also
   // auto-claims any pending earnings the player accrued while offline.
@@ -583,6 +603,8 @@ export default function App() {
   }, [screen]);
   const [friendInput, setFriendInput] = useState<string>("");
   const [friendMsg, setFriendMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [friendSearchResult, setFriendSearchResult] = useState<{ id: number; name: string; hometown: string; sprite: string; rank: number } | null>(null);
+  const [friendProfileModal, setFriendProfileModal] = useState<{ id: number; name: string; hometown: string; sprite: string; rank: number; addedAt: number } | null>(null);
 
   const [caught, setCaught] = useState<Set<number>>(new Set(initial?.caught ?? []));
   const [seen, setSeen] = useState<Set<number>>(new Set(initial?.seen ?? initial?.caught ?? []));
@@ -2440,6 +2462,15 @@ export default function App() {
                 <i className={`fa-solid ${muted ? "fa-volume-xmark" : "fa-volume-high"}`} style={{ color: muted ? "var(--m-muted)" : "var(--m-yellow)" }} />
               </span>
               <span className="m-pill"><i className="fa-solid fa-bullhorn" /> Caught: {caught.size}/{TOTAL_POKEMON}</span>
+              <span className="m-pill" style={{ cursor: "pointer", position: "relative" }}
+                onClick={() => { sfx.click(); setShowNotifications(true); }}>
+                <i className="fa-solid fa-bell" style={{ color: unreadCount > 0 ? "var(--m-yellow)" : "var(--m-muted)" }} />
+                {unreadCount > 0 && (
+                  <span style={{ position: "absolute", top: -4, right: -4, background: "#ef4444", color: "#fff", borderRadius: "50%", width: 14, height: 14, fontSize: 9, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>
+                    {unreadCount}
+                  </span>
+                )}
+              </span>
             </div>
           </div>
 
@@ -2716,6 +2747,42 @@ export default function App() {
               </div>
             );
           })()}
+        {/* Notifications modal */}
+        {showNotifications && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 200, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 60 }}
+            onClick={() => setShowNotifications(false)}>
+            <div style={{ background: "rgba(18,18,24,0.95)", backdropFilter: "blur(16px)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 16, width: "90%", maxWidth: 380, maxHeight: "70vh", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 8px 32px rgba(0,0,0,0.6)" }}
+              onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>
+                  <i className="fa-solid fa-bell" style={{ marginRight: 8, color: "var(--m-yellow)" }} />Notifications
+                </span>
+                <div style={{ display: "flex", gap: 10 }}>
+                  {unreadCount > 0 && (
+                    <button onClick={markAllRead} style={{ background: "none", border: "none", color: "#9ca3af", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>Mark all read</button>
+                  )}
+                  <button onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", color: "#9ca3af", fontSize: 18, cursor: "pointer", lineHeight: 1 }}>×</button>
+                </div>
+              </div>
+              <div style={{ overflowY: "auto", flex: 1 }}>
+                {notifications.length === 0 ? (
+                  <div style={{ padding: 24, textAlign: "center", color: "#6b7280", fontSize: 12 }}>No notifications yet.</div>
+                ) : (
+                  notifications.map((n) => (
+                    <div key={n.id} style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", gap: 12, alignItems: "flex-start", background: n.read ? "transparent" : "rgba(250,204,21,0.05)", cursor: "pointer" }}
+                      onClick={() => setNotifications((prev) => prev.map((x) => x.id === n.id ? { ...x, read: true } : x))}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: n.read ? "transparent" : "#facc15", marginTop: 4, flexShrink: 0 }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, color: n.read ? "#9ca3af" : "#f0f0f0", lineHeight: 1.4 }}>{n.text}</div>
+                        <div style={{ fontSize: 10, color: "#6b7280", marginTop: 4 }}>{n.time}</div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
         </div>
       </div>
     );
@@ -2903,14 +2970,23 @@ export default function App() {
       setFriendMsg({ text, ok });
       setTimeout(() => setFriendMsg(null), 4000);
     };
-    const handleAdd = () => {
+    const handleSearch = () => {
       sfx.click();
       const decoded = decodeFriendCode(friendInput);
-      if (!decoded) { showMsg("Invalid friend code or trainer ID.", false); return; }
+      if (!decoded) { showMsg("Invalid friend code or trainer ID.", false); setFriendSearchResult(null); return; }
+      setFriendSearchResult({ id: decoded.id, name: decoded.name, hometown: decoded.hometown ?? "Unknown", sprite: decoded.sprite ?? "hilbert", rank: decoded.rank ?? 1 });
+      setFriendMsg(null);
+    };
+    const handleAddFromResult = () => {
+      if (!friendSearchResult) return;
+      sfx.click();
+      const decoded = decodeFriendCode(friendInput);
+      if (!decoded) return;
       const result = addFriendOp(friends, decoded, player.id);
       if (!result.ok || !result.friend) { showMsg(result.reason ?? "Could not add friend.", false); return; }
       setFriends((prev) => [...prev, result.friend!]);
       setFriendInput("");
+      setFriendSearchResult(null);
       showMsg(`Added ${result.friend.name} to your friends!`, true);
       addLog(`👋 Added ${result.friend.name} (#${result.friend.id}) to friends.`, "#4ade80");
     };
@@ -2961,23 +3037,37 @@ export default function App() {
             <div style={{ fontSize: 11, color: "#777", marginTop: 6 }}>Share this code with another HexaMon trainer to add each other.</div>
           </div>
 
-          {/* Add a friend */}
+          {/* Search a trainer */}
           <div style={{ margin: "0 16px 16px", background: "#15151b", border: "1px solid #26262d", borderRadius: 12, padding: 12 }}>
-            <div style={{ fontSize: 12, color: "#bbb", marginBottom: 8 }}>ADD A FRIEND</div>
+            <div style={{ fontSize: 12, color: "#bbb", marginBottom: 8 }}>FIND A TRAINER</div>
             <div style={{ display: "flex", gap: 8 }}>
               <input
                 value={friendInput}
-                onChange={(e) => setFriendInput(e.target.value)}
+                onChange={(e) => { setFriendInput(e.target.value); setFriendSearchResult(null); }}
+                onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
                 placeholder="Paste friend code or Trainer ID"
                 style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #2a2a32", background: "#0d0d12", color: "#fff", fontSize: 12, outline: "none", borderRadius: 6 }}
               />
-              <button onClick={handleAdd} className="btn" style={{ padding: "10px 16px", borderRadius: 6, background: "#2f7bff", color: "#fff", fontWeight: 700, fontSize: 12, border: "none" }}>
-                <i className="fa-solid fa-plus" /> Add
+              <button onClick={handleSearch} className="btn" style={{ padding: "10px 16px", borderRadius: 6, background: "#2f7bff", color: "#fff", fontWeight: 700, fontSize: 12, border: "none" }}>
+                <i className="fa-solid fa-magnifying-glass" />
               </button>
             </div>
             {friendMsg && (
               <div style={{ marginTop: 8, fontSize: 10, color: friendMsg.ok ? "#4ade80" : "#f87171", fontWeight: 600 }}>
                 {friendMsg.text}
+              </div>
+            )}
+            {friendSearchResult && (
+              <div style={{ marginTop: 10, background: "rgba(255,255,255,0.04)", border: "1px solid #2a2a32", borderRadius: 10, padding: 10, display: "flex", alignItems: "center", gap: 12 }}>
+                <img src={TRAINER_SPRITE(friendSearchResult.sprite)} alt={friendSearchResult.name} style={{ width: 48, height: 48, imageRendering: "pixelated", flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, color: "#fff", fontWeight: 700 }}>{friendSearchResult.name}</div>
+                  <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>#{friendSearchResult.id} · Rank {friendSearchResult.rank}</div>
+                  <div style={{ fontSize: 11, color: "#6b7280" }}>{friendSearchResult.hometown}</div>
+                </div>
+                <button onClick={handleAddFromResult} className="btn" style={{ padding: "8px 12px", borderRadius: 6, background: "#4ade80", color: "#062b16", fontWeight: 700, fontSize: 11, border: "none", flexShrink: 0 }}>
+                  <i className="fa-solid fa-user-plus" /> Add
+                </button>
               </div>
             )}
           </div>
@@ -2995,11 +3085,13 @@ export default function App() {
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {friends.map((f) => (
                   <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "#15151b", border: "1px solid #26262d", borderRadius: 10, padding: 10 }}>
-                    <img src={TRAINER_SPRITE(f.sprite || "hilbert")} alt={f.name} style={{ width: 44, height: 44, imageRendering: "pixelated", opacity: f.sprite ? 1 : 0.6 }} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ cursor: "pointer" }} onClick={() => { sfx.click(); setFriendProfileModal({ id: f.id, name: f.name, hometown: f.hometown ?? "", sprite: f.sprite || "hilbert", rank: f.rank ?? 1, addedAt: f.addedAt }); }}>
+                      <img src={TRAINER_SPRITE(f.sprite || "hilbert")} alt={f.name} style={{ width: 44, height: 44, imageRendering: "pixelated", opacity: f.sprite ? 1 : 0.6 }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0, cursor: "pointer" }} onClick={() => { sfx.click(); setFriendProfileModal({ id: f.id, name: f.name, hometown: f.hometown ?? "", sprite: f.sprite || "hilbert", rank: f.rank ?? 1, addedAt: f.addedAt }); }}>
                       <div style={{ fontSize: 12, color: "#fff", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</div>
                       <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>
-                        #{f.id}{f.rank ? ` • Rank ${f.rank}` : ""}{f.hometown ? ` • ${f.hometown}` : ""}
+                        #{f.id}{f.rank ? ` · Rank ${f.rank}` : ""}{f.hometown ? ` · ${f.hometown}` : ""}
                       </div>
                       <div style={{ fontSize: 11, color: "#666", marginTop: 2 }}>
                         Added {new Date(f.addedAt).toLocaleDateString()}
@@ -3014,6 +3106,32 @@ export default function App() {
             )}
           </div>
         </div>
+        {/* Friend profile modal */}
+        {friendProfileModal && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" }}
+            onClick={() => setFriendProfileModal(null)}>
+            <div style={{ background: "#0d0d1a", border: "2px solid #4ade80", borderRadius: 14, padding: 20, width: "88%", maxWidth: 340, boxShadow: "0 8px 32px rgba(0,0,0,0.6)" }}
+              onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#4ade80", letterSpacing: 1 }}>TRAINER PROFILE</span>
+                <button onClick={() => setFriendProfileModal(null)} style={{ background: "none", border: "none", color: "#9ca3af", fontSize: 18, cursor: "pointer", lineHeight: 1 }}>×</button>
+              </div>
+              <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 16 }}>
+                <img src={TRAINER_SPRITE(friendProfileModal.sprite)} alt={friendProfileModal.name} style={{ width: 72, height: 72, imageRendering: "pixelated" }} />
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>{friendProfileModal.name}</div>
+                  <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>#{friendProfileModal.id} · Rank {friendProfileModal.rank}</div>
+                  <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>{friendProfileModal.hometown || "Unknown Town"}</div>
+                </div>
+              </div>
+              <div style={{ background: "#171022", border: "1px solid #312440", borderRadius: 8, padding: 10, display: "flex", justifyContent: "space-between" }}>
+                <div style={{ fontSize: 11, color: "#aaa" }}>Friends since</div>
+                <div style={{ fontSize: 11, color: "#fff" }}>{new Date(friendProfileModal.addedAt).toLocaleDateString()}</div>
+              </div>
+              <button onClick={() => setFriendProfileModal(null)} style={{ marginTop: 14, width: "100%", background: "transparent", border: "1px solid #26262d", color: "#9ca3af", padding: "10px", borderRadius: 8, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>Close</button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -3028,7 +3146,7 @@ export default function App() {
         </div>
 
         {/* Full-size preview */}
-        <div style={{ margin: 16, background: "#0d0d1a", border: "3px solid #5e2c73", borderRadius: 12, padding: 18, boxShadow: "0 4px 15px rgba(0,0,0,0.5)", fontFamily: "'Press Start 2P', monospace" }}>
+        <div style={{ margin: 16, background: "#0d0d1a", border: "3px solid #5e2c73", borderRadius: 12, padding: 18, boxShadow: "0 4px 15px rgba(0,0,0,0.5)" }}>
           <div style={{ textAlign: "right", fontSize: 12, color: "#888", marginBottom: 6, letterSpacing: 1 }}>
             IDNo. {player.id}
           </div>
@@ -3037,7 +3155,7 @@ export default function App() {
             return (
               <>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "2px solid #5e2c73", paddingBottom: 10, marginBottom: 14 }}>
-                  <div style={{ fontSize: 16, color: "#fff", textShadow: "1px 1px #000" }}>TRAINER CARD</div>
+                  <div style={{ fontSize: 14, color: "#fff", textShadow: "1px 1px #000", fontFamily: "'Press Start 2P', monospace" }}>TRAINER CARD</div>
                   <div style={{ fontSize: 12, color: "#ddd" }}>Rank {cardProg.rank} / {MAX_RANK}{cardProg.isMax ? " ★" : ""}</div>
                 </div>
                 <div style={{ fontSize: 12, color: "#aaa", marginBottom: 16, letterSpacing: 0.5 }}>
@@ -3079,16 +3197,16 @@ export default function App() {
           </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 16, fontFamily: "'Press Start 2P', monospace" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
             <div style={{ fontSize: 11, color: "#E91E63", marginBottom: 8 }}>TRAINER NAME</div>
             <input value={player.name} onChange={(e) => setPlayer({ ...player, name: e.target.value })} maxLength={12}
-              style={{ background: "#111", border: "1px solid #333", color: "#fff", fontFamily: "'Press Start 2P',monospace", fontSize: 12, padding: "8px", borderRadius: 4, width: "100%" }} />
+              style={{ background: "#111", border: "1px solid #333", color: "#fff", fontSize: 14, padding: "8px", borderRadius: 4, width: "100%" }} />
           </div>
           <div>
             <div style={{ fontSize: 11, color: "#E91E63", marginBottom: 8 }}>HOMETOWN</div>
             <input value={player.hometown} onChange={(e) => setPlayer({ ...player, hometown: e.target.value })} maxLength={20}
-              style={{ background: "#111", border: "1px solid #333", color: "#fff", fontFamily: "'Press Start 2P',monospace", fontSize: 12, padding: "8px", borderRadius: 4, width: "100%" }} />
+              style={{ background: "#111", border: "1px solid #333", color: "#fff", fontSize: 14, padding: "8px", borderRadius: 4, width: "100%" }} />
           </div>
           <div>
             <div style={{ fontSize: 11, color: "#E91E63", marginBottom: 8 }}>CHOOSE AVATAR (GEN V)</div>
@@ -5487,7 +5605,7 @@ export default function App() {
             <div style={{ position: "absolute", left: 12, top: 14 }}>
               <BackBtn onClick={() => { sfx.menuBack(); setScreen("world"); }} />
             </div>
-            <h1 className="page-header-title" style={{ margin: 0 }}>Crimson Sky Marketplace</h1>
+            <h1 className="page-header-title" style={{ margin: 0 }}>Marketplace</h1>
             <div style={{ marginTop: 6, display: "flex", justifyContent: "center", gap: 14, alignItems: "center" }}>
               <span style={{ fontSize: 12, color: "var(--m-yellow)", fontWeight: 600 }}>
                 <i className="fa-solid fa-coins" style={{ fontSize: 10, marginRight: 4 }} />₽{player.money.toLocaleString()}
@@ -5522,55 +5640,93 @@ export default function App() {
 
           {marketTab === "global" && (
             <>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 16px 10px" }}>
-                <span style={{ fontSize: 11, color: "var(--m-muted)" }}>
-                  <i className="fa-solid fa-clock-rotate-left" style={{ marginRight: 6 }} />
-                  Daily rotation — 50 wild trades, refreshes every 24h
-                </span>
+              <div className="m-search-row" style={{ paddingBottom: 8 }}>
+                <div className="m-search">
+                  <i className="fa-solid fa-magnifying-glass" />
+                  <input type="text" placeholder="Search Pokémon…" value={globalSearch} onChange={(e) => setGlobalSearch(e.target.value)} />
+                  {globalSearch && <i className="fa-solid fa-xmark" style={{ cursor: "pointer" }} onClick={() => setGlobalSearch("")} />}
+                </div>
+                <select value={globalSort} onChange={(e) => setGlobalSort(e.target.value as "price"|"iv"|"nature")}
+                  style={{ background: "var(--m-card)", border: "1px solid var(--m-border)", color: "var(--m-text)", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontFamily: "inherit", cursor: "pointer" }}>
+                  <option value="price">Price ↑</option>
+                  <option value="iv">IV ↓</option>
+                  <option value="nature">Nature A-Z</option>
+                </select>
+                <button className="m-icon-btn" onClick={() => setGlobalView((v) => v === "grid" ? "list" : "grid")} style={{ flexShrink: 0 }}>
+                  <i className={`fa-solid ${globalView === "grid" ? "fa-list" : "fa-grip"}`} />
+                </button>
                 <button className="m-mkt-refresh" onClick={() => { sfx.click(); refreshMarket(); }} disabled={marketLoading}>
-                  <i className={`fa-solid fa-rotate ${marketLoading ? "fa-spin" : ""}`} /> Refresh
+                  <i className={`fa-solid fa-rotate ${marketLoading ? "fa-spin" : ""}`} />
                 </button>
               </div>
               {marketLoading && globalMarket.length === 0 ? (
                 <div className="m-mkt-status"><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: 8 }} />Loading marketplace…</div>
               ) : globalMarket.length === 0 ? (
                 <div className="m-mkt-empty">No items in the global market right now.</div>
-              ) : (
-                <div className="m-grid">
-                  {globalMarket.map((it) => {
-                    const busy = marketBusyId === `g-${it.id}`;
-                    const sold = it.isSold;
-                    return (
-                      <div key={it.id} className={`m-pcard ${sold ? "sold" : ""}`}
-                        onClick={() => { if (!sold && !busy) handleBuyGlobal(it); }}>
-                        {sold && <span className="m-soldout">SOLD OUT</span>}
-                        <img src={SPRITE(it.pokemonSprite)} alt={it.pokemonName} />
-                        <div className="ovr">
-                          <span className="m-nature">Lv {it.level} · {it.nature}</span>
-                          <span className="m-pname">{it.pokemonName}</span>
-                          <span className="m-price">
-                            <i className="fa-solid fa-coins" style={{ marginRight: 4, fontSize: 10 }} />
-                            ₽{it.price.toLocaleString()}
-                            {busy && <i className="fa-solid fa-spinner fa-spin" style={{ marginLeft: 6 }} />}
-                          </span>
+              ) : (() => {
+                const totalIv = (it: GlobalMarketItem) => (it.ivHp ?? 0) + (it.ivAtk ?? 0) + (it.ivDef ?? 0) + (it.ivSpa ?? 0) + (it.ivSpd ?? 0) + (it.ivSpe ?? 0);
+                const filtered = globalMarket
+                  .filter((it) => !globalSearch || it.pokemonName.toLowerCase().includes(globalSearch.toLowerCase()))
+                  .sort((a, b) => globalSort === "price" ? a.price - b.price : globalSort === "iv" ? totalIv(b) - totalIv(a) : (a.nature ?? "").localeCompare(b.nature ?? ""));
+                return globalView === "grid" ? (
+                  <div className="m-grid">
+                    {filtered.map((it) => {
+                      const sold = it.isSold;
+                      return (
+                        <div key={it.id} className={`m-pcard ${sold ? "sold" : ""}`}
+                          onClick={() => { if (!sold) { sfx.click(); setMarketDetailMon({ type: "global", item: it }); } }}>
+                          {sold && <span className="m-soldout">SOLD OUT</span>}
+                          <img src={SPRITE(it.pokemonSprite)} alt={it.pokemonName} />
+                          <div className="ovr">
+                            <span className="m-nature">Lv {it.level} · {it.nature}</span>
+                            <span className="m-pname">{it.pokemonName}</span>
+                            <span className="m-price"><i className="fa-solid fa-coins" style={{ marginRight: 4, fontSize: 10 }} />₽{it.price.toLocaleString()}</span>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="m-list">
+                    {filtered.map((it) => {
+                      const sold = it.isSold;
+                      return (
+                        <div key={it.id} className="m-card" style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: 12, opacity: sold ? 0.5 : 1, cursor: sold ? "default" : "pointer" }}
+                          onClick={() => { if (!sold) { sfx.click(); setMarketDetailMon({ type: "global", item: it }); } }}>
+                          <img src={SPRITE(it.pokemonSprite)} alt={it.pokemonName} style={{ width: 44, height: 44, imageRendering: "pixelated" }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--m-text)" }}>{it.pokemonName}</div>
+                            <div style={{ fontSize: 11, color: "var(--m-muted)" }}>Lv {it.level} · {it.nature}{sold ? " · SOLD OUT" : ""}</div>
+                          </div>
+                          <div style={{ fontSize: 13, color: "var(--m-yellow)", fontWeight: 600 }}>₽{it.price.toLocaleString()}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </>
           )}
 
           {marketTab === "user" && (
             <>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 16px 10px" }}>
-                <span style={{ fontSize: 11, color: "var(--m-muted)" }}>
-                  <i className="fa-solid fa-handshake" style={{ marginRight: 6 }} />
-                  Player listings — sellers receive 95% (5% market tax)
-                </span>
+              <div className="m-search-row" style={{ paddingBottom: 8 }}>
+                <div className="m-search">
+                  <i className="fa-solid fa-magnifying-glass" />
+                  <input type="text" placeholder="Search Pokémon…" value={userSearch} onChange={(e) => setUserSearch(e.target.value)} />
+                  {userSearch && <i className="fa-solid fa-xmark" style={{ cursor: "pointer" }} onClick={() => setUserSearch("")} />}
+                </div>
+                <select value={userSort} onChange={(e) => setUserSort(e.target.value as "price"|"iv"|"nature")}
+                  style={{ background: "var(--m-card)", border: "1px solid var(--m-border)", color: "var(--m-text)", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontFamily: "inherit", cursor: "pointer" }}>
+                  <option value="price">Price ↑</option>
+                  <option value="iv">IV ↓</option>
+                  <option value="nature">Nature A-Z</option>
+                </select>
+                <button className="m-icon-btn" onClick={() => setUserView((v) => v === "grid" ? "list" : "grid")} style={{ flexShrink: 0 }}>
+                  <i className={`fa-solid ${userView === "grid" ? "fa-list" : "fa-grip"}`} />
+                </button>
                 <button className="m-mkt-refresh" onClick={() => { sfx.click(); refreshMarket(); }} disabled={marketLoading}>
-                  <i className={`fa-solid fa-rotate ${marketLoading ? "fa-spin" : ""}`} /> Refresh
+                  <i className={`fa-solid fa-rotate ${marketLoading ? "fa-spin" : ""}`} />
                 </button>
               </div>
               {marketLoading && userListings.length === 0 ? (
@@ -5579,43 +5735,65 @@ export default function App() {
                 <div className="m-mkt-empty">
                   No active listings. Visit a Pokémon's detail screen and tap <strong>Sell on Market</strong> to list one.
                 </div>
-              ) : (
-                <div className="m-grid">
-                  {userListings.map((l) => {
-                    const mine = myListingIds.includes(l.id) || l.sellerId === String(player.id);
-                    const busy = marketBusyId === `u-${l.id}`;
-                    return (
-                      <div key={l.id} className="m-pcard"
-                        style={{ cursor: mine ? "default" : "pointer" }}
-                        onClick={() => { if (!mine && !busy) handleBuyListing(l); }}>
-                        {mine && <span className="m-mine-tag">MINE</span>}
-                        <img src={SPRITE(l.pokemonSprite)} alt={l.pokemonName} />
-                        <div className="ovr">
-                          <span className="m-seller"><i className="fa-solid fa-user" style={{ marginRight: 4, fontSize: 12 }} />{l.sellerName}</span>
-                          <span className="m-pname">{l.pokemonName}</span>
-                          <span className="m-nature">Lv {l.level} · {l.nature}</span>
-                          <span className="m-price">
-                            <i className="fa-solid fa-coins" style={{ marginRight: 4, fontSize: 10 }} />
-                            ₽{l.price.toLocaleString()}
-                          </span>
-                          {mine ? (
-                            <button
-                              className="m-cancel-btn"
-                              disabled={busy}
-                              onClick={(e) => { e.stopPropagation(); sfx.click(); handleCancelListing(l); }}
-                              style={{ marginTop: 4 }}
-                            >
-                              {busy ? <><i className="fa-solid fa-spinner fa-spin" /> Cancelling…</> : <><i className="fa-solid fa-xmark" /> Cancel</>}
-                            </button>
-                          ) : (
-                            busy && <span style={{ fontSize: 10, color: "#fff" }}><i className="fa-solid fa-spinner fa-spin" /> Buying…</span>
-                          )}
+              ) : (() => {
+                const totalIvU = (l: UserListing) => { const mj = l.monJson ?? {}; return (mj.ivHp ?? 0) + (mj.ivAtk ?? 0) + (mj.ivDef ?? 0) + (mj.ivSpa ?? 0) + (mj.ivSpd ?? 0) + (mj.ivSpe ?? 0); };
+                const filteredUser = userListings
+                  .filter((l) => !userSearch || l.pokemonName.toLowerCase().includes(userSearch.toLowerCase()))
+                  .sort((a, b) => userSort === "price" ? a.price - b.price : userSort === "iv" ? totalIvU(b) - totalIvU(a) : (a.nature ?? "").localeCompare(b.nature ?? ""));
+                return userView === "grid" ? (
+                  <div className="m-grid">
+                    {filteredUser.map((l) => {
+                      const mine = myListingIds.includes(l.id) || l.sellerId === String(player.id);
+                      const busy = marketBusyId === `u-${l.id}`;
+                      return (
+                        <div key={l.id} className="m-pcard" style={{ cursor: mine ? "default" : "pointer" }}
+                          onClick={() => { if (!mine && !busy) { sfx.click(); setMarketDetailMon({ type: "user", listing: l }); } }}>
+                          {mine && <span className="m-mine-tag">MINE</span>}
+                          <img src={SPRITE(l.pokemonSprite)} alt={l.pokemonName} />
+                          <div className="ovr">
+                            <span className="m-seller"><i className="fa-solid fa-user" style={{ marginRight: 4, fontSize: 12 }} />{l.sellerName}</span>
+                            <span className="m-pname">{l.pokemonName}</span>
+                            <span className="m-nature">Lv {l.level} · {l.nature}</span>
+                            <span className="m-price"><i className="fa-solid fa-coins" style={{ marginRight: 4, fontSize: 10 }} />₽{l.price.toLocaleString()}</span>
+                            {mine && (
+                              <button className="m-cancel-btn" disabled={busy}
+                                onClick={(e) => { e.stopPropagation(); sfx.click(); handleCancelListing(l); }} style={{ marginTop: 4 }}>
+                                {busy ? <><i className="fa-solid fa-spinner fa-spin" /> Cancelling…</> : <><i className="fa-solid fa-xmark" /> Cancel</>}
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="m-list">
+                    {filteredUser.map((l) => {
+                      const mine = myListingIds.includes(l.id) || l.sellerId === String(player.id);
+                      const busy = marketBusyId === `u-${l.id}`;
+                      return (
+                        <div key={l.id} className="m-card" style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: 12, cursor: mine ? "default" : "pointer" }}
+                          onClick={() => { if (!mine && !busy) { sfx.click(); setMarketDetailMon({ type: "user", listing: l }); } }}>
+                          <img src={SPRITE(l.pokemonSprite)} alt={l.pokemonName} style={{ width: 44, height: 44, imageRendering: "pixelated" }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--m-text)" }}>{l.pokemonName}</div>
+                            <div style={{ fontSize: 11, color: "var(--m-muted)" }}>Lv {l.level} · {l.nature} · {l.sellerName}{mine ? " (Mine)" : ""}</div>
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                            <div style={{ fontSize: 13, color: "var(--m-yellow)", fontWeight: 600 }}>₽{l.price.toLocaleString()}</div>
+                            {mine && (
+                              <button className="m-cancel-btn" disabled={busy}
+                                onClick={(e) => { e.stopPropagation(); sfx.click(); handleCancelListing(l); }} style={{ fontSize: 9, padding: "3px 8px" }}>
+                                {busy ? <i className="fa-solid fa-spinner fa-spin" /> : "Cancel"}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </>
           )}
 
@@ -5687,19 +5865,9 @@ export default function App() {
                         }}
                         onClick={() => {
                           if (!canAfford) return;
-                          sfx.itemPickup();
-                          if (isStardustCat) {
-                            setPlayer((p) => ({ ...p, stardust: (p.stardust ?? 0) - it.price }));
-                          } else {
-                            setPlayer((p) => ({ ...p, money: p.money - it.price }));
-                          }
-                          setInventory((inv) => {
-                            const found = inv.find((x) => x.name === it.name);
-                            return found
-                              ? inv.map((x) => x.name === it.name ? { ...x, qty: x.qty + 1 } : x)
-                              : [...inv, { name: it.name, qty: 1 }];
-                          });
-                          addLog(`Bought ${it.name}!`, "#FFD700");
+                          sfx.click();
+                          setBuyQty(1);
+                          setBuyQtyModal({ name: it.name, price: it.price, isStardust: isStardustCat, itemData: it });
                         }}>BUY</button>
                     </div>
                   );
@@ -5781,6 +5949,115 @@ export default function App() {
                   <button className="m-btn-primary" onClick={submitSale} disabled={!valid || sellModal.submitting}>
                     {sellModal.submitting ? <><i className="fa-solid fa-spinner fa-spin" /> Listing…</> : "List for sale"}
                   </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Market detail modal */}
+        {marketDetailMon && (() => {
+          const isGlobal = marketDetailMon.type === "global";
+          const name = isGlobal ? marketDetailMon.item.pokemonName : marketDetailMon.listing.pokemonName;
+          const sprite = isGlobal ? marketDetailMon.item.pokemonSprite : marketDetailMon.listing.pokemonSprite;
+          const level = isGlobal ? marketDetailMon.item.level : marketDetailMon.listing.level;
+          const nature = isGlobal ? marketDetailMon.item.nature : marketDetailMon.listing.nature;
+          const price = isGlobal ? marketDetailMon.item.price : marketDetailMon.listing.price;
+          const mj = !isGlobal ? (marketDetailMon.listing.monJson ?? {}) : {};
+          const ivHp = isGlobal ? marketDetailMon.item.ivHp : (mj.ivHp ?? 0);
+          const ivAtk = isGlobal ? marketDetailMon.item.ivAtk : (mj.ivAtk ?? 0);
+          const ivDef = isGlobal ? marketDetailMon.item.ivDef : (mj.ivDef ?? 0);
+          const ivSpa = isGlobal ? marketDetailMon.item.ivSpa : (mj.ivSpa ?? 0);
+          const ivSpd = isGlobal ? marketDetailMon.item.ivSpd : (mj.ivSpd ?? 0);
+          const ivSpe = isGlobal ? marketDetailMon.item.ivSpe : (mj.ivSpe ?? 0);
+          const totalIv = ivHp + ivAtk + ivDef + ivSpa + ivSpd + ivSpe;
+          const ivPct = Math.round((totalIv / 186) * 100);
+          const canAfford = player.money >= price;
+          const isBusy = isGlobal ? marketBusyId === `g-${marketDetailMon.item.id}` : marketBusyId === `u-${marketDetailMon.listing.id}`;
+          return (
+            <div className="m-modal-back" onClick={() => setMarketDetailMon(null)}>
+              <div className="m-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 340 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+                  <img src={SPRITE(sprite)} alt={name} style={{ width: 72, height: 72, imageRendering: "pixelated", flexShrink: 0 }} />
+                  <div>
+                    <h3 style={{ margin: "0 0 4px" }}>{name}</h3>
+                    <div style={{ fontSize: 12, color: "var(--m-muted)" }}>Lv {level} · {nature}</div>
+                    {!isGlobal && <div style={{ fontSize: 11, color: "var(--m-muted)", marginTop: 2 }}>Seller: {(marketDetailMon as { type: "user"; listing: UserListing }).listing.sellerName}</div>}
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6, marginBottom: 14 }}>
+                  {[["HP", ivHp], ["Atk", ivAtk], ["Def", ivDef], ["SpA", ivSpa], ["SpD", ivSpd], ["Spe", ivSpe]].map(([lbl, val]) => (
+                    <div key={lbl as string} style={{ background: "var(--m-input)", borderRadius: 8, padding: "6px 8px", textAlign: "center" }}>
+                      <div style={{ fontSize: 10, color: "var(--m-muted)" }}>{lbl}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: Number(val) === 31 ? "#4ade80" : "var(--m-text)" }}>{val}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--m-muted)", marginBottom: 14 }}>Total IV: {totalIv}/186 ({ivPct}%)</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: "var(--m-yellow)" }}>₽{price.toLocaleString()}</span>
+                  {!canAfford && <span style={{ fontSize: 11, color: "#f87171" }}>Insufficient funds</span>}
+                </div>
+                <div className="m-modal-row">
+                  <button className="m-btn-ghost" onClick={() => setMarketDetailMon(null)}>Cancel</button>
+                  <button className="m-btn-primary" disabled={!canAfford || isBusy}
+                    onClick={async () => {
+                      setMarketDetailMon(null);
+                      if (isGlobal) await handleBuyGlobal(marketDetailMon.item);
+                      else await handleBuyListing((marketDetailMon as { type: "user"; listing: UserListing }).listing);
+                    }}>
+                    {isBusy ? <><i className="fa-solid fa-spinner fa-spin" /> Buying…</> : `BUY for ₽${price.toLocaleString()}`}
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Bulk item buy modal */}
+        {buyQtyModal && (() => {
+          const qty = Math.max(1, buyQty);
+          const totalCost = qty * buyQtyModal.price;
+          const balance = buyQtyModal.isStardust ? (player.stardust ?? 0) : player.money;
+          const canAfford = balance >= totalCost;
+          const confirmBuy = () => {
+            if (!canAfford) return;
+            sfx.itemPickup();
+            if (buyQtyModal.isStardust) {
+              setPlayer((p) => ({ ...p, stardust: (p.stardust ?? 0) - totalCost }));
+            } else {
+              setPlayer((p) => ({ ...p, money: p.money - totalCost }));
+            }
+            setInventory((inv) => {
+              const found = inv.find((x) => x.name === buyQtyModal.name);
+              return found
+                ? inv.map((x) => x.name === buyQtyModal.name ? { ...x, qty: x.qty + qty } : x)
+                : [...inv, { name: buyQtyModal.name, qty }];
+            });
+            addLog(`Bought ×${qty} ${buyQtyModal.name}!`, "#FFD700");
+            setBuyQtyModal(null);
+          };
+          return (
+            <div className="m-modal-back" onClick={() => setBuyQtyModal(null)}>
+              <div className="m-modal" onClick={(e) => e.stopPropagation()}>
+                <h3>Buy {buyQtyModal.name}</h3>
+                <p style={{ marginBottom: 14 }}>{buyQtyModal.itemData.info}</p>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <span style={{ fontSize: 13, color: "var(--m-muted)" }}>Quantity</span>
+                  <input type="number" min={1} value={qty}
+                    onChange={(e) => setBuyQty(Math.max(1, Number(e.target.value) || 1))}
+                    style={{ width: 80, background: "var(--m-input)", border: "1px solid var(--m-border)", color: "var(--m-text)", borderRadius: 8, padding: "6px 10px", fontSize: 14, fontFamily: "inherit", textAlign: "center" }} />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--m-input)", borderRadius: 10, padding: "10px 14px", marginBottom: 14 }}>
+                  <span style={{ fontSize: 12, color: "var(--m-muted)" }}>Total cost</span>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: buyQtyModal.isStardust ? "#c4b5fd" : "var(--m-yellow)" }}>
+                    {buyQtyModal.isStardust ? `✨ ${totalCost.toLocaleString()}` : `₽${totalCost.toLocaleString()}`}
+                  </span>
+                </div>
+                {!canAfford && <p style={{ color: "#f87171", fontSize: 11, marginBottom: 10 }}>Insufficient funds for this quantity.</p>}
+                <div className="m-modal-row">
+                  <button className="m-btn-ghost" onClick={() => setBuyQtyModal(null)}>Cancel</button>
+                  <button className="m-btn-primary" disabled={!canAfford} onClick={confirmBuy}>Confirm Purchase</button>
                 </div>
               </div>
             </div>
