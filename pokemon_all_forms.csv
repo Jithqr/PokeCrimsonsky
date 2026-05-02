@@ -1,0 +1,1351 @@
+ID,Name,Category,API_URL
+1,Bulbasaur,Base Form,https://pokeapi.co/api/v2/pokemon/1/
+2,Ivysaur,Base Form,https://pokeapi.co/api/v2/pokemon/2/
+3,Venusaur,Base Form,https://pokeapi.co/api/v2/pokemon/3/
+4,Charmander,Base Form,https://pokeapi.co/api/v2/pokemon/4/
+5,Charmeleon,Base Form,https://pokeapi.co/api/v2/pokemon/5/
+6,Charizard,Base Form,https://pokeapi.co/api/v2/pokemon/6/
+7,Squirtle,Base Form,https://pokeapi.co/api/v2/pokemon/7/
+8,Wartortle,Base Form,https://pokeapi.co/api/v2/pokemon/8/
+9,Blastoise,Base Form,https://pokeapi.co/api/v2/pokemon/9/
+10,Caterpie,Base Form,https://pokeapi.co/api/v2/pokemon/10/
+11,Metapod,Base Form,https://pokeapi.co/api/v2/pokemon/11/
+12,Butterfree,Base Form,https://pokeapi.co/api/v2/pokemon/12/
+13,Weedle,Base Form,https://pokeapi.co/api/v2/pokemon/13/
+14,Kakuna,Base Form,https://pokeapi.co/api/v2/pokemon/14/
+15,Beedrill,Base Form,https://pokeapi.co/api/v2/pokemon/15/
+16,Pidgey,Base Form,https://pokeapi.co/api/v2/pokemon/16/
+17,Pidgeotto,Base Form,https://pokeapi.co/api/v2/pokemon/17/
+18,Pidgeot,Base Form,https://pokeapi.co/api/v2/pokemon/18/
+19,Rattata,Base Form,https://pokeapi.co/api/v2/pokemon/19/
+20,Raticate,Base Form,https://pokeapi.co/api/v2/pokemon/20/
+21,Spearow,Base Form,https://pokeapi.co/api/v2/pokemon/21/
+22,Fearow,Base Form,https://pokeapi.co/api/v2/pokemon/22/
+23,Ekans,Base Form,https://pokeapi.co/api/v2/pokemon/23/
+24,Arbok,Base Form,https://pokeapi.co/api/v2/pokemon/24/
+25,Pikachu,Base Form,https://pokeapi.co/api/v2/pokemon/25/
+26,Raichu,Base Form,https://pokeapi.co/api/v2/pokemon/26/
+27,Sandshrew,Base Form,https://pokeapi.co/api/v2/pokemon/27/
+28,Sandslash,Base Form,https://pokeapi.co/api/v2/pokemon/28/
+29,Nidoran F,Base Form,https://pokeapi.co/api/v2/pokemon/29/
+30,Nidorina,Base Form,https://pokeapi.co/api/v2/pokemon/30/
+31,Nidoqueen,Base Form,https://pokeapi.co/api/v2/pokemon/31/
+32,Nidoran M,Base Form,https://pokeapi.co/api/v2/pokemon/32/
+33,Nidorino,Base Form,https://pokeapi.co/api/v2/pokemon/33/
+34,Nidoking,Base Form,https://pokeapi.co/api/v2/pokemon/34/
+35,Clefairy,Base Form,https://pokeapi.co/api/v2/pokemon/35/
+36,Clefable,Base Form,https://pokeapi.co/api/v2/pokemon/36/
+37,Vulpix,Base Form,https://pokeapi.co/api/v2/pokemon/37/
+38,Ninetales,Base Form,https://pokeapi.co/api/v2/pokemon/38/
+39,Jigglypuff,Base Form,https://pokeapi.co/api/v2/pokemon/39/
+40,Wigglytuff,Base Form,https://pokeapi.co/api/v2/pokemon/40/
+41,Zubat,Base Form,https://pokeapi.co/api/v2/pokemon/41/
+42,Golbat,Base Form,https://pokeapi.co/api/v2/pokemon/42/
+43,Oddish,Base Form,https://pokeapi.co/api/v2/pokemon/43/
+44,Gloom,Base Form,https://pokeapi.co/api/v2/pokemon/44/
+45,Vileplume,Base Form,https://pokeapi.co/api/v2/pokemon/45/
+46,Paras,Base Form,https://pokeapi.co/api/v2/pokemon/46/
+47,Parasect,Base Form,https://pokeapi.co/api/v2/pokemon/47/
+48,Venonat,Base Form,https://pokeapi.co/api/v2/pokemon/48/
+49,Venomoth,Base Form,https://pokeapi.co/api/v2/pokemon/49/
+50,Diglett,Base Form,https://pokeapi.co/api/v2/pokemon/50/
+51,Dugtrio,Base Form,https://pokeapi.co/api/v2/pokemon/51/
+52,Meowth,Base Form,https://pokeapi.co/api/v2/pokemon/52/
+53,Persian,Base Form,https://pokeapi.co/api/v2/pokemon/53/
+54,Psyduck,Base Form,https://pokeapi.co/api/v2/pokemon/54/
+55,Golduck,Base Form,https://pokeapi.co/api/v2/pokemon/55/
+56,Mankey,Base Form,https://pokeapi.co/api/v2/pokemon/56/
+57,Primeape,Base Form,https://pokeapi.co/api/v2/pokemon/57/
+58,Growlithe,Base Form,https://pokeapi.co/api/v2/pokemon/58/
+59,Arcanine,Base Form,https://pokeapi.co/api/v2/pokemon/59/
+60,Poliwag,Base Form,https://pokeapi.co/api/v2/pokemon/60/
+61,Poliwhirl,Base Form,https://pokeapi.co/api/v2/pokemon/61/
+62,Poliwrath,Base Form,https://pokeapi.co/api/v2/pokemon/62/
+63,Abra,Base Form,https://pokeapi.co/api/v2/pokemon/63/
+64,Kadabra,Base Form,https://pokeapi.co/api/v2/pokemon/64/
+65,Alakazam,Base Form,https://pokeapi.co/api/v2/pokemon/65/
+66,Machop,Base Form,https://pokeapi.co/api/v2/pokemon/66/
+67,Machoke,Base Form,https://pokeapi.co/api/v2/pokemon/67/
+68,Machamp,Base Form,https://pokeapi.co/api/v2/pokemon/68/
+69,Bellsprout,Base Form,https://pokeapi.co/api/v2/pokemon/69/
+70,Weepinbell,Base Form,https://pokeapi.co/api/v2/pokemon/70/
+71,Victreebel,Base Form,https://pokeapi.co/api/v2/pokemon/71/
+72,Tentacool,Base Form,https://pokeapi.co/api/v2/pokemon/72/
+73,Tentacruel,Base Form,https://pokeapi.co/api/v2/pokemon/73/
+74,Geodude,Base Form,https://pokeapi.co/api/v2/pokemon/74/
+75,Graveler,Base Form,https://pokeapi.co/api/v2/pokemon/75/
+76,Golem,Base Form,https://pokeapi.co/api/v2/pokemon/76/
+77,Ponyta,Base Form,https://pokeapi.co/api/v2/pokemon/77/
+78,Rapidash,Base Form,https://pokeapi.co/api/v2/pokemon/78/
+79,Slowpoke,Base Form,https://pokeapi.co/api/v2/pokemon/79/
+80,Slowbro,Base Form,https://pokeapi.co/api/v2/pokemon/80/
+81,Magnemite,Base Form,https://pokeapi.co/api/v2/pokemon/81/
+82,Magneton,Base Form,https://pokeapi.co/api/v2/pokemon/82/
+83,Farfetchd,Base Form,https://pokeapi.co/api/v2/pokemon/83/
+84,Doduo,Base Form,https://pokeapi.co/api/v2/pokemon/84/
+85,Dodrio,Base Form,https://pokeapi.co/api/v2/pokemon/85/
+86,Seel,Base Form,https://pokeapi.co/api/v2/pokemon/86/
+87,Dewgong,Base Form,https://pokeapi.co/api/v2/pokemon/87/
+88,Grimer,Base Form,https://pokeapi.co/api/v2/pokemon/88/
+89,Muk,Base Form,https://pokeapi.co/api/v2/pokemon/89/
+90,Shellder,Base Form,https://pokeapi.co/api/v2/pokemon/90/
+91,Cloyster,Base Form,https://pokeapi.co/api/v2/pokemon/91/
+92,Gastly,Base Form,https://pokeapi.co/api/v2/pokemon/92/
+93,Haunter,Base Form,https://pokeapi.co/api/v2/pokemon/93/
+94,Gengar,Base Form,https://pokeapi.co/api/v2/pokemon/94/
+95,Onix,Base Form,https://pokeapi.co/api/v2/pokemon/95/
+96,Drowzee,Base Form,https://pokeapi.co/api/v2/pokemon/96/
+97,Hypno,Base Form,https://pokeapi.co/api/v2/pokemon/97/
+98,Krabby,Base Form,https://pokeapi.co/api/v2/pokemon/98/
+99,Kingler,Base Form,https://pokeapi.co/api/v2/pokemon/99/
+100,Voltorb,Base Form,https://pokeapi.co/api/v2/pokemon/100/
+101,Electrode,Base Form,https://pokeapi.co/api/v2/pokemon/101/
+102,Exeggcute,Base Form,https://pokeapi.co/api/v2/pokemon/102/
+103,Exeggutor,Base Form,https://pokeapi.co/api/v2/pokemon/103/
+104,Cubone,Base Form,https://pokeapi.co/api/v2/pokemon/104/
+105,Marowak,Base Form,https://pokeapi.co/api/v2/pokemon/105/
+106,Hitmonlee,Base Form,https://pokeapi.co/api/v2/pokemon/106/
+107,Hitmonchan,Base Form,https://pokeapi.co/api/v2/pokemon/107/
+108,Lickitung,Base Form,https://pokeapi.co/api/v2/pokemon/108/
+109,Koffing,Base Form,https://pokeapi.co/api/v2/pokemon/109/
+110,Weezing,Base Form,https://pokeapi.co/api/v2/pokemon/110/
+111,Rhyhorn,Base Form,https://pokeapi.co/api/v2/pokemon/111/
+112,Rhydon,Base Form,https://pokeapi.co/api/v2/pokemon/112/
+113,Chansey,Base Form,https://pokeapi.co/api/v2/pokemon/113/
+114,Tangela,Base Form,https://pokeapi.co/api/v2/pokemon/114/
+115,Kangaskhan,Base Form,https://pokeapi.co/api/v2/pokemon/115/
+116,Horsea,Base Form,https://pokeapi.co/api/v2/pokemon/116/
+117,Seadra,Base Form,https://pokeapi.co/api/v2/pokemon/117/
+118,Goldeen,Base Form,https://pokeapi.co/api/v2/pokemon/118/
+119,Seaking,Base Form,https://pokeapi.co/api/v2/pokemon/119/
+120,Staryu,Base Form,https://pokeapi.co/api/v2/pokemon/120/
+121,Starmie,Base Form,https://pokeapi.co/api/v2/pokemon/121/
+122,Mr Mime,Base Form,https://pokeapi.co/api/v2/pokemon/122/
+123,Scyther,Base Form,https://pokeapi.co/api/v2/pokemon/123/
+124,Jynx,Base Form,https://pokeapi.co/api/v2/pokemon/124/
+125,Electabuzz,Base Form,https://pokeapi.co/api/v2/pokemon/125/
+126,Magmar,Base Form,https://pokeapi.co/api/v2/pokemon/126/
+127,Pinsir,Base Form,https://pokeapi.co/api/v2/pokemon/127/
+128,Tauros,Base Form,https://pokeapi.co/api/v2/pokemon/128/
+129,Magikarp,Base Form,https://pokeapi.co/api/v2/pokemon/129/
+130,Gyarados,Base Form,https://pokeapi.co/api/v2/pokemon/130/
+131,Lapras,Base Form,https://pokeapi.co/api/v2/pokemon/131/
+132,Ditto,Base Form,https://pokeapi.co/api/v2/pokemon/132/
+133,Eevee,Base Form,https://pokeapi.co/api/v2/pokemon/133/
+134,Vaporeon,Base Form,https://pokeapi.co/api/v2/pokemon/134/
+135,Jolteon,Base Form,https://pokeapi.co/api/v2/pokemon/135/
+136,Flareon,Base Form,https://pokeapi.co/api/v2/pokemon/136/
+137,Porygon,Base Form,https://pokeapi.co/api/v2/pokemon/137/
+138,Omanyte,Base Form,https://pokeapi.co/api/v2/pokemon/138/
+139,Omastar,Base Form,https://pokeapi.co/api/v2/pokemon/139/
+140,Kabuto,Base Form,https://pokeapi.co/api/v2/pokemon/140/
+141,Kabutops,Base Form,https://pokeapi.co/api/v2/pokemon/141/
+142,Aerodactyl,Base Form,https://pokeapi.co/api/v2/pokemon/142/
+143,Snorlax,Base Form,https://pokeapi.co/api/v2/pokemon/143/
+144,Articuno,Base Form,https://pokeapi.co/api/v2/pokemon/144/
+145,Zapdos,Base Form,https://pokeapi.co/api/v2/pokemon/145/
+146,Moltres,Base Form,https://pokeapi.co/api/v2/pokemon/146/
+147,Dratini,Base Form,https://pokeapi.co/api/v2/pokemon/147/
+148,Dragonair,Base Form,https://pokeapi.co/api/v2/pokemon/148/
+149,Dragonite,Base Form,https://pokeapi.co/api/v2/pokemon/149/
+150,Mewtwo,Base Form,https://pokeapi.co/api/v2/pokemon/150/
+151,Mew,Base Form,https://pokeapi.co/api/v2/pokemon/151/
+152,Chikorita,Base Form,https://pokeapi.co/api/v2/pokemon/152/
+153,Bayleef,Base Form,https://pokeapi.co/api/v2/pokemon/153/
+154,Meganium,Base Form,https://pokeapi.co/api/v2/pokemon/154/
+155,Cyndaquil,Base Form,https://pokeapi.co/api/v2/pokemon/155/
+156,Quilava,Base Form,https://pokeapi.co/api/v2/pokemon/156/
+157,Typhlosion,Base Form,https://pokeapi.co/api/v2/pokemon/157/
+158,Totodile,Base Form,https://pokeapi.co/api/v2/pokemon/158/
+159,Croconaw,Base Form,https://pokeapi.co/api/v2/pokemon/159/
+160,Feraligatr,Base Form,https://pokeapi.co/api/v2/pokemon/160/
+161,Sentret,Base Form,https://pokeapi.co/api/v2/pokemon/161/
+162,Furret,Base Form,https://pokeapi.co/api/v2/pokemon/162/
+163,Hoothoot,Base Form,https://pokeapi.co/api/v2/pokemon/163/
+164,Noctowl,Base Form,https://pokeapi.co/api/v2/pokemon/164/
+165,Ledyba,Base Form,https://pokeapi.co/api/v2/pokemon/165/
+166,Ledian,Base Form,https://pokeapi.co/api/v2/pokemon/166/
+167,Spinarak,Base Form,https://pokeapi.co/api/v2/pokemon/167/
+168,Ariados,Base Form,https://pokeapi.co/api/v2/pokemon/168/
+169,Crobat,Base Form,https://pokeapi.co/api/v2/pokemon/169/
+170,Chinchou,Base Form,https://pokeapi.co/api/v2/pokemon/170/
+171,Lanturn,Base Form,https://pokeapi.co/api/v2/pokemon/171/
+172,Pichu,Base Form,https://pokeapi.co/api/v2/pokemon/172/
+173,Cleffa,Base Form,https://pokeapi.co/api/v2/pokemon/173/
+174,Igglybuff,Base Form,https://pokeapi.co/api/v2/pokemon/174/
+175,Togepi,Base Form,https://pokeapi.co/api/v2/pokemon/175/
+176,Togetic,Base Form,https://pokeapi.co/api/v2/pokemon/176/
+177,Natu,Base Form,https://pokeapi.co/api/v2/pokemon/177/
+178,Xatu,Base Form,https://pokeapi.co/api/v2/pokemon/178/
+179,Mareep,Base Form,https://pokeapi.co/api/v2/pokemon/179/
+180,Flaaffy,Base Form,https://pokeapi.co/api/v2/pokemon/180/
+181,Ampharos,Base Form,https://pokeapi.co/api/v2/pokemon/181/
+182,Bellossom,Base Form,https://pokeapi.co/api/v2/pokemon/182/
+183,Marill,Base Form,https://pokeapi.co/api/v2/pokemon/183/
+184,Azumarill,Base Form,https://pokeapi.co/api/v2/pokemon/184/
+185,Sudowoodo,Base Form,https://pokeapi.co/api/v2/pokemon/185/
+186,Politoed,Base Form,https://pokeapi.co/api/v2/pokemon/186/
+187,Hoppip,Base Form,https://pokeapi.co/api/v2/pokemon/187/
+188,Skiploom,Base Form,https://pokeapi.co/api/v2/pokemon/188/
+189,Jumpluff,Base Form,https://pokeapi.co/api/v2/pokemon/189/
+190,Aipom,Base Form,https://pokeapi.co/api/v2/pokemon/190/
+191,Sunkern,Base Form,https://pokeapi.co/api/v2/pokemon/191/
+192,Sunflora,Base Form,https://pokeapi.co/api/v2/pokemon/192/
+193,Yanma,Base Form,https://pokeapi.co/api/v2/pokemon/193/
+194,Wooper,Base Form,https://pokeapi.co/api/v2/pokemon/194/
+195,Quagsire,Base Form,https://pokeapi.co/api/v2/pokemon/195/
+196,Espeon,Base Form,https://pokeapi.co/api/v2/pokemon/196/
+197,Umbreon,Base Form,https://pokeapi.co/api/v2/pokemon/197/
+198,Murkrow,Base Form,https://pokeapi.co/api/v2/pokemon/198/
+199,Slowking,Base Form,https://pokeapi.co/api/v2/pokemon/199/
+200,Misdreavus,Base Form,https://pokeapi.co/api/v2/pokemon/200/
+201,Unown,Base Form,https://pokeapi.co/api/v2/pokemon/201/
+202,Wobbuffet,Base Form,https://pokeapi.co/api/v2/pokemon/202/
+203,Girafarig,Base Form,https://pokeapi.co/api/v2/pokemon/203/
+204,Pineco,Base Form,https://pokeapi.co/api/v2/pokemon/204/
+205,Forretress,Base Form,https://pokeapi.co/api/v2/pokemon/205/
+206,Dunsparce,Base Form,https://pokeapi.co/api/v2/pokemon/206/
+207,Gligar,Base Form,https://pokeapi.co/api/v2/pokemon/207/
+208,Steelix,Base Form,https://pokeapi.co/api/v2/pokemon/208/
+209,Snubbull,Base Form,https://pokeapi.co/api/v2/pokemon/209/
+210,Granbull,Base Form,https://pokeapi.co/api/v2/pokemon/210/
+211,Qwilfish,Base Form,https://pokeapi.co/api/v2/pokemon/211/
+212,Scizor,Base Form,https://pokeapi.co/api/v2/pokemon/212/
+213,Shuckle,Base Form,https://pokeapi.co/api/v2/pokemon/213/
+214,Heracross,Base Form,https://pokeapi.co/api/v2/pokemon/214/
+215,Sneasel,Base Form,https://pokeapi.co/api/v2/pokemon/215/
+216,Teddiursa,Base Form,https://pokeapi.co/api/v2/pokemon/216/
+217,Ursaring,Base Form,https://pokeapi.co/api/v2/pokemon/217/
+218,Slugma,Base Form,https://pokeapi.co/api/v2/pokemon/218/
+219,Magcargo,Base Form,https://pokeapi.co/api/v2/pokemon/219/
+220,Swinub,Base Form,https://pokeapi.co/api/v2/pokemon/220/
+221,Piloswine,Base Form,https://pokeapi.co/api/v2/pokemon/221/
+222,Corsola,Base Form,https://pokeapi.co/api/v2/pokemon/222/
+223,Remoraid,Base Form,https://pokeapi.co/api/v2/pokemon/223/
+224,Octillery,Base Form,https://pokeapi.co/api/v2/pokemon/224/
+225,Delibird,Base Form,https://pokeapi.co/api/v2/pokemon/225/
+226,Mantine,Base Form,https://pokeapi.co/api/v2/pokemon/226/
+227,Skarmory,Base Form,https://pokeapi.co/api/v2/pokemon/227/
+228,Houndour,Base Form,https://pokeapi.co/api/v2/pokemon/228/
+229,Houndoom,Base Form,https://pokeapi.co/api/v2/pokemon/229/
+230,Kingdra,Base Form,https://pokeapi.co/api/v2/pokemon/230/
+231,Phanpy,Base Form,https://pokeapi.co/api/v2/pokemon/231/
+232,Donphan,Base Form,https://pokeapi.co/api/v2/pokemon/232/
+233,Porygon2,Base Form,https://pokeapi.co/api/v2/pokemon/233/
+234,Stantler,Base Form,https://pokeapi.co/api/v2/pokemon/234/
+235,Smeargle,Base Form,https://pokeapi.co/api/v2/pokemon/235/
+236,Tyrogue,Base Form,https://pokeapi.co/api/v2/pokemon/236/
+237,Hitmontop,Base Form,https://pokeapi.co/api/v2/pokemon/237/
+238,Smoochum,Base Form,https://pokeapi.co/api/v2/pokemon/238/
+239,Elekid,Base Form,https://pokeapi.co/api/v2/pokemon/239/
+240,Magby,Base Form,https://pokeapi.co/api/v2/pokemon/240/
+241,Miltank,Base Form,https://pokeapi.co/api/v2/pokemon/241/
+242,Blissey,Base Form,https://pokeapi.co/api/v2/pokemon/242/
+243,Raikou,Base Form,https://pokeapi.co/api/v2/pokemon/243/
+244,Entei,Base Form,https://pokeapi.co/api/v2/pokemon/244/
+245,Suicune,Base Form,https://pokeapi.co/api/v2/pokemon/245/
+246,Larvitar,Base Form,https://pokeapi.co/api/v2/pokemon/246/
+247,Pupitar,Base Form,https://pokeapi.co/api/v2/pokemon/247/
+248,Tyranitar,Base Form,https://pokeapi.co/api/v2/pokemon/248/
+249,Lugia,Base Form,https://pokeapi.co/api/v2/pokemon/249/
+250,Ho Oh,Base Form,https://pokeapi.co/api/v2/pokemon/250/
+251,Celebi,Base Form,https://pokeapi.co/api/v2/pokemon/251/
+252,Treecko,Base Form,https://pokeapi.co/api/v2/pokemon/252/
+253,Grovyle,Base Form,https://pokeapi.co/api/v2/pokemon/253/
+254,Sceptile,Base Form,https://pokeapi.co/api/v2/pokemon/254/
+255,Torchic,Base Form,https://pokeapi.co/api/v2/pokemon/255/
+256,Combusken,Base Form,https://pokeapi.co/api/v2/pokemon/256/
+257,Blaziken,Base Form,https://pokeapi.co/api/v2/pokemon/257/
+258,Mudkip,Base Form,https://pokeapi.co/api/v2/pokemon/258/
+259,Marshtomp,Base Form,https://pokeapi.co/api/v2/pokemon/259/
+260,Swampert,Base Form,https://pokeapi.co/api/v2/pokemon/260/
+261,Poochyena,Base Form,https://pokeapi.co/api/v2/pokemon/261/
+262,Mightyena,Base Form,https://pokeapi.co/api/v2/pokemon/262/
+263,Zigzagoon,Base Form,https://pokeapi.co/api/v2/pokemon/263/
+264,Linoone,Base Form,https://pokeapi.co/api/v2/pokemon/264/
+265,Wurmple,Base Form,https://pokeapi.co/api/v2/pokemon/265/
+266,Silcoon,Base Form,https://pokeapi.co/api/v2/pokemon/266/
+267,Beautifly,Base Form,https://pokeapi.co/api/v2/pokemon/267/
+268,Cascoon,Base Form,https://pokeapi.co/api/v2/pokemon/268/
+269,Dustox,Base Form,https://pokeapi.co/api/v2/pokemon/269/
+270,Lotad,Base Form,https://pokeapi.co/api/v2/pokemon/270/
+271,Lombre,Base Form,https://pokeapi.co/api/v2/pokemon/271/
+272,Ludicolo,Base Form,https://pokeapi.co/api/v2/pokemon/272/
+273,Seedot,Base Form,https://pokeapi.co/api/v2/pokemon/273/
+274,Nuzleaf,Base Form,https://pokeapi.co/api/v2/pokemon/274/
+275,Shiftry,Base Form,https://pokeapi.co/api/v2/pokemon/275/
+276,Taillow,Base Form,https://pokeapi.co/api/v2/pokemon/276/
+277,Swellow,Base Form,https://pokeapi.co/api/v2/pokemon/277/
+278,Wingull,Base Form,https://pokeapi.co/api/v2/pokemon/278/
+279,Pelipper,Base Form,https://pokeapi.co/api/v2/pokemon/279/
+280,Ralts,Base Form,https://pokeapi.co/api/v2/pokemon/280/
+281,Kirlia,Base Form,https://pokeapi.co/api/v2/pokemon/281/
+282,Gardevoir,Base Form,https://pokeapi.co/api/v2/pokemon/282/
+283,Surskit,Base Form,https://pokeapi.co/api/v2/pokemon/283/
+284,Masquerain,Base Form,https://pokeapi.co/api/v2/pokemon/284/
+285,Shroomish,Base Form,https://pokeapi.co/api/v2/pokemon/285/
+286,Breloom,Base Form,https://pokeapi.co/api/v2/pokemon/286/
+287,Slakoth,Base Form,https://pokeapi.co/api/v2/pokemon/287/
+288,Vigoroth,Base Form,https://pokeapi.co/api/v2/pokemon/288/
+289,Slaking,Base Form,https://pokeapi.co/api/v2/pokemon/289/
+290,Nincada,Base Form,https://pokeapi.co/api/v2/pokemon/290/
+291,Ninjask,Base Form,https://pokeapi.co/api/v2/pokemon/291/
+292,Shedinja,Base Form,https://pokeapi.co/api/v2/pokemon/292/
+293,Whismur,Base Form,https://pokeapi.co/api/v2/pokemon/293/
+294,Loudred,Base Form,https://pokeapi.co/api/v2/pokemon/294/
+295,Exploud,Base Form,https://pokeapi.co/api/v2/pokemon/295/
+296,Makuhita,Base Form,https://pokeapi.co/api/v2/pokemon/296/
+297,Hariyama,Base Form,https://pokeapi.co/api/v2/pokemon/297/
+298,Azurill,Base Form,https://pokeapi.co/api/v2/pokemon/298/
+299,Nosepass,Base Form,https://pokeapi.co/api/v2/pokemon/299/
+300,Skitty,Base Form,https://pokeapi.co/api/v2/pokemon/300/
+301,Delcatty,Base Form,https://pokeapi.co/api/v2/pokemon/301/
+302,Sableye,Base Form,https://pokeapi.co/api/v2/pokemon/302/
+303,Mawile,Base Form,https://pokeapi.co/api/v2/pokemon/303/
+304,Aron,Base Form,https://pokeapi.co/api/v2/pokemon/304/
+305,Lairon,Base Form,https://pokeapi.co/api/v2/pokemon/305/
+306,Aggron,Base Form,https://pokeapi.co/api/v2/pokemon/306/
+307,Meditite,Base Form,https://pokeapi.co/api/v2/pokemon/307/
+308,Medicham,Base Form,https://pokeapi.co/api/v2/pokemon/308/
+309,Electrike,Base Form,https://pokeapi.co/api/v2/pokemon/309/
+310,Manectric,Base Form,https://pokeapi.co/api/v2/pokemon/310/
+311,Plusle,Base Form,https://pokeapi.co/api/v2/pokemon/311/
+312,Minun,Base Form,https://pokeapi.co/api/v2/pokemon/312/
+313,Volbeat,Base Form,https://pokeapi.co/api/v2/pokemon/313/
+314,Illumise,Base Form,https://pokeapi.co/api/v2/pokemon/314/
+315,Roselia,Base Form,https://pokeapi.co/api/v2/pokemon/315/
+316,Gulpin,Base Form,https://pokeapi.co/api/v2/pokemon/316/
+317,Swalot,Base Form,https://pokeapi.co/api/v2/pokemon/317/
+318,Carvanha,Base Form,https://pokeapi.co/api/v2/pokemon/318/
+319,Sharpedo,Base Form,https://pokeapi.co/api/v2/pokemon/319/
+320,Wailmer,Base Form,https://pokeapi.co/api/v2/pokemon/320/
+321,Wailord,Base Form,https://pokeapi.co/api/v2/pokemon/321/
+322,Numel,Base Form,https://pokeapi.co/api/v2/pokemon/322/
+323,Camerupt,Base Form,https://pokeapi.co/api/v2/pokemon/323/
+324,Torkoal,Base Form,https://pokeapi.co/api/v2/pokemon/324/
+325,Spoink,Base Form,https://pokeapi.co/api/v2/pokemon/325/
+326,Grumpig,Base Form,https://pokeapi.co/api/v2/pokemon/326/
+327,Spinda,Base Form,https://pokeapi.co/api/v2/pokemon/327/
+328,Trapinch,Base Form,https://pokeapi.co/api/v2/pokemon/328/
+329,Vibrava,Base Form,https://pokeapi.co/api/v2/pokemon/329/
+330,Flygon,Base Form,https://pokeapi.co/api/v2/pokemon/330/
+331,Cacnea,Base Form,https://pokeapi.co/api/v2/pokemon/331/
+332,Cacturne,Base Form,https://pokeapi.co/api/v2/pokemon/332/
+333,Swablu,Base Form,https://pokeapi.co/api/v2/pokemon/333/
+334,Altaria,Base Form,https://pokeapi.co/api/v2/pokemon/334/
+335,Zangoose,Base Form,https://pokeapi.co/api/v2/pokemon/335/
+336,Seviper,Base Form,https://pokeapi.co/api/v2/pokemon/336/
+337,Lunatone,Base Form,https://pokeapi.co/api/v2/pokemon/337/
+338,Solrock,Base Form,https://pokeapi.co/api/v2/pokemon/338/
+339,Barboach,Base Form,https://pokeapi.co/api/v2/pokemon/339/
+340,Whiscash,Base Form,https://pokeapi.co/api/v2/pokemon/340/
+341,Corphish,Base Form,https://pokeapi.co/api/v2/pokemon/341/
+342,Crawdaunt,Base Form,https://pokeapi.co/api/v2/pokemon/342/
+343,Baltoy,Base Form,https://pokeapi.co/api/v2/pokemon/343/
+344,Claydol,Base Form,https://pokeapi.co/api/v2/pokemon/344/
+345,Lileep,Base Form,https://pokeapi.co/api/v2/pokemon/345/
+346,Cradily,Base Form,https://pokeapi.co/api/v2/pokemon/346/
+347,Anorith,Base Form,https://pokeapi.co/api/v2/pokemon/347/
+348,Armaldo,Base Form,https://pokeapi.co/api/v2/pokemon/348/
+349,Feebas,Base Form,https://pokeapi.co/api/v2/pokemon/349/
+350,Milotic,Base Form,https://pokeapi.co/api/v2/pokemon/350/
+351,Castform,Base Form,https://pokeapi.co/api/v2/pokemon/351/
+352,Kecleon,Base Form,https://pokeapi.co/api/v2/pokemon/352/
+353,Shuppet,Base Form,https://pokeapi.co/api/v2/pokemon/353/
+354,Banette,Base Form,https://pokeapi.co/api/v2/pokemon/354/
+355,Duskull,Base Form,https://pokeapi.co/api/v2/pokemon/355/
+356,Dusclops,Base Form,https://pokeapi.co/api/v2/pokemon/356/
+357,Tropius,Base Form,https://pokeapi.co/api/v2/pokemon/357/
+358,Chimecho,Base Form,https://pokeapi.co/api/v2/pokemon/358/
+359,Absol,Base Form,https://pokeapi.co/api/v2/pokemon/359/
+360,Wynaut,Base Form,https://pokeapi.co/api/v2/pokemon/360/
+361,Snorunt,Base Form,https://pokeapi.co/api/v2/pokemon/361/
+362,Glalie,Base Form,https://pokeapi.co/api/v2/pokemon/362/
+363,Spheal,Base Form,https://pokeapi.co/api/v2/pokemon/363/
+364,Sealeo,Base Form,https://pokeapi.co/api/v2/pokemon/364/
+365,Walrein,Base Form,https://pokeapi.co/api/v2/pokemon/365/
+366,Clamperl,Base Form,https://pokeapi.co/api/v2/pokemon/366/
+367,Huntail,Base Form,https://pokeapi.co/api/v2/pokemon/367/
+368,Gorebyss,Base Form,https://pokeapi.co/api/v2/pokemon/368/
+369,Relicanth,Base Form,https://pokeapi.co/api/v2/pokemon/369/
+370,Luvdisc,Base Form,https://pokeapi.co/api/v2/pokemon/370/
+371,Bagon,Base Form,https://pokeapi.co/api/v2/pokemon/371/
+372,Shelgon,Base Form,https://pokeapi.co/api/v2/pokemon/372/
+373,Salamence,Base Form,https://pokeapi.co/api/v2/pokemon/373/
+374,Beldum,Base Form,https://pokeapi.co/api/v2/pokemon/374/
+375,Metang,Base Form,https://pokeapi.co/api/v2/pokemon/375/
+376,Metagross,Base Form,https://pokeapi.co/api/v2/pokemon/376/
+377,Regirock,Base Form,https://pokeapi.co/api/v2/pokemon/377/
+378,Regice,Base Form,https://pokeapi.co/api/v2/pokemon/378/
+379,Registeel,Base Form,https://pokeapi.co/api/v2/pokemon/379/
+380,Latias,Base Form,https://pokeapi.co/api/v2/pokemon/380/
+381,Latios,Base Form,https://pokeapi.co/api/v2/pokemon/381/
+382,Kyogre,Base Form,https://pokeapi.co/api/v2/pokemon/382/
+383,Groudon,Base Form,https://pokeapi.co/api/v2/pokemon/383/
+384,Rayquaza,Base Form,https://pokeapi.co/api/v2/pokemon/384/
+385,Jirachi,Base Form,https://pokeapi.co/api/v2/pokemon/385/
+386,Deoxys Normal,Base Form,https://pokeapi.co/api/v2/pokemon/386/
+387,Turtwig,Base Form,https://pokeapi.co/api/v2/pokemon/387/
+388,Grotle,Base Form,https://pokeapi.co/api/v2/pokemon/388/
+389,Torterra,Base Form,https://pokeapi.co/api/v2/pokemon/389/
+390,Chimchar,Base Form,https://pokeapi.co/api/v2/pokemon/390/
+391,Monferno,Base Form,https://pokeapi.co/api/v2/pokemon/391/
+392,Infernape,Base Form,https://pokeapi.co/api/v2/pokemon/392/
+393,Piplup,Base Form,https://pokeapi.co/api/v2/pokemon/393/
+394,Prinplup,Base Form,https://pokeapi.co/api/v2/pokemon/394/
+395,Empoleon,Base Form,https://pokeapi.co/api/v2/pokemon/395/
+396,Starly,Base Form,https://pokeapi.co/api/v2/pokemon/396/
+397,Staravia,Base Form,https://pokeapi.co/api/v2/pokemon/397/
+398,Staraptor,Base Form,https://pokeapi.co/api/v2/pokemon/398/
+399,Bidoof,Base Form,https://pokeapi.co/api/v2/pokemon/399/
+400,Bibarel,Base Form,https://pokeapi.co/api/v2/pokemon/400/
+401,Kricketot,Base Form,https://pokeapi.co/api/v2/pokemon/401/
+402,Kricketune,Base Form,https://pokeapi.co/api/v2/pokemon/402/
+403,Shinx,Base Form,https://pokeapi.co/api/v2/pokemon/403/
+404,Luxio,Base Form,https://pokeapi.co/api/v2/pokemon/404/
+405,Luxray,Base Form,https://pokeapi.co/api/v2/pokemon/405/
+406,Budew,Base Form,https://pokeapi.co/api/v2/pokemon/406/
+407,Roserade,Base Form,https://pokeapi.co/api/v2/pokemon/407/
+408,Cranidos,Base Form,https://pokeapi.co/api/v2/pokemon/408/
+409,Rampardos,Base Form,https://pokeapi.co/api/v2/pokemon/409/
+410,Shieldon,Base Form,https://pokeapi.co/api/v2/pokemon/410/
+411,Bastiodon,Base Form,https://pokeapi.co/api/v2/pokemon/411/
+412,Burmy,Base Form,https://pokeapi.co/api/v2/pokemon/412/
+413,Wormadam Plant,Base Form,https://pokeapi.co/api/v2/pokemon/413/
+414,Mothim,Base Form,https://pokeapi.co/api/v2/pokemon/414/
+415,Combee,Base Form,https://pokeapi.co/api/v2/pokemon/415/
+416,Vespiquen,Base Form,https://pokeapi.co/api/v2/pokemon/416/
+417,Pachirisu,Base Form,https://pokeapi.co/api/v2/pokemon/417/
+418,Buizel,Base Form,https://pokeapi.co/api/v2/pokemon/418/
+419,Floatzel,Base Form,https://pokeapi.co/api/v2/pokemon/419/
+420,Cherubi,Base Form,https://pokeapi.co/api/v2/pokemon/420/
+421,Cherrim,Base Form,https://pokeapi.co/api/v2/pokemon/421/
+422,Shellos,Base Form,https://pokeapi.co/api/v2/pokemon/422/
+423,Gastrodon,Base Form,https://pokeapi.co/api/v2/pokemon/423/
+424,Ambipom,Base Form,https://pokeapi.co/api/v2/pokemon/424/
+425,Drifloon,Base Form,https://pokeapi.co/api/v2/pokemon/425/
+426,Drifblim,Base Form,https://pokeapi.co/api/v2/pokemon/426/
+427,Buneary,Base Form,https://pokeapi.co/api/v2/pokemon/427/
+428,Lopunny,Base Form,https://pokeapi.co/api/v2/pokemon/428/
+429,Mismagius,Base Form,https://pokeapi.co/api/v2/pokemon/429/
+430,Honchkrow,Base Form,https://pokeapi.co/api/v2/pokemon/430/
+431,Glameow,Base Form,https://pokeapi.co/api/v2/pokemon/431/
+432,Purugly,Base Form,https://pokeapi.co/api/v2/pokemon/432/
+433,Chingling,Base Form,https://pokeapi.co/api/v2/pokemon/433/
+434,Stunky,Base Form,https://pokeapi.co/api/v2/pokemon/434/
+435,Skuntank,Base Form,https://pokeapi.co/api/v2/pokemon/435/
+436,Bronzor,Base Form,https://pokeapi.co/api/v2/pokemon/436/
+437,Bronzong,Base Form,https://pokeapi.co/api/v2/pokemon/437/
+438,Bonsly,Base Form,https://pokeapi.co/api/v2/pokemon/438/
+439,Mime Jr,Base Form,https://pokeapi.co/api/v2/pokemon/439/
+440,Happiny,Base Form,https://pokeapi.co/api/v2/pokemon/440/
+441,Chatot,Base Form,https://pokeapi.co/api/v2/pokemon/441/
+442,Spiritomb,Base Form,https://pokeapi.co/api/v2/pokemon/442/
+443,Gible,Base Form,https://pokeapi.co/api/v2/pokemon/443/
+444,Gabite,Base Form,https://pokeapi.co/api/v2/pokemon/444/
+445,Garchomp,Base Form,https://pokeapi.co/api/v2/pokemon/445/
+446,Munchlax,Base Form,https://pokeapi.co/api/v2/pokemon/446/
+447,Riolu,Base Form,https://pokeapi.co/api/v2/pokemon/447/
+448,Lucario,Base Form,https://pokeapi.co/api/v2/pokemon/448/
+449,Hippopotas,Base Form,https://pokeapi.co/api/v2/pokemon/449/
+450,Hippowdon,Base Form,https://pokeapi.co/api/v2/pokemon/450/
+451,Skorupi,Base Form,https://pokeapi.co/api/v2/pokemon/451/
+452,Drapion,Base Form,https://pokeapi.co/api/v2/pokemon/452/
+453,Croagunk,Base Form,https://pokeapi.co/api/v2/pokemon/453/
+454,Toxicroak,Base Form,https://pokeapi.co/api/v2/pokemon/454/
+455,Carnivine,Base Form,https://pokeapi.co/api/v2/pokemon/455/
+456,Finneon,Base Form,https://pokeapi.co/api/v2/pokemon/456/
+457,Lumineon,Base Form,https://pokeapi.co/api/v2/pokemon/457/
+458,Mantyke,Base Form,https://pokeapi.co/api/v2/pokemon/458/
+459,Snover,Base Form,https://pokeapi.co/api/v2/pokemon/459/
+460,Abomasnow,Base Form,https://pokeapi.co/api/v2/pokemon/460/
+461,Weavile,Base Form,https://pokeapi.co/api/v2/pokemon/461/
+462,Magnezone,Base Form,https://pokeapi.co/api/v2/pokemon/462/
+463,Lickilicky,Base Form,https://pokeapi.co/api/v2/pokemon/463/
+464,Rhyperior,Base Form,https://pokeapi.co/api/v2/pokemon/464/
+465,Tangrowth,Base Form,https://pokeapi.co/api/v2/pokemon/465/
+466,Electivire,Base Form,https://pokeapi.co/api/v2/pokemon/466/
+467,Magmortar,Base Form,https://pokeapi.co/api/v2/pokemon/467/
+468,Togekiss,Base Form,https://pokeapi.co/api/v2/pokemon/468/
+469,Yanmega,Base Form,https://pokeapi.co/api/v2/pokemon/469/
+470,Leafeon,Base Form,https://pokeapi.co/api/v2/pokemon/470/
+471,Glaceon,Base Form,https://pokeapi.co/api/v2/pokemon/471/
+472,Gliscor,Base Form,https://pokeapi.co/api/v2/pokemon/472/
+473,Mamoswine,Base Form,https://pokeapi.co/api/v2/pokemon/473/
+474,Porygon Z,Base Form,https://pokeapi.co/api/v2/pokemon/474/
+475,Gallade,Base Form,https://pokeapi.co/api/v2/pokemon/475/
+476,Probopass,Base Form,https://pokeapi.co/api/v2/pokemon/476/
+477,Dusknoir,Base Form,https://pokeapi.co/api/v2/pokemon/477/
+478,Froslass,Base Form,https://pokeapi.co/api/v2/pokemon/478/
+479,Rotom,Base Form,https://pokeapi.co/api/v2/pokemon/479/
+480,Uxie,Base Form,https://pokeapi.co/api/v2/pokemon/480/
+481,Mesprit,Base Form,https://pokeapi.co/api/v2/pokemon/481/
+482,Azelf,Base Form,https://pokeapi.co/api/v2/pokemon/482/
+483,Dialga,Base Form,https://pokeapi.co/api/v2/pokemon/483/
+484,Palkia,Base Form,https://pokeapi.co/api/v2/pokemon/484/
+485,Heatran,Base Form,https://pokeapi.co/api/v2/pokemon/485/
+486,Regigigas,Base Form,https://pokeapi.co/api/v2/pokemon/486/
+487,Giratina Altered,Base Form,https://pokeapi.co/api/v2/pokemon/487/
+488,Cresselia,Base Form,https://pokeapi.co/api/v2/pokemon/488/
+489,Phione,Base Form,https://pokeapi.co/api/v2/pokemon/489/
+490,Manaphy,Base Form,https://pokeapi.co/api/v2/pokemon/490/
+491,Darkrai,Base Form,https://pokeapi.co/api/v2/pokemon/491/
+492,Shaymin Land,Base Form,https://pokeapi.co/api/v2/pokemon/492/
+493,Arceus,Base Form,https://pokeapi.co/api/v2/pokemon/493/
+494,Victini,Base Form,https://pokeapi.co/api/v2/pokemon/494/
+495,Snivy,Base Form,https://pokeapi.co/api/v2/pokemon/495/
+496,Servine,Base Form,https://pokeapi.co/api/v2/pokemon/496/
+497,Serperior,Base Form,https://pokeapi.co/api/v2/pokemon/497/
+498,Tepig,Base Form,https://pokeapi.co/api/v2/pokemon/498/
+499,Pignite,Base Form,https://pokeapi.co/api/v2/pokemon/499/
+500,Emboar,Base Form,https://pokeapi.co/api/v2/pokemon/500/
+501,Oshawott,Base Form,https://pokeapi.co/api/v2/pokemon/501/
+502,Dewott,Base Form,https://pokeapi.co/api/v2/pokemon/502/
+503,Samurott,Base Form,https://pokeapi.co/api/v2/pokemon/503/
+504,Patrat,Base Form,https://pokeapi.co/api/v2/pokemon/504/
+505,Watchog,Base Form,https://pokeapi.co/api/v2/pokemon/505/
+506,Lillipup,Base Form,https://pokeapi.co/api/v2/pokemon/506/
+507,Herdier,Base Form,https://pokeapi.co/api/v2/pokemon/507/
+508,Stoutland,Base Form,https://pokeapi.co/api/v2/pokemon/508/
+509,Purrloin,Base Form,https://pokeapi.co/api/v2/pokemon/509/
+510,Liepard,Base Form,https://pokeapi.co/api/v2/pokemon/510/
+511,Pansage,Base Form,https://pokeapi.co/api/v2/pokemon/511/
+512,Simisage,Base Form,https://pokeapi.co/api/v2/pokemon/512/
+513,Pansear,Base Form,https://pokeapi.co/api/v2/pokemon/513/
+514,Simisear,Base Form,https://pokeapi.co/api/v2/pokemon/514/
+515,Panpour,Base Form,https://pokeapi.co/api/v2/pokemon/515/
+516,Simipour,Base Form,https://pokeapi.co/api/v2/pokemon/516/
+517,Munna,Base Form,https://pokeapi.co/api/v2/pokemon/517/
+518,Musharna,Base Form,https://pokeapi.co/api/v2/pokemon/518/
+519,Pidove,Base Form,https://pokeapi.co/api/v2/pokemon/519/
+520,Tranquill,Base Form,https://pokeapi.co/api/v2/pokemon/520/
+521,Unfezant,Base Form,https://pokeapi.co/api/v2/pokemon/521/
+522,Blitzle,Base Form,https://pokeapi.co/api/v2/pokemon/522/
+523,Zebstrika,Base Form,https://pokeapi.co/api/v2/pokemon/523/
+524,Roggenrola,Base Form,https://pokeapi.co/api/v2/pokemon/524/
+525,Boldore,Base Form,https://pokeapi.co/api/v2/pokemon/525/
+526,Gigalith,Base Form,https://pokeapi.co/api/v2/pokemon/526/
+527,Woobat,Base Form,https://pokeapi.co/api/v2/pokemon/527/
+528,Swoobat,Base Form,https://pokeapi.co/api/v2/pokemon/528/
+529,Drilbur,Base Form,https://pokeapi.co/api/v2/pokemon/529/
+530,Excadrill,Base Form,https://pokeapi.co/api/v2/pokemon/530/
+531,Audino,Base Form,https://pokeapi.co/api/v2/pokemon/531/
+532,Timburr,Base Form,https://pokeapi.co/api/v2/pokemon/532/
+533,Gurdurr,Base Form,https://pokeapi.co/api/v2/pokemon/533/
+534,Conkeldurr,Base Form,https://pokeapi.co/api/v2/pokemon/534/
+535,Tympole,Base Form,https://pokeapi.co/api/v2/pokemon/535/
+536,Palpitoad,Base Form,https://pokeapi.co/api/v2/pokemon/536/
+537,Seismitoad,Base Form,https://pokeapi.co/api/v2/pokemon/537/
+538,Throh,Base Form,https://pokeapi.co/api/v2/pokemon/538/
+539,Sawk,Base Form,https://pokeapi.co/api/v2/pokemon/539/
+540,Sewaddle,Base Form,https://pokeapi.co/api/v2/pokemon/540/
+541,Swadloon,Base Form,https://pokeapi.co/api/v2/pokemon/541/
+542,Leavanny,Base Form,https://pokeapi.co/api/v2/pokemon/542/
+543,Venipede,Base Form,https://pokeapi.co/api/v2/pokemon/543/
+544,Whirlipede,Base Form,https://pokeapi.co/api/v2/pokemon/544/
+545,Scolipede,Base Form,https://pokeapi.co/api/v2/pokemon/545/
+546,Cottonee,Base Form,https://pokeapi.co/api/v2/pokemon/546/
+547,Whimsicott,Base Form,https://pokeapi.co/api/v2/pokemon/547/
+548,Petilil,Base Form,https://pokeapi.co/api/v2/pokemon/548/
+549,Lilligant,Base Form,https://pokeapi.co/api/v2/pokemon/549/
+550,Basculin Red Striped,Base Form,https://pokeapi.co/api/v2/pokemon/550/
+551,Sandile,Base Form,https://pokeapi.co/api/v2/pokemon/551/
+552,Krokorok,Base Form,https://pokeapi.co/api/v2/pokemon/552/
+553,Krookodile,Base Form,https://pokeapi.co/api/v2/pokemon/553/
+554,Darumaka,Base Form,https://pokeapi.co/api/v2/pokemon/554/
+555,Darmanitan Standard,Base Form,https://pokeapi.co/api/v2/pokemon/555/
+556,Maractus,Base Form,https://pokeapi.co/api/v2/pokemon/556/
+557,Dwebble,Base Form,https://pokeapi.co/api/v2/pokemon/557/
+558,Crustle,Base Form,https://pokeapi.co/api/v2/pokemon/558/
+559,Scraggy,Base Form,https://pokeapi.co/api/v2/pokemon/559/
+560,Scrafty,Base Form,https://pokeapi.co/api/v2/pokemon/560/
+561,Sigilyph,Base Form,https://pokeapi.co/api/v2/pokemon/561/
+562,Yamask,Base Form,https://pokeapi.co/api/v2/pokemon/562/
+563,Cofagrigus,Base Form,https://pokeapi.co/api/v2/pokemon/563/
+564,Tirtouga,Base Form,https://pokeapi.co/api/v2/pokemon/564/
+565,Carracosta,Base Form,https://pokeapi.co/api/v2/pokemon/565/
+566,Archen,Base Form,https://pokeapi.co/api/v2/pokemon/566/
+567,Archeops,Base Form,https://pokeapi.co/api/v2/pokemon/567/
+568,Trubbish,Base Form,https://pokeapi.co/api/v2/pokemon/568/
+569,Garbodor,Base Form,https://pokeapi.co/api/v2/pokemon/569/
+570,Zorua,Base Form,https://pokeapi.co/api/v2/pokemon/570/
+571,Zoroark,Base Form,https://pokeapi.co/api/v2/pokemon/571/
+572,Minccino,Base Form,https://pokeapi.co/api/v2/pokemon/572/
+573,Cinccino,Base Form,https://pokeapi.co/api/v2/pokemon/573/
+574,Gothita,Base Form,https://pokeapi.co/api/v2/pokemon/574/
+575,Gothorita,Base Form,https://pokeapi.co/api/v2/pokemon/575/
+576,Gothitelle,Base Form,https://pokeapi.co/api/v2/pokemon/576/
+577,Solosis,Base Form,https://pokeapi.co/api/v2/pokemon/577/
+578,Duosion,Base Form,https://pokeapi.co/api/v2/pokemon/578/
+579,Reuniclus,Base Form,https://pokeapi.co/api/v2/pokemon/579/
+580,Ducklett,Base Form,https://pokeapi.co/api/v2/pokemon/580/
+581,Swanna,Base Form,https://pokeapi.co/api/v2/pokemon/581/
+582,Vanillite,Base Form,https://pokeapi.co/api/v2/pokemon/582/
+583,Vanillish,Base Form,https://pokeapi.co/api/v2/pokemon/583/
+584,Vanilluxe,Base Form,https://pokeapi.co/api/v2/pokemon/584/
+585,Deerling,Base Form,https://pokeapi.co/api/v2/pokemon/585/
+586,Sawsbuck,Base Form,https://pokeapi.co/api/v2/pokemon/586/
+587,Emolga,Base Form,https://pokeapi.co/api/v2/pokemon/587/
+588,Karrablast,Base Form,https://pokeapi.co/api/v2/pokemon/588/
+589,Escavalier,Base Form,https://pokeapi.co/api/v2/pokemon/589/
+590,Foongus,Base Form,https://pokeapi.co/api/v2/pokemon/590/
+591,Amoonguss,Base Form,https://pokeapi.co/api/v2/pokemon/591/
+592,Frillish Male,Base Form,https://pokeapi.co/api/v2/pokemon/592/
+593,Jellicent Male,Base Form,https://pokeapi.co/api/v2/pokemon/593/
+594,Alomomola,Base Form,https://pokeapi.co/api/v2/pokemon/594/
+595,Joltik,Base Form,https://pokeapi.co/api/v2/pokemon/595/
+596,Galvantula,Base Form,https://pokeapi.co/api/v2/pokemon/596/
+597,Ferroseed,Base Form,https://pokeapi.co/api/v2/pokemon/597/
+598,Ferrothorn,Base Form,https://pokeapi.co/api/v2/pokemon/598/
+599,Klink,Base Form,https://pokeapi.co/api/v2/pokemon/599/
+600,Klang,Base Form,https://pokeapi.co/api/v2/pokemon/600/
+601,Klinklang,Base Form,https://pokeapi.co/api/v2/pokemon/601/
+602,Tynamo,Base Form,https://pokeapi.co/api/v2/pokemon/602/
+603,Eelektrik,Base Form,https://pokeapi.co/api/v2/pokemon/603/
+604,Eelektross,Base Form,https://pokeapi.co/api/v2/pokemon/604/
+605,Elgyem,Base Form,https://pokeapi.co/api/v2/pokemon/605/
+606,Beheeyem,Base Form,https://pokeapi.co/api/v2/pokemon/606/
+607,Litwick,Base Form,https://pokeapi.co/api/v2/pokemon/607/
+608,Lampent,Base Form,https://pokeapi.co/api/v2/pokemon/608/
+609,Chandelure,Base Form,https://pokeapi.co/api/v2/pokemon/609/
+610,Axew,Base Form,https://pokeapi.co/api/v2/pokemon/610/
+611,Fraxure,Base Form,https://pokeapi.co/api/v2/pokemon/611/
+612,Haxorus,Base Form,https://pokeapi.co/api/v2/pokemon/612/
+613,Cubchoo,Base Form,https://pokeapi.co/api/v2/pokemon/613/
+614,Beartic,Base Form,https://pokeapi.co/api/v2/pokemon/614/
+615,Cryogonal,Base Form,https://pokeapi.co/api/v2/pokemon/615/
+616,Shelmet,Base Form,https://pokeapi.co/api/v2/pokemon/616/
+617,Accelgor,Base Form,https://pokeapi.co/api/v2/pokemon/617/
+618,Stunfisk,Base Form,https://pokeapi.co/api/v2/pokemon/618/
+619,Mienfoo,Base Form,https://pokeapi.co/api/v2/pokemon/619/
+620,Mienshao,Base Form,https://pokeapi.co/api/v2/pokemon/620/
+621,Druddigon,Base Form,https://pokeapi.co/api/v2/pokemon/621/
+622,Golett,Base Form,https://pokeapi.co/api/v2/pokemon/622/
+623,Golurk,Base Form,https://pokeapi.co/api/v2/pokemon/623/
+624,Pawniard,Base Form,https://pokeapi.co/api/v2/pokemon/624/
+625,Bisharp,Base Form,https://pokeapi.co/api/v2/pokemon/625/
+626,Bouffalant,Base Form,https://pokeapi.co/api/v2/pokemon/626/
+627,Rufflet,Base Form,https://pokeapi.co/api/v2/pokemon/627/
+628,Braviary,Base Form,https://pokeapi.co/api/v2/pokemon/628/
+629,Vullaby,Base Form,https://pokeapi.co/api/v2/pokemon/629/
+630,Mandibuzz,Base Form,https://pokeapi.co/api/v2/pokemon/630/
+631,Heatmor,Base Form,https://pokeapi.co/api/v2/pokemon/631/
+632,Durant,Base Form,https://pokeapi.co/api/v2/pokemon/632/
+633,Deino,Base Form,https://pokeapi.co/api/v2/pokemon/633/
+634,Zweilous,Base Form,https://pokeapi.co/api/v2/pokemon/634/
+635,Hydreigon,Base Form,https://pokeapi.co/api/v2/pokemon/635/
+636,Larvesta,Base Form,https://pokeapi.co/api/v2/pokemon/636/
+637,Volcarona,Base Form,https://pokeapi.co/api/v2/pokemon/637/
+638,Cobalion,Base Form,https://pokeapi.co/api/v2/pokemon/638/
+639,Terrakion,Base Form,https://pokeapi.co/api/v2/pokemon/639/
+640,Virizion,Base Form,https://pokeapi.co/api/v2/pokemon/640/
+641,Tornadus Incarnate,Base Form,https://pokeapi.co/api/v2/pokemon/641/
+642,Thundurus Incarnate,Base Form,https://pokeapi.co/api/v2/pokemon/642/
+643,Reshiram,Base Form,https://pokeapi.co/api/v2/pokemon/643/
+644,Zekrom,Base Form,https://pokeapi.co/api/v2/pokemon/644/
+645,Landorus Incarnate,Base Form,https://pokeapi.co/api/v2/pokemon/645/
+646,Kyurem,Base Form,https://pokeapi.co/api/v2/pokemon/646/
+647,Keldeo Ordinary,Base Form,https://pokeapi.co/api/v2/pokemon/647/
+648,Meloetta Aria,Base Form,https://pokeapi.co/api/v2/pokemon/648/
+649,Genesect,Base Form,https://pokeapi.co/api/v2/pokemon/649/
+650,Chespin,Base Form,https://pokeapi.co/api/v2/pokemon/650/
+651,Quilladin,Base Form,https://pokeapi.co/api/v2/pokemon/651/
+652,Chesnaught,Base Form,https://pokeapi.co/api/v2/pokemon/652/
+653,Fennekin,Base Form,https://pokeapi.co/api/v2/pokemon/653/
+654,Braixen,Base Form,https://pokeapi.co/api/v2/pokemon/654/
+655,Delphox,Base Form,https://pokeapi.co/api/v2/pokemon/655/
+656,Froakie,Base Form,https://pokeapi.co/api/v2/pokemon/656/
+657,Frogadier,Base Form,https://pokeapi.co/api/v2/pokemon/657/
+658,Greninja,Base Form,https://pokeapi.co/api/v2/pokemon/658/
+659,Bunnelby,Base Form,https://pokeapi.co/api/v2/pokemon/659/
+660,Diggersby,Base Form,https://pokeapi.co/api/v2/pokemon/660/
+661,Fletchling,Base Form,https://pokeapi.co/api/v2/pokemon/661/
+662,Fletchinder,Base Form,https://pokeapi.co/api/v2/pokemon/662/
+663,Talonflame,Base Form,https://pokeapi.co/api/v2/pokemon/663/
+664,Scatterbug,Base Form,https://pokeapi.co/api/v2/pokemon/664/
+665,Spewpa,Base Form,https://pokeapi.co/api/v2/pokemon/665/
+666,Vivillon,Base Form,https://pokeapi.co/api/v2/pokemon/666/
+667,Litleo,Base Form,https://pokeapi.co/api/v2/pokemon/667/
+668,Pyroar Male,Base Form,https://pokeapi.co/api/v2/pokemon/668/
+669,Flabebe,Base Form,https://pokeapi.co/api/v2/pokemon/669/
+670,Floette,Base Form,https://pokeapi.co/api/v2/pokemon/670/
+671,Florges,Base Form,https://pokeapi.co/api/v2/pokemon/671/
+672,Skiddo,Base Form,https://pokeapi.co/api/v2/pokemon/672/
+673,Gogoat,Base Form,https://pokeapi.co/api/v2/pokemon/673/
+674,Pancham,Base Form,https://pokeapi.co/api/v2/pokemon/674/
+675,Pangoro,Base Form,https://pokeapi.co/api/v2/pokemon/675/
+676,Furfrou,Base Form,https://pokeapi.co/api/v2/pokemon/676/
+677,Espurr,Base Form,https://pokeapi.co/api/v2/pokemon/677/
+678,Meowstic Male,Base Form,https://pokeapi.co/api/v2/pokemon/678/
+679,Honedge,Base Form,https://pokeapi.co/api/v2/pokemon/679/
+680,Doublade,Base Form,https://pokeapi.co/api/v2/pokemon/680/
+681,Aegislash Shield,Base Form,https://pokeapi.co/api/v2/pokemon/681/
+682,Spritzee,Base Form,https://pokeapi.co/api/v2/pokemon/682/
+683,Aromatisse,Base Form,https://pokeapi.co/api/v2/pokemon/683/
+684,Swirlix,Base Form,https://pokeapi.co/api/v2/pokemon/684/
+685,Slurpuff,Base Form,https://pokeapi.co/api/v2/pokemon/685/
+686,Inkay,Base Form,https://pokeapi.co/api/v2/pokemon/686/
+687,Malamar,Base Form,https://pokeapi.co/api/v2/pokemon/687/
+688,Binacle,Base Form,https://pokeapi.co/api/v2/pokemon/688/
+689,Barbaracle,Base Form,https://pokeapi.co/api/v2/pokemon/689/
+690,Skrelp,Base Form,https://pokeapi.co/api/v2/pokemon/690/
+691,Dragalge,Base Form,https://pokeapi.co/api/v2/pokemon/691/
+692,Clauncher,Base Form,https://pokeapi.co/api/v2/pokemon/692/
+693,Clawitzer,Base Form,https://pokeapi.co/api/v2/pokemon/693/
+694,Helioptile,Base Form,https://pokeapi.co/api/v2/pokemon/694/
+695,Heliolisk,Base Form,https://pokeapi.co/api/v2/pokemon/695/
+696,Tyrunt,Base Form,https://pokeapi.co/api/v2/pokemon/696/
+697,Tyrantrum,Base Form,https://pokeapi.co/api/v2/pokemon/697/
+698,Amaura,Base Form,https://pokeapi.co/api/v2/pokemon/698/
+699,Aurorus,Base Form,https://pokeapi.co/api/v2/pokemon/699/
+700,Sylveon,Base Form,https://pokeapi.co/api/v2/pokemon/700/
+701,Hawlucha,Base Form,https://pokeapi.co/api/v2/pokemon/701/
+702,Dedenne,Base Form,https://pokeapi.co/api/v2/pokemon/702/
+703,Carbink,Base Form,https://pokeapi.co/api/v2/pokemon/703/
+704,Goomy,Base Form,https://pokeapi.co/api/v2/pokemon/704/
+705,Sliggoo,Base Form,https://pokeapi.co/api/v2/pokemon/705/
+706,Goodra,Base Form,https://pokeapi.co/api/v2/pokemon/706/
+707,Klefki,Base Form,https://pokeapi.co/api/v2/pokemon/707/
+708,Phantump,Base Form,https://pokeapi.co/api/v2/pokemon/708/
+709,Trevenant,Base Form,https://pokeapi.co/api/v2/pokemon/709/
+710,Pumpkaboo Average,Base Form,https://pokeapi.co/api/v2/pokemon/710/
+711,Gourgeist Average,Base Form,https://pokeapi.co/api/v2/pokemon/711/
+712,Bergmite,Base Form,https://pokeapi.co/api/v2/pokemon/712/
+713,Avalugg,Base Form,https://pokeapi.co/api/v2/pokemon/713/
+714,Noibat,Base Form,https://pokeapi.co/api/v2/pokemon/714/
+715,Noivern,Base Form,https://pokeapi.co/api/v2/pokemon/715/
+716,Xerneas,Base Form,https://pokeapi.co/api/v2/pokemon/716/
+717,Yveltal,Base Form,https://pokeapi.co/api/v2/pokemon/717/
+718,Zygarde 50,Base Form,https://pokeapi.co/api/v2/pokemon/718/
+719,Diancie,Base Form,https://pokeapi.co/api/v2/pokemon/719/
+720,Hoopa,Base Form,https://pokeapi.co/api/v2/pokemon/720/
+721,Volcanion,Base Form,https://pokeapi.co/api/v2/pokemon/721/
+722,Rowlet,Base Form,https://pokeapi.co/api/v2/pokemon/722/
+723,Dartrix,Base Form,https://pokeapi.co/api/v2/pokemon/723/
+724,Decidueye,Base Form,https://pokeapi.co/api/v2/pokemon/724/
+725,Litten,Base Form,https://pokeapi.co/api/v2/pokemon/725/
+726,Torracat,Base Form,https://pokeapi.co/api/v2/pokemon/726/
+727,Incineroar,Base Form,https://pokeapi.co/api/v2/pokemon/727/
+728,Popplio,Base Form,https://pokeapi.co/api/v2/pokemon/728/
+729,Brionne,Base Form,https://pokeapi.co/api/v2/pokemon/729/
+730,Primarina,Base Form,https://pokeapi.co/api/v2/pokemon/730/
+731,Pikipek,Base Form,https://pokeapi.co/api/v2/pokemon/731/
+732,Trumbeak,Base Form,https://pokeapi.co/api/v2/pokemon/732/
+733,Toucannon,Base Form,https://pokeapi.co/api/v2/pokemon/733/
+734,Yungoos,Base Form,https://pokeapi.co/api/v2/pokemon/734/
+735,Gumshoos,Base Form,https://pokeapi.co/api/v2/pokemon/735/
+736,Grubbin,Base Form,https://pokeapi.co/api/v2/pokemon/736/
+737,Charjabug,Base Form,https://pokeapi.co/api/v2/pokemon/737/
+738,Vikavolt,Base Form,https://pokeapi.co/api/v2/pokemon/738/
+739,Crabrawler,Base Form,https://pokeapi.co/api/v2/pokemon/739/
+740,Crabominable,Base Form,https://pokeapi.co/api/v2/pokemon/740/
+741,Oricorio Baile,Base Form,https://pokeapi.co/api/v2/pokemon/741/
+742,Cutiefly,Base Form,https://pokeapi.co/api/v2/pokemon/742/
+743,Ribombee,Base Form,https://pokeapi.co/api/v2/pokemon/743/
+744,Rockruff,Base Form,https://pokeapi.co/api/v2/pokemon/744/
+745,Lycanroc Midday,Base Form,https://pokeapi.co/api/v2/pokemon/745/
+746,Wishiwashi Solo,Base Form,https://pokeapi.co/api/v2/pokemon/746/
+747,Mareanie,Base Form,https://pokeapi.co/api/v2/pokemon/747/
+748,Toxapex,Base Form,https://pokeapi.co/api/v2/pokemon/748/
+749,Mudbray,Base Form,https://pokeapi.co/api/v2/pokemon/749/
+750,Mudsdale,Base Form,https://pokeapi.co/api/v2/pokemon/750/
+751,Dewpider,Base Form,https://pokeapi.co/api/v2/pokemon/751/
+752,Araquanid,Base Form,https://pokeapi.co/api/v2/pokemon/752/
+753,Fomantis,Base Form,https://pokeapi.co/api/v2/pokemon/753/
+754,Lurantis,Base Form,https://pokeapi.co/api/v2/pokemon/754/
+755,Morelull,Base Form,https://pokeapi.co/api/v2/pokemon/755/
+756,Shiinotic,Base Form,https://pokeapi.co/api/v2/pokemon/756/
+757,Salandit,Base Form,https://pokeapi.co/api/v2/pokemon/757/
+758,Salazzle,Base Form,https://pokeapi.co/api/v2/pokemon/758/
+759,Stufful,Base Form,https://pokeapi.co/api/v2/pokemon/759/
+760,Bewear,Base Form,https://pokeapi.co/api/v2/pokemon/760/
+761,Bounsweet,Base Form,https://pokeapi.co/api/v2/pokemon/761/
+762,Steenee,Base Form,https://pokeapi.co/api/v2/pokemon/762/
+763,Tsareena,Base Form,https://pokeapi.co/api/v2/pokemon/763/
+764,Comfey,Base Form,https://pokeapi.co/api/v2/pokemon/764/
+765,Oranguru,Base Form,https://pokeapi.co/api/v2/pokemon/765/
+766,Passimian,Base Form,https://pokeapi.co/api/v2/pokemon/766/
+767,Wimpod,Base Form,https://pokeapi.co/api/v2/pokemon/767/
+768,Golisopod,Base Form,https://pokeapi.co/api/v2/pokemon/768/
+769,Sandygast,Base Form,https://pokeapi.co/api/v2/pokemon/769/
+770,Palossand,Base Form,https://pokeapi.co/api/v2/pokemon/770/
+771,Pyukumuku,Base Form,https://pokeapi.co/api/v2/pokemon/771/
+772,Type Null,Base Form,https://pokeapi.co/api/v2/pokemon/772/
+773,Silvally,Base Form,https://pokeapi.co/api/v2/pokemon/773/
+774,Minior Red Meteor,Base Form,https://pokeapi.co/api/v2/pokemon/774/
+775,Komala,Base Form,https://pokeapi.co/api/v2/pokemon/775/
+776,Turtonator,Base Form,https://pokeapi.co/api/v2/pokemon/776/
+777,Togedemaru,Base Form,https://pokeapi.co/api/v2/pokemon/777/
+778,Mimikyu Disguised,Base Form,https://pokeapi.co/api/v2/pokemon/778/
+779,Bruxish,Base Form,https://pokeapi.co/api/v2/pokemon/779/
+780,Drampa,Base Form,https://pokeapi.co/api/v2/pokemon/780/
+781,Dhelmise,Base Form,https://pokeapi.co/api/v2/pokemon/781/
+782,Jangmo O,Base Form,https://pokeapi.co/api/v2/pokemon/782/
+783,Hakamo O,Base Form,https://pokeapi.co/api/v2/pokemon/783/
+784,Kommo O,Base Form,https://pokeapi.co/api/v2/pokemon/784/
+785,Tapu Koko,Base Form,https://pokeapi.co/api/v2/pokemon/785/
+786,Tapu Lele,Base Form,https://pokeapi.co/api/v2/pokemon/786/
+787,Tapu Bulu,Base Form,https://pokeapi.co/api/v2/pokemon/787/
+788,Tapu Fini,Base Form,https://pokeapi.co/api/v2/pokemon/788/
+789,Cosmog,Base Form,https://pokeapi.co/api/v2/pokemon/789/
+790,Cosmoem,Base Form,https://pokeapi.co/api/v2/pokemon/790/
+791,Solgaleo,Base Form,https://pokeapi.co/api/v2/pokemon/791/
+792,Lunala,Base Form,https://pokeapi.co/api/v2/pokemon/792/
+793,Nihilego,Base Form,https://pokeapi.co/api/v2/pokemon/793/
+794,Buzzwole,Base Form,https://pokeapi.co/api/v2/pokemon/794/
+795,Pheromosa,Base Form,https://pokeapi.co/api/v2/pokemon/795/
+796,Xurkitree,Base Form,https://pokeapi.co/api/v2/pokemon/796/
+797,Celesteela,Base Form,https://pokeapi.co/api/v2/pokemon/797/
+798,Kartana,Base Form,https://pokeapi.co/api/v2/pokemon/798/
+799,Guzzlord,Base Form,https://pokeapi.co/api/v2/pokemon/799/
+800,Necrozma,Base Form,https://pokeapi.co/api/v2/pokemon/800/
+801,Magearna,Base Form,https://pokeapi.co/api/v2/pokemon/801/
+802,Marshadow,Base Form,https://pokeapi.co/api/v2/pokemon/802/
+803,Poipole,Base Form,https://pokeapi.co/api/v2/pokemon/803/
+804,Naganadel,Base Form,https://pokeapi.co/api/v2/pokemon/804/
+805,Stakataka,Base Form,https://pokeapi.co/api/v2/pokemon/805/
+806,Blacephalon,Base Form,https://pokeapi.co/api/v2/pokemon/806/
+807,Zeraora,Base Form,https://pokeapi.co/api/v2/pokemon/807/
+808,Meltan,Base Form,https://pokeapi.co/api/v2/pokemon/808/
+809,Melmetal,Base Form,https://pokeapi.co/api/v2/pokemon/809/
+810,Grookey,Base Form,https://pokeapi.co/api/v2/pokemon/810/
+811,Thwackey,Base Form,https://pokeapi.co/api/v2/pokemon/811/
+812,Rillaboom,Base Form,https://pokeapi.co/api/v2/pokemon/812/
+813,Scorbunny,Base Form,https://pokeapi.co/api/v2/pokemon/813/
+814,Raboot,Base Form,https://pokeapi.co/api/v2/pokemon/814/
+815,Cinderace,Base Form,https://pokeapi.co/api/v2/pokemon/815/
+816,Sobble,Base Form,https://pokeapi.co/api/v2/pokemon/816/
+817,Drizzile,Base Form,https://pokeapi.co/api/v2/pokemon/817/
+818,Inteleon,Base Form,https://pokeapi.co/api/v2/pokemon/818/
+819,Skwovet,Base Form,https://pokeapi.co/api/v2/pokemon/819/
+820,Greedent,Base Form,https://pokeapi.co/api/v2/pokemon/820/
+821,Rookidee,Base Form,https://pokeapi.co/api/v2/pokemon/821/
+822,Corvisquire,Base Form,https://pokeapi.co/api/v2/pokemon/822/
+823,Corviknight,Base Form,https://pokeapi.co/api/v2/pokemon/823/
+824,Blipbug,Base Form,https://pokeapi.co/api/v2/pokemon/824/
+825,Dottler,Base Form,https://pokeapi.co/api/v2/pokemon/825/
+826,Orbeetle,Base Form,https://pokeapi.co/api/v2/pokemon/826/
+827,Nickit,Base Form,https://pokeapi.co/api/v2/pokemon/827/
+828,Thievul,Base Form,https://pokeapi.co/api/v2/pokemon/828/
+829,Gossifleur,Base Form,https://pokeapi.co/api/v2/pokemon/829/
+830,Eldegoss,Base Form,https://pokeapi.co/api/v2/pokemon/830/
+831,Wooloo,Base Form,https://pokeapi.co/api/v2/pokemon/831/
+832,Dubwool,Base Form,https://pokeapi.co/api/v2/pokemon/832/
+833,Chewtle,Base Form,https://pokeapi.co/api/v2/pokemon/833/
+834,Drednaw,Base Form,https://pokeapi.co/api/v2/pokemon/834/
+835,Yamper,Base Form,https://pokeapi.co/api/v2/pokemon/835/
+836,Boltund,Base Form,https://pokeapi.co/api/v2/pokemon/836/
+837,Rolycoly,Base Form,https://pokeapi.co/api/v2/pokemon/837/
+838,Carkol,Base Form,https://pokeapi.co/api/v2/pokemon/838/
+839,Coalossal,Base Form,https://pokeapi.co/api/v2/pokemon/839/
+840,Applin,Base Form,https://pokeapi.co/api/v2/pokemon/840/
+841,Flapple,Base Form,https://pokeapi.co/api/v2/pokemon/841/
+842,Appletun,Base Form,https://pokeapi.co/api/v2/pokemon/842/
+843,Silicobra,Base Form,https://pokeapi.co/api/v2/pokemon/843/
+844,Sandaconda,Base Form,https://pokeapi.co/api/v2/pokemon/844/
+845,Cramorant,Base Form,https://pokeapi.co/api/v2/pokemon/845/
+846,Arrokuda,Base Form,https://pokeapi.co/api/v2/pokemon/846/
+847,Barraskewda,Base Form,https://pokeapi.co/api/v2/pokemon/847/
+848,Toxel,Base Form,https://pokeapi.co/api/v2/pokemon/848/
+849,Toxtricity Amped,Base Form,https://pokeapi.co/api/v2/pokemon/849/
+850,Sizzlipede,Base Form,https://pokeapi.co/api/v2/pokemon/850/
+851,Centiskorch,Base Form,https://pokeapi.co/api/v2/pokemon/851/
+852,Clobbopus,Base Form,https://pokeapi.co/api/v2/pokemon/852/
+853,Grapploct,Base Form,https://pokeapi.co/api/v2/pokemon/853/
+854,Sinistea,Base Form,https://pokeapi.co/api/v2/pokemon/854/
+855,Polteageist,Base Form,https://pokeapi.co/api/v2/pokemon/855/
+856,Hatenna,Base Form,https://pokeapi.co/api/v2/pokemon/856/
+857,Hattrem,Base Form,https://pokeapi.co/api/v2/pokemon/857/
+858,Hatterene,Base Form,https://pokeapi.co/api/v2/pokemon/858/
+859,Impidimp,Base Form,https://pokeapi.co/api/v2/pokemon/859/
+860,Morgrem,Base Form,https://pokeapi.co/api/v2/pokemon/860/
+861,Grimmsnarl,Base Form,https://pokeapi.co/api/v2/pokemon/861/
+862,Obstagoon,Base Form,https://pokeapi.co/api/v2/pokemon/862/
+863,Perrserker,Base Form,https://pokeapi.co/api/v2/pokemon/863/
+864,Cursola,Base Form,https://pokeapi.co/api/v2/pokemon/864/
+865,Sirfetchd,Base Form,https://pokeapi.co/api/v2/pokemon/865/
+866,Mr Rime,Base Form,https://pokeapi.co/api/v2/pokemon/866/
+867,Runerigus,Base Form,https://pokeapi.co/api/v2/pokemon/867/
+868,Milcery,Base Form,https://pokeapi.co/api/v2/pokemon/868/
+869,Alcremie,Base Form,https://pokeapi.co/api/v2/pokemon/869/
+870,Falinks,Base Form,https://pokeapi.co/api/v2/pokemon/870/
+871,Pincurchin,Base Form,https://pokeapi.co/api/v2/pokemon/871/
+872,Snom,Base Form,https://pokeapi.co/api/v2/pokemon/872/
+873,Frosmoth,Base Form,https://pokeapi.co/api/v2/pokemon/873/
+874,Stonjourner,Base Form,https://pokeapi.co/api/v2/pokemon/874/
+875,Eiscue Ice,Base Form,https://pokeapi.co/api/v2/pokemon/875/
+876,Indeedee Male,Base Form,https://pokeapi.co/api/v2/pokemon/876/
+877,Morpeko Full Belly,Base Form,https://pokeapi.co/api/v2/pokemon/877/
+878,Cufant,Base Form,https://pokeapi.co/api/v2/pokemon/878/
+879,Copperajah,Base Form,https://pokeapi.co/api/v2/pokemon/879/
+880,Dracozolt,Base Form,https://pokeapi.co/api/v2/pokemon/880/
+881,Arctozolt,Base Form,https://pokeapi.co/api/v2/pokemon/881/
+882,Dracovish,Base Form,https://pokeapi.co/api/v2/pokemon/882/
+883,Arctovish,Base Form,https://pokeapi.co/api/v2/pokemon/883/
+884,Duraludon,Base Form,https://pokeapi.co/api/v2/pokemon/884/
+885,Dreepy,Base Form,https://pokeapi.co/api/v2/pokemon/885/
+886,Drakloak,Base Form,https://pokeapi.co/api/v2/pokemon/886/
+887,Dragapult,Base Form,https://pokeapi.co/api/v2/pokemon/887/
+888,Zacian,Base Form,https://pokeapi.co/api/v2/pokemon/888/
+889,Zamazenta,Base Form,https://pokeapi.co/api/v2/pokemon/889/
+890,Eternatus,Base Form,https://pokeapi.co/api/v2/pokemon/890/
+891,Kubfu,Base Form,https://pokeapi.co/api/v2/pokemon/891/
+892,Urshifu Single Strike,Base Form,https://pokeapi.co/api/v2/pokemon/892/
+893,Zarude,Base Form,https://pokeapi.co/api/v2/pokemon/893/
+894,Regieleki,Base Form,https://pokeapi.co/api/v2/pokemon/894/
+895,Regidrago,Base Form,https://pokeapi.co/api/v2/pokemon/895/
+896,Glastrier,Base Form,https://pokeapi.co/api/v2/pokemon/896/
+897,Spectrier,Base Form,https://pokeapi.co/api/v2/pokemon/897/
+898,Calyrex,Base Form,https://pokeapi.co/api/v2/pokemon/898/
+899,Wyrdeer,Base Form,https://pokeapi.co/api/v2/pokemon/899/
+900,Kleavor,Base Form,https://pokeapi.co/api/v2/pokemon/900/
+901,Ursaluna,Base Form,https://pokeapi.co/api/v2/pokemon/901/
+902,Basculegion Male,Base Form,https://pokeapi.co/api/v2/pokemon/902/
+903,Sneasler,Base Form,https://pokeapi.co/api/v2/pokemon/903/
+904,Overqwil,Base Form,https://pokeapi.co/api/v2/pokemon/904/
+905,Enamorus Incarnate,Base Form,https://pokeapi.co/api/v2/pokemon/905/
+906,Sprigatito,Base Form,https://pokeapi.co/api/v2/pokemon/906/
+907,Floragato,Base Form,https://pokeapi.co/api/v2/pokemon/907/
+908,Meowscarada,Base Form,https://pokeapi.co/api/v2/pokemon/908/
+909,Fuecoco,Base Form,https://pokeapi.co/api/v2/pokemon/909/
+910,Crocalor,Base Form,https://pokeapi.co/api/v2/pokemon/910/
+911,Skeledirge,Base Form,https://pokeapi.co/api/v2/pokemon/911/
+912,Quaxly,Base Form,https://pokeapi.co/api/v2/pokemon/912/
+913,Quaxwell,Base Form,https://pokeapi.co/api/v2/pokemon/913/
+914,Quaquaval,Base Form,https://pokeapi.co/api/v2/pokemon/914/
+915,Lechonk,Base Form,https://pokeapi.co/api/v2/pokemon/915/
+916,Oinkologne Male,Base Form,https://pokeapi.co/api/v2/pokemon/916/
+917,Tarountula,Base Form,https://pokeapi.co/api/v2/pokemon/917/
+918,Spidops,Base Form,https://pokeapi.co/api/v2/pokemon/918/
+919,Nymble,Base Form,https://pokeapi.co/api/v2/pokemon/919/
+920,Lokix,Base Form,https://pokeapi.co/api/v2/pokemon/920/
+921,Pawmi,Base Form,https://pokeapi.co/api/v2/pokemon/921/
+922,Pawmo,Base Form,https://pokeapi.co/api/v2/pokemon/922/
+923,Pawmot,Base Form,https://pokeapi.co/api/v2/pokemon/923/
+924,Tandemaus,Base Form,https://pokeapi.co/api/v2/pokemon/924/
+925,Maushold Family Of Four,Base Form,https://pokeapi.co/api/v2/pokemon/925/
+926,Fidough,Base Form,https://pokeapi.co/api/v2/pokemon/926/
+927,Dachsbun,Base Form,https://pokeapi.co/api/v2/pokemon/927/
+928,Smoliv,Base Form,https://pokeapi.co/api/v2/pokemon/928/
+929,Dolliv,Base Form,https://pokeapi.co/api/v2/pokemon/929/
+930,Arboliva,Base Form,https://pokeapi.co/api/v2/pokemon/930/
+931,Squawkabilly Green Plumage,Base Form,https://pokeapi.co/api/v2/pokemon/931/
+932,Nacli,Base Form,https://pokeapi.co/api/v2/pokemon/932/
+933,Naclstack,Base Form,https://pokeapi.co/api/v2/pokemon/933/
+934,Garganacl,Base Form,https://pokeapi.co/api/v2/pokemon/934/
+935,Charcadet,Base Form,https://pokeapi.co/api/v2/pokemon/935/
+936,Armarouge,Base Form,https://pokeapi.co/api/v2/pokemon/936/
+937,Ceruledge,Base Form,https://pokeapi.co/api/v2/pokemon/937/
+938,Tadbulb,Base Form,https://pokeapi.co/api/v2/pokemon/938/
+939,Bellibolt,Base Form,https://pokeapi.co/api/v2/pokemon/939/
+940,Wattrel,Base Form,https://pokeapi.co/api/v2/pokemon/940/
+941,Kilowattrel,Base Form,https://pokeapi.co/api/v2/pokemon/941/
+942,Maschiff,Base Form,https://pokeapi.co/api/v2/pokemon/942/
+943,Mabosstiff,Base Form,https://pokeapi.co/api/v2/pokemon/943/
+944,Shroodle,Base Form,https://pokeapi.co/api/v2/pokemon/944/
+945,Grafaiai,Base Form,https://pokeapi.co/api/v2/pokemon/945/
+946,Bramblin,Base Form,https://pokeapi.co/api/v2/pokemon/946/
+947,Brambleghast,Base Form,https://pokeapi.co/api/v2/pokemon/947/
+948,Toedscool,Base Form,https://pokeapi.co/api/v2/pokemon/948/
+949,Toedscruel,Base Form,https://pokeapi.co/api/v2/pokemon/949/
+950,Klawf,Base Form,https://pokeapi.co/api/v2/pokemon/950/
+951,Capsakid,Base Form,https://pokeapi.co/api/v2/pokemon/951/
+952,Scovillain,Base Form,https://pokeapi.co/api/v2/pokemon/952/
+953,Rellor,Base Form,https://pokeapi.co/api/v2/pokemon/953/
+954,Rabsca,Base Form,https://pokeapi.co/api/v2/pokemon/954/
+955,Flittle,Base Form,https://pokeapi.co/api/v2/pokemon/955/
+956,Espathra,Base Form,https://pokeapi.co/api/v2/pokemon/956/
+957,Tinkatink,Base Form,https://pokeapi.co/api/v2/pokemon/957/
+958,Tinkatuff,Base Form,https://pokeapi.co/api/v2/pokemon/958/
+959,Tinkaton,Base Form,https://pokeapi.co/api/v2/pokemon/959/
+960,Wiglett,Base Form,https://pokeapi.co/api/v2/pokemon/960/
+961,Wugtrio,Base Form,https://pokeapi.co/api/v2/pokemon/961/
+962,Bombirdier,Base Form,https://pokeapi.co/api/v2/pokemon/962/
+963,Finizen,Base Form,https://pokeapi.co/api/v2/pokemon/963/
+964,Palafin Zero,Base Form,https://pokeapi.co/api/v2/pokemon/964/
+965,Varoom,Base Form,https://pokeapi.co/api/v2/pokemon/965/
+966,Revavroom,Base Form,https://pokeapi.co/api/v2/pokemon/966/
+967,Cyclizar,Base Form,https://pokeapi.co/api/v2/pokemon/967/
+968,Orthworm,Base Form,https://pokeapi.co/api/v2/pokemon/968/
+969,Glimmet,Base Form,https://pokeapi.co/api/v2/pokemon/969/
+970,Glimmora,Base Form,https://pokeapi.co/api/v2/pokemon/970/
+971,Greavard,Base Form,https://pokeapi.co/api/v2/pokemon/971/
+972,Houndstone,Base Form,https://pokeapi.co/api/v2/pokemon/972/
+973,Flamigo,Base Form,https://pokeapi.co/api/v2/pokemon/973/
+974,Cetoddle,Base Form,https://pokeapi.co/api/v2/pokemon/974/
+975,Cetitan,Base Form,https://pokeapi.co/api/v2/pokemon/975/
+976,Veluza,Base Form,https://pokeapi.co/api/v2/pokemon/976/
+977,Dondozo,Base Form,https://pokeapi.co/api/v2/pokemon/977/
+978,Tatsugiri Curly,Base Form,https://pokeapi.co/api/v2/pokemon/978/
+979,Annihilape,Base Form,https://pokeapi.co/api/v2/pokemon/979/
+980,Clodsire,Base Form,https://pokeapi.co/api/v2/pokemon/980/
+981,Farigiraf,Base Form,https://pokeapi.co/api/v2/pokemon/981/
+982,Dudunsparce Two Segment,Base Form,https://pokeapi.co/api/v2/pokemon/982/
+983,Kingambit,Base Form,https://pokeapi.co/api/v2/pokemon/983/
+984,Great Tusk,Base Form,https://pokeapi.co/api/v2/pokemon/984/
+985,Scream Tail,Base Form,https://pokeapi.co/api/v2/pokemon/985/
+986,Brute Bonnet,Base Form,https://pokeapi.co/api/v2/pokemon/986/
+987,Flutter Mane,Base Form,https://pokeapi.co/api/v2/pokemon/987/
+988,Slither Wing,Base Form,https://pokeapi.co/api/v2/pokemon/988/
+989,Sandy Shocks,Base Form,https://pokeapi.co/api/v2/pokemon/989/
+990,Iron Treads,Base Form,https://pokeapi.co/api/v2/pokemon/990/
+991,Iron Bundle,Base Form,https://pokeapi.co/api/v2/pokemon/991/
+992,Iron Hands,Base Form,https://pokeapi.co/api/v2/pokemon/992/
+993,Iron Jugulis,Base Form,https://pokeapi.co/api/v2/pokemon/993/
+994,Iron Moth,Base Form,https://pokeapi.co/api/v2/pokemon/994/
+995,Iron Thorns,Base Form,https://pokeapi.co/api/v2/pokemon/995/
+996,Frigibax,Base Form,https://pokeapi.co/api/v2/pokemon/996/
+997,Arctibax,Base Form,https://pokeapi.co/api/v2/pokemon/997/
+998,Baxcalibur,Base Form,https://pokeapi.co/api/v2/pokemon/998/
+999,Gimmighoul,Base Form,https://pokeapi.co/api/v2/pokemon/999/
+1000,Gholdengo,Base Form,https://pokeapi.co/api/v2/pokemon/1000/
+1001,Wo Chien,Base Form,https://pokeapi.co/api/v2/pokemon/1001/
+1002,Chien Pao,Base Form,https://pokeapi.co/api/v2/pokemon/1002/
+1003,Ting Lu,Base Form,https://pokeapi.co/api/v2/pokemon/1003/
+1004,Chi Yu,Base Form,https://pokeapi.co/api/v2/pokemon/1004/
+1005,Roaring Moon,Base Form,https://pokeapi.co/api/v2/pokemon/1005/
+1006,Iron Valiant,Base Form,https://pokeapi.co/api/v2/pokemon/1006/
+1007,Koraidon,Base Form,https://pokeapi.co/api/v2/pokemon/1007/
+1008,Miraidon,Base Form,https://pokeapi.co/api/v2/pokemon/1008/
+1009,Walking Wake,Base Form,https://pokeapi.co/api/v2/pokemon/1009/
+1010,Iron Leaves,Base Form,https://pokeapi.co/api/v2/pokemon/1010/
+1011,Dipplin,Base Form,https://pokeapi.co/api/v2/pokemon/1011/
+1012,Poltchageist,Base Form,https://pokeapi.co/api/v2/pokemon/1012/
+1013,Sinistcha,Base Form,https://pokeapi.co/api/v2/pokemon/1013/
+1014,Okidogi,Base Form,https://pokeapi.co/api/v2/pokemon/1014/
+1015,Munkidori,Base Form,https://pokeapi.co/api/v2/pokemon/1015/
+1016,Fezandipiti,Base Form,https://pokeapi.co/api/v2/pokemon/1016/
+1017,Ogerpon,Base Form,https://pokeapi.co/api/v2/pokemon/1017/
+1018,Archaludon,Base Form,https://pokeapi.co/api/v2/pokemon/1018/
+1019,Hydrapple,Base Form,https://pokeapi.co/api/v2/pokemon/1019/
+1020,Gouging Fire,Base Form,https://pokeapi.co/api/v2/pokemon/1020/
+1021,Raging Bolt,Base Form,https://pokeapi.co/api/v2/pokemon/1021/
+1022,Iron Boulder,Base Form,https://pokeapi.co/api/v2/pokemon/1022/
+1023,Iron Crown,Base Form,https://pokeapi.co/api/v2/pokemon/1023/
+1024,Terapagos,Base Form,https://pokeapi.co/api/v2/pokemon/1024/
+1025,Pecharunt,Base Form,https://pokeapi.co/api/v2/pokemon/1025/
+10001,Deoxys Attack,Alternate Form,https://pokeapi.co/api/v2/pokemon/10001/
+10002,Deoxys Defense,Alternate Form,https://pokeapi.co/api/v2/pokemon/10002/
+10003,Deoxys Speed,Alternate Form,https://pokeapi.co/api/v2/pokemon/10003/
+10004,Wormadam Sandy,Alternate Form,https://pokeapi.co/api/v2/pokemon/10004/
+10005,Wormadam Trash,Alternate Form,https://pokeapi.co/api/v2/pokemon/10005/
+10006,Shaymin Sky,Alternate Form,https://pokeapi.co/api/v2/pokemon/10006/
+10007,Giratina Origin,Alternate Form,https://pokeapi.co/api/v2/pokemon/10007/
+10008,Rotom Heat,Alternate Form,https://pokeapi.co/api/v2/pokemon/10008/
+10009,Rotom Wash,Alternate Form,https://pokeapi.co/api/v2/pokemon/10009/
+10010,Rotom Frost,Alternate Form,https://pokeapi.co/api/v2/pokemon/10010/
+10011,Rotom Fan,Alternate Form,https://pokeapi.co/api/v2/pokemon/10011/
+10012,Rotom Mow,Alternate Form,https://pokeapi.co/api/v2/pokemon/10012/
+10013,Castform Sunny,Alternate Form,https://pokeapi.co/api/v2/pokemon/10013/
+10014,Castform Rainy,Alternate Form,https://pokeapi.co/api/v2/pokemon/10014/
+10015,Castform Snowy,Alternate Form,https://pokeapi.co/api/v2/pokemon/10015/
+10016,Basculin Blue Striped,Alternate Form,https://pokeapi.co/api/v2/pokemon/10016/
+10017,Darmanitan Zen,Alternate Form,https://pokeapi.co/api/v2/pokemon/10017/
+10018,Meloetta Pirouette,Alternate Form,https://pokeapi.co/api/v2/pokemon/10018/
+10019,Tornadus Therian,Alternate Form,https://pokeapi.co/api/v2/pokemon/10019/
+10020,Thundurus Therian,Alternate Form,https://pokeapi.co/api/v2/pokemon/10020/
+10021,Landorus Therian,Alternate Form,https://pokeapi.co/api/v2/pokemon/10021/
+10022,Kyurem Black,Alternate Form,https://pokeapi.co/api/v2/pokemon/10022/
+10023,Kyurem White,Alternate Form,https://pokeapi.co/api/v2/pokemon/10023/
+10024,Keldeo Resolute,Alternate Form,https://pokeapi.co/api/v2/pokemon/10024/
+10025,Meowstic Female,Alternate Form,https://pokeapi.co/api/v2/pokemon/10025/
+10026,Aegislash Blade,Alternate Form,https://pokeapi.co/api/v2/pokemon/10026/
+10027,Pumpkaboo Small,Alternate Form,https://pokeapi.co/api/v2/pokemon/10027/
+10028,Pumpkaboo Large,Alternate Form,https://pokeapi.co/api/v2/pokemon/10028/
+10029,Pumpkaboo Super,Alternate Form,https://pokeapi.co/api/v2/pokemon/10029/
+10030,Gourgeist Small,Alternate Form,https://pokeapi.co/api/v2/pokemon/10030/
+10031,Gourgeist Large,Alternate Form,https://pokeapi.co/api/v2/pokemon/10031/
+10032,Gourgeist Super,Alternate Form,https://pokeapi.co/api/v2/pokemon/10032/
+10033,Venusaur Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10033/
+10034,Charizard Mega X,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10034/
+10035,Charizard Mega Y,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10035/
+10036,Blastoise Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10036/
+10037,Alakazam Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10037/
+10038,Gengar Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10038/
+10039,Kangaskhan Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10039/
+10040,Pinsir Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10040/
+10041,Gyarados Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10041/
+10042,Aerodactyl Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10042/
+10043,Mewtwo Mega X,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10043/
+10044,Mewtwo Mega Y,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10044/
+10045,Ampharos Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10045/
+10046,Scizor Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10046/
+10047,Heracross Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10047/
+10048,Houndoom Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10048/
+10049,Tyranitar Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10049/
+10050,Blaziken Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10050/
+10051,Gardevoir Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10051/
+10052,Mawile Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10052/
+10053,Aggron Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10053/
+10054,Medicham Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10054/
+10055,Manectric Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10055/
+10056,Banette Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10056/
+10057,Absol Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10057/
+10058,Garchomp Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10058/
+10059,Lucario Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10059/
+10060,Abomasnow Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10060/
+10061,Floette Eternal,Alternate Form,https://pokeapi.co/api/v2/pokemon/10061/
+10062,Latias Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10062/
+10063,Latios Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10063/
+10064,Swampert Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10064/
+10065,Sceptile Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10065/
+10066,Sableye Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10066/
+10067,Altaria Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10067/
+10068,Gallade Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10068/
+10069,Audino Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10069/
+10070,Sharpedo Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10070/
+10071,Slowbro Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10071/
+10072,Steelix Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10072/
+10073,Pidgeot Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10073/
+10074,Glalie Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10074/
+10075,Diancie Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10075/
+10076,Metagross Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10076/
+10077,Kyogre Primal,Primal Reversion,https://pokeapi.co/api/v2/pokemon/10077/
+10078,Groudon Primal,Primal Reversion,https://pokeapi.co/api/v2/pokemon/10078/
+10079,Rayquaza Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10079/
+10080,Pikachu Rock Star,Alternate Form,https://pokeapi.co/api/v2/pokemon/10080/
+10081,Pikachu Belle,Alternate Form,https://pokeapi.co/api/v2/pokemon/10081/
+10082,Pikachu Pop Star,Alternate Form,https://pokeapi.co/api/v2/pokemon/10082/
+10083,Pikachu Phd,Alternate Form,https://pokeapi.co/api/v2/pokemon/10083/
+10084,Pikachu Libre,Alternate Form,https://pokeapi.co/api/v2/pokemon/10084/
+10085,Pikachu Cosplay,Alternate Form,https://pokeapi.co/api/v2/pokemon/10085/
+10086,Hoopa Unbound,Alternate Form,https://pokeapi.co/api/v2/pokemon/10086/
+10087,Camerupt Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10087/
+10088,Lopunny Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10088/
+10089,Salamence Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10089/
+10090,Beedrill Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10090/
+10091,Rattata Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10091/
+10092,Raticate Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10092/
+10093,Raticate Totem Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10093/
+10094,Pikachu Original Cap,Alternate Form,https://pokeapi.co/api/v2/pokemon/10094/
+10095,Pikachu Hoenn Cap,Alternate Form,https://pokeapi.co/api/v2/pokemon/10095/
+10096,Pikachu Sinnoh Cap,Alternate Form,https://pokeapi.co/api/v2/pokemon/10096/
+10097,Pikachu Unova Cap,Alternate Form,https://pokeapi.co/api/v2/pokemon/10097/
+10098,Pikachu Kalos Cap,Alternate Form,https://pokeapi.co/api/v2/pokemon/10098/
+10099,Pikachu Alola Cap,Regional Form,https://pokeapi.co/api/v2/pokemon/10099/
+10100,Raichu Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10100/
+10101,Sandshrew Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10101/
+10102,Sandslash Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10102/
+10103,Vulpix Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10103/
+10104,Ninetales Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10104/
+10105,Diglett Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10105/
+10106,Dugtrio Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10106/
+10107,Meowth Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10107/
+10108,Persian Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10108/
+10109,Geodude Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10109/
+10110,Graveler Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10110/
+10111,Golem Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10111/
+10112,Grimer Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10112/
+10113,Muk Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10113/
+10114,Exeggutor Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10114/
+10115,Marowak Alola,Regional Form,https://pokeapi.co/api/v2/pokemon/10115/
+10116,Greninja Battle Bond,Alternate Form,https://pokeapi.co/api/v2/pokemon/10116/
+10117,Greninja Ash,Alternate Form,https://pokeapi.co/api/v2/pokemon/10117/
+10118,Zygarde 10 Power Construct,Alternate Form,https://pokeapi.co/api/v2/pokemon/10118/
+10119,Zygarde 50 Power Construct,Alternate Form,https://pokeapi.co/api/v2/pokemon/10119/
+10120,Zygarde Complete,Alternate Form,https://pokeapi.co/api/v2/pokemon/10120/
+10121,Gumshoos Totem,Alternate Form,https://pokeapi.co/api/v2/pokemon/10121/
+10122,Vikavolt Totem,Alternate Form,https://pokeapi.co/api/v2/pokemon/10122/
+10123,Oricorio Pom Pom,Alternate Form,https://pokeapi.co/api/v2/pokemon/10123/
+10124,Oricorio Pau,Alternate Form,https://pokeapi.co/api/v2/pokemon/10124/
+10125,Oricorio Sensu,Alternate Form,https://pokeapi.co/api/v2/pokemon/10125/
+10126,Lycanroc Midnight,Alternate Form,https://pokeapi.co/api/v2/pokemon/10126/
+10127,Wishiwashi School,Alternate Form,https://pokeapi.co/api/v2/pokemon/10127/
+10128,Lurantis Totem,Alternate Form,https://pokeapi.co/api/v2/pokemon/10128/
+10129,Salazzle Totem,Alternate Form,https://pokeapi.co/api/v2/pokemon/10129/
+10130,Minior Orange Meteor,Alternate Form,https://pokeapi.co/api/v2/pokemon/10130/
+10131,Minior Yellow Meteor,Alternate Form,https://pokeapi.co/api/v2/pokemon/10131/
+10132,Minior Green Meteor,Alternate Form,https://pokeapi.co/api/v2/pokemon/10132/
+10133,Minior Blue Meteor,Alternate Form,https://pokeapi.co/api/v2/pokemon/10133/
+10134,Minior Indigo Meteor,Alternate Form,https://pokeapi.co/api/v2/pokemon/10134/
+10135,Minior Violet Meteor,Alternate Form,https://pokeapi.co/api/v2/pokemon/10135/
+10136,Minior Red,Alternate Form,https://pokeapi.co/api/v2/pokemon/10136/
+10137,Minior Orange,Alternate Form,https://pokeapi.co/api/v2/pokemon/10137/
+10138,Minior Yellow,Alternate Form,https://pokeapi.co/api/v2/pokemon/10138/
+10139,Minior Green,Alternate Form,https://pokeapi.co/api/v2/pokemon/10139/
+10140,Minior Blue,Alternate Form,https://pokeapi.co/api/v2/pokemon/10140/
+10141,Minior Indigo,Alternate Form,https://pokeapi.co/api/v2/pokemon/10141/
+10142,Minior Violet,Alternate Form,https://pokeapi.co/api/v2/pokemon/10142/
+10143,Mimikyu Busted,Alternate Form,https://pokeapi.co/api/v2/pokemon/10143/
+10144,Mimikyu Totem Disguised,Alternate Form,https://pokeapi.co/api/v2/pokemon/10144/
+10145,Mimikyu Totem Busted,Alternate Form,https://pokeapi.co/api/v2/pokemon/10145/
+10146,Kommo O Totem,Alternate Form,https://pokeapi.co/api/v2/pokemon/10146/
+10147,Magearna Original,Alternate Form,https://pokeapi.co/api/v2/pokemon/10147/
+10148,Pikachu Partner Cap,Alternate Form,https://pokeapi.co/api/v2/pokemon/10148/
+10149,Marowak Totem,Alternate Form,https://pokeapi.co/api/v2/pokemon/10149/
+10150,Ribombee Totem,Alternate Form,https://pokeapi.co/api/v2/pokemon/10150/
+10151,Rockruff Own Tempo,Alternate Form,https://pokeapi.co/api/v2/pokemon/10151/
+10152,Lycanroc Dusk,Alternate Form,https://pokeapi.co/api/v2/pokemon/10152/
+10153,Araquanid Totem,Alternate Form,https://pokeapi.co/api/v2/pokemon/10153/
+10154,Togedemaru Totem,Alternate Form,https://pokeapi.co/api/v2/pokemon/10154/
+10155,Necrozma Dusk,Alternate Form,https://pokeapi.co/api/v2/pokemon/10155/
+10156,Necrozma Dawn,Alternate Form,https://pokeapi.co/api/v2/pokemon/10156/
+10157,Necrozma Ultra,Alternate Form,https://pokeapi.co/api/v2/pokemon/10157/
+10158,Pikachu Starter,Alternate Form,https://pokeapi.co/api/v2/pokemon/10158/
+10159,Eevee Starter,Alternate Form,https://pokeapi.co/api/v2/pokemon/10159/
+10160,Pikachu World Cap,Alternate Form,https://pokeapi.co/api/v2/pokemon/10160/
+10161,Meowth Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10161/
+10162,Ponyta Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10162/
+10163,Rapidash Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10163/
+10164,Slowpoke Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10164/
+10165,Slowbro Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10165/
+10166,Farfetchd Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10166/
+10167,Weezing Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10167/
+10168,Mr Mime Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10168/
+10169,Articuno Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10169/
+10170,Zapdos Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10170/
+10171,Moltres Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10171/
+10172,Slowking Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10172/
+10173,Corsola Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10173/
+10174,Zigzagoon Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10174/
+10175,Linoone Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10175/
+10176,Darumaka Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10176/
+10177,Darmanitan Galar Standard,Regional Form,https://pokeapi.co/api/v2/pokemon/10177/
+10178,Darmanitan Galar Zen,Regional Form,https://pokeapi.co/api/v2/pokemon/10178/
+10179,Yamask Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10179/
+10180,Stunfisk Galar,Regional Form,https://pokeapi.co/api/v2/pokemon/10180/
+10181,Zygarde 10,Alternate Form,https://pokeapi.co/api/v2/pokemon/10181/
+10182,Cramorant Gulping,Alternate Form,https://pokeapi.co/api/v2/pokemon/10182/
+10183,Cramorant Gorging,Alternate Form,https://pokeapi.co/api/v2/pokemon/10183/
+10184,Toxtricity Low Key,Alternate Form,https://pokeapi.co/api/v2/pokemon/10184/
+10185,Eiscue Noice,Alternate Form,https://pokeapi.co/api/v2/pokemon/10185/
+10186,Indeedee Female,Alternate Form,https://pokeapi.co/api/v2/pokemon/10186/
+10187,Morpeko Hangry,Alternate Form,https://pokeapi.co/api/v2/pokemon/10187/
+10188,Zacian Crowned,Alternate Form,https://pokeapi.co/api/v2/pokemon/10188/
+10189,Zamazenta Crowned,Alternate Form,https://pokeapi.co/api/v2/pokemon/10189/
+10190,Eternatus Eternamax,Alternate Form,https://pokeapi.co/api/v2/pokemon/10190/
+10191,Urshifu Rapid Strike,Alternate Form,https://pokeapi.co/api/v2/pokemon/10191/
+10192,Zarude Dada,Alternate Form,https://pokeapi.co/api/v2/pokemon/10192/
+10193,Calyrex Ice,Alternate Form,https://pokeapi.co/api/v2/pokemon/10193/
+10194,Calyrex Shadow,Alternate Form,https://pokeapi.co/api/v2/pokemon/10194/
+10195,Venusaur Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10195/
+10196,Charizard Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10196/
+10197,Blastoise Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10197/
+10198,Butterfree Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10198/
+10199,Pikachu Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10199/
+10200,Meowth Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10200/
+10201,Machamp Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10201/
+10202,Gengar Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10202/
+10203,Kingler Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10203/
+10204,Lapras Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10204/
+10205,Eevee Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10205/
+10206,Snorlax Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10206/
+10207,Garbodor Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10207/
+10208,Melmetal Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10208/
+10209,Rillaboom Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10209/
+10210,Cinderace Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10210/
+10211,Inteleon Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10211/
+10212,Corviknight Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10212/
+10213,Orbeetle Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10213/
+10214,Drednaw Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10214/
+10215,Coalossal Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10215/
+10216,Flapple Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10216/
+10217,Appletun Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10217/
+10218,Sandaconda Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10218/
+10219,Toxtricity Amped Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10219/
+10220,Centiskorch Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10220/
+10221,Hatterene Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10221/
+10222,Grimmsnarl Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10222/
+10223,Alcremie Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10223/
+10224,Copperajah Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10224/
+10225,Duraludon Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10225/
+10226,Urshifu Single Strike Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10226/
+10227,Urshifu Rapid Strike Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10227/
+10228,Toxtricity Low Key Gmax,Gigantamax,https://pokeapi.co/api/v2/pokemon/10228/
+10229,Growlithe Hisui,Regional Form,https://pokeapi.co/api/v2/pokemon/10229/
+10230,Arcanine Hisui,Regional Form,https://pokeapi.co/api/v2/pokemon/10230/
+10231,Voltorb Hisui,Regional Form,https://pokeapi.co/api/v2/pokemon/10231/
+10232,Electrode Hisui,Regional Form,https://pokeapi.co/api/v2/pokemon/10232/
+10233,Typhlosion Hisui,Regional Form,https://pokeapi.co/api/v2/pokemon/10233/
+10234,Qwilfish Hisui,Regional Form,https://pokeapi.co/api/v2/pokemon/10234/
+10235,Sneasel Hisui,Regional Form,https://pokeapi.co/api/v2/pokemon/10235/
+10236,Samurott Hisui,Regional Form,https://pokeapi.co/api/v2/pokemon/10236/
+10237,Lilligant Hisui,Regional Form,https://pokeapi.co/api/v2/pokemon/10237/
+10238,Zorua Hisui,Regional Form,https://pokeapi.co/api/v2/pokemon/10238/
+10239,Zoroark Hisui,Regional Form,https://pokeapi.co/api/v2/pokemon/10239/
+10240,Braviary Hisui,Regional Form,https://pokeapi.co/api/v2/pokemon/10240/
+10241,Sliggoo Hisui,Regional Form,https://pokeapi.co/api/v2/pokemon/10241/
+10242,Goodra Hisui,Regional Form,https://pokeapi.co/api/v2/pokemon/10242/
+10243,Avalugg Hisui,Regional Form,https://pokeapi.co/api/v2/pokemon/10243/
+10244,Decidueye Hisui,Regional Form,https://pokeapi.co/api/v2/pokemon/10244/
+10245,Dialga Origin,Alternate Form,https://pokeapi.co/api/v2/pokemon/10245/
+10246,Palkia Origin,Alternate Form,https://pokeapi.co/api/v2/pokemon/10246/
+10247,Basculin White Striped,Alternate Form,https://pokeapi.co/api/v2/pokemon/10247/
+10248,Basculegion Female,Alternate Form,https://pokeapi.co/api/v2/pokemon/10248/
+10249,Enamorus Therian,Alternate Form,https://pokeapi.co/api/v2/pokemon/10249/
+10250,Tauros Paldea Combat Breed,Regional Form,https://pokeapi.co/api/v2/pokemon/10250/
+10251,Tauros Paldea Blaze Breed,Regional Form,https://pokeapi.co/api/v2/pokemon/10251/
+10252,Tauros Paldea Aqua Breed,Regional Form,https://pokeapi.co/api/v2/pokemon/10252/
+10253,Wooper Paldea,Regional Form,https://pokeapi.co/api/v2/pokemon/10253/
+10254,Oinkologne Female,Alternate Form,https://pokeapi.co/api/v2/pokemon/10254/
+10255,Dudunsparce Three Segment,Alternate Form,https://pokeapi.co/api/v2/pokemon/10255/
+10256,Palafin Hero,Alternate Form,https://pokeapi.co/api/v2/pokemon/10256/
+10257,Maushold Family Of Three,Alternate Form,https://pokeapi.co/api/v2/pokemon/10257/
+10258,Tatsugiri Droopy,Alternate Form,https://pokeapi.co/api/v2/pokemon/10258/
+10259,Tatsugiri Stretchy,Alternate Form,https://pokeapi.co/api/v2/pokemon/10259/
+10260,Squawkabilly Blue Plumage,Alternate Form,https://pokeapi.co/api/v2/pokemon/10260/
+10261,Squawkabilly Yellow Plumage,Alternate Form,https://pokeapi.co/api/v2/pokemon/10261/
+10262,Squawkabilly White Plumage,Alternate Form,https://pokeapi.co/api/v2/pokemon/10262/
+10263,Gimmighoul Roaming,Alternate Form,https://pokeapi.co/api/v2/pokemon/10263/
+10264,Koraidon Limited Build,Alternate Form,https://pokeapi.co/api/v2/pokemon/10264/
+10265,Koraidon Sprinting Build,Alternate Form,https://pokeapi.co/api/v2/pokemon/10265/
+10266,Koraidon Swimming Build,Alternate Form,https://pokeapi.co/api/v2/pokemon/10266/
+10267,Koraidon Gliding Build,Alternate Form,https://pokeapi.co/api/v2/pokemon/10267/
+10268,Miraidon Low Power Mode,Alternate Form,https://pokeapi.co/api/v2/pokemon/10268/
+10269,Miraidon Drive Mode,Alternate Form,https://pokeapi.co/api/v2/pokemon/10269/
+10270,Miraidon Aquatic Mode,Alternate Form,https://pokeapi.co/api/v2/pokemon/10270/
+10271,Miraidon Glide Mode,Alternate Form,https://pokeapi.co/api/v2/pokemon/10271/
+10272,Ursaluna Bloodmoon,Alternate Form,https://pokeapi.co/api/v2/pokemon/10272/
+10273,Ogerpon Wellspring Mask,Alternate Form,https://pokeapi.co/api/v2/pokemon/10273/
+10274,Ogerpon Hearthflame Mask,Alternate Form,https://pokeapi.co/api/v2/pokemon/10274/
+10275,Ogerpon Cornerstone Mask,Alternate Form,https://pokeapi.co/api/v2/pokemon/10275/
+10276,Terapagos Terastal,Alternate Form,https://pokeapi.co/api/v2/pokemon/10276/
+10277,Terapagos Stellar,Alternate Form,https://pokeapi.co/api/v2/pokemon/10277/
+10278,Clefable Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10278/
+10279,Victreebel Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10279/
+10280,Starmie Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10280/
+10281,Dragonite Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10281/
+10282,Meganium Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10282/
+10283,Feraligatr Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10283/
+10284,Skarmory Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10284/
+10285,Froslass Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10285/
+10286,Emboar Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10286/
+10287,Excadrill Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10287/
+10288,Scolipede Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10288/
+10289,Scrafty Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10289/
+10290,Eelektross Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10290/
+10291,Chandelure Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10291/
+10292,Chesnaught Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10292/
+10293,Delphox Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10293/
+10294,Greninja Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10294/
+10295,Pyroar Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10295/
+10296,Floette Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10296/
+10297,Malamar Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10297/
+10298,Barbaracle Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10298/
+10299,Dragalge Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10299/
+10300,Hawlucha Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10300/
+10301,Zygarde Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10301/
+10302,Drampa Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10302/
+10303,Falinks Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10303/
+10304,Raichu Mega X,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10304/
+10305,Raichu Mega Y,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10305/
+10306,Chimecho Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10306/
+10307,Absol Mega Z,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10307/
+10308,Staraptor Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10308/
+10309,Garchomp Mega Z,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10309/
+10310,Lucario Mega Z,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10310/
+10311,Heatran Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10311/
+10312,Darkrai Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10312/
+10313,Golurk Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10313/
+10314,Meowstic Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10314/
+10315,Crabominable Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10315/
+10316,Golisopod Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10316/
+10317,Magearna Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10317/
+10318,Magearna Original Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10318/
+10319,Zeraora Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10319/
+10320,Scovillain Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10320/
+10321,Glimmora Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10321/
+10322,Tatsugiri Curly Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10322/
+10323,Tatsugiri Droopy Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10323/
+10324,Tatsugiri Stretchy Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10324/
+10325,Baxcalibur Mega,Mega Evolution,https://pokeapi.co/api/v2/pokemon/10325/

@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "L5CInys4-G8ak8GdhwaHL"
+uri = "file://pokemon_all_forms.csv"
+type = "table"
+title = "All Pokémon Forms & Megas (1,350 entries)"

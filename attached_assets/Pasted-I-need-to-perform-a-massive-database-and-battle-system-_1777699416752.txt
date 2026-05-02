@@ -1,0 +1,67 @@
+I need to perform a massive database and battle system overhaul for Crimson Sky to include all alternate forms, Mega Evolutions, Shiny variants, and Mega Stones.
+​Please execute this update in the following phases using Python/Flask:
+​Phase 1: PokéAPI Database Expansion (Forms & Megas)
+​Create a script to re-fetch data from PokéAPI (https://pokeapi.co/api/v2/pokemon-species/{id}).
+​For every species, inspect the varieties array.
+​Add every valid variety (e.g., lycanroc-dusk, deoxys-attack, venusaur-mega, zygarde-10) into the database as a distinct playable Pokémon with its own unique base stats, typing, and ID (e.g., ID 718.1 for Zygarde-10).
+​Update the Crimson Sky Dex UI to group these forms under their base Pokédex number so players can toggle between them.
+​Phase 2: Sprite Mapping & Shiny Logic
+​Update the frontend image rendering to pull from the Project Pokémon 3D models repository.
+​Write a URL formatting function that matches the Pokémon's database ID/Form name to the correct Project Pokémon image path.
+​Shiny Logic: Add an is_shiny boolean to the user's Pokémon inventory table. When generating a Pokémon (wild or market), apply a 1/4096 chance to set is_shiny = True. If True, append the shiny identifier to the Project Pokémon URL to render the alternate color palette and add a ✨ icon next to its name in the UI.
+​Phase 3: Mega Stones & Battle UI
+​Add a new table or dictionary containing all Mega Stones, mapped to their specific Pokémon (e.g., Venusaurite -> venusaur-mega).
+​Add these stones to the Marketplace 'Items' tab for players to purchase.
+​Battle UI: In the active battle screen, if the user's active Pokémon is holding its correct Mega Stone, render a glowing 'MEGA EVOLVE' button next to the 'Battle / Catch' options.
+​Battle Logic: When clicked, dynamically swap the Pokémon's stats, types, and sprite to its Mega form for the remainder of the battle.
+​Phase 4: Missing Sprite Checker (Validation Script)
+​Write a temporary Python utility script using the requests library.
+​Have this script loop through every Pokémon ID and Form ID in the database, construct the target Project Pokémon image URL, and send a HEAD request.
+​If the request returns a 404 Not Found, append that Pokémon's name and ID to a .txt log file so I can manually see which sprites are missing."
+
+Create a new file in Replit called generate_dex.py, paste this code, and run it:
+
+import requests
+import csv
+
+def generate_pokemon_file():
+    print("Fetching data from PokéAPI...")
+    # This endpoint grabs all base Pokémon AND all their alternate forms/Megas at once
+    response = requests.get("https://pokeapi.co/api/v2/pokemon?limit=10000")
+    data = response.json()
+
+    filename = "pokemon_all_forms.csv"
+    
+    with open(filename, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["ID", "Name", "Category", "API_URL"])
+        
+        for p in data["results"]:
+            name = p["name"]
+            url = p["url"]
+            # PokéAPI IDs for base forms are 1-1025. Alternate forms/Megas start at 10001.
+            poke_id = int(url.split("/")[-2]) 
+            
+            # Categorize the form
+            category = "Base Form"
+            if "-mega" in name:
+                category = "Mega Evolution"
+            elif "-primal" in name:
+                category = "Primal Reversion"
+            elif "-gmax" in name:
+                category = "Gigantamax"
+            elif "-alola" in name or "-galar" in name or "-hisui" in name or "-paldea" in name:
+                category = "Regional Form"
+            elif poke_id > 10000:
+                category = "Alternate Form"
+
+            # Clean up the name for the file (e.g., "deoxys-attack" -> "Deoxys-Attack")
+            clean_name = name.replace("-", " ").title()
+            
+            writer.writerow([poke_id, clean_name, category, url])
+
+    print(f"Success! Saved all forms to {filename}")
+
+if __name__ == "__main__":
+    generate_pokemon_file()
+
