@@ -2453,7 +2453,7 @@ export default function App() {
 
           <div className="m-topbar">
             <div>
-              <div className="m-game-title">Pokémon &mdash; Crimson Sky</div>
+              <div className="m-game-title">Crimson Sky</div>
               <div className="m-location"><i className="fa-solid fa-circle" /> {region.emoji} {region.name} &bull; Gen {region.gen}</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -2461,7 +2461,7 @@ export default function App() {
                 onClick={() => { const m = !muted; setMuted(m); if (!m) sfx.click(); }}>
                 <i className={`fa-solid ${muted ? "fa-volume-xmark" : "fa-volume-high"}`} style={{ color: muted ? "var(--m-muted)" : "var(--m-yellow)" }} />
               </span>
-              <span className="m-pill"><i className="fa-solid fa-bullhorn" /> Caught: {caught.size}/{TOTAL_POKEMON}</span>
+
               <span className="m-pill" style={{ cursor: "pointer", position: "relative" }}
                 onClick={() => { sfx.click(); setShowNotifications(true); }}>
                 <i className="fa-solid fa-bell" style={{ color: unreadCount > 0 ? "var(--m-yellow)" : "var(--m-muted)" }} />
