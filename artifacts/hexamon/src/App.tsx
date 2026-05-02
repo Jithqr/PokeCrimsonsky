@@ -8,6 +8,7 @@ import {
 } from "./lib/friends";
 import { natureMult } from "./lib/natures";
 import { tmStoreItems } from "./lib/tm-data";
+import { POKEMON_FORMS, type FormEntry, type FormCategory } from "./lib/pokemon-forms";
 import {
   fetchGlobalMarket, buyGlobalItem,
   fetchUserListings, createUserListing, buyUserListing, cancelUserListing,
@@ -750,6 +751,10 @@ export default function App() {
   const [evolving, setEvolving] = useState<{ from: string; to: string; sprite: string } | null>(null);
   const [dexFilter, setDexFilter] = useState("all");
   const [genFilter, setGenFilter] = useState<number>(0);
+  const [dexMode, setDexMode] = useState<"base"|"forms">("base");
+  const [dexFormCat, setDexFormCat] = useState<"all"|FormCategory>("all");
+  const [dexShiny, setDexShiny] = useState(false);
+  const [dexFormDetail, setDexFormDetail] = useState<FormEntry|null>(null);
   const [pickedMacro, setPickedMacro] = useState(0);
   const [huntCount, setHuntCount] = useState(0);
   const [legendThreshold, setLegendThreshold] = useState(() => 20 + Math.floor(Math.random() * 16));
@@ -5692,12 +5697,6 @@ export default function App() {
         items: [
           { name: "Rare Candy", price: 4800, info: "+1 Level" },
         ] },
-      { key: "mega", label: "MEGA STONES", emoji: "💎", color: "#db2777", desc: "Unlock Mega Evolution in battle",
-        items: Object.entries(MEGA_STONES).map(([stone, data]) => ({
-          name: stone,
-          price: 8000,
-          info: `Mega Evolve ${data.megaSprite.replace(/-mega[xy]?$/, "").replace(/-/g, " ")} in battle — boosts stats & may change type`,
-        })) },
       { key: "tms", label: "TMs", emoji: "💿", color: "#9C27B0", desc: "Teach new moves",
         items: tmStoreItems() },
     ];
@@ -6450,56 +6449,187 @@ export default function App() {
   }
 
   if (screen === "dex") {
+    const DEX_FORM_CATS: { key: "all"|FormCategory; label: string; color: string }[] = [
+      { key: "all",      label: "ALL",       color: "#aaa" },
+      { key: "mega",     label: "MEGA",      color: "#db2777" },
+      { key: "alolan",   label: "ALOLAN",    color: "#f59e0b" },
+      { key: "galarian", label: "GALARIAN",  color: "#3b82f6" },
+      { key: "hisuian",  label: "HISUIAN",   color: "#10b981" },
+      { key: "paldean",  label: "PALDEAN",   color: "#ef4444" },
+      { key: "other",    label: "OTHER",     color: "#a78bfa" },
+    ];
+
     const types = ["all", ...Array.from(new Set(ALL_POKEMON.map((p) => p.type1)))].sort();
     const filtered = ALL_POKEMON.filter((p) =>
       (dexFilter === "all" || p.type1 === dexFilter || p.type2 === dexFilter) &&
       (genFilter === 0 || p.gen === genFilter)
     );
+
+    const filteredForms = POKEMON_FORMS.filter((f) =>
+      dexFormCat === "all" || f.category === dexFormCat
+    );
+
+    const statBar = (val: number, color: string) => (
+      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        <div style={{ width: 24, textAlign: "right", fontSize: 10, color: "#aaa", flexShrink: 0 }}>{val}</div>
+        <div style={{ flex: 1, height: 6, background: "#27272a", borderRadius: 3, overflow: "hidden" }}>
+          <div style={{ width: `${Math.min(100, (val / 255) * 100)}%`, height: "100%", background: color, borderRadius: 3 }} />
+        </div>
+      </div>
+    );
+
     return (
       <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
+          {/* ── header ── */}
           <div style={S.header}>
             <BackBtn onClick={() => setScreen("world")} />
             <span className="page-header-title">Pokédex</span>
-            <div style={{ width: 88 }} />
+            <button
+              onClick={() => setDexShiny((v) => !v)}
+              style={{ marginRight: 8, background: dexShiny ? "#fbbf2420" : "transparent", border: `1px solid ${dexShiny ? "#fbbf24" : "#555"}`, borderRadius: 8, padding: "4px 10px", color: dexShiny ? "#fbbf24" : "#aaa", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
+              ✨ Shiny
+            </button>
           </div>
-          <div style={{ padding: "8px 10px 4px", overflowX: "auto", display: "flex", gap: 4 }}>
-            <button className="btn"
-              style={{ border: "1px solid #555", color: genFilter === 0 ? "#fff" : "#888", padding: "4px 8px", borderRadius: 4, background: genFilter === 0 ? "#fff2" : "transparent", flexShrink: 0, fontSize: 11 }}
-              onClick={() => setGenFilter(0)}>ALL GENS</button>
-            {[1,2,3,4,5,6,7,8,9].map((g) => (
-              <button key={g} className="btn"
-                style={{ border: "1px solid #5e2c73", color: genFilter === g ? "#FFD700" : "#aaa", padding: "4px 8px", borderRadius: 4, background: genFilter === g ? "#fff2" : "transparent", flexShrink: 0, fontSize: 11 }}
-                onClick={() => setGenFilter(g)}>G{g} {GEN_NAMES[g]}</button>
+
+          {/* ── mode tabs ── */}
+          <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #27272a", padding: "0 12px" }}>
+            {(["base","forms"] as const).map((m) => (
+              <button key={m} onClick={() => setDexMode(m)} style={{ flex: 1, padding: "10px 0", background: "transparent", border: "none", borderBottom: `2px solid ${dexMode === m ? "#a78bfa" : "transparent"}`, color: dexMode === m ? "#a78bfa" : "#888", fontWeight: 700, fontSize: 13, cursor: "pointer", transition: "all .15s" }}>
+                {m === "base" ? `📖 BASE DEX (${ALL_POKEMON.length})` : `🌀 ALT FORMS (${POKEMON_FORMS.length})`}
+              </button>
             ))}
           </div>
-          <div style={{ padding: "4px 10px 4px", overflowX: "auto", display: "flex", gap: 4 }}>
-            {types.map((t) => (
-              <button key={t} className="btn"
-                style={{ border: `1px solid ${t === "all" ? "#555" : TYPE_COLORS[t]}`, color: t === "all" ? "#888" : TYPE_COLORS[t], padding: "4px 8px", borderRadius: 4, background: dexFilter === t ? "#fff2" : "transparent", flexShrink: 0 }}
-                onClick={() => setDexFilter(t)}>{t === "all" ? "ALL" : t}</button>
-            ))}
-          </div>
-          <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6 }}>
-              {filtered.map((p) => {
-                const isCaught = caught.has(p.id) || team.some((m) => m.id === p.id);
-                const isSeen = isCaught || seen.has(p.id);
-                return (
-                  <div key={p.id} style={{ background: isSeen ? `${TYPE_COLORS[p.type1]}11` : "#18181b", border: `1px solid ${isSeen ? TYPE_COLORS[p.type1] + "66" : "#27272a"}`, borderRadius: 8, padding: "8px 4px", textAlign: "center", opacity: isSeen ? 1 : 0.45, position: "relative" }}>
-                    {isSeen
-                      ? <div style={{ filter: isCaught ? "none" : "grayscale(1) brightness(0.6)" }}><MonSprite sprite={p.sprite} size={52} className="" /></div>
-                      : <div style={{ width: 52, height: 52, margin: "0 auto", background: "#111", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>❓</div>
-                    }
-                    {isCaught && <div style={{ position: "absolute", top: 4, right: 4, fontSize: 12, color: "#4ade80" }} title="Caught"><i className="fa-solid fa-circle-check" /></div>}
-                    <div style={{ fontSize: 5, color: isSeen ? "#ddd" : "#333", marginTop: 3 }}>#{String(p.id).padStart(3, "0")}</div>
-                    <div style={{ fontSize: 10, color: isSeen ? "#fff" : "#333", marginTop: 1 }}>{isSeen ? p.name : "????"}</div>
-                    {isSeen && <div style={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 3 }}>{typeTag(p.type1)}</div>}
-                  </div>
-                );
-              })}
+
+          {/* ── BASE DEX filters ── */}
+          {dexMode === "base" && (
+            <>
+              <div style={{ padding: "8px 10px 4px", overflowX: "auto", display: "flex", gap: 4 }}>
+                <button className="btn" style={{ border: "1px solid #555", color: genFilter === 0 ? "#fff" : "#888", padding: "4px 8px", borderRadius: 4, background: genFilter === 0 ? "#fff2" : "transparent", flexShrink: 0, fontSize: 11 }} onClick={() => setGenFilter(0)}>ALL GENS</button>
+                {[1,2,3,4,5,6,7,8,9].map((g) => (
+                  <button key={g} className="btn" style={{ border: "1px solid #5e2c73", color: genFilter === g ? "#FFD700" : "#aaa", padding: "4px 8px", borderRadius: 4, background: genFilter === g ? "#fff2" : "transparent", flexShrink: 0, fontSize: 11 }} onClick={() => setGenFilter(g)}>G{g} {GEN_NAMES[g]}</button>
+                ))}
+              </div>
+              <div style={{ padding: "4px 10px 4px", overflowX: "auto", display: "flex", gap: 4 }}>
+                {types.map((t) => (
+                  <button key={t} className="btn" style={{ border: `1px solid ${t === "all" ? "#555" : TYPE_COLORS[t]}`, color: t === "all" ? "#888" : TYPE_COLORS[t], padding: "4px 8px", borderRadius: 4, background: dexFilter === t ? "#fff2" : "transparent", flexShrink: 0 }} onClick={() => setDexFilter(t)}>{t === "all" ? "ALL" : t}</button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* ── FORMS filters ── */}
+          {dexMode === "forms" && (
+            <div style={{ padding: "8px 10px 4px", overflowX: "auto", display: "flex", gap: 4 }}>
+              {DEX_FORM_CATS.map((c) => (
+                <button key={c.key} className="btn"
+                  style={{ border: `1px solid ${c.color}`, color: dexFormCat === c.key ? c.color : "#666", padding: "4px 10px", borderRadius: 14, background: dexFormCat === c.key ? `${c.color}20` : "transparent", flexShrink: 0, fontSize: 11, fontWeight: 700 }}
+                  onClick={() => setDexFormCat(c.key)}>{c.label}</button>
+              ))}
             </div>
-          </div>
+          )}
+
+          {/* ── BASE DEX grid ── */}
+          {dexMode === "base" && (
+            <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6 }}>
+                {filtered.map((p) => {
+                  const isCaught = caught.has(p.id) || team.some((m) => m.id === p.id);
+                  const isSeen = isCaught || seen.has(p.id);
+                  return (
+                    <div key={p.id} style={{ background: isSeen ? `${TYPE_COLORS[p.type1]}11` : "#18181b", border: `1px solid ${isSeen ? TYPE_COLORS[p.type1] + "66" : "#27272a"}`, borderRadius: 8, padding: "8px 4px", textAlign: "center", opacity: isSeen ? 1 : 0.45, position: "relative" }}>
+                      {isSeen
+                        ? <div style={{ filter: isCaught ? "none" : "grayscale(1) brightness(0.6)" }}><MonSprite sprite={p.sprite} size={52} className="" isShiny={dexShiny} /></div>
+                        : <div style={{ width: 52, height: 52, margin: "0 auto", background: "#111", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>❓</div>
+                      }
+                      {isCaught && <div style={{ position: "absolute", top: 4, right: 4, fontSize: 12, color: "#4ade80" }} title="Caught"><i className="fa-solid fa-circle-check" /></div>}
+                      {dexShiny && isSeen && <div style={{ position: "absolute", top: 4, left: 4, fontSize: 10 }}>✨</div>}
+                      <div style={{ fontSize: 9, color: isSeen ? "#ddd" : "#333", marginTop: 3 }}>#{String(p.id).padStart(3, "0")}</div>
+                      <div style={{ fontSize: 10, color: isSeen ? "#fff" : "#333", marginTop: 1 }}>{isSeen ? p.name : "????"}</div>
+                      {isSeen && <div style={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 3 }}>{typeTag(p.type1)}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── FORMS grid ── */}
+          {dexMode === "forms" && (
+            <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6 }}>
+                {filteredForms.map((f) => {
+                  const catColor = DEX_FORM_CATS.find((c) => c.key === f.category)?.color ?? "#aaa";
+                  return (
+                    <div key={f.id} onClick={() => setDexFormDetail(f)} style={{ background: `${TYPE_COLORS[f.type1] ?? "#555"}11`, border: `1px solid ${(TYPE_COLORS[f.type1] ?? "#555") + "55"}`, borderRadius: 8, padding: "8px 4px", textAlign: "center", cursor: "pointer", position: "relative" }}>
+                      <div style={{ position: "absolute", top: 3, left: 3, fontSize: 8, fontWeight: 700, color: catColor, background: `${catColor}20`, borderRadius: 4, padding: "1px 4px", textTransform: "uppercase" }}>{f.category}</div>
+                      {dexShiny && <div style={{ position: "absolute", top: 3, right: 3, fontSize: 10 }}>✨</div>}
+                      <MonSprite sprite={f.sprite} size={52} className="" isShiny={dexShiny} />
+                      <div style={{ fontSize: 9, color: "#aaa", marginTop: 2 }}>#{String(f.id).padStart(5, "0")}</div>
+                      <div style={{ fontSize: 9, color: "#fff", marginTop: 1, lineHeight: 1.2 }}>{f.name}</div>
+                      <div style={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 3 }}>
+                        {typeTag(f.type1)}
+                        {f.type2 && typeTag(f.type2)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── Form Detail Modal ── */}
+          {dexFormDetail && (
+            <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 300, padding: 16 }}
+              onClick={() => setDexFormDetail(null)}>
+              <div style={{ background: "#1c1c1e", border: `1px solid ${(TYPE_COLORS[dexFormDetail.type1] ?? "#555") + "88"}`, borderRadius: 18, padding: "20px 16px", width: "100%", maxWidth: 420, maxHeight: "80vh", overflowY: "auto" }}
+                onClick={(e) => e.stopPropagation()}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>{dexFormDetail.name}</div>
+                    <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
+                      {typeTag(dexFormDetail.type1)}
+                      {dexFormDetail.type2 && typeTag(dexFormDetail.type2)}
+                    </div>
+                  </div>
+                  <MonSprite sprite={dexFormDetail.sprite} size={72} className="" isShiny={dexShiny} />
+                </div>
+                <div style={{ fontSize: 11, color: "#888", marginBottom: 12, textTransform: "capitalize" }}>
+                  {dexFormDetail.category === "mega" ? "Mega Evolution" : dexFormDetail.category === "alolan" ? "Alolan Form" : dexFormDetail.category === "galarian" ? "Galarian Form" : dexFormDetail.category === "hisuian" ? "Hisuian Form" : dexFormDetail.category === "paldean" ? "Paldean Form" : "Alternate Form"}
+                  {" · "}Gen {dexFormDetail.gen}
+                </div>
+
+                {/* Base Stats */}
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#aaa", marginBottom: 6, letterSpacing: 1 }}>BASE STATS</div>
+                {[
+                  ["HP",  dexFormDetail.hp,  "#4ade80"],
+                  ["ATK", dexFormDetail.atk, "#f97316"],
+                  ["DEF", dexFormDetail.def, "#3b82f6"],
+                  ["SpA", dexFormDetail.spa, "#a78bfa"],
+                  ["SpD", dexFormDetail.spd, "#06b6d4"],
+                  ["Spe", dexFormDetail.spe, "#fbbf24"],
+                ].map(([label, val, color]) => (
+                  <div key={label as string} style={{ display: "grid", gridTemplateColumns: "30px 1fr", gap: 6, alignItems: "center", marginBottom: 4 }}>
+                    <div style={{ fontSize: 10, color: "#aaa", textAlign: "right" }}>{label}</div>
+                    {statBar(val as number, color as string)}
+                  </div>
+                ))}
+                <div style={{ borderTop: "1px solid #27272a", marginTop: 4, paddingTop: 4, fontSize: 11, color: "#aaa", textAlign: "right" }}>
+                  BST: {dexFormDetail.hp + dexFormDetail.atk + dexFormDetail.def + dexFormDetail.spa + dexFormDetail.spd + dexFormDetail.spe}
+                </div>
+
+                {/* Moves */}
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#aaa", margin: "12px 0 6px", letterSpacing: 1 }}>SIGNATURE MOVES</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {dexFormDetail.moves.map((mv) => (
+                    <span key={mv} style={{ background: "#27272a", color: "#e2e8f0", fontSize: 11, padding: "3px 8px", borderRadius: 10, border: "1px solid #3f3f46" }}>{mv}</span>
+                  ))}
+                </div>
+
+                <button onClick={() => setDexFormDetail(null)} style={{ width: "100%", marginTop: 16, padding: "10px 0", background: "#27272a", border: "none", borderRadius: 10, color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Close</button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
