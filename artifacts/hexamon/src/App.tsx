@@ -5246,8 +5246,7 @@ export default function App() {
                 <div><span style={{ color: C.textMuted }}>Level: </span><b style={{ fontWeight: 600 }}>{m.level}</b> <span style={{ color: C.textMuted }}>| Nature: </span><b style={{ fontWeight: 600 }}>{m.nature ?? "Hardy"}</b></div>
                 <div><span style={{ color: C.textMuted }}>Types: </span><b style={{ fontWeight: 600 }}>{typeText}</b></div>
                 <div><span style={{ color: C.textMuted }}>Gender: </span><b style={{ fontWeight: 600 }}>{gender}</b></div>
-                <div><span style={{ color: C.textMuted }}>Ability: </span><b style={{ fontWeight: 600 }}>{(m as any).ability ?? "—"}</b></div>
-                <div><span style={{ color: C.textMuted }}>Tera Type: </span><b style={{ fontWeight: 600 }}>{m.type1}</b></div>
+
                 <div><span style={{ color: C.textMuted }}>EXP: </span><b style={{ fontWeight: 600 }}>{m.exp.toLocaleString()}</b></div>
                 <div><span style={{ color: C.textMuted }}>Need To Next Level: </span><b style={{ fontWeight: 600 }}>{needNext.toLocaleString()}</b></div>
                 <div style={{ width: "100%", height: 6, background: "#1a1a2e", borderRadius: 3, margin: "8px 0 4px", border: "1px solid #2a2a4a", position: "relative", overflow: "hidden" }}>
