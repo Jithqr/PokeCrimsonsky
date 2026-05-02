@@ -35,6 +35,70 @@ import { typeMultiplier, type PType } from "./lib/type-chart";
 
 const SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/ani/${name.replace(/[^a-z0-9]/g, "")}.gif`;
 const SPRITE_BACK = (name: string) => `https://play.pokemonshowdown.com/sprites/ani-back/${name.replace(/[^a-z0-9]/g, "")}.gif`;
+const SPRITE_SHINY = (name: string) => `https://play.pokemonshowdown.com/sprites/ani-shiny/${name.replace(/[^a-z0-9]/g, "")}.gif`;
+const SPRITE_BACK_SHINY = (name: string) => `https://play.pokemonshowdown.com/sprites/ani-back-shiny/${name.replace(/[^a-z0-9]/g, "")}.gif`;
+
+type MegaData = { megaSprite: string; type1: string; type2?: string | null; hp: number; atk: number; def: number; spa: number; spd: number; spe: number };
+const MEGA_STONES: Record<string, MegaData> = {
+  "Venusaurite":    { megaSprite: "venusaur-mega",    type1:"Grass",    type2:"Poison",   hp:80,  atk:100, def:123, spa:122, spd:120, spe:80  },
+  "Charizardite X": { megaSprite: "charizard-megax",  type1:"Fire",     type2:"Dragon",   hp:78,  atk:130, def:111, spa:130, spd:85,  spe:100 },
+  "Charizardite Y": { megaSprite: "charizard-megay",  type1:"Fire",     type2:"Flying",   hp:78,  atk:104, def:78,  spa:159, spd:115, spe:100 },
+  "Blastoisinite":  { megaSprite: "blastoise-mega",   type1:"Water",    type2:null,       hp:79,  atk:103, def:120, spa:135, spd:115, spe:78  },
+  "Beedrillite":    { megaSprite: "beedrill-mega",    type1:"Bug",      type2:"Poison",   hp:65,  atk:150, def:40,  spa:15,  spd:80,  spe:145 },
+  "Pidgeotite":     { megaSprite: "pidgeot-mega",     type1:"Normal",   type2:"Flying",   hp:83,  atk:80,  def:80,  spa:135, spd:80,  spe:121 },
+  "Alakazite":      { megaSprite: "alakazam-mega",    type1:"Psychic",  type2:null,       hp:55,  atk:50,  def:65,  spa:175, spd:95,  spe:150 },
+  "Slowbronite":    { megaSprite: "slowbro-mega",     type1:"Water",    type2:"Psychic",  hp:95,  atk:75,  def:180, spa:130, spd:80,  spe:30  },
+  "Gengarite":      { megaSprite: "gengar-mega",      type1:"Ghost",    type2:"Poison",   hp:60,  atk:65,  def:80,  spa:170, spd:95,  spe:130 },
+  "Kangaskhanite":  { megaSprite: "kangaskhan-mega",  type1:"Normal",   type2:null,       hp:105, atk:125, def:100, spa:60,  spd:100, spe:100 },
+  "Pinsirite":      { megaSprite: "pinsir-mega",      type1:"Bug",      type2:"Flying",   hp:65,  atk:155, def:120, spa:65,  spd:90,  spe:105 },
+  "Gyaradosite":    { megaSprite: "gyarados-mega",    type1:"Water",    type2:"Dark",     hp:95,  atk:155, def:109, spa:70,  spd:130, spe:81  },
+  "Aerodactylite":  { megaSprite: "aerodactyl-mega",  type1:"Rock",     type2:"Flying",   hp:80,  atk:135, def:85,  spa:70,  spd:95,  spe:150 },
+  "Mewtwonite X":   { megaSprite: "mewtwo-megax",     type1:"Psychic",  type2:"Fighting", hp:106, atk:190, def:100, spa:154, spd:100, spe:130 },
+  "Mewtwonite Y":   { megaSprite: "mewtwo-megay",     type1:"Psychic",  type2:null,       hp:106, atk:150, def:70,  spa:194, spd:120, spe:140 },
+  "Ampharosite":    { megaSprite: "ampharos-mega",    type1:"Electric", type2:"Dragon",   hp:90,  atk:95,  def:105, spa:165, spd:110, spe:45  },
+  "Steelixite":     { megaSprite: "steelix-mega",     type1:"Steel",    type2:"Ground",   hp:75,  atk:125, def:230, spa:55,  spd:65,  spe:30  },
+  "Scizorite":      { megaSprite: "scizor-mega",      type1:"Bug",      type2:"Steel",    hp:70,  atk:150, def:140, spa:65,  spd:100, spe:75  },
+  "Heracronite":    { megaSprite: "heracross-mega",   type1:"Bug",      type2:"Fighting", hp:80,  atk:185, def:115, spa:40,  spd:105, spe:75  },
+  "Houndoomite":    { megaSprite: "houndoom-mega",    type1:"Dark",     type2:"Fire",     hp:75,  atk:90,  def:90,  spa:140, spd:90,  spe:115 },
+  "Tyranitarite":   { megaSprite: "tyranitar-mega",   type1:"Rock",     type2:"Dark",     hp:100, atk:164, def:150, spa:95,  spd:120, spe:71  },
+  "Blazikenite":    { megaSprite: "blaziken-mega",    type1:"Fire",     type2:"Fighting", hp:80,  atk:160, def:80,  spa:130, spd:80,  spe:100 },
+  "Gardevoirite":   { megaSprite: "gardevoir-mega",   type1:"Psychic",  type2:"Fairy",    hp:68,  atk:85,  def:65,  spa:165, spd:135, spe:100 },
+  "Mawilite":       { megaSprite: "mawile-mega",      type1:"Steel",    type2:"Fairy",    hp:50,  atk:105, def:125, spa:55,  spd:95,  spe:50  },
+  "Aggronite":      { megaSprite: "aggron-mega",      type1:"Steel",    type2:null,       hp:70,  atk:140, def:230, spa:60,  spd:80,  spe:50  },
+  "Medichamite":    { megaSprite: "medicham-mega",    type1:"Fighting", type2:"Psychic",  hp:60,  atk:100, def:85,  spa:80,  spd:85,  spe:100 },
+  "Manectite":      { megaSprite: "manectric-mega",   type1:"Electric", type2:null,       hp:70,  atk:75,  def:80,  spa:135, spd:80,  spe:135 },
+  "Sharpedonite":   { megaSprite: "sharpedo-mega",    type1:"Water",    type2:"Dark",     hp:70,  atk:140, def:70,  spa:110, spd:65,  spe:105 },
+  "Cameruptite":    { megaSprite: "camerupt-mega",    type1:"Fire",     type2:"Ground",   hp:70,  atk:120, def:100, spa:145, spd:105, spe:20  },
+  "Altarianite":    { megaSprite: "altaria-mega",     type1:"Dragon",   type2:"Fairy",    hp:75,  atk:110, def:110, spa:110, spd:105, spe:80  },
+  "Banettite":      { megaSprite: "banette-mega",     type1:"Ghost",    type2:null,       hp:64,  atk:165, def:75,  spa:93,  spd:83,  spe:75  },
+  "Absolite":       { megaSprite: "absol-mega",       type1:"Dark",     type2:null,       hp:65,  atk:150, def:60,  spa:115, spd:60,  spe:115 },
+  "Glalitite":      { megaSprite: "glalie-mega",      type1:"Ice",      type2:null,       hp:80,  atk:120, def:80,  spa:120, spd:80,  spe:100 },
+  "Salamencite":    { megaSprite: "salamence-mega",   type1:"Dragon",   type2:"Flying",   hp:95,  atk:145, def:130, spa:120, spd:90,  spe:120 },
+  "Metagrossite":   { megaSprite: "metagross-mega",   type1:"Steel",    type2:"Psychic",  hp:80,  atk:145, def:150, spa:105, spd:110, spe:110 },
+  "Latiasite":      { megaSprite: "latias-mega",      type1:"Dragon",   type2:"Psychic",  hp:80,  atk:100, def:120, spa:140, spd:150, spe:110 },
+  "Latiosite":      { megaSprite: "latios-mega",      type1:"Dragon",   type2:"Psychic",  hp:80,  atk:130, def:100, spa:160, spd:120, spe:110 },
+  "Lucarionite":    { megaSprite: "lucario-mega",     type1:"Fighting", type2:"Steel",    hp:70,  atk:145, def:88,  spa:140, spd:70,  spe:112 },
+  "Abomasite":      { megaSprite: "abomasnow-mega",   type1:"Grass",    type2:"Ice",      hp:90,  atk:132, def:105, spa:132, spd:105, spe:30  },
+  "Lopunnite":      { megaSprite: "lopunny-mega",     type1:"Normal",   type2:"Fighting", hp:65,  atk:136, def:94,  spa:54,  spd:96,  spe:135 },
+  "Garchompite":    { megaSprite: "garchomp-mega",    type1:"Dragon",   type2:"Ground",   hp:108, atk:170, def:115, spa:120, spd:95,  spe:92  },
+  "Diancite":       { megaSprite: "diancie-mega",     type1:"Rock",     type2:"Fairy",    hp:50,  atk:160, def:110, spa:160, spd:110, spe:110 },
+};
+const STONE_TO_SPRITE: Record<string, string> = {
+  "Venusaurite":"venusaur","Charizardite X":"charizard","Charizardite Y":"charizard",
+  "Blastoisinite":"blastoise","Beedrillite":"beedrill","Pidgeotite":"pidgeot",
+  "Alakazite":"alakazam","Slowbronite":"slowbro","Gengarite":"gengar",
+  "Kangaskhanite":"kangaskhan","Pinsirite":"pinsir","Gyaradosite":"gyarados",
+  "Aerodactylite":"aerodactyl","Mewtwonite X":"mewtwo","Mewtwonite Y":"mewtwo",
+  "Ampharosite":"ampharos","Steelixite":"steelix","Scizorite":"scizor",
+  "Heracronite":"heracross","Houndoomite":"houndoom","Tyranitarite":"tyranitar",
+  "Blazikenite":"blaziken","Gardevoirite":"gardevoir","Mawilite":"mawile",
+  "Aggronite":"aggron","Medichamite":"medicham","Manectite":"manectric",
+  "Sharpedonite":"sharpedo","Cameruptite":"camerupt","Altarianite":"altaria",
+  "Banettite":"banette","Absolite":"absol","Glalitite":"glalie",
+  "Salamencite":"salamence","Metagrossite":"metagross","Latiasite":"latias",
+  "Latiosite":"latios","Lucarionite":"lucario","Abomasite":"abomasnow",
+  "Lopunnite":"lopunny","Garchompite":"garchomp","Diancite":"diancie",
+};
 const TRAINER_SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/trainers/${name}.png`;
 
 
@@ -108,6 +172,7 @@ type Mon = PokemonTemplate & {
   moves: string[];
   caughtAt?: number;
   origin?: "wild" | "safari" | "store" | "redeem" | "starter" | "trade" | "evolve";
+  isShiny?: boolean;
 };
 
 // Convert an in-app Mon (which has level-scaled cached stats) to the wire format
@@ -259,6 +324,7 @@ function makeMon(template: PokemonTemplate, level: number, origin: Mon["origin"]
     nature,
     caughtAt: Date.now(),
     origin,
+    isShiny: Math.random() < 1 / 4096,
   };
 }
 
@@ -323,7 +389,7 @@ function todayStr() {
   const d = new Date();
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
-type Battle = { wild: Mon; pMon: Mon; phase: string; turnCount: number; canCatch: boolean; ballsThrown: number; selectedBall: string; fleeThreshold: number };
+type Battle = { wild: Mon; pMon: Mon; phase: string; turnCount: number; canCatch: boolean; ballsThrown: number; selectedBall: string; fleeThreshold: number; hasMegaEvolved?: boolean };
 const MAX_BATTLE_BALLS = 5;
 const BALL_BASE_MULT: Record<string, number> = {
   "Poké Ball": 1, "Pokeball": 1, "Great Ball": 1.5, "Ultra Ball": 2, "Master Ball": 255,
@@ -1582,7 +1648,7 @@ export default function App() {
     // throws a ball that misses AFTER this many balls have been used.
     // Random 1–5 means some catches succeed/fail before the mon ever runs.
     const fleeThreshold = 1 + Math.floor(Math.random() * MAX_BATTLE_BALLS);
-    setBattle({ wild: scoutedWild, pMon, phase: "choose", turnCount: 0, canCatch: true, ballsThrown: 0, selectedBall: "Poké Ball", fleeThreshold });
+    setBattle({ wild: scoutedWild, pMon, phase: "choose", turnCount: 0, canCatch: true, ballsThrown: 0, selectedBall: "Poké Ball", fleeThreshold, hasMegaEvolved: false });
     setScoutedWild(null);
     setScreen("battle");
     // Wild encounter audio: opponent's cry, then loop the wild battle theme.
@@ -1751,6 +1817,34 @@ export default function App() {
     setRingRadius(110);
     ringDirRef.current = -1;
     setRingActive(true);
+  }
+
+  function doMegaEvolve() {
+    if (!battle || battle.hasMegaEvolved) return;
+    const m = battle.pMon;
+    const entry = Object.entries(STONE_TO_SPRITE).find(
+      ([stone, spr]) => spr === m.sprite && inventory.some((it) => it.name === stone && it.qty > 0)
+    );
+    if (!entry) return;
+    const [stone] = entry;
+    const sd = MEGA_STONES[stone];
+    if (!sd) return;
+    const megaMon: Mon = {
+      ...m,
+      sprite: sd.megaSprite,
+      name: `Mega ${m.name}`,
+      type1: sd.type1,
+      type2: sd.type2 ?? null,
+      atk: calcAppStat(sd.atk, m.ivAtk ?? 0, m.evAtk ?? 0, m.level, m.nature, "atk"),
+      def: calcAppStat(sd.def, m.ivDef ?? 0, m.evDef ?? 0, m.level, m.nature, "def"),
+      spa: calcAppStat(sd.spa, m.ivSpa ?? 0, m.evSpa ?? 0, m.level, m.nature, "spa"),
+      spd: calcAppStat(sd.spd, m.ivSpd ?? 0, m.evSpd ?? 0, m.level, m.nature, "spd"),
+      spe: calcAppStat(sd.spe, m.ivSpe ?? 0, m.evSpe ?? 0, m.level, m.nature, "spe"),
+      maxHp: calcAppMaxHp(sd.hp, m.ivHp ?? 0, m.evHp ?? 0, m.level),
+      currentHp: m.currentHp,
+    };
+    addLog(`🌟 ${m.name} Mega Evolved into Mega ${m.name}!`, "#FF69B4");
+    setBattle((prev) => prev ? { ...prev, pMon: megaMon, hasMegaEvolved: true } : prev);
   }
 
   function openBallPicker() {
@@ -2243,26 +2337,28 @@ export default function App() {
     );
   }
 
-  function MonSprite({ sprite, size = 80, back = false, className = "mon-float", style = {} }: { sprite: string; size?: number; back?: boolean; className?: string; style?: React.CSSProperties }) {
+  function MonSprite({ sprite, size = 80, back = false, isShiny = false, className = "mon-float", style = {} }: { sprite: string; size?: number; back?: boolean; isShiny?: boolean; className?: string; style?: React.CSSProperties }) {
     const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
     const custom = CUSTOM_SPRITE_URL(clean);
     const customList = custom ? [custom] : [];
     const fallbacks = back
       ? [
           ...customList,
-          `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif`,
+          isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back-shiny/${clean}.gif` : `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif`,
+          isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif` : "",
           `https://play.pokemonshowdown.com/sprites/gen5-back/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/home/${clean}.png`,
-        ]
+        ].filter(Boolean)
       : [
           ...customList,
-          `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`,
+          isShiny ? `https://play.pokemonshowdown.com/sprites/ani-shiny/${clean}.gif` : `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`,
+          isShiny ? `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif` : "",
           `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/home/${clean}.png`,
-        ];
+        ].filter(Boolean);
     return (
       <img
         src={fallbacks[0]}
@@ -3305,6 +3401,10 @@ export default function App() {
           }
           .wb-action-btn:active:not(:disabled) { transform: translateY(1px); }
           .wb-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+          @keyframes megaPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(219,39,119,0.6), 0 0 40px rgba(124,58,237,0.4); transform: scale(1); }
+            50% { box-shadow: 0 0 30px rgba(219,39,119,0.9), 0 0 60px rgba(124,58,237,0.7); transform: scale(1.02); }
+          }
         `}</style>
         <div style={{ ...S.wrap, background: "#0a0a0c", fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", padding: "16px 16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
 
@@ -3334,7 +3434,7 @@ export default function App() {
             <div style={{ position: "absolute", top: 14, left: 14, zIndex: 4 }}>
               <div className="wb-info-card">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 0.5, color: "#f0f0f0" }}>{wild.name}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 0.5, color: wild.isShiny ? "#FFD700" : "#f0f0f0" }}>{wild.isShiny ? "✨ " : ""}{wild.name}</span>
                   <span style={{ fontSize: 11, color: "#888890" }}>Lv{wild.level}</span>
                 </div>
                 <div style={{ marginBottom: 5, display: "flex", gap: 4 }}>
@@ -3355,19 +3455,19 @@ export default function App() {
             {/* Enemy sprite — top-right */}
             <div style={{ position: "absolute", top: 10, right: 14, zIndex: 3 }}>
               {ballAnim !== "capture" && ballAnim !== "wobble" && ballAnim !== "success" && (
-                <MonSprite sprite={wild.sprite} size={110} className={
+                <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className={
                   shakeE ? "mon-shake" : (ballAnim === "fail" ? "" : "mon-float")
-                } style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
+                } style={{ filter: wild.isShiny ? "drop-shadow(0 6px 18px rgba(255,215,0,0.8))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
               )}
               {ballAnim === "capture" && (
-                <MonSprite sprite={wild.sprite} size={110} className="mon-suck" style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
+                <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className="mon-suck" style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
               )}
               {moveAnim?.target === "enemy" && <MoveFx key={moveAnim.key} type={moveAnim.type} />}
             </div>
 
             {/* Player sprite — bottom-left */}
             <div style={{ position: "absolute", bottom: 12, left: 12, zIndex: 3 }}>
-              <MonSprite sprite={pMon.sprite} size={95} back className={shakeP ? "mon-shake" : "mon-float"} style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.8))" }} />
+              <MonSprite sprite={pMon.sprite} size={95} back isShiny={pMon.isShiny} className={shakeP ? "mon-shake" : "mon-float"} style={{ filter: pMon.isShiny ? "drop-shadow(0 6px 18px rgba(255,215,0,0.8))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.8))" }} />
               {moveAnim?.target === "player" && <MoveFx key={moveAnim.key} type={moveAnim.type} />}
             </div>
 
@@ -3375,7 +3475,7 @@ export default function App() {
             <div style={{ position: "absolute", bottom: 12, right: 12, zIndex: 4 }}>
               <div className="wb-info-card">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 0.5, color: "#f0f0f0" }}>{pMon.name}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 0.5, color: pMon.isShiny ? "#FFD700" : "#f0f0f0" }}>{pMon.isShiny ? "✨ " : ""}{pMon.name}</span>
                   <span style={{ fontSize: 11, color: "#888890" }}>Lv{pMon.level}</span>
                 </div>
                 <div style={{ height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden", marginBottom: 4 }}>
@@ -3483,6 +3583,28 @@ export default function App() {
               );
             })}
           </div>
+
+          {/* Mega Evolve button */}
+          {(() => {
+            const megaEntry = Object.entries(STONE_TO_SPRITE).find(
+              ([stone, spr]) => spr === pMon.sprite && inventory.some((it) => it.name === stone && it.qty > 0)
+            );
+            if (!megaEntry || battle.hasMegaEvolved) return null;
+            return (
+              <button
+                onClick={doMegaEvolve}
+                style={{
+                  width: "100%", padding: "14px 10px", borderRadius: 12, fontSize: 13, fontWeight: 800,
+                  letterSpacing: 2, textTransform: "uppercase", cursor: "pointer",
+                  background: "linear-gradient(135deg, #7c3aed 0%, #db2777 100%)",
+                  border: "2px solid #f0abfc", color: "#fff",
+                  boxShadow: "0 0 20px rgba(219,39,119,0.6), 0 0 40px rgba(124,58,237,0.4)",
+                  animation: "megaPulse 1.5s ease-in-out infinite",
+                }}>
+                🌟 MEGA EVOLVE
+              </button>
+            );
+          })()}
 
           {/* Actions */}
           <div style={{ display: "flex", gap: 10 }}>
@@ -4047,7 +4169,7 @@ export default function App() {
             // KEY ITEMS no longer matches "pass" — Safari Pass and similar
             // permit-style items belong under OTHERS instead.
             { key: "key", label: "KEY ITEMS", emoji: "🔑", color: "#FF9800", match: (n: string) => /(bike|rod|key|map|card|ticket|flute|stone tablet)/i.test(n) },
-            { key: "stones", label: "STONES", emoji: "💎", color: "#03A9F4", match: (n: string) => /stone|shard/i.test(n) && !/stone tablet/i.test(n) },
+            { key: "stones", label: "STONES", emoji: "💎", color: "#03A9F4", match: (n: string) => (/stone|shard/i.test(n) && !/stone tablet/i.test(n)) || n in MEGA_STONES },
             { key: "others", label: "OTHERS", emoji: "📦", color: "#26A69A", match: (_n: string) => true /* fallback; handled below */ },
           ];
           const active = bagCats.find((c) => c.key === bagCat)!;
@@ -5570,6 +5692,12 @@ export default function App() {
         items: [
           { name: "Rare Candy", price: 4800, info: "+1 Level" },
         ] },
+      { key: "mega", label: "MEGA STONES", emoji: "💎", color: "#db2777", desc: "Unlock Mega Evolution in battle",
+        items: Object.entries(MEGA_STONES).map(([stone, data]) => ({
+          name: stone,
+          price: 8000,
+          info: `Mega Evolve ${data.megaSprite.replace(/-mega[xy]?$/, "").replace(/-/g, " ")} in battle — boosts stats & may change type`,
+        })) },
       { key: "tms", label: "TMs", emoji: "💿", color: "#9C27B0", desc: "Teach new moves",
         items: tmStoreItems() },
     ];
