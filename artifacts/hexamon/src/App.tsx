@@ -2475,22 +2475,22 @@ export default function App() {
           </div>
 
           <div style={{
-            margin: "14px 16px 12px", background: "#0d0d1a", border: "2px solid #5e2c73", borderRadius: 12,
+            margin: "14px 16px 12px", background: "#0d0d1a", border: "2px solid #7c3aed", borderRadius: 8,
             padding: 14, boxShadow: "0 4px 10px rgba(0,0,0,0.5)", position: "relative",
             fontFamily: "'Press Start 2P', monospace",
           }}>
-            <div style={{ textAlign: "right", fontSize: 12, color: "#aaa", marginBottom: 8, letterSpacing: 1 }}>
+            <div style={{ textAlign: "right", fontSize: 9, color: "#aaa", marginBottom: 6, letterSpacing: 1 }}>
               IDNo. {player.id}
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "1px solid #5e2c73", paddingBottom: 10, marginBottom: 12 }}>
-              <div style={{ fontSize: 14, color: "#fff", textShadow: "1px 1px #000", letterSpacing: 1 }}>TRAINER CARD</div>
-              <div style={{ fontSize: 11, color: "#ddd" }}>Rank {rankProg.rank} / {MAX_RANK}{rankProg.isMax ? " ★" : ""}</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #7c3aed", paddingBottom: 8, marginBottom: 10 }}>
+              <div style={{ fontSize: 13, color: "#fff", textShadow: "1px 1px #000", letterSpacing: 1 }}>TRAINER CARD</div>
+              <div style={{ fontSize: 11, color: "#fff", fontWeight: 700 }}>Rank {rankProg.rank}{rankProg.isMax ? " ★" : ""}</div>
             </div>
-            <div style={{ fontSize: 12, color: "#bbb", marginBottom: 14, letterSpacing: 0.5 }}>
+            <div style={{ fontSize: 10, color: "#bbb", marginBottom: 12, letterSpacing: 0.5 }}>
               {player.hometown} • {player.name}
             </div>
-            <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-              <div style={{ width: 80, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 72, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <img src={TRAINER_SPRITE(player.sprite)} alt="Trainer" style={{ width: "100%", imageRendering: "pixelated" }} />
               </div>
               <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
@@ -2500,24 +2500,24 @@ export default function App() {
                   { label: "WINS", val: player.wins, col: "#4CAF50" },
                   { label: "LOSSES", val: player.losses, col: "#F44336" },
                 ].map((stat, i) => (
-                  <div key={i} style={{ background: "#171022", border: "1px solid #312440", padding: 8, borderRadius: 4 }}>
-                    <div style={{ fontSize: 10, color: "#aaa", marginBottom: 6, letterSpacing: 0.5 }}>{stat.label}</div>
-                    <div style={{ fontSize: 12, color: stat.col }}>{stat.val}</div>
+                  <div key={i} style={{ background: "#13102a", border: "1px solid #2d2050", padding: "7px 8px", borderRadius: 4 }}>
+                    <div style={{ fontSize: 8, color: "#aaa", marginBottom: 5, letterSpacing: 0.5 }}>{stat.label}</div>
+                    <div style={{ fontSize: 11, color: stat.col }}>{stat.val}</div>
                   </div>
                 ))}
               </div>
             </div>
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 11, color: "#bbb", marginBottom: 6, letterSpacing: 0.5 }}>
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 9, color: "#bbb", marginBottom: 6, letterSpacing: 0.5 }}>
                 {rankProg.isMax
-                  ? `MAX RANK — ${rankProg.totalExp.toLocaleString()} EXP`
-                  : `RANK ${rankProg.rank} → ${rankProg.rank + 1} (${rankProg.current.toLocaleString()} / ${rankProg.needed.toLocaleString()})`}
+                  ? `EXP PROGRESS — MAX RANK`
+                  : `EXP PROGRESS (${rankProg.current.toLocaleString()} / ${rankProg.needed.toLocaleString()})`}
               </div>
-              <div style={{ background: "#222", height: 10, border: "1px solid #5e2c73", borderRadius: 2, overflow: "hidden" }}>
-                <div style={{ width: `${expPct}%`, background: rankProg.isMax ? "#FFD700" : "#9c27b0", height: "100%", transition: "width 0.3s" }} />
+              <div style={{ background: "#1a1a2e", height: 13, borderRadius: 2, overflow: "hidden" }}>
+                <div style={{ width: `${expPct}%`, background: rankProg.isMax ? "#FFD700" : "#8b22d9", height: "100%", transition: "width 0.3s" }} />
               </div>
             </div>
-            <div style={{ borderTop: "1px solid #312440", paddingTop: 8, textAlign: "right", fontSize: 11, color: "#aaa" }}>
+            <div style={{ borderTop: "1px solid #2d2050", paddingTop: 8, textAlign: "right", fontSize: 9, color: "#aaa" }}>
               Adventure started: {player.adventureStarted}
             </div>
           </div>
@@ -3146,53 +3146,54 @@ export default function App() {
         </div>
 
         {/* Full-size preview */}
-        <div style={{ margin: 16, background: "#0d0d1a", border: "3px solid #5e2c73", borderRadius: 12, padding: 18, boxShadow: "0 4px 15px rgba(0,0,0,0.5)" }}>
-          <div style={{ textAlign: "right", fontSize: 12, color: "#888", marginBottom: 6, letterSpacing: 1 }}>
+        <div style={{ margin: 16, background: "#0d0d1a", border: "2px solid #7c3aed", borderRadius: 8, padding: 16, boxShadow: "0 4px 15px rgba(0,0,0,0.5)", fontFamily: "'Press Start 2P', monospace" }}>
+          <div style={{ textAlign: "right", fontSize: 9, color: "#aaa", marginBottom: 6, letterSpacing: 1 }}>
             IDNo. {player.id}
           </div>
           {(() => {
             const cardProg = rankProgress(player.exp);
+            const cardPct = cardProg.isMax ? 100 : Math.min(100, Math.round((cardProg.current / cardProg.needed) * 100));
             return (
               <>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "2px solid #5e2c73", paddingBottom: 10, marginBottom: 14 }}>
-                  <div style={{ fontSize: 14, color: "#fff", textShadow: "1px 1px #000", fontFamily: "'Press Start 2P', monospace" }}>TRAINER CARD</div>
-                  <div style={{ fontSize: 12, color: "#ddd" }}>Rank {cardProg.rank} / {MAX_RANK}{cardProg.isMax ? " ★" : ""}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #7c3aed", paddingBottom: 8, marginBottom: 10 }}>
+                  <div style={{ fontSize: 13, color: "#fff", textShadow: "1px 1px #000", letterSpacing: 1 }}>TRAINER CARD</div>
+                  <div style={{ fontSize: 11, color: "#fff", fontWeight: 700 }}>Rank {cardProg.rank}{cardProg.isMax ? " ★" : ""}</div>
                 </div>
-                <div style={{ fontSize: 12, color: "#aaa", marginBottom: 16, letterSpacing: 0.5 }}>
-                  {player.hometown} • {player.name} • {rankTier(cardProg.rank)}
+                <div style={{ fontSize: 10, color: "#bbb", marginBottom: 12, letterSpacing: 0.5 }}>
+                  {player.hometown} • {player.name}
                 </div>
-                <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
-                  <div style={{ width: 90, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+                  <div style={{ width: 80, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <img src={TRAINER_SPRITE(player.sprite)} alt="Trainer" style={{ width: "100%", imageRendering: "pixelated" }} />
                   </div>
-                  <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                     {[
                       { label: "EXP. POINTS", val: cardProg.totalExp.toLocaleString(), col: "#fff" },
                       { label: cardProg.isMax ? "MAX RANK" : "TO NEXT RANK", val: cardProg.isMax ? "★" : cardProg.toNext.toLocaleString(), col: cardProg.isMax ? "#FFD700" : "#fff" },
                       { label: "WINS", val: player.wins, col: "#4CAF50" },
                       { label: "LOSSES", val: player.losses, col: "#F44336" },
                     ].map((stat, i) => (
-                      <div key={i} style={{ background: "#171022", border: "1px solid #312440", padding: 10, borderRadius: 4 }}>
-                        <div style={{ fontSize: 10, color: "#888", marginBottom: 8 }}>{stat.label}</div>
-                        <div style={{ fontSize: 12, color: stat.col }}>{stat.val}</div>
+                      <div key={i} style={{ background: "#13102a", border: "1px solid #2d2050", padding: "7px 8px", borderRadius: 4 }}>
+                        <div style={{ fontSize: 8, color: "#aaa", marginBottom: 5, letterSpacing: 0.5 }}>{stat.label}</div>
+                        <div style={{ fontSize: 11, color: stat.col }}>{stat.val}</div>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, color: "#aaa", marginBottom: 8 }}>
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ fontSize: 9, color: "#bbb", marginBottom: 6, letterSpacing: 0.5 }}>
                     {cardProg.isMax
-                      ? `MAX RANK — ${cardProg.totalExp.toLocaleString()} EXP`
-                      : `RANK ${cardProg.rank} → ${cardProg.rank + 1} (${cardProg.current.toLocaleString()} / ${cardProg.needed.toLocaleString()})`}
+                      ? `EXP PROGRESS — MAX RANK`
+                      : `EXP PROGRESS (${cardProg.current.toLocaleString()} / ${cardProg.needed.toLocaleString()})`}
                   </div>
-                  <div style={{ background: "#222", height: 12, border: "1px solid #5e2c73", borderRadius: 2, overflow: "hidden" }}>
-                    <div style={{ width: `${cardProg.pct}%`, background: cardProg.isMax ? "#FFD700" : "#9c27b0", height: "100%" }} />
+                  <div style={{ background: "#1a1a2e", height: 13, borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{ width: `${cardPct}%`, background: cardProg.isMax ? "#FFD700" : "#8b22d9", height: "100%" }} />
                   </div>
                 </div>
               </>
             );
           })()}
-          <div style={{ borderTop: "1px solid #312440", paddingTop: 10, textAlign: "right", fontSize: 11, color: "#777" }}>
+          <div style={{ borderTop: "1px solid #2d2050", paddingTop: 8, textAlign: "right", fontSize: 9, color: "#aaa" }}>
             Adventure started: {player.adventureStarted}
           </div>
         </div>
