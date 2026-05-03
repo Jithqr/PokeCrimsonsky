@@ -153,4 +153,168 @@ export const POKEMON_FORMS: FormEntry[] = [
   { id:10528, name:"Urshifu (Rapid)",    sprite:"urshifurapidstrike",type1:"Fighting",type2:"Water",    hp:100, atk:130, def:100, spa:63,  spd:60,  spe:97,  moves:["Surging Strikes","Close Combat","Aqua Jet","Swords Dance"],   category:"other", baseId:892, gen:8 },
   { id:10529, name:"Calyrex (Ice Rider)",sprite:"calyrex-ice",      type1:"Psychic",  type2:"Ice",      hp:100, atk:165, def:150, spa:85,  spd:130, spe:50,  moves:["Glacial Lance","Psychic","High Horsepower","Swords Dance"],   category:"other", baseId:898, gen:8 },
   { id:10530, name:"Calyrex (Shadow)",   sprite:"calyrex-shadow",   type1:"Psychic",  type2:"Ghost",    hp:100, atk:85,  def:80,  spa:165, spd:100, spe:150, moves:["Astral Barrage","Psychic","Nasty Plot","Energy Ball"],        category:"other", baseId:898, gen:8 },
+
+  // ── UNOWN FORMS (B–Z, !, ?) ───────────────────────────────────
+  { id:10531, name:"Unown (B)",  sprite:"unown-b",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10532, name:"Unown (C)",  sprite:"unown-c",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10533, name:"Unown (D)",  sprite:"unown-d",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10534, name:"Unown (E)",  sprite:"unown-e",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10535, name:"Unown (F)",  sprite:"unown-f",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10536, name:"Unown (G)",  sprite:"unown-g",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10537, name:"Unown (H)",  sprite:"unown-h",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10538, name:"Unown (I)",  sprite:"unown-i",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10539, name:"Unown (J)",  sprite:"unown-j",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10540, name:"Unown (K)",  sprite:"unown-k",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10541, name:"Unown (L)",  sprite:"unown-l",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10542, name:"Unown (M)",  sprite:"unown-m",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10543, name:"Unown (N)",  sprite:"unown-n",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10544, name:"Unown (O)",  sprite:"unown-o",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10545, name:"Unown (P)",  sprite:"unown-p",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10546, name:"Unown (Q)",  sprite:"unown-q",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10547, name:"Unown (R)",  sprite:"unown-r",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10548, name:"Unown (S)",  sprite:"unown-s",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10549, name:"Unown (T)",  sprite:"unown-t",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10550, name:"Unown (U)",  sprite:"unown-u",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10551, name:"Unown (V)",  sprite:"unown-v",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10552, name:"Unown (W)",  sprite:"unown-w",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10553, name:"Unown (X)",  sprite:"unown-x",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10554, name:"Unown (Y)",  sprite:"unown-y",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10555, name:"Unown (Z)",  sprite:"unown-z",           type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10556, name:"Unown (!)",  sprite:"unown-exclamation", type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+  { id:10557, name:"Unown (?)",  sprite:"unown-question",    type1:"Psychic", type2:null, hp:48, atk:72, def:48, spa:72, spd:48, spe:48, moves:["Hidden Power"], category:"other", baseId:201, gen:2 },
+
+  // ── CASTFORM WEATHER FORMS ────────────────────────────────────
+  { id:10558, name:"Castform (Sunny)",  sprite:"castform-sunny",  type1:"Fire",  type2:null, hp:70, atk:70, def:70, spa:70, spd:70, spe:70, moves:["Fire Blast","Sunny Day","Weather Ball","Morning Sun"],  category:"other", baseId:351, gen:3 },
+  { id:10559, name:"Castform (Rainy)",  sprite:"castform-rainy",  type1:"Water", type2:null, hp:70, atk:70, def:70, spa:70, spd:70, spe:70, moves:["Hydro Pump","Rain Dance","Weather Ball","Thunder"],      category:"other", baseId:351, gen:3 },
+  { id:10560, name:"Castform (Snowy)",  sprite:"castform-snowy",  type1:"Ice",   type2:null, hp:70, atk:70, def:70, spa:70, spd:70, spe:70, moves:["Blizzard","Hail","Weather Ball","Ice Beam"],             category:"other", baseId:351, gen:3 },
+
+  // ── CHERRIM SUNSHINE ─────────────────────────────────────────
+  { id:10561, name:"Cherrim (Sunshine)", sprite:"cherrim-sunshine", type1:"Grass", type2:null, hp:70, atk:60, def:70, spa:87, spd:78, spe:85, moves:["Petal Blizzard","Solar Beam","Sunny Day","Aromatherapy"], category:"other", baseId:421, gen:4 },
+
+  // ── SHELLOS & GASTRODON EAST SEA ─────────────────────────────
+  { id:10562, name:"Shellos (East)",   sprite:"shellos-east",   type1:"Water", type2:null,    hp:76, atk:48, def:48, spa:57, spd:62, spe:34, moves:["Muddy Water","Water Pulse","Earth Power","Rain Dance"], category:"other", baseId:422, gen:4 },
+  { id:10563, name:"Gastrodon (East)", sprite:"gastrodon-east", type1:"Water", type2:"Ground", hp:111, atk:83, def:68, spa:92, spd:82, spe:39, moves:["Muddy Water","Earth Power","Scald","Recover"],        category:"other", baseId:423, gen:4 },
+
+  // ── BURMY CLOAKS ─────────────────────────────────────────────
+  { id:10564, name:"Burmy (Sandy)",  sprite:"burmy-sandy",  type1:"Bug", type2:null, hp:40, atk:29, def:45, spa:29, spd:45, spe:36, moves:["Bug Bite","Protect","Tackle","Sand Attack"],   category:"other", baseId:412, gen:4 },
+  { id:10565, name:"Burmy (Trash)",  sprite:"burmy-trash",  type1:"Bug", type2:null, hp:40, atk:29, def:45, spa:29, spd:45, spe:36, moves:["Bug Bite","Protect","Tackle","Iron Defense"],   category:"other", baseId:412, gen:4 },
+
+  // ── BASCULIN BLUE-STRIPED ─────────────────────────────────────
+  { id:10566, name:"Basculin (Blue-Striped)", sprite:"basculin-bluestriped", type1:"Water", type2:null, hp:70, atk:92, def:65, spa:80, spd:55, spe:98, moves:["Aqua Tail","Crunch","Final Gambit","Wave Crash"], category:"other", baseId:550, gen:5 },
+
+  // ── DEERLING SEASONAL FORMS ───────────────────────────────────
+  { id:10567, name:"Deerling (Summer)", sprite:"deerling-summer", type1:"Normal", type2:"Grass", hp:60, atk:60, def:50, spa:40, spd:50, spe:75, moves:["Energy Ball","Double Kick","Agility","Jump Kick"], category:"other", baseId:585, gen:5 },
+  { id:10568, name:"Deerling (Autumn)", sprite:"deerling-autumn", type1:"Normal", type2:"Grass", hp:60, atk:60, def:50, spa:40, spd:50, spe:75, moves:["Energy Ball","Double Kick","Agility","Jump Kick"], category:"other", baseId:585, gen:5 },
+  { id:10569, name:"Deerling (Winter)", sprite:"deerling-winter", type1:"Normal", type2:"Grass", hp:60, atk:60, def:50, spa:40, spd:50, spe:75, moves:["Energy Ball","Double Kick","Agility","Jump Kick"], category:"other", baseId:585, gen:5 },
+
+  // ── SAWSBUCK SEASONAL FORMS ───────────────────────────────────
+  { id:10570, name:"Sawsbuck (Summer)", sprite:"sawsbuck-summer", type1:"Normal", type2:"Grass", hp:80, atk:100, def:70, spa:60, spd:70, spe:95, moves:["Horn Leech","Jump Kick","Nature Power","Double Edge"], category:"other", baseId:586, gen:5 },
+  { id:10571, name:"Sawsbuck (Autumn)", sprite:"sawsbuck-autumn", type1:"Normal", type2:"Grass", hp:80, atk:100, def:70, spa:60, spd:70, spe:95, moves:["Horn Leech","Jump Kick","Nature Power","Double Edge"], category:"other", baseId:586, gen:5 },
+  { id:10572, name:"Sawsbuck (Winter)", sprite:"sawsbuck-winter", type1:"Normal", type2:"Grass", hp:80, atk:100, def:70, spa:60, spd:70, spe:95, moves:["Horn Leech","Jump Kick","Nature Power","Double Edge"], category:"other", baseId:586, gen:5 },
+
+  // ── VIVILLON WING PATTERNS ────────────────────────────────────
+  { id:10573, name:"Vivillon (Archipelago)", sprite:"vivillon-archipelago", type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10574, name:"Vivillon (Continental)", sprite:"vivillon-continental", type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10575, name:"Vivillon (Elegant)",     sprite:"vivillon-elegant",     type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10576, name:"Vivillon (Fancy)",       sprite:"vivillon-fancy",       type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10577, name:"Vivillon (Garden)",      sprite:"vivillon-garden",      type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10578, name:"Vivillon (High Plains)", sprite:"vivillon-highplains",  type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10579, name:"Vivillon (Icy Snow)",    sprite:"vivillon-icysnow",     type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10580, name:"Vivillon (Jungle)",      sprite:"vivillon-jungle",      type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10581, name:"Vivillon (Marine)",      sprite:"vivillon-marine",      type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10582, name:"Vivillon (Modern)",      sprite:"vivillon-modern",      type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10583, name:"Vivillon (Monsoon)",     sprite:"vivillon-monsoon",     type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10584, name:"Vivillon (Ocean)",       sprite:"vivillon-ocean",       type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10585, name:"Vivillon (Polar)",       sprite:"vivillon-polar",       type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10586, name:"Vivillon (River)",       sprite:"vivillon-river",       type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10587, name:"Vivillon (Sandstorm)",   sprite:"vivillon-sandstorm",   type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10588, name:"Vivillon (Savanna)",     sprite:"vivillon-savanna",     type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10589, name:"Vivillon (Sun)",         sprite:"vivillon-sun",         type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10590, name:"Vivillon (Tundra)",      sprite:"vivillon-tundra",      type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+  { id:10591, name:"Vivillon (Poke Ball)",   sprite:"vivillon-pokeball",    type1:"Bug", type2:"Flying", hp:80, atk:52, def:50, spa:90, spd:50, spe:89, moves:["Powder","Hurricane","Quiver Dance","Bug Buzz"], category:"other", baseId:666, gen:6 },
+
+  // ── ZYGARDE COMPLETE ─────────────────────────────────────────
+  { id:10592, name:"Zygarde (Complete)", sprite:"zygarde-complete", type1:"Dragon", type2:"Ground", hp:216, atk:100, def:121, spa:91, spd:95, spe:85, moves:["Core Enforcer","Thousand Arrows","Extreme Speed","Coil"], category:"other", baseId:718, gen:6 },
+
+  // ── FLABÉBÉ COLOR FORMS ───────────────────────────────────────
+  { id:10593, name:"Flabebe (Yellow)", sprite:"flabebe-yellow", type1:"Fairy", type2:null, hp:44, atk:38, def:39, spa:61, spd:79, spe:42, moves:["Moonblast","Fairy Wind","Aromatherapy","Wish"], category:"other", baseId:669, gen:6 },
+  { id:10594, name:"Flabebe (Orange)", sprite:"flabebe-orange", type1:"Fairy", type2:null, hp:44, atk:38, def:39, spa:61, spd:79, spe:42, moves:["Moonblast","Fairy Wind","Aromatherapy","Wish"], category:"other", baseId:669, gen:6 },
+  { id:10595, name:"Flabebe (Blue)",   sprite:"flabebe-blue",   type1:"Fairy", type2:null, hp:44, atk:38, def:39, spa:61, spd:79, spe:42, moves:["Moonblast","Fairy Wind","Aromatherapy","Wish"], category:"other", baseId:669, gen:6 },
+  { id:10596, name:"Flabebe (White)",  sprite:"flabebe-white",  type1:"Fairy", type2:null, hp:44, atk:38, def:39, spa:61, spd:79, spe:42, moves:["Moonblast","Fairy Wind","Aromatherapy","Wish"], category:"other", baseId:669, gen:6 },
+
+  // ── FLOETTE COLOR FORMS ───────────────────────────────────────
+  { id:10597, name:"Floette (Yellow)", sprite:"floette-yellow", type1:"Fairy", type2:null, hp:54, atk:45, def:47, spa:75, spd:98, spe:52, moves:["Moonblast","Dazzling Gleam","Aromatherapy","Wish"], category:"other", baseId:670, gen:6 },
+  { id:10598, name:"Floette (Orange)", sprite:"floette-orange", type1:"Fairy", type2:null, hp:54, atk:45, def:47, spa:75, spd:98, spe:52, moves:["Moonblast","Dazzling Gleam","Aromatherapy","Wish"], category:"other", baseId:670, gen:6 },
+  { id:10599, name:"Floette (Blue)",   sprite:"floette-blue",   type1:"Fairy", type2:null, hp:54, atk:45, def:47, spa:75, spd:98, spe:52, moves:["Moonblast","Dazzling Gleam","Aromatherapy","Wish"], category:"other", baseId:670, gen:6 },
+  { id:10600, name:"Floette (White)",  sprite:"floette-white",  type1:"Fairy", type2:null, hp:54, atk:45, def:47, spa:75, spd:98, spe:52, moves:["Moonblast","Dazzling Gleam","Aromatherapy","Wish"], category:"other", baseId:670, gen:6 },
+
+  // ── FURFROU TRIMS ─────────────────────────────────────────────
+  { id:10601, name:"Furfrou (Heart)",     sprite:"furfrou-heart",     type1:"Normal", type2:null, hp:75, atk:80, def:60, spa:65, spd:90, spe:102, moves:["Retaliate","Return","Charm","Sucker Punch"], category:"other", baseId:676, gen:6 },
+  { id:10602, name:"Furfrou (Star)",      sprite:"furfrou-star",      type1:"Normal", type2:null, hp:75, atk:80, def:60, spa:65, spd:90, spe:102, moves:["Retaliate","Return","Charm","Sucker Punch"], category:"other", baseId:676, gen:6 },
+  { id:10603, name:"Furfrou (Diamond)",   sprite:"furfrou-diamond",   type1:"Normal", type2:null, hp:75, atk:80, def:60, spa:65, spd:90, spe:102, moves:["Retaliate","Return","Charm","Sucker Punch"], category:"other", baseId:676, gen:6 },
+  { id:10604, name:"Furfrou (Debutante)", sprite:"furfrou-debutante", type1:"Normal", type2:null, hp:75, atk:80, def:60, spa:65, spd:90, spe:102, moves:["Retaliate","Return","Charm","Sucker Punch"], category:"other", baseId:676, gen:6 },
+  { id:10605, name:"Furfrou (Matron)",    sprite:"furfrou-matron",    type1:"Normal", type2:null, hp:75, atk:80, def:60, spa:65, spd:90, spe:102, moves:["Retaliate","Return","Charm","Sucker Punch"], category:"other", baseId:676, gen:6 },
+  { id:10606, name:"Furfrou (Dandy)",     sprite:"furfrou-dandy",     type1:"Normal", type2:null, hp:75, atk:80, def:60, spa:65, spd:90, spe:102, moves:["Retaliate","Return","Charm","Sucker Punch"], category:"other", baseId:676, gen:6 },
+  { id:10607, name:"Furfrou (La Reine)",  sprite:"furfrou-lareine",   type1:"Normal", type2:null, hp:75, atk:80, def:60, spa:65, spd:90, spe:102, moves:["Retaliate","Return","Charm","Sucker Punch"], category:"other", baseId:676, gen:6 },
+  { id:10608, name:"Furfrou (Kabuki)",    sprite:"furfrou-kabuki",    type1:"Normal", type2:null, hp:75, atk:80, def:60, spa:65, spd:90, spe:102, moves:["Retaliate","Return","Charm","Sucker Punch"], category:"other", baseId:676, gen:6 },
+  { id:10609, name:"Furfrou (Pharaoh)",   sprite:"furfrou-pharaoh",   type1:"Normal", type2:null, hp:75, atk:80, def:60, spa:65, spd:90, spe:102, moves:["Retaliate","Return","Charm","Sucker Punch"], category:"other", baseId:676, gen:6 },
+
+  // ── MEOWSTIC FEMALE ───────────────────────────────────────────
+  { id:10610, name:"Meowstic (Female)", sprite:"meowstic-f", type1:"Psychic", type2:null, hp:74, atk:48, def:76, spa:83, spd:81, spe:104, moves:["Psychic","Shadow Ball","Moonblast","Helping Hand"], category:"other", baseId:678, gen:6 },
+
+  // ── AEGISLASH BLADE ───────────────────────────────────────────
+  { id:10611, name:"Aegislash (Blade)", sprite:"aegislash-blade", type1:"Steel", type2:"Ghost", hp:60, atk:150, def:50, spa:150, spd:50, spe:60, moves:["Shadow Sneak","Kings Shield","Sacred Sword","Shadow Ball"], category:"other", baseId:681, gen:6 },
+
+  // ── PUMPKABOO SIZE FORMS ──────────────────────────────────────
+  { id:10612, name:"Pumpkaboo (Small)", sprite:"pumpkaboo-small", type1:"Ghost", type2:"Grass", hp:44, atk:66, def:70, spa:44, spd:55, spe:56, moves:["Shadow Ball","Leech Seed","Will-O-Wisp","Trick Or Treat"], category:"other", baseId:710, gen:6 },
+  { id:10613, name:"Pumpkaboo (Large)", sprite:"pumpkaboo-large", type1:"Ghost", type2:"Grass", hp:54, atk:66, def:70, spa:44, spd:55, spe:42, moves:["Shadow Ball","Leech Seed","Will-O-Wisp","Trick Or Treat"], category:"other", baseId:710, gen:6 },
+  { id:10614, name:"Pumpkaboo (Super)", sprite:"pumpkaboo-super", type1:"Ghost", type2:"Grass", hp:59, atk:66, def:70, spa:44, spd:55, spe:36, moves:["Shadow Ball","Leech Seed","Will-O-Wisp","Trick Or Treat"], category:"other", baseId:710, gen:6 },
+
+  // ── GOURGEIST SIZE FORMS ──────────────────────────────────────
+  { id:10615, name:"Gourgeist (Small)", sprite:"gourgeist-small", type1:"Ghost", type2:"Grass", hp:55, atk:85,  def:122, spa:58, spd:75, spe:99, moves:["Shadow Ball","Leech Seed","Phantom Force","Will-O-Wisp"], category:"other", baseId:711, gen:6 },
+  { id:10616, name:"Gourgeist (Large)", sprite:"gourgeist-large", type1:"Ghost", type2:"Grass", hp:75, atk:95,  def:122, spa:58, spd:75, spe:69, moves:["Shadow Ball","Leech Seed","Phantom Force","Will-O-Wisp"], category:"other", baseId:711, gen:6 },
+  { id:10617, name:"Gourgeist (Super)", sprite:"gourgeist-super", type1:"Ghost", type2:"Grass", hp:85, atk:100, def:122, spa:58, spd:75, spe:54, moves:["Shadow Ball","Leech Seed","Phantom Force","Will-O-Wisp"], category:"other", baseId:711, gen:6 },
+
+  // ── WISHIWASHI SCHOOL ─────────────────────────────────────────
+  { id:10618, name:"Wishiwashi (School)", sprite:"wishiwashi-school", type1:"Water", type2:null, hp:45, atk:140, def:130, spa:140, spd:135, spe:30, moves:["Aqua Tail","Liquidation","Ice Beam","Endeavor"], category:"other", baseId:746, gen:7 },
+
+  // ── MINIOR CORE COLORS ────────────────────────────────────────
+  { id:10619, name:"Minior (Red Core)",    sprite:"minior-red",    type1:"Rock", type2:"Flying", hp:60, atk:100, def:60, spa:100, spd:60, spe:120, moves:["Acrobatics","Power Gem","Shell Smash","Swift"], category:"other", baseId:774, gen:7 },
+  { id:10620, name:"Minior (Orange Core)", sprite:"minior-orange", type1:"Rock", type2:"Flying", hp:60, atk:100, def:60, spa:100, spd:60, spe:120, moves:["Acrobatics","Power Gem","Shell Smash","Swift"], category:"other", baseId:774, gen:7 },
+  { id:10621, name:"Minior (Yellow Core)", sprite:"minior-yellow", type1:"Rock", type2:"Flying", hp:60, atk:100, def:60, spa:100, spd:60, spe:120, moves:["Acrobatics","Power Gem","Shell Smash","Swift"], category:"other", baseId:774, gen:7 },
+  { id:10622, name:"Minior (Green Core)",  sprite:"minior-green",  type1:"Rock", type2:"Flying", hp:60, atk:100, def:60, spa:100, spd:60, spe:120, moves:["Acrobatics","Power Gem","Shell Smash","Swift"], category:"other", baseId:774, gen:7 },
+  { id:10623, name:"Minior (Blue Core)",   sprite:"minior-blue",   type1:"Rock", type2:"Flying", hp:60, atk:100, def:60, spa:100, spd:60, spe:120, moves:["Acrobatics","Power Gem","Shell Smash","Swift"], category:"other", baseId:774, gen:7 },
+  { id:10624, name:"Minior (Indigo Core)", sprite:"minior-indigo", type1:"Rock", type2:"Flying", hp:60, atk:100, def:60, spa:100, spd:60, spe:120, moves:["Acrobatics","Power Gem","Shell Smash","Swift"], category:"other", baseId:774, gen:7 },
+  { id:10625, name:"Minior (Violet Core)", sprite:"minior-violet", type1:"Rock", type2:"Flying", hp:60, atk:100, def:60, spa:100, spd:60, spe:120, moves:["Acrobatics","Power Gem","Shell Smash","Swift"], category:"other", baseId:774, gen:7 },
+
+  // ── MIMIKYU BUSTED ────────────────────────────────────────────
+  { id:10626, name:"Mimikyu (Busted)", sprite:"mimikyu-busted", type1:"Ghost", type2:"Fairy", hp:55, atk:90, def:80, spa:50, spd:105, spe:96, moves:["Shadow Sneak","Play Rough","Wood Hammer","Swords Dance"], category:"other", baseId:778, gen:7 },
+
+  // ── TOXTRICITY LOW KEY ────────────────────────────────────────
+  { id:10627, name:"Toxtricity (Low Key)", sprite:"toxtricity-lowkey", type1:"Electric", type2:"Poison", hp:75, atk:98, def:70, spa:114, spd:70, spe:75, moves:["Discharge","Sludge Wave","Shift Gear","Venoshock"], category:"other", baseId:849, gen:8 },
+
+  // ── INDEEDEE FEMALE ───────────────────────────────────────────
+  { id:10628, name:"Indeedee (Female)", sprite:"indeedee-f", type1:"Psychic", type2:"Normal", hp:70, atk:55, def:65, spa:95, spd:110, spe:85, moves:["Psychic","Dazzling Gleam","Follow Me","Healing Wish"], category:"other", baseId:876, gen:8 },
+
+  // ── ENAMORUS THERIAN ──────────────────────────────────────────
+  { id:10629, name:"Enamorus (Therian)", sprite:"enamorus-therian", type1:"Fairy", type2:"Flying", hp:74, atk:115, def:80, spa:115, spd:90, spe:106, moves:["Springtide Storm","Earth Power","Fly","Calm Mind"], category:"other", baseId:905, gen:8 },
+
+  // ── PALAFIN HERO ─────────────────────────────────────────────
+  { id:10630, name:"Palafin (Hero)", sprite:"palafin-hero", type1:"Water", type2:null, hp:100, atk:160, def:97, spa:106, spd:87, spe:100, moves:["Wave Crash","Flip Turn","Jet Punch","Mach Punch"], category:"other", baseId:964, gen:9 },
+
+  // ── MAUSHOLD FAMILY OF THREE ──────────────────────────────────
+  { id:10631, name:"Maushold (Three)", sprite:"maushold-three", type1:"Normal", type2:null, hp:74, atk:75, def:70, spa:65, spd:75, spe:111, moves:["Population Bomb","Tidy Up","After You","Helping Hand"], category:"other", baseId:925, gen:9 },
+
+  // ── SQUAWKABILLY COLOR FORMS ──────────────────────────────────
+  { id:10632, name:"Squawkabilly (Blue)",   sprite:"squawkabilly-blue",   type1:"Normal", type2:"Flying", hp:82, atk:96, def:51, spa:45, spd:51, spe:92, moves:["Boomburst","Brave Bird","Quick Attack","Taunt"], category:"other", baseId:931, gen:9 },
+  { id:10633, name:"Squawkabilly (Yellow)", sprite:"squawkabilly-yellow", type1:"Normal", type2:"Flying", hp:82, atk:96, def:51, spa:45, spd:51, spe:92, moves:["Boomburst","Brave Bird","Quick Attack","Taunt"], category:"other", baseId:931, gen:9 },
+  { id:10634, name:"Squawkabilly (White)",  sprite:"squawkabilly-white",  type1:"Normal", type2:"Flying", hp:82, atk:96, def:51, spa:45, spd:51, spe:92, moves:["Boomburst","Brave Bird","Quick Attack","Taunt"], category:"other", baseId:931, gen:9 },
+
+  // ── TERAPAGOS STELLAR ────────────────────────────────────────
+  { id:10635, name:"Terapagos (Stellar)", sprite:"terapagos-stellar", type1:"Normal", type2:null, hp:160, atk:105, def:110, spa:130, spd:110, spe:85, moves:["Tera Starstorm","Earth Power","Calm Mind","Ancient Power"], category:"other", baseId:1024, gen:9 },
+
+  // ── OGERPON MASK FORMS ────────────────────────────────────────
+  { id:10636, name:"Ogerpon (Wellspring)",  sprite:"ogerpon-wellspring",  type1:"Grass", type2:"Water",    hp:80, atk:120, def:84, spa:60, spd:96, spe:110, moves:["Ivy Cudgel","Aqua Cutter","Wood Hammer","Follow Me"], category:"other", baseId:1017, gen:9 },
+  { id:10637, name:"Ogerpon (Hearthflame)", sprite:"ogerpon-hearthflame", type1:"Grass", type2:"Fire",     hp:80, atk:120, def:84, spa:60, spd:96, spe:110, moves:["Ivy Cudgel","Fire Lash","Wood Hammer","Follow Me"],  category:"other", baseId:1017, gen:9 },
+  { id:10638, name:"Ogerpon (Cornerstone)", sprite:"ogerpon-cornerstone", type1:"Grass", type2:"Rock",     hp:80, atk:120, def:84, spa:60, spd:96, spe:110, moves:["Ivy Cudgel","Rock Smash","Wood Hammer","Follow Me"], category:"other", baseId:1017, gen:9 },
 ];

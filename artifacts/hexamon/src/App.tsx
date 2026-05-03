@@ -180,12 +180,14 @@ type Mon = PokemonTemplate & {
 // the battle engine expects (raw species base stats + IVs/EVs).
 function toShippableMon(m: Mon) {
   const tpl = ALL_POKEMON.find((p) => p.id === m.id);
+  const formTpl = !tpl ? POKEMON_FORMS.find((f) => f.id === m.id) : null;
+  const base = tpl ?? formTpl;
   return {
     id: m.id, name: m.name, level: m.level,
-    type1: (tpl?.type1 ?? m.type1), type2: (tpl?.type2 ?? m.type2 ?? null),
-    sprite: tpl?.sprite ?? m.sprite,
-    hp: tpl?.hp ?? m.hp, atk: tpl?.atk ?? m.atk, def: tpl?.def ?? m.def,
-    spa: tpl?.spa ?? m.spa, spd: (tpl as any)?.spd ?? (m as any).spd ?? m.spa, spe: tpl?.spe ?? m.spe,
+    type1: (base?.type1 ?? m.type1), type2: (base?.type2 ?? m.type2 ?? null),
+    sprite: base?.sprite ?? m.sprite,
+    hp: base?.hp ?? m.hp, atk: base?.atk ?? m.atk, def: base?.def ?? m.def,
+    spa: base?.spa ?? m.spa, spd: (base as any)?.spd ?? (m as any).spd ?? m.spa, spe: base?.spe ?? m.spe,
     ivHp: m.ivHp, ivAtk: m.ivAtk, ivDef: m.ivDef,
     ivSpa: m.ivSpa, ivSpd: m.ivSpd, ivSpe: m.ivSpe,
     evHp: m.evHp ?? 0, evAtk: m.evAtk ?? 0, evDef: m.evDef ?? 0,
@@ -329,6 +331,43 @@ function makeMon(template: PokemonTemplate, level: number, origin: Mon["origin"]
   };
 }
 
+// Build a Mon from a FormEntry (no learnset — uses the form's fixed move list).
+function makeMonFromForm(form: FormEntry, level: number, origin: Mon["origin"] = "wild"): Mon {
+  const ivs = generateIvs();
+  const nature = randomNature();
+  const ev = 0;
+  const maxHp = calcAppMaxHp(form.hp, ivs.ivHp, ev, level);
+  return {
+    id: form.id,
+    name: form.name,
+    sprite: form.sprite,
+    type1: form.type1,
+    type2: form.type2,
+    hp: form.hp,
+    gen: form.gen,
+    learn: [],
+    moves: form.moves.slice(0, 4),
+    uid: makeUid(),
+    level,
+    maxHp,
+    currentHp: maxHp,
+    atk: calcAppStat(form.atk, ivs.ivAtk, ev, level, nature, "atk"),
+    def: calcAppStat(form.def, ivs.ivDef, ev, level, nature, "def"),
+    spa: calcAppStat(form.spa, ivs.ivSpa, ev, level, nature, "spa"),
+    spd: calcAppStat(form.spd, ivs.ivSpd, ev, level, nature, "spd"),
+    spe: calcAppStat(form.spe, ivs.ivSpe, ev, level, nature, "spe"),
+    exp: 0,
+    expNeeded: Math.floor(level * level * 1.2),
+    status: null,
+    ...ivs,
+    evHp: 0, evAtk: 0, evDef: 0, evSpa: 0, evSpd: 0, evSpe: 0,
+    nature,
+    caughtAt: Date.now(),
+    origin,
+    isShiny: Math.random() < 1 / 4096,
+  };
+}
+
 function getCP(m: Mon): number {
   const a = (m.atk + (m.ivAtk ?? 0));
   const d = Math.sqrt(m.def + (m.ivDef ?? 0));
@@ -378,6 +417,14 @@ for (const r of REGIONS) {
   const inGen = ALL_POKEMON.filter((p) => p.gen === r.gen).map((p) => p.id);
   REGION_POOLS[r.gen] = inGen.filter((id) => !ALL_LEGENDARY_IDS.has(id));
   REGION_LEGENDS[r.gen] = inGen.filter((id) => ALL_LEGENDARY_IDS.has(id));
+}
+
+// Non-mega alternate forms that can appear in the wild, keyed by gen.
+const FORM_POOLS: Record<number, FormEntry[]> = {};
+for (const r of REGIONS) {
+  FORM_POOLS[r.gen] = POKEMON_FORMS.filter(
+    (f) => f.gen === r.gen && f.category !== "mega"
+  );
 }
 
 type LogEntry = { msg: string; color: string; id: number };
@@ -1417,6 +1464,7 @@ export default function App() {
   function spawnWild(forceLegendary = false): Mon | null {
     const region = REGIONS[player.macroRegion] ?? REGIONS[0];
     const pool = REGION_POOLS[region.gen] ?? [];
+    const formPool = FORM_POOLS[region.gen] ?? [];
     const legends = REGION_LEGENDS[region.gen] ?? [];
     let id: number;
     let isLegend = forceLegendary;
@@ -1432,6 +1480,13 @@ export default function App() {
       setLegendThreshold(20 + Math.floor(Math.random() * 16));
       addLog(`✨ A LEGENDARY Pokémon appears!`, "#FFD700");
     } else {
+      // 18% chance to spawn an alternate form instead of a base species.
+      if (formPool.length > 0 && Math.random() < 0.18) {
+        const form = formPool[Math.floor(Math.random() * formPool.length)];
+        const lv = region.minLv + Math.floor(Math.random() * (region.maxLv - region.minLv + 1));
+        setHuntCount((c) => c + 1);
+        return makeMonFromForm(form, lv, "wild");
+      }
       if (pool.length === 0) { addLog("No wild Pokémon here yet!", "#F44336"); return null; }
       id = pool[Math.floor(Math.random() * pool.length)];
       setHuntCount((c) => c + 1);
@@ -1454,11 +1509,22 @@ export default function App() {
   function spawnSafari(forceLegendary = false): Mon | null {
     const region = REGIONS[safariRegion] ?? REGIONS[0];
     const pool = REGION_POOLS[region.gen] ?? [];
+    const formPool = FORM_POOLS[region.gen] ?? [];
     const legends = REGION_LEGENDS[region.gen] ?? [];
     const isLegend = forceLegendary && legends.length > 0;
-    const id = isLegend
-      ? legends[Math.floor(Math.random() * legends.length)]
-      : pool[Math.floor(Math.random() * pool.length)];
+    if (isLegend) {
+      const id = legends[Math.floor(Math.random() * legends.length)];
+      if (!id) return null;
+      const tpl = getPokemon(id);
+      return makeMon(tpl, pickWildLevel(tpl));
+    }
+    // 18% chance to spawn an alternate form in safari.
+    if (formPool.length > 0 && Math.random() < 0.18) {
+      const form = formPool[Math.floor(Math.random() * formPool.length)];
+      const lv = region.minLv + Math.floor(Math.random() * (region.maxLv - region.minLv + 1));
+      return makeMonFromForm(form, lv, "safari");
+    }
+    const id = pool[Math.floor(Math.random() * pool.length)];
     if (!id) return null;
     // Levels are now bounded by the species' evolution stage (see levelRangeFor).
     const tpl = getPokemon(id);
@@ -1509,12 +1575,21 @@ export default function App() {
     const isLegend = next >= (3 + Math.floor(Math.random() * 3));
     // spawnSafari uses safariRegion state; call directly with the region we just picked
     const pool = REGION_POOLS[region.gen] ?? [];
+    const formPool = FORM_POOLS[region.gen] ?? [];
     const legends = REGION_LEGENDS[region.gen] ?? [];
     const useLegend = isLegend && legends.length > 0;
-    const id = useLegend
-      ? legends[Math.floor(Math.random() * legends.length)]
-      : pool[Math.floor(Math.random() * pool.length)];
-    const sm = id ? (() => { const tpl = getPokemon(id); return makeMon(tpl, pickWildLevel(tpl)); })() : null;
+    let sm: Mon | null = null;
+    if (useLegend) {
+      const id = legends[Math.floor(Math.random() * legends.length)];
+      if (id) { const tpl = getPokemon(id); sm = makeMon(tpl, pickWildLevel(tpl)); }
+    } else if (formPool.length > 0 && Math.random() < 0.18) {
+      const form = formPool[Math.floor(Math.random() * formPool.length)];
+      const lv = region.minLv + Math.floor(Math.random() * (region.maxLv - region.minLv + 1));
+      sm = makeMonFromForm(form, lv, "safari");
+    } else {
+      const id = pool[Math.floor(Math.random() * pool.length)];
+      if (id) { const tpl = getPokemon(id); sm = makeMon(tpl, pickWildLevel(tpl)); }
+    }
     setSafariEnc(sm);
     if (sm) setSeen((prev) => prev.has(sm.id) ? prev : new Set(prev).add(sm.id));
     setSafariCounter(1);
