@@ -126,8 +126,6 @@ export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: (
       </div>
 
       <div style={S.scroll}>
-        <div style={S.heroTitle}>Crimson Sky Dex</div>
-
         <div style={S.searchWrap}>
           <i className="fa-solid fa-magnifying-glass" style={{ color: "#6b7280", fontSize: 12, marginRight: 8 }} />
           <input

@@ -1,0 +1,28 @@
+Task Overview:
+Update the game’s database, mechanics, and UI to include all missing Pokémon forms (Shinies, Alternate Forms, G-Max, and Megas), correctly assign their encounter logic in Hunts/Safari vs. Battles, integrate accurate sprites, and apply a specific UI adjustment.
+​1. Pokédex Data Integration
+​Comprehensive Addition: Add complete Dex data for all Shiny Pokémon, Alternate Forms, Gigantamax (G-Max) forms, and Mega Evolutions.
+​Audit Missing Forms: Research and add any currently missing forms into the Dex. Specific examples include (but are not limited to):
+​Zygarde (10%, 50%, and Complete Forme)
+​Vivillon (All 20 patterns)
+​Unown (All 28 letters/symbols)
+​Identify and include any other missing regional, meteorological, or form-changing variants not currently in the game.
+​2. Encounter Mechanics & Locations
+​Standard Alternate Forms: Must be available as encounters in Hunts.
+​Legendary Alternate Forms: Must be available as encounters in both Hunts and Safari.
+​Missing Forms Addition: Ensure the newly added forms (Zygarde Complete, Vivillon patterns, Unown variants, etc.) are correctly distributed into Hunts and Safari based on their legendary/non-legendary status.
+​STRICT RESTRICTION FOR MEGAS & G-MAX: Do NOT add Mega Evolutions or Gigantamax forms to Hunts or Safari encounter pools. These forms are strictly battle-exclusive and must only occur via in-battle transformation mechanics.
+​3. Assets and References
+​Data References: Use the following links to ensure complete accuracy for stats, typings, and form lists:
+​Mega Evolutions: https://www.serebii.net/pokemon/megaevolution.shtml
+​Gigantamax Forms: https://www.serebii.net/swordshield/gigantamax.shtml
+​Alternate Forms: https://www.serebii.net/games/forms.shtml
+​Shiny Pokémon: https://pokemondb.net/pokedex/shiny
+​Sprite & GIF Integration:
+​Source animations and sprites from:
+​https://play.pokemonshowdown.com/sprites/ani/
+​https://projectpokemon.org/home/docs/spriteindex_148/3d-models-generation-1-pok%C3%A9mon-r90/
+​Implementation Note: Because the GIF repositories are mixed, you must programmatically map or manually check the image files by Pokémon name rather than generation index to ensure the correct assets are linked.
+​4. UI Adjustments
+​Locate the "crimson sky dex" text currently rendered in orange color and remove it.
+​Crucial Exception: Do exactly nothing to the "crimson sky dex" text located immediately beside the "Back" button. This specific element must remain intact and visible.

@@ -423,7 +423,7 @@ for (const r of REGIONS) {
 const FORM_POOLS: Record<number, FormEntry[]> = {};
 for (const r of REGIONS) {
   FORM_POOLS[r.gen] = POKEMON_FORMS.filter(
-    (f) => f.gen === r.gen && f.category !== "mega"
+    (f) => f.gen === r.gen && f.category !== "mega" && f.category !== "gmax"
   );
 }
 
@@ -6527,6 +6527,7 @@ export default function App() {
     const DEX_FORM_CATS: { key: "all"|FormCategory; label: string; color: string }[] = [
       { key: "all",      label: "ALL",       color: "#aaa" },
       { key: "mega",     label: "MEGA",      color: "#db2777" },
+      { key: "gmax",     label: "G-MAX",     color: "#f97316" },
       { key: "alolan",   label: "ALOLAN",    color: "#f59e0b" },
       { key: "galarian", label: "GALARIAN",  color: "#3b82f6" },
       { key: "hisuian",  label: "HISUIAN",   color: "#10b981" },
@@ -6670,7 +6671,7 @@ export default function App() {
                   <MonSprite sprite={dexFormDetail.sprite} size={72} className="" isShiny={dexShiny} />
                 </div>
                 <div style={{ fontSize: 11, color: "#888", marginBottom: 12, textTransform: "capitalize" }}>
-                  {dexFormDetail.category === "mega" ? "Mega Evolution" : dexFormDetail.category === "alolan" ? "Alolan Form" : dexFormDetail.category === "galarian" ? "Galarian Form" : dexFormDetail.category === "hisuian" ? "Hisuian Form" : dexFormDetail.category === "paldean" ? "Paldean Form" : "Alternate Form"}
+                  {dexFormDetail.category === "mega" ? "Mega Evolution" : dexFormDetail.category === "gmax" ? "Gigantamax Form" : dexFormDetail.category === "alolan" ? "Alolan Form" : dexFormDetail.category === "galarian" ? "Galarian Form" : dexFormDetail.category === "hisuian" ? "Hisuian Form" : dexFormDetail.category === "paldean" ? "Paldean Form" : "Alternate Form"}
                   {" · "}Gen {dexFormDetail.gen}
                 </div>
 
