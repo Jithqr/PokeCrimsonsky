@@ -434,13 +434,8 @@ export function fromAppMon(m: {
     currentHp: 0,
     status: null,
     stages: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
-    pp: {},
     sprite: m.sprite,
   };
   bm.currentHp = calcMaxHp(bm);
-  for (const mv of bm.moves) {
-    const def = getMove(mv);
-    bm.pp![mv] = def.pp;
-  }
   return bm;
 }

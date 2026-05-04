@@ -87,9 +87,10 @@ async function loadDex(): Promise<Record<string, DexExtra>> {
 }
 
 type Tab = "level-up" | "machine" | "egg" | "tutor";
-type DexMode = "base" | "shiny" | FormCategory;
+type DexMode = "base" | "shiny" | "all" | FormCategory;
 
 const FORM_TABS: { key: DexMode; label: string; color: string }[] = [
+  { key: "all",      label: "ALL",       color: "#94a3b8" },
   { key: "base",     label: "BASE",      color: "#6b7280" },
   { key: "shiny",    label: "✨ SHINY",  color: "#fbbf24" },
   { key: "mega",     label: "MEGA",      color: "#db2777" },
@@ -122,7 +123,8 @@ export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: (
   const [selectedForm, setSelectedForm] = useState<FormEntry | null>(null);
 
   const isShiny = mode === "shiny";
-  const showingForms = mode !== "base" && mode !== "shiny";
+  const isAll = mode === "all";
+  const showingForms = mode !== "base" && mode !== "shiny" && mode !== "all";
 
   const filteredBase = useMemo(() => {
     if (showingForms) return [];
@@ -134,13 +136,12 @@ export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: (
   }, [query, showingForms]);
 
   const filteredForms = useMemo(() => {
-    if (!showingForms) return [];
-    const cat = mode as FormCategory;
-    const byCategory = POKEMON_FORMS.filter((f) => f.category === cat);
+    if (!showingForms && !isAll) return [];
+    const pool = isAll ? POKEMON_FORMS : POKEMON_FORMS.filter((f) => f.category === (mode as FormCategory));
     const q = query.trim().toLowerCase();
-    if (!q) return byCategory;
-    return byCategory.filter((f) => f.name.toLowerCase().includes(q) || String(f.id).includes(q));
-  }, [query, mode, showingForms]);
+    if (!q) return pool;
+    return pool.filter((f) => f.name.toLowerCase().includes(q) || String(f.id).includes(q));
+  }, [query, mode, showingForms, isAll]);
 
   if (selected) {
     return (
@@ -163,6 +164,7 @@ export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: (
 
   const activeColor = FORM_TABS.find((t) => t.key === mode)?.color ?? "#6b7280";
   const visibleList = showingForms ? filteredForms : filteredBase;
+  const totalCount = isAll ? filteredBase.length + filteredForms.length : visibleList.length;
 
   return (
     <div style={S.root}>
@@ -204,12 +206,12 @@ export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: (
 
         {/* ── count label ── */}
         <div style={{ fontSize: 11, color: "#555", marginBottom: 10, marginLeft: 2 }}>
-          {visibleList.length} {showingForms ? "form" : "Pokémon"}{visibleList.length !== 1 ? "s" : ""}
+          {totalCount} {isAll ? "total entries" : showingForms ? `form${totalCount !== 1 ? "s" : ""}` : `Pokémon`}
           {isShiny ? " · shiny" : ""}
         </div>
 
         <div style={S.grid}>
-          {/* Base / Shiny */}
+          {/* Base / Shiny (also shows in ALL mode) */}
           {!showingForms && filteredBase.map((p) => (
             <button key={p.id} style={S.card} onClick={() => setSelected(p)}>
               <div style={S.cardId}>#{String(p.id).padStart(4, "0")}</div>
@@ -225,32 +227,35 @@ export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: (
             </button>
           ))}
 
-          {/* Forms */}
-          {showingForms && filteredForms.map((f) => (
-            <button key={f.id} style={{ ...S.card, borderColor: `${activeColor}44` }} onClick={() => setSelectedForm(f)}>
-              <div style={{ ...S.cardId, color: activeColor }}>#{String(f.id)}</div>
-              <div style={S.cardSpriteBox}>
-                <img
-                  src={formSpriteUrl(f.sprite)}
-                  alt={f.name}
-                  style={{ width: 96, height: 96, imageRendering: "pixelated", objectFit: "contain" }}
-                  onError={(e) => {
-                    const el = e.target as HTMLImageElement;
-                    const clean = f.sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
-                    if (el.src.includes("sprites/ani/")) el.src = `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
-                    else if (el.src.includes("gen5")) el.src = `https://play.pokemonshowdown.com/sprites/home/${clean}.png`;
-                  }}
-                />
-              </div>
-              <div style={S.cardName}>{f.name}</div>
-              <div style={{ display: "flex", gap: 4, marginTop: 4, justifyContent: "center" }}>
-                <span style={{ background: TYPE_COLORS[f.type1] || "#666", borderRadius: 8, fontSize: 9, padding: "2px 6px", color: "#fff", fontWeight: 700 }}>{f.type1}</span>
-                {f.type2 && <span style={{ background: TYPE_COLORS[f.type2] || "#666", borderRadius: 8, fontSize: 9, padding: "2px 6px", color: "#fff", fontWeight: 700 }}>{f.type2}</span>}
-              </div>
-            </button>
-          ))}
+          {/* Forms (shows in form tabs and ALL mode) */}
+          {(showingForms || isAll) && filteredForms.map((f) => {
+            const fColor = isAll ? (FORM_TABS.find((t) => t.key === f.category)?.color ?? activeColor) : activeColor;
+            return (
+              <button key={f.id} style={{ ...S.card, borderColor: `${fColor}44` }} onClick={() => setSelectedForm(f)}>
+                <div style={{ ...S.cardId, color: fColor }}>#{String(f.id)}</div>
+                <div style={S.cardSpriteBox}>
+                  <img
+                    src={formSpriteUrl(f.sprite)}
+                    alt={f.name}
+                    style={{ width: 96, height: 96, imageRendering: "pixelated", objectFit: "contain" }}
+                    onError={(e) => {
+                      const el = e.target as HTMLImageElement;
+                      const clean = f.sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
+                      if (el.src.includes("sprites/ani/")) el.src = `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
+                      else if (el.src.includes("gen5")) el.src = `https://play.pokemonshowdown.com/sprites/home/${clean}.png`;
+                    }}
+                  />
+                </div>
+                <div style={S.cardName}>{f.name}</div>
+                <div style={{ display: "flex", gap: 4, marginTop: 4, justifyContent: "center" }}>
+                  <span style={{ background: TYPE_COLORS[f.type1] || "#666", borderRadius: 8, fontSize: 9, padding: "2px 6px", color: "#fff", fontWeight: 700 }}>{f.type1}</span>
+                  {f.type2 && <span style={{ background: TYPE_COLORS[f.type2] || "#666", borderRadius: 8, fontSize: 9, padding: "2px 6px", color: "#fff", fontWeight: 700 }}>{f.type2}</span>}
+                </div>
+              </button>
+            );
+          })}
 
-          {visibleList.length === 0 && (
+          {totalCount === 0 && (
             <div style={{ gridColumn: "1 / -1", textAlign: "center", color: "#6b7280", padding: 40 }}>No Pokémon found</div>
           )}
         </div>
@@ -268,6 +273,7 @@ const FORM_CAT_LABEL: Record<string, string> = {
 };
 
 function FormDetail({ form, onBack, onHome }: { form: FormEntry; onBack: () => void; onHome: () => void }) {
+  const [shinyView, setShinyView] = useState(false);
   const stats: { key: string; label: string; base: number }[] = [
     { key: "hp",  label: "HP",          base: form.hp  },
     { key: "atk", label: "Attack",      base: form.atk },
@@ -286,9 +292,17 @@ function FormDetail({ form, onBack, onHome }: { form: FormEntry; onBack: () => v
       <div style={S.topBar}>
         <BackBtn onClick={onBack} />
         <div className="page-header-title">Crimson Sky Dex</div>
-        <button style={S.iconBtn} onClick={onHome} aria-label="Home">
-          <i className="fa-solid fa-house" />
-        </button>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button
+            style={{ ...S.iconBtn, color: shinyView ? "#fbbf24" : "#6b7280", borderColor: shinyView ? "#fbbf24" : "#2a2a2d" }}
+            onClick={() => setShinyView((v) => !v)}
+            aria-label="Toggle shiny"
+            title="Toggle shiny sprite"
+          >✨</button>
+          <button style={S.iconBtn} onClick={onHome} aria-label="Home">
+            <i className="fa-solid fa-house" />
+          </button>
+        </div>
       </div>
 
       <div style={S.scroll}>
@@ -297,15 +311,18 @@ function FormDetail({ form, onBack, onHome }: { form: FormEntry; onBack: () => v
         {/* Hero sprite */}
         <div style={S.spriteCard}>
           <img
-            src={`https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`}
+            src={formSpriteUrl(form.sprite, shinyView)}
             alt={form.name}
             style={{ width: 200, height: 200, imageRendering: "pixelated", objectFit: "contain" }}
             onError={(e) => {
               const el = e.target as HTMLImageElement;
-              if (el.src.includes("sprites/ani/")) el.src = `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
-              else if (el.src.includes("gen5")) el.src = `https://play.pokemonshowdown.com/sprites/home/${clean}.png`;
+              const src = el.src;
+              if (src.includes("ani-shiny/")) el.src = `https://play.pokemonshowdown.com/sprites/shiny/${clean}.png`;
+              else if (src.includes("sprites/ani/")) el.src = `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
+              else if (src.includes("gen5") || src.includes("shiny/")) el.src = `https://play.pokemonshowdown.com/sprites/home/${clean}.png`;
             }}
           />
+          {shinyView && <div style={{ fontSize: 11, color: "#fbbf24", marginTop: 4, fontWeight: 700 }}>✨ Shiny</div>}
         </div>
 
         <div style={S.bigName}>{form.name}</div>
@@ -747,10 +764,6 @@ function DexDetail({
                     <div style={S.moveStatBox}>
                       <div style={S.moveStatLab}>Accuracy</div>
                       <div style={S.moveStatVal}>{def.accuracy ? `${def.accuracy}%` : "—"}</div>
-                    </div>
-                    <div style={S.moveStatBox}>
-                      <div style={S.moveStatLab}>PP</div>
-                      <div style={S.moveStatVal}>{def.pp || "—"}</div>
                     </div>
                   </div>
                 </div>
