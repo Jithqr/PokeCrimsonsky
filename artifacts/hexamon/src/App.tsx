@@ -2421,6 +2421,17 @@ export default function App() {
     const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
     const custom = CUSTOM_SPRITE_URL(clean);
     const customList = custom ? [custom] : [];
+    // For game-exclusive forms (mega/gmax) with no Showdown sprite, fall back to base Pokemon
+    const baseClean = clean
+      .replace(/-megax$/, "").replace(/-megay$/, "").replace(/-megaz$/, "")
+      .replace(/-mega$/, "").replace(/-gmax$/, "");
+    const baseExtras = baseClean !== clean
+      ? [
+          `https://play.pokemonshowdown.com/sprites/ani/${baseClean}.gif`,
+          `https://play.pokemonshowdown.com/sprites/dex/${baseClean}.png`,
+          `https://play.pokemonshowdown.com/sprites/home/${baseClean}.png`,
+        ]
+      : [];
     const fallbacks = back
       ? [
           ...customList,
@@ -2430,6 +2441,7 @@ export default function App() {
           `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/home/${clean}.png`,
+          ...baseExtras,
         ].filter(Boolean)
       : [
           ...customList,
@@ -2438,6 +2450,7 @@ export default function App() {
           `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
           `https://play.pokemonshowdown.com/sprites/home/${clean}.png`,
+          ...baseExtras,
         ].filter(Boolean);
     return (
       <img
