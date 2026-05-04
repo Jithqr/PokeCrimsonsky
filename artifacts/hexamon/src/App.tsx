@@ -15,6 +15,13 @@ import {
   fetchPendingEarnings, claimPendingEarnings,
   type GlobalMarketItem, type UserListing,
 } from "./lib/marketApi";
+import {
+  fetchMails, markMailRead, markAllMailRead, sendTransfer, fetchPendingTransfers, claimTransfers,
+  proposeTrade, fetchPendingTrades, acceptTrade, declineTrade, cancelTrade,
+  registerPlayer, checkBanned, redeemDbCode,
+  verifyAdmin, adminGetPlayer, adminBanPlayer, adminUnban, adminAnnounce, adminDrop, adminCreateCode, adminListCodes, adminDeleteCode,
+  type SocialMail, type PendingTransfer, type TradeProp,
+} from "./lib/socialApi";
 import { PokeTalesDex } from "./components/PokeTalesDex";
 import { SplashLoader } from "./components/SplashLoader";
 import { StoryIntro } from "./components/StoryIntro";
@@ -125,6 +132,10 @@ const CUSTOM_SPRITES: Record<string, string> = {
   ironcrown: "sprites/custom/ironcrown.gif",
   terapagos: "sprites/custom/terapagos.gif",
   pecharunt: "sprites/custom/pecharunt.gif",
+  "urshifu-gmax": "sprites/custom/urshifu-gmax.gif",
+  "urshifu-rapid-strike-gmax": "sprites/custom/urshifu-rapid-strike-gmax.gif",
+  "cinderace-gmax": "sprites/custom/cinderace-gmax.gif",
+  "rillaboom-gmax": "sprites/custom/rillaboom-gmax.gif",
 };
 const CUSTOM_SPRITE_URL = (clean: string) =>
   CUSTOM_SPRITES[clean] ? `${import.meta.env.BASE_URL}${CUSTOM_SPRITES[clean]}` : null;
@@ -673,6 +684,85 @@ export default function App() {
   const unreadCount = notifications.filter((n) => !n.read).length;
   const markAllRead = () => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
 
+  // ── Social state ─────────────────────────────────────────────────────────
+  const [mailItems, setMailItems] = useState<SocialMail[]>([]);
+  const [mailLoading, setMailLoading] = useState(false);
+  const [selectedMail, setSelectedMail] = useState<SocialMail | null>(null);
+  const [mailMsg, setMailMsg] = useState<{text:string;ok:boolean}|null>(null);
+  const [transferInput, setTransferInput] = useState("");
+  const [transferAmount, setTransferAmount] = useState("");
+  const [transferNote, setTransferNote] = useState("");
+  const [transferMsg, setTransferMsg] = useState<{text:string;ok:boolean}|null>(null);
+  const [transferLoading, setTransferLoading] = useState(false);
+  const [pendingTransfers, setPendingTransfers] = useState<PendingTransfer[]>([]);
+  const [transferSent, setTransferSent] = useState<PendingTransfer[]>([]);
+  const [tradeTargetId, setTradeTargetId] = useState("");
+  const [tradeMyMon, setTradeMyMon] = useState<Mon | null>(null);
+  const [tradeMsg, setTradeMsg] = useState<{text:string;ok:boolean}|null>(null);
+  const [tradeLoading, setTradeLoading] = useState(false);
+  const [pendingTrades, setPendingTrades] = useState<{incoming:TradeProp[];outgoing:TradeProp[];completed:TradeProp[]}>({incoming:[],outgoing:[],completed:[]});
+  const [tradeSource, setTradeSource] = useState<"team"|"box">("team");
+  const [adminAuthed, setAdminAuthed] = useState(false);
+  const [adminKeyInput, setAdminKeyInput] = useState("");
+  const [adminMsg, setAdminMsg] = useState<{text:string;ok:boolean}|null>(null);
+  const [adminTab, setAdminTab] = useState<"spectate"|"ban"|"announce"|"drop"|"codes">("spectate");
+  const [adminTargetId, setAdminTargetId] = useState("");
+  const [adminTargetInfo, setAdminTargetInfo] = useState<any>(null);
+  const [adminAnnounceSubj, setAdminAnnounceSubj] = useState("");
+  const [adminAnnounceBody, setAdminAnnounceBody] = useState("");
+  const [adminAnnounceTarget, setAdminAnnounceTarget] = useState("");
+  const [adminDropMoney, setAdminDropMoney] = useState("");
+  const [adminDropItem, setAdminDropItem] = useState("");
+  const [adminDropQty, setAdminDropQty] = useState("");
+  const [adminDropMsg2, setAdminDropMsg2] = useState("");
+  const [adminDropTarget, setAdminDropTarget] = useState("");
+  const [adminCodeKey, setAdminCodeKey] = useState("");
+  const [adminCodeMoney, setAdminCodeMoney] = useState("");
+  const [adminCodeItem, setAdminCodeItem] = useState("");
+  const [adminCodeQty, setAdminCodeQty] = useState("");
+  const [adminCodeUses, setAdminCodeUses] = useState("1");
+  const [adminCodesList, setAdminCodesList] = useState<any[]>([]);
+  const [banReason, setBanReason] = useState("");
+  const [isBanned, setIsBanned] = useState(false);
+  const [banReasonText, setBanReasonText] = useState("");
+
+  const addItemToInventory = useCallback((name: string, qty: number) => {
+    setInventory(prev => {
+      const idx = prev.findIndex(i => i.name === name);
+      if (idx >= 0) return prev.map((i, j) => j === idx ? {...i, qty: i.qty + qty} : i);
+      return [...prev, {name, qty}];
+    });
+  }, []);
+
+  const loadMails = useCallback(async () => {
+    setMailLoading(true);
+    try { const items = await fetchMails(String(player.id)); setMailItems(items); } catch { /* ignore */ } finally { setMailLoading(false); }
+  }, [player.id]);
+
+  const loadTransfers = useCallback(async () => {
+    try {
+      const r = await fetchPendingTransfers(String(player.id));
+      setPendingTransfers(r.pending ?? []);
+      setTransferSent(r.sent ?? []);
+    } catch { /* ignore */ }
+  }, [player.id]);
+
+  const claimAllTransfers = useCallback(async () => {
+    try {
+      const r = await claimTransfers(String(player.id));
+      if (r.total > 0) {
+        setPlayer(p => ({ ...p, money: p.money + r.total }));
+        setNotifications(prev => [{ id: Date.now(), text: `💸 Claimed ₽${r.total.toLocaleString()} from transfers!`, read: false, time: new Date().toLocaleTimeString() }, ...prev.slice(0, 19)]);
+      }
+      await loadTransfers();
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player.id, loadTransfers]);
+
+  const loadTrades = useCallback(async () => {
+    try { const r = await fetchPendingTrades(String(player.id)); setPendingTrades(r); } catch { /* ignore */ }
+  }, [player.id]);
+
   // Marketplace data loader — runs whenever the store screen opens. Also
   // auto-claims any pending earnings the player accrued while offline.
   const refreshMarket = useCallback(async () => {
@@ -711,6 +801,13 @@ export default function App() {
     refreshMarket();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen]);
+
+  // Register player with social system and check ban status on mount
+  useEffect(() => {
+    registerPlayer({ playerId: String(player.id), name: player.name, sprite: player.sprite, hometown: player.hometown });
+    checkBanned(String(player.id)).then(r => { if (r.banned) { setIsBanned(true); setBanReasonText(r.reason || ""); } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player.id]);
   const [friendInput, setFriendInput] = useState<string>("");
   const [friendMsg, setFriendMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [friendSearchResult, setFriendSearchResult] = useState<{ id: number; name: string; hometown: string; sprite: string; rank: number } | null>(null);
@@ -2617,10 +2714,10 @@ export default function App() {
       { label: "Training Zone", icon: "fa-dumbbell",      color: "var(--m-orange)", action: () => { setScreen("training"); } },
       { label: "League",        icon: "fa-trophy",        color: "var(--m-yellow)", action: () => { setScreen("league"); } },
       { label: "Friends",       icon: "fa-user-plus",     color: "var(--m-green)",  action: () => { setFriendInput(""); setFriendMsg(null); setScreen("friends"); } },
-      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
-      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
-      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
-      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
+      { label: "Mails",    icon: "fa-envelope",      color: "var(--m-blue)",   action: () => { loadMails(); setScreen("mails"); } },
+      { label: "Transfer", icon: "fa-money-bill-transfer", color: "var(--m-green)", action: () => { loadTransfers(); setScreen("transfer"); } },
+      { label: "Trade",    icon: "fa-arrows-rotate",  color: "var(--m-orange)", action: () => { loadTrades(); setScreen("trade"); } },
+      { label: "Mod",      icon: "fa-shield-halved",  color: "var(--m-purple)", action: () => { setAdminMsg(null); setScreen("mod"); } },
       { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
     ];
     const menuPages = [menuPage1, menuPage2];
@@ -3317,6 +3414,394 @@ export default function App() {
             </div>
           </div>
         )}
+      </div>
+    );
+  }
+
+  // ── MAILS SCREEN ────────────────────────────────────────────────────────
+  if (screen === "mails") {
+    const unreadMails = mailItems.filter(m => !m.read).length;
+    const doMarkAllRead = async () => {
+      try { await markAllMailRead(String(player.id)); setMailItems(prev => prev.map(m => ({...m, read: true}))); } catch { /* ignore */ }
+    };
+    const claimMailReward = (mail: SocialMail) => {
+      const d = mail.data as any;
+      if (!d) return;
+      if ((d.money || 0) > 0) setPlayer(p => ({...p, money: p.money + (d.money || 0)}));
+      if (d.item && (d.qty || d.itemQty || 0) > 0) addItemToInventory(d.item, d.qty || d.itemQty || 1);
+      if ((d.type === "trade_reward" || d.type === "trade_return") && d.mon) setBox(prev => [...prev, d.mon]);
+      markMailRead(mail.id, String(player.id)).catch(() => {});
+      setMailItems(prev => prev.map(m => m.id === mail.id ? {...m, read: true, data: null} : m));
+      setSelectedMail(null);
+    };
+    const isClaimable = (mail: SocialMail) => {
+      const d = mail.data as any;
+      if (!d) return false;
+      const t = d.type;
+      return t === "drop" || t === "redeem_reward" || t === "trade_reward" || t === "trade_return";
+    };
+    return (
+      <div style={S.root}><style>{css}</style>
+        <div style={S.wrap}>
+          <div style={S.header}>
+            <BackBtn onClick={() => { setSelectedMail(null); setScreen("world"); }} />
+            <span className="page-header-title">
+              <i className="fa-solid fa-envelope" style={{ marginRight: 6 }} />Mails
+              {unreadMails > 0 && <span style={{ marginLeft: 8, background: "#ef4444", color: "#fff", borderRadius: 999, padding: "2px 6px", fontSize: 9 }}>{unreadMails}</span>}
+            </span>
+            <button onClick={doMarkAllRead} style={{ background: "transparent", border: "1px solid #444", color: "#9ca3af", padding: "4px 8px", borderRadius: 6, fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>All Read</button>
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
+            {mailLoading && <div style={{ textAlign: "center", padding: 24, color: "#6b7280", fontSize: 13 }}>Loading...</div>}
+            {selectedMail ? (
+              <div style={{ background: "#111827", border: "1px solid #374151", borderRadius: 12, padding: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                  <div style={{ fontSize: 11, color: "#9ca3af" }}>From: <strong style={{ color: "#fff" }}>{selectedMail.fromName}</strong></div>
+                  <div style={{ fontSize: 10, color: "#6b7280" }}>{new Date(selectedMail.createdAt).toLocaleDateString()}</div>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 12 }}>{selectedMail.subject}</div>
+                <div style={{ fontSize: 13, color: "#d1d5db", lineHeight: 1.6, marginBottom: 16 }}>{selectedMail.body}</div>
+                {isClaimable(selectedMail) && (
+                  <button onClick={() => claimMailReward(selectedMail)} style={{ width: "100%", background: "linear-gradient(135deg,#7c3aed,#db2777)", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontSize: 13, fontWeight: 700, cursor: "pointer", marginBottom: 8, fontFamily: "inherit" }}>
+                    <i className="fa-solid fa-gift" style={{ marginRight: 8 }} />Claim Reward
+                  </button>
+                )}
+                <button onClick={() => setSelectedMail(null)} style={{ width: "100%", background: "transparent", border: "1px solid #374151", color: "#9ca3af", borderRadius: 8, padding: "10px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>← Back to Inbox</button>
+              </div>
+            ) : !mailLoading && mailItems.length === 0 ? (
+              <div style={{ textAlign: "center", padding: 64, color: "#6b7280" }}>
+                <i className="fa-solid fa-inbox" style={{ fontSize: 48, marginBottom: 16, display: "block" }} />
+                <div style={{ fontSize: 14 }}>No mails yet.</div>
+              </div>
+            ) : mailItems.map(mail => (
+              <div key={mail.id} onClick={() => { setSelectedMail(mail); if (!mail.read) { markMailRead(mail.id, String(player.id)).catch(() => {}); setMailItems(p => p.map(m => m.id === mail.id ? {...m, read: true} : m)); } }}
+                style={{ background: mail.read ? "#0d0d1a" : "#1a0f2e", border: `1px solid ${mail.read ? "#1f2937" : "#7c3aed"}`, borderRadius: 10, padding: 12, marginBottom: 8, cursor: "pointer" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: mail.read ? 400 : 700, color: mail.read ? "#9ca3af" : "#fff", marginBottom: 3 }}>{mail.subject}</div>
+                    <div style={{ fontSize: 11, color: "#6b7280" }}>From: {mail.fromName}</div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, marginLeft: 8 }}>
+                    {!mail.read && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#7c3aed", flexShrink: 0 }} />}
+                    <div style={{ fontSize: 10, color: "#4b5563", whiteSpace: "nowrap" }}>{new Date(mail.createdAt).toLocaleDateString()}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── TRANSFER SCREEN ─────────────────────────────────────────────────────
+  if (screen === "transfer") {
+    const totalPending = pendingTransfers.reduce((s, t) => s + t.amount, 0);
+    const doSendTransfer = async () => {
+      const toId = transferInput.trim();
+      const amt = Number(transferAmount);
+      if (!toId || !amt || amt <= 0) { setTransferMsg({ text: "Enter a valid player ID and amount.", ok: false }); return; }
+      if (amt > player.money) { setTransferMsg({ text: "Not enough money.", ok: false }); return; }
+      setTransferLoading(true);
+      try {
+        await sendTransfer(String(player.id), player.name, toId, amt, transferNote);
+        setPlayer(p => ({ ...p, money: p.money - amt }));
+        setTransferMsg({ text: `₽${amt.toLocaleString()} sent!`, ok: true });
+        setTransferInput(""); setTransferAmount(""); setTransferNote("");
+        await loadTransfers();
+      } catch (e: any) {
+        setTransferMsg({ text: e.message || "Error sending transfer.", ok: false });
+      } finally {
+        setTransferLoading(false);
+        setTimeout(() => setTransferMsg(null), 4000);
+      }
+    };
+    return (
+      <div style={S.root}><style>{css}</style>
+        <div style={S.wrap}>
+          <div style={S.header}>
+            <BackBtn onClick={() => setScreen("world")} />
+            <span className="page-header-title"><i className="fa-solid fa-money-bill-transfer" style={{ marginRight: 6 }} />Transfer</span>
+            <div style={{ fontSize: 11, color: "#4ade80", fontWeight: 700 }}>₽{player.money.toLocaleString()}</div>
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
+            {transferMsg && <div style={{ background: transferMsg.ok ? "#14532d" : "#7f1d1d", border: `1px solid ${transferMsg.ok ? "#166534" : "#991b1b"}`, borderRadius: 8, padding: 10, marginBottom: 10, fontSize: 12, color: "#fff" }}>{transferMsg.text}</div>}
+            {pendingTransfers.length > 0 && (
+              <div style={{ background: "#14532d", border: "1px solid #166534", borderRadius: 12, padding: 14, marginBottom: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#4ade80", marginBottom: 8 }}>Incoming: ₽{totalPending.toLocaleString()} Pending</div>
+                {pendingTransfers.slice(0, 5).map(t => (
+                  <div key={t.id} style={{ fontSize: 11, color: "#a7f3d0", marginBottom: 4 }}>From {t.fromName}: +₽{t.amount.toLocaleString()}{t.note ? ` "${t.note}"` : ""}</div>
+                ))}
+                <button onClick={claimAllTransfers} style={{ marginTop: 8, width: "100%", background: "linear-gradient(135deg,#16a34a,#166534)", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                  Claim All ₽{totalPending.toLocaleString()}
+                </button>
+              </div>
+            )}
+            <div style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 12, padding: 14, marginBottom: 14 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 12 }}>Send Money</div>
+              <input value={transferInput} onChange={e => setTransferInput(e.target.value)} placeholder="Target Player ID (10 digits)" style={{ width: "100%", background: "#0d0d1a", border: "1px solid #374151", color: "#fff", borderRadius: 8, padding: "10px 12px", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box", marginBottom: 8 }} />
+              <input value={transferAmount} onChange={e => setTransferAmount(e.target.value)} placeholder={`Amount (max ₽${player.money.toLocaleString()})`} type="number" min="1" style={{ width: "100%", background: "#0d0d1a", border: "1px solid #374151", color: "#fff", borderRadius: 8, padding: "10px 12px", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box", marginBottom: 8 }} />
+              <input value={transferNote} onChange={e => setTransferNote(e.target.value)} placeholder="Note (optional)" style={{ width: "100%", background: "#0d0d1a", border: "1px solid #374151", color: "#fff", borderRadius: 8, padding: "10px 12px", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box", marginBottom: 10 }} />
+              <button onClick={doSendTransfer} disabled={transferLoading} style={{ width: "100%", background: "linear-gradient(135deg,#2563eb,#1d4ed8)", color: "#fff", border: "none", borderRadius: 8, padding: "12px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", opacity: transferLoading ? 0.6 : 1 }}>
+                {transferLoading ? "Sending..." : "Send Transfer"}
+              </button>
+            </div>
+            <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 12 }}>Your Player ID: <span style={{ color: "#9ca3af", fontFamily: "monospace" }}>{player.id}</span></div>
+            {transferSent.length > 0 && (
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#9ca3af", marginBottom: 8 }}>Sent History</div>
+                {transferSent.map((t, i) => (
+                  <div key={i} style={{ background: "#0d0d1a", border: "1px solid #1f2937", borderRadius: 8, padding: 10, marginBottom: 6, fontSize: 11, color: "#9ca3af" }}>
+                    To ID …{String(t.toId).slice(-4)}: -₽{t.amount.toLocaleString()}{t.note ? ` · "${t.note}"` : ""}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── TRADE SCREEN ────────────────────────────────────────────────────────
+  if (screen === "trade") {
+    const tradeSrcMons = tradeSource === "team" ? team : box;
+    const monSpriteUrl = (m: Mon) => {
+      const key = (m.formSprite || (m.species || m.name).toLowerCase().replace(/[^a-z0-9]/g, "")).replace(/\s/g, "-");
+      return `https://play.pokemonshowdown.com/sprites/ani/${key}.gif`;
+    };
+    const doProposeTrade = async () => {
+      if (!tradeMyMon) { setTradeMsg({ text: "Select a Pokémon to offer.", ok: false }); return; }
+      if (!tradeTargetId.trim()) { setTradeMsg({ text: "Enter the target Player ID.", ok: false }); return; }
+      setTradeLoading(true);
+      try {
+        await proposeTrade(String(player.id), player.name, tradeTargetId.trim(), tradeMyMon, tradeMyMon.name);
+        if (tradeSource === "team") setTeam(prev => prev.filter(m => m !== tradeMyMon));
+        else setBox(prev => prev.filter(m => m !== tradeMyMon));
+        setTradeMsg({ text: `Offer sent! ${tradeMyMon.name} is held until accepted or cancelled.`, ok: true });
+        setTradeMyMon(null); setTradeTargetId("");
+        await loadTrades();
+      } catch (e: any) {
+        setTradeMsg({ text: e.message || "Error sending trade.", ok: false });
+      } finally { setTradeLoading(false); }
+    };
+    const doAcceptTrade = async (t: TradeProp) => {
+      if (!tradeMyMon) { setTradeMsg({ text: "Select a Pokémon to offer in return.", ok: false }); return; }
+      setTradeLoading(true);
+      try {
+        const r = await acceptTrade(t.id, String(player.id), tradeMyMon, tradeMyMon.name);
+        if (tradeSource === "team") setTeam(prev => prev.filter(m => m !== tradeMyMon));
+        else setBox(prev => prev.filter(m => m !== tradeMyMon));
+        if (r.proposerMon) setBox(prev => [...prev, r.proposerMon as Mon]);
+        setTradeMsg({ text: `Trade complete! You received ${t.proposerMonName}!`, ok: true });
+        setTradeMyMon(null);
+        await loadTrades();
+      } catch (e: any) {
+        setTradeMsg({ text: e.message || "Error accepting trade.", ok: false });
+      } finally { setTradeLoading(false); }
+    };
+    const doDeclineTrade = async (t: TradeProp) => {
+      try { await declineTrade(t.id, String(player.id)); setTradeMsg({ text: "Trade declined.", ok: true }); await loadTrades(); } catch { /* ignore */ }
+    };
+    const doCancelTrade = async (t: TradeProp) => {
+      try {
+        const r = await cancelTrade(t.id, String(player.id));
+        if (r.proposerMon) setBox(prev => [...prev, r.proposerMon as Mon]);
+        setTradeMsg({ text: `Cancelled. ${t.proposerMonName} returned.`, ok: true });
+        await loadTrades();
+      } catch { /* ignore */ }
+    };
+    return (
+      <div style={S.root}><style>{css}</style>
+        <div style={S.wrap}>
+          <div style={S.header}>
+            <BackBtn onClick={() => { setTradeMyMon(null); setScreen("world"); }} />
+            <span className="page-header-title"><i className="fa-solid fa-arrows-rotate" style={{ marginRight: 6 }} />Trade</span>
+            <div style={{ width: 60 }} />
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
+            {tradeMsg && <div style={{ background: tradeMsg.ok ? "#14532d" : "#7f1d1d", border: `1px solid ${tradeMsg.ok ? "#166534" : "#991b1b"}`, borderRadius: 8, padding: 10, marginBottom: 10, fontSize: 12, color: "#fff" }}>{tradeMsg.text}</div>}
+            {pendingTrades.incoming.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 10 }}>Incoming Offers ({pendingTrades.incoming.length})</div>
+                {pendingTrades.incoming.map(t => (
+                  <div key={t.id} style={{ background: "#1a0f2e", border: "1px solid #7c3aed", borderRadius: 12, padding: 12, marginBottom: 10 }}>
+                    <div style={{ fontSize: 12, color: "#c4b5fd", marginBottom: 4 }}><strong style={{ color: "#fff" }}>{t.proposerName}</strong> offers <strong style={{ color: "#a78bfa" }}>{t.proposerMonName}</strong></div>
+                    <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 10 }}>Select your Pokémon below, then accept.</div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={() => doAcceptTrade(t)} disabled={!tradeMyMon || tradeLoading} style={{ flex: 1, background: "linear-gradient(135deg,#16a34a,#15803d)", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", opacity: (!tradeMyMon || tradeLoading) ? 0.5 : 1 }}>
+                        Accept{tradeMyMon ? ` (get ${t.proposerMonName})` : " (pick mon)"}
+                      </button>
+                      <button onClick={() => doDeclineTrade(t)} disabled={tradeLoading} style={{ background: "transparent", border: "1px solid #ef4444", color: "#ef4444", borderRadius: 8, padding: "9px 12px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>Decline</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {pendingTrades.outgoing.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#9ca3af", marginBottom: 10 }}>Your Pending Offers</div>
+                {pendingTrades.outgoing.map(t => (
+                  <div key={t.id} style={{ background: "#0d0d1a", border: "1px solid #374151", borderRadius: 12, padding: 12, marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontSize: 12, color: "#d1d5db" }}>{t.proposerMonName} → …{String(t.targetId).slice(-4)}</div>
+                      <div style={{ fontSize: 10, color: "#6b7280" }}>Waiting...</div>
+                    </div>
+                    <button onClick={() => doCancelTrade(t)} style={{ background: "transparent", border: "1px solid #4b5563", color: "#9ca3af", borderRadius: 8, padding: "6px 10px", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 12, padding: 14, marginBottom: 14 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 12 }}>New Trade Offer</div>
+              <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                <button onClick={() => setTradeSource("team")} style={{ flex: 1, background: tradeSource === "team" ? "#7c3aed" : "#1f2937", color: "#fff", border: "none", borderRadius: 8, padding: "8px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>Team</button>
+                <button onClick={() => setTradeSource("box")} style={{ flex: 1, background: tradeSource === "box" ? "#7c3aed" : "#1f2937", color: "#fff", border: "none", borderRadius: 8, padding: "8px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>Box ({box.length})</button>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6, marginBottom: 10, maxHeight: 200, overflowY: "auto" }}>
+                {tradeSrcMons.map((m, i) => (
+                  <div key={i} onClick={() => setTradeMyMon(m === tradeMyMon ? null : m)} style={{ background: m === tradeMyMon ? "#4c1d95" : "#0d0d1a", border: `1px solid ${m === tradeMyMon ? "#7c3aed" : "#1f2937"}`, borderRadius: 8, padding: 6, cursor: "pointer", textAlign: "center" }}>
+                    <img src={monSpriteUrl(m)} alt={m.name} style={{ width: 52, height: 52, imageRendering: "pixelated", objectFit: "contain" }} onError={(e) => { const t = e.target as HTMLImageElement; t.src = `https://play.pokemonshowdown.com/sprites/dex/${(m.species || m.name).toLowerCase().replace(/[^a-z0-9]/g,"")}.png`; }} />
+                    <div style={{ fontSize: 9, color: "#e5e7eb", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</div>
+                    <div style={{ fontSize: 8, color: "#6b7280" }}>Lv.{m.level}</div>
+                  </div>
+                ))}
+              </div>
+              <input value={tradeTargetId} onChange={e => setTradeTargetId(e.target.value)} placeholder="Target Player ID (10 digits)" style={{ width: "100%", background: "#0d0d1a", border: "1px solid #374151", color: "#fff", borderRadius: 8, padding: "10px 12px", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box", marginBottom: 10 }} />
+              <button onClick={doProposeTrade} disabled={!tradeMyMon || tradeLoading} style={{ width: "100%", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff", border: "none", borderRadius: 8, padding: "12px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", opacity: (!tradeMyMon || tradeLoading) ? 0.5 : 1 }}>
+                {tradeLoading ? "Sending..." : `Offer ${tradeMyMon?.name || "..."}`}
+              </button>
+              <div style={{ fontSize: 11, color: "#6b7280", marginTop: 8, textAlign: "center" }}>Your ID: {player.id}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── MOD SCREEN ──────────────────────────────────────────────────────────
+  if (screen === "mod") {
+    const TAB_BTNS: Array<{id: "spectate"|"ban"|"announce"|"drop"|"codes"; label: string}> = [
+      { id: "spectate", label: "Spectate" }, { id: "ban", label: "Ban/Unban" },
+      { id: "announce", label: "Announce" }, { id: "drop", label: "Drop" }, { id: "codes", label: "Codes" },
+    ];
+    const inp: React.CSSProperties = { width: "100%", background: "#0d0d1a", border: "1px solid #374151", color: "#fff", borderRadius: 8, padding: "10px 12px", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box", marginBottom: 8 };
+    const doVerify = async () => {
+      const ok = await verifyAdmin(adminKeyInput);
+      if (ok) {
+        setAdminAuthed(true); setAdminMsg({ text: "Admin access granted.", ok: true });
+        adminListCodes(adminKeyInput).then(r => setAdminCodesList(r.codes || [])).catch(() => {});
+      } else { setAdminMsg({ text: "Invalid key.", ok: false }); }
+    };
+    const doSpectate = async () => {
+      try { const r = await adminGetPlayer(adminKeyInput, adminTargetId.trim()); setAdminTargetInfo(r.player); setAdminMsg({ text: `Found: ${r.player?.name}`, ok: true }); }
+      catch (e: any) { setAdminMsg({ text: e.message, ok: false }); }
+    };
+    const doBan = async (ban: boolean) => {
+      try {
+        if (ban) await adminBanPlayer(adminKeyInput, adminTargetId.trim(), banReason);
+        else await adminUnban(adminKeyInput, adminTargetId.trim());
+        setAdminMsg({ text: `Player ${ban ? "banned" : "unbanned"}.`, ok: true });
+      } catch (e: any) { setAdminMsg({ text: e.message, ok: false }); }
+    };
+    const doAnnounce = async () => {
+      try {
+        const r = await adminAnnounce(adminKeyInput, adminAnnounceSubj, adminAnnounceBody, adminAnnounceTarget || undefined);
+        setAdminMsg({ text: `Announcement sent to ${r.count} players.`, ok: true });
+        setAdminAnnounceSubj(""); setAdminAnnounceBody("");
+      } catch (e: any) { setAdminMsg({ text: e.message, ok: false }); }
+    };
+    const doDrop = async () => {
+      try {
+        const r = await adminDrop(adminKeyInput, Number(adminDropMoney) || 0, adminDropItem, Number(adminDropQty) || 0, adminDropMsg2, adminDropTarget || undefined);
+        setAdminMsg({ text: `Drop sent to ${r.count} players.`, ok: true });
+      } catch (e: any) { setAdminMsg({ text: e.message, ok: false }); }
+    };
+    const doCreateCode = async () => {
+      try {
+        const r = await adminCreateCode(adminKeyInput, adminCodeKey, Number(adminCodeMoney) || 0, adminCodeItem, Number(adminCodeQty) || 0, Number(adminCodeUses) || 1);
+        setAdminMsg({ text: `Code "${r.code}" created!`, ok: true });
+        setAdminCodeKey(""); setAdminCodeMoney(""); setAdminCodeItem(""); setAdminCodeQty(""); setAdminCodeUses("1");
+        adminListCodes(adminKeyInput).then(r2 => setAdminCodesList(r2.codes || [])).catch(() => {});
+      } catch (e: any) { setAdminMsg({ text: e.message, ok: false }); }
+    };
+    return (
+      <div style={S.root}><style>{css}</style>
+        <div style={S.wrap}>
+          <div style={S.header}>
+            <BackBtn onClick={() => setScreen("world")} />
+            <span className="page-header-title"><i className="fa-solid fa-shield-halved" style={{ marginRight: 6 }} />Mod Panel</span>
+            {adminAuthed && <span style={{ fontSize: 10, color: "#4ade80" }}>✓ Auth</span>}
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
+            {adminMsg && <div style={{ background: adminMsg.ok ? "#14532d" : "#7f1d1d", border: `1px solid ${adminMsg.ok ? "#166534" : "#991b1b"}`, borderRadius: 8, padding: 10, marginBottom: 10, fontSize: 12, color: "#fff" }}>{adminMsg.text}</div>}
+            {!adminAuthed ? (
+              <div style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 12, padding: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 12 }}><i className="fa-solid fa-lock" style={{ marginRight: 8, color: "#7c3aed" }} />Admin Login</div>
+                <input value={adminKeyInput} onChange={e => setAdminKeyInput(e.target.value)} type="password" placeholder="Admin Key" style={inp} onKeyDown={e => e.key === "Enter" && doVerify()} />
+                <button onClick={doVerify} style={{ width: "100%", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff", border: "none", borderRadius: 8, padding: "11px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Verify Key</button>
+              </div>
+            ) : (
+              <>
+                <div style={{ display: "flex", gap: 4, marginBottom: 14, flexWrap: "wrap" }}>
+                  {TAB_BTNS.map(t => (
+                    <button key={t.id} onClick={() => setAdminTab(t.id)} style={{ background: adminTab === t.id ? "#7c3aed" : "#1f2937", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>{t.label}</button>
+                  ))}
+                </div>
+                <div style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 12, padding: 14 }}>
+                  {adminTab === "spectate" && <>
+                    <input value={adminTargetId} onChange={e => setAdminTargetId(e.target.value)} placeholder="Player ID" style={inp} />
+                    <button onClick={doSpectate} style={{ width: "100%", background: "linear-gradient(135deg,#2563eb,#1d4ed8)", color: "#fff", border: "none", borderRadius: 8, padding: "11px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", marginBottom: 10 }}>Fetch Player</button>
+                    {adminTargetInfo && <div style={{ background: "#0d0d1a", border: "1px solid #374151", borderRadius: 8, padding: 10, fontSize: 12, color: "#d1d5db" }}>
+                      <div style={{ marginBottom: 4 }}><b style={{ color: "#9ca3af" }}>Name:</b> {adminTargetInfo.name}</div>
+                      <div style={{ marginBottom: 4 }}><b style={{ color: "#9ca3af" }}>Town:</b> {adminTargetInfo.hometown}</div>
+                      <div style={{ marginBottom: 4 }}><b style={{ color: "#9ca3af" }}>Sprite:</b> {adminTargetInfo.sprite}</div>
+                      <div><b style={{ color: "#9ca3af" }}>Banned:</b> <span style={{ color: adminTargetInfo.isBanned ? "#ef4444" : "#4ade80" }}>{adminTargetInfo.isBanned ? `Yes — ${adminTargetInfo.banReason}` : "No"}</span></div>
+                    </div>}
+                  </>}
+                  {adminTab === "ban" && <>
+                    <input value={adminTargetId} onChange={e => setAdminTargetId(e.target.value)} placeholder="Player ID to ban/unban" style={inp} />
+                    <input value={banReason} onChange={e => setBanReason(e.target.value)} placeholder="Ban reason" style={inp} />
+                    <button onClick={() => doBan(true)} style={{ width: "100%", background: "linear-gradient(135deg,#dc2626,#b91c1c)", color: "#fff", border: "none", borderRadius: 8, padding: "11px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", marginBottom: 8 }}>Ban Player</button>
+                    <button onClick={() => doBan(false)} style={{ width: "100%", background: "linear-gradient(135deg,#16a34a,#15803d)", color: "#fff", border: "none", borderRadius: 8, padding: "11px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Unban Player</button>
+                  </>}
+                  {adminTab === "announce" && <>
+                    <input value={adminAnnounceSubj} onChange={e => setAdminAnnounceSubj(e.target.value)} placeholder="Subject" style={inp} />
+                    <textarea value={adminAnnounceBody} onChange={e => setAdminAnnounceBody(e.target.value)} placeholder="Message body" style={{ ...inp, minHeight: 80, resize: "vertical" }} />
+                    <input value={adminAnnounceTarget} onChange={e => setAdminAnnounceTarget(e.target.value)} placeholder="Target Player ID (blank = all players)" style={inp} />
+                    <button onClick={doAnnounce} style={{ width: "100%", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff", border: "none", borderRadius: 8, padding: "11px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Send Announcement</button>
+                  </>}
+                  {adminTab === "drop" && <>
+                    <input value={adminDropMoney} onChange={e => setAdminDropMoney(e.target.value)} placeholder="Money amount" type="number" style={inp} />
+                    <input value={adminDropItem} onChange={e => setAdminDropItem(e.target.value)} placeholder="Item name (optional)" style={inp} />
+                    <input value={adminDropQty} onChange={e => setAdminDropQty(e.target.value)} placeholder="Item quantity" type="number" style={inp} />
+                    <input value={adminDropMsg2} onChange={e => setAdminDropMsg2(e.target.value)} placeholder="Message" style={inp} />
+                    <input value={adminDropTarget} onChange={e => setAdminDropTarget(e.target.value)} placeholder="Target Player ID (blank = all)" style={inp} />
+                    <button onClick={doDrop} style={{ width: "100%", background: "linear-gradient(135deg,#ea580c,#c2410c)", color: "#fff", border: "none", borderRadius: 8, padding: "11px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Send Drop</button>
+                  </>}
+                  {adminTab === "codes" && <>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", marginBottom: 10 }}>Create Redeem Code</div>
+                    <input value={adminCodeKey} onChange={e => setAdminCodeKey(e.target.value)} placeholder="Code (e.g. LAUNCH2024)" style={inp} />
+                    <input value={adminCodeMoney} onChange={e => setAdminCodeMoney(e.target.value)} placeholder="Money reward (0 = none)" type="number" style={inp} />
+                    <input value={adminCodeItem} onChange={e => setAdminCodeItem(e.target.value)} placeholder="Item reward (optional)" style={inp} />
+                    <input value={adminCodeQty} onChange={e => setAdminCodeQty(e.target.value)} placeholder="Item qty" type="number" style={inp} />
+                    <input value={adminCodeUses} onChange={e => setAdminCodeUses(e.target.value)} placeholder="Max uses (default 1)" type="number" style={inp} />
+                    <button onClick={doCreateCode} style={{ width: "100%", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff", border: "none", borderRadius: 8, padding: "11px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", marginBottom: adminCodesList.length > 0 ? 14 : 0 }}>Create Code</button>
+                    {adminCodesList.length > 0 && <>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", marginBottom: 8 }}>Active Codes ({adminCodesList.length})</div>
+                      {adminCodesList.map((c, i) => (
+                        <div key={i} style={{ background: "#0d0d1a", border: "1px solid #1f2937", borderRadius: 6, padding: "7px 10px", marginBottom: 4, fontSize: 10, color: "#d1d5db", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div><strong>{c.code}</strong>{c.money > 0 && <span style={{ color: "#4ade80" }}> +₽{c.money}</span>}{c.item && <span style={{ color: "#a78bfa" }}> ×{c.itemQty} {c.item}</span>}</div>
+                          <span style={{ color: "#6b7280" }}>{c.useCount}/{c.maxUses}</span>
+                        </div>
+                      ))}
+                    </>}
+                  </>}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     );
   }

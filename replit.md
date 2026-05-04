@@ -29,7 +29,7 @@ I prefer concise and accurate responses. When making changes, prioritize correct
 - **PvP Battle System**: Real-time WebSocket-based battles with a server-authoritative engine for fair play.
 - **Marketplace**: Server-driven system with Global Listings, User Listings (player-to-player trading with a 5% tax), and a Pending Earnings inbox for seller payouts. Pricing is dynamically calculated based on BST, level, IVs, and tier.
 - **Alternate Form Spawning**: Wild and Safari encounters can yield non-mega alternate forms, with specific rules for G-Max exclusion.
-- **Crimson Sky Dex**: Comprehensive Pokedex displaying all 1109 base Pokémon and 306 alternate forms, with filtering by category (BASE, SHINY, MEGA, G-MAX, ALOLAN, GALARIAN, HISUIAN, PALDEAN, ALT FORM). Includes shiny sprite toggles and robust sprite fallback logic.
+- **Crimson Sky Dex**: Comprehensive Pokedex displaying all 1109 base Pokémon and 370+ alternate forms, with filtering by category (BASE, SHINY, MEGA, G-MAX, ALOLAN, GALARIAN, HISUIAN, PALDEAN, ALT FORM). Includes shiny sprite toggles, robust sprite fallback logic, and an **Available Forms** panel in each Pokémon's detail view showing all Mega/G-Max forms with stats.
 - **Mon Generation**: New Pokémon spawns (wild, marketplace, NPC) are assigned random natures and weighted IVs, with a total IV cap.
 - **Evolution**: Streamlined evolution process with no candy cost, preserving original Pokémon attributes (UID, nickname, IVs, EVs, nature, exp).
 - **Wild Battle Mechanics**: Wild battles now incorporate move power, accuracy, type effectiveness, and critical hits, with corresponding SFX.
@@ -37,6 +37,16 @@ I prefer concise and accurate responses. When making changes, prioritize correct
 - **Inventory Management**: Categorized inventory system with a dedicated "OTHERS" tab for miscellaneous items.
 - **Ranked PvP**: Simplified ranking system with a flat ±50 rank change per match.
 - **UI Enhancements**: Includes gym badge images, improved safari UI with status boxes and region picker icons, and adjusted header layouts for better navigation.
+- **Social System (Mails, Transfer, Trade, Mod)**: Full server-backed social infrastructure:
+  - **Mails**: Server-side inbox for receiving system messages, drops, trade results, and announcements. Supports "Claim" for money/item/Pokémon rewards.
+  - **Transfer**: Send money to any player by ID. Recipient claims from Transfer screen. Sender deducted immediately.
+  - **Trade**: Propose Pokémon trades by player ID. Proposer's mon is removed locally and held server-side. Target accepts with their mon — both swap atomically. Results delivered via mail.
+  - **Mod Panel**: Admin-key-protected dashboard for Spectate (lookup players), Ban/Unban, Announce (broadcast mail), Drop (give money/items globally or to one player), and Redeem Code creation/management.
+  - **Admin Key**: Default `CRIMSON_ADMIN_2024` (override via `ADMIN_KEY` env var).
+  - **Player Registry**: All players auto-register on login for social lookups and ban enforcement.
+- **G-Max GIF Sprites**: Custom local GIFs for Urshifu (Single Strike), Urshifu (Rapid Strike), Cinderace, and Rillaboom G-Max forms. Melmetal G-Max uses Showdown's hosted sprite.
+- **28 New Crimson Sky Exclusive Mega Forms**: Mega Melmetal, Chesnaught, Delphox, Emboar, Feraligatr, Greninja, Meganium, Barbaracle, Chandelure, Dragalge, Dragonite, Drampa, Eelektross, Excadrill, Froslass, Hawlucha, Malamar, Pyroar, Scolipede, Scrafty, Skarmory, Victreebel, Banette-Y, Tropius, Tatsugiri (Droopy & Stretchy), plus Floette (Eternal Form). IDs 10068–10094.
+- **Arceus Type Forms**: All 17 type-specific Arceus forms added (IDs 10700–10716) with Judgment + type-matching moves.
 
 ## Design Patterns & Implementations
 

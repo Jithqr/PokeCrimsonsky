@@ -777,6 +777,53 @@ function DexDetail({
           </div>
         </div>
 
+        {/* Available Forms (Mega / G-Max) */}
+        {(() => {
+          const myForms = POKEMON_FORMS.filter(f =>
+            (f.category === "mega" || f.category === "gmax") && f.baseId === mon.id
+          );
+          if (myForms.length === 0) return null;
+          const typeCol: Record<string,string> = {
+            Normal:"#A8A77A",Fire:"#EE8130",Water:"#6390F0",Electric:"#F7D02C",Grass:"#7AC74C",
+            Ice:"#96D9D6",Fighting:"#C22E28",Poison:"#A33EA1",Ground:"#E2BF65",Flying:"#A98FF3",
+            Psychic:"#F95587",Bug:"#A6B91A",Rock:"#B6A136",Ghost:"#735797",Dragon:"#6F35FC",
+            Dark:"#705746",Steel:"#B7B7CE",Fairy:"#D685AD",
+          };
+          return (
+            <div style={{ marginTop: 24, padding: "0 16px" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 16 }}>✨</span> Available Forms
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                {myForms.map(form => (
+                  <div key={form.id} style={{ background: "#111", border: "1px solid #27272a", borderRadius: 12, padding: 10, textAlign: "center" }}>
+                    <img
+                      src={`https://play.pokemonshowdown.com/sprites/ani/${form.sprite}.gif`}
+                      alt={form.name}
+                      style={{ width: 72, height: 72, imageRendering: "pixelated", objectFit: "contain", display: "block", margin: "0 auto 6px" }}
+                      onError={(e) => { (e.target as HTMLImageElement).src = `https://play.pokemonshowdown.com/sprites/dex/${form.sprite.replace(/-mega[xyz]?$|-mega$|-gmax$/,"")}.png`; }}
+                    />
+                    <div style={{ fontSize: 11, fontWeight: 600, color: "#fff", marginBottom: 6, lineHeight: 1.3 }}>{form.name}</div>
+                    <div style={{ display: "flex", gap: 4, justifyContent: "center", marginBottom: 6 }}>
+                      <span style={{ padding: "2px 8px", borderRadius: 999, fontSize: 9, background: typeCol[form.type1] || "#666", color: "#fff" }}>{form.type1}</span>
+                      {form.type2 && <span style={{ padding: "2px 8px", borderRadius: 999, fontSize: 9, background: typeCol[form.type2] || "#666", color: "#fff" }}>{form.type2}</span>}
+                    </div>
+                    <div style={{ fontSize: 10, color: "#9ca3af" }}>BST: {form.hp+form.atk+form.def+form.spa+form.spd+form.spe}</div>
+                    <div style={{ display: "grid", gridTemplateColumns:"repeat(3,1fr)", gap:2, marginTop:4 }}>
+                      {([["HP",form.hp,"#ef4444"],["Atk",form.atk,"#f97316"],["Def",form.def,"#eab308"],["SpA",form.spa,"#3b82f6"],["SpD",form.spd,"#8b5cf6"],["Spe",form.spe,"#10b981"]] as [string,number,string][]).map(([k,v,c])=>(
+                        <div key={k} style={{ fontSize: 8, color: "#6b7280", textAlign:"center" }}>
+                          <div style={{ color: c, fontWeight:700, fontSize:9 }}>{v}</div>
+                          <div>{k}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         <div style={{ height: 30 }} />
       </div>
     </div>
