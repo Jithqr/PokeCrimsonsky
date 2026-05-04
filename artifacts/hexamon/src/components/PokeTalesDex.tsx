@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ALL_POKEMON, type PokemonTemplate } from "../lib/pokemon-data";
+import { POKEMON_FORMS, type FormEntry, type FormCategory } from "../lib/pokemon-forms";
 import { getMove } from "../lib/move-data";
 import { BackBtn } from "./BackBtn";
 
@@ -86,26 +87,66 @@ async function loadDex(): Promise<Record<string, DexExtra>> {
 }
 
 type Tab = "level-up" | "machine" | "egg" | "tutor";
+type DexMode = "base" | "shiny" | FormCategory;
+
+const FORM_TABS: { key: DexMode; label: string; color: string }[] = [
+  { key: "base",     label: "BASE",      color: "#6b7280" },
+  { key: "shiny",    label: "✨ SHINY",  color: "#fbbf24" },
+  { key: "mega",     label: "MEGA",      color: "#db2777" },
+  { key: "gmax",     label: "G-MAX",     color: "#f97316" },
+  { key: "alolan",   label: "ALOLAN",    color: "#f59e0b" },
+  { key: "galarian", label: "GALARIAN",  color: "#3b82f6" },
+  { key: "hisuian",  label: "HISUIAN",   color: "#10b981" },
+  { key: "paldean",  label: "PALDEAN",   color: "#ef4444" },
+  { key: "other",    label: "ALT FORM",  color: "#a78bfa" },
+];
+
+function formSpriteUrl(sprite: string, shiny = false) {
+  const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
+  if (shiny) return `https://play.pokemonshowdown.com/sprites/ani-shiny/${clean}.gif`;
+  return `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`;
+}
+function formSpriteFallback(sprite: string, shiny = false) {
+  const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
+  if (shiny) return `https://play.pokemonshowdown.com/sprites/shiny/${clean}.png`;
+  return `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
+}
 
 // ============================================================
 // Crimson Sky Dex – grid view
 // ============================================================
 export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: () => void }) {
   const [query, setQuery] = useState("");
+  const [mode, setMode] = useState<DexMode>("base");
   const [selected, setSelected] = useState<PokemonTemplate | null>(null);
+  const [selectedForm, setSelectedForm] = useState<FormEntry | null>(null);
 
-  const filtered = useMemo(() => {
+  const isShiny = mode === "shiny";
+  const showingForms = mode !== "base" && mode !== "shiny";
+
+  const filteredBase = useMemo(() => {
+    if (showingForms) return [];
     const q = query.trim().toLowerCase();
     if (!q) return ALL_POKEMON;
     return ALL_POKEMON.filter(
       (p) => p.name.toLowerCase().includes(q) || String(p.id).padStart(4, "0").includes(q),
     );
-  }, [query]);
+  }, [query, showingForms]);
+
+  const filteredForms = useMemo(() => {
+    if (!showingForms) return [];
+    const cat = mode as FormCategory;
+    const byCategory = POKEMON_FORMS.filter((f) => f.category === cat);
+    const q = query.trim().toLowerCase();
+    if (!q) return byCategory;
+    return byCategory.filter((f) => f.name.toLowerCase().includes(q) || String(f.id).includes(q));
+  }, [query, mode, showingForms]);
 
   if (selected) {
     return (
       <DexDetail
         mon={selected}
+        isShiny={isShiny}
         onBack={() => setSelected(null)}
         onHome={onHome}
         onJump={(id) => {
@@ -116,6 +157,13 @@ export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: (
     );
   }
 
+  if (selectedForm) {
+    return <FormDetail form={selectedForm} onBack={() => setSelectedForm(null)} onHome={onHome} />;
+  }
+
+  const activeColor = FORM_TABS.find((t) => t.key === mode)?.color ?? "#6b7280";
+  const visibleList = showingForms ? filteredForms : filteredBase;
+
   return (
     <div style={S.root}>
       <style>{CSS}</style>
@@ -125,37 +173,194 @@ export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: (
         <div style={{ width: 80 }} />
       </div>
 
+      {/* ── Category tab strip ── */}
+      <div style={{ display: "flex", overflowX: "auto", gap: 6, padding: "8px 12px", borderBottom: "1px solid #1a1a1a", flexShrink: 0, scrollbarWidth: "none" } as React.CSSProperties}>
+        {FORM_TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => { setMode(t.key); setQuery(""); }}
+            style={{
+              flexShrink: 0, padding: "5px 12px", borderRadius: 20,
+              border: `1px solid ${mode === t.key ? t.color : "#333"}`,
+              background: mode === t.key ? `${t.color}22` : "transparent",
+              color: mode === t.key ? t.color : "#666",
+              fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: 0.5,
+            }}
+          >{t.label}</button>
+        ))}
+      </div>
+
       <div style={S.scroll}>
-        <div style={S.searchWrap}>
+        <div style={{ ...S.searchWrap, marginTop: 12 }}>
           <i className="fa-solid fa-magnifying-glass" style={{ color: "#6b7280", fontSize: 12, marginRight: 8 }} />
           <input
             style={S.searchInput}
-            placeholder="Search Pokémon..."
+            placeholder={showingForms ? "Search forms…" : "Search Pokémon…"}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
+          {isShiny && <span style={{ color: "#fbbf24", fontSize: 12, fontWeight: 700, marginLeft: 8, flexShrink: 0 }}>✨ Shiny</span>}
+        </div>
+
+        {/* ── count label ── */}
+        <div style={{ fontSize: 11, color: "#555", marginBottom: 10, marginLeft: 2 }}>
+          {visibleList.length} {showingForms ? "form" : "Pokémon"}{visibleList.length !== 1 ? "s" : ""}
+          {isShiny ? " · shiny" : ""}
         </div>
 
         <div style={S.grid}>
-          {filtered.map((p) => (
+          {/* Base / Shiny */}
+          {!showingForms && filteredBase.map((p) => (
             <button key={p.id} style={S.card} onClick={() => setSelected(p)}>
               <div style={S.cardId}>#{String(p.id).padStart(4, "0")}</div>
               <div style={S.cardSpriteBox}>
                 <img
-                  src={spriteUrl(p.sprite)}
+                  src={formSpriteUrl(p.sprite, isShiny)}
                   alt={p.name}
                   style={{ width: 96, height: 96, imageRendering: "pixelated", objectFit: "contain" }}
+                  onError={(e) => { (e.target as HTMLImageElement).src = formSpriteFallback(p.sprite, isShiny); }}
                 />
               </div>
-              <div style={S.cardName}>{p.name}</div>
+              <div style={S.cardName}>{p.name}{isShiny ? " ✨" : ""}</div>
             </button>
           ))}
-          {filtered.length === 0 && (
-            <div style={{ gridColumn: "1 / -1", textAlign: "center", color: "#6b7280", padding: 40 }}>
-              No Pokémon found
-            </div>
+
+          {/* Forms */}
+          {showingForms && filteredForms.map((f) => (
+            <button key={f.id} style={{ ...S.card, borderColor: `${activeColor}44` }} onClick={() => setSelectedForm(f)}>
+              <div style={{ ...S.cardId, color: activeColor }}>#{String(f.id)}</div>
+              <div style={S.cardSpriteBox}>
+                <img
+                  src={formSpriteUrl(f.sprite)}
+                  alt={f.name}
+                  style={{ width: 96, height: 96, imageRendering: "pixelated", objectFit: "contain" }}
+                  onError={(e) => {
+                    const el = e.target as HTMLImageElement;
+                    const clean = f.sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
+                    if (el.src.includes("sprites/ani/")) el.src = `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
+                    else if (el.src.includes("gen5")) el.src = `https://play.pokemonshowdown.com/sprites/home/${clean}.png`;
+                  }}
+                />
+              </div>
+              <div style={S.cardName}>{f.name}</div>
+              <div style={{ display: "flex", gap: 4, marginTop: 4, justifyContent: "center" }}>
+                <span style={{ background: TYPE_COLORS[f.type1] || "#666", borderRadius: 8, fontSize: 9, padding: "2px 6px", color: "#fff", fontWeight: 700 }}>{f.type1}</span>
+                {f.type2 && <span style={{ background: TYPE_COLORS[f.type2] || "#666", borderRadius: 8, fontSize: 9, padding: "2px 6px", color: "#fff", fontWeight: 700 }}>{f.type2}</span>}
+              </div>
+            </button>
+          ))}
+
+          {visibleList.length === 0 && (
+            <div style={{ gridColumn: "1 / -1", textAlign: "center", color: "#6b7280", padding: 40 }}>No Pokémon found</div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// Form Detail – shown when tapping a form card
+// ============================================================
+const FORM_CAT_LABEL: Record<string, string> = {
+  mega: "Mega Evolution", gmax: "Gigantamax Form", alolan: "Alolan Form",
+  galarian: "Galarian Form", hisuian: "Hisuian Form", paldean: "Paldean Form", other: "Alternate Form",
+};
+
+function FormDetail({ form, onBack, onHome }: { form: FormEntry; onBack: () => void; onHome: () => void }) {
+  const stats: { key: string; label: string; base: number }[] = [
+    { key: "hp",  label: "HP",          base: form.hp  },
+    { key: "atk", label: "Attack",      base: form.atk },
+    { key: "def", label: "Defense",     base: form.def },
+    { key: "spa", label: "Sp. Attack",  base: form.spa },
+    { key: "spd", label: "Sp. Defense", base: form.spd },
+    { key: "spe", label: "Speed",       base: form.spe },
+  ];
+  const total = form.hp + form.atk + form.def + form.spa + form.spd + form.spe;
+  const types = [form.type1, form.type2].filter(Boolean) as string[];
+  const clean = form.sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
+
+  return (
+    <div style={S.root}>
+      <style>{CSS}</style>
+      <div style={S.topBar}>
+        <BackBtn onClick={onBack} />
+        <div className="page-header-title">Crimson Sky Dex</div>
+        <button style={S.iconBtn} onClick={onHome} aria-label="Home">
+          <i className="fa-solid fa-house" />
+        </button>
+      </div>
+
+      <div style={S.scroll}>
+        <div style={S.redGlow} />
+
+        {/* Hero sprite */}
+        <div style={S.spriteCard}>
+          <img
+            src={`https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`}
+            alt={form.name}
+            style={{ width: 200, height: 200, imageRendering: "pixelated", objectFit: "contain" }}
+            onError={(e) => {
+              const el = e.target as HTMLImageElement;
+              if (el.src.includes("sprites/ani/")) el.src = `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
+              else if (el.src.includes("gen5")) el.src = `https://play.pokemonshowdown.com/sprites/home/${clean}.png`;
+            }}
+          />
+        </div>
+
+        <div style={S.bigName}>{form.name}</div>
+        <div style={{ color: "#9ca3af", fontSize: 13, fontStyle: "italic", marginBottom: 12 }}>
+          {FORM_CAT_LABEL[form.category] ?? "Alternate Form"} · Gen {form.gen}
+        </div>
+
+        <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
+          {types.map((t) => (
+            <span key={t} style={{ ...S.typePill, background: TYPE_COLORS[t] || "#666" }}>{t}</span>
+          ))}
+        </div>
+
+        {/* Base Stats */}
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#aaa", marginBottom: 10, letterSpacing: 1 }}>BASE STATS</div>
+        <div style={S.statsCard}>
+          {stats.map(({ key: k, label, base }) => (
+            <div key={k} style={S.statRow}>
+              <div style={{ width: 90, color: "#9ca3af", fontSize: 13 }}>{label}</div>
+              <div style={{ width: 36, color: "#fff", fontSize: 14, fontWeight: 600 }}>{base}</div>
+              <div style={S.statBarBg}>
+                <div style={{ ...S.statBarFill, width: `${Math.min(100, (base / 255) * 100)}%`, background: STAT_BAR_COLORS[k] }} />
+              </div>
+              <div style={{ width: 40, textAlign: "right", color: "#9ca3af", fontSize: 12 }}>
+                {Math.round((base / 255) * 100)}%
+              </div>
+            </div>
+          ))}
+          <div style={S.totalRow}>
+            <span style={{ color: "#fff", fontSize: 15, fontWeight: 600 }}>Total</span>
+            <span style={{ color: "#ef4444", fontSize: 18, fontWeight: 700 }}>{total}</span>
+          </div>
+        </div>
+
+        {/* Moves */}
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#aaa", margin: "18px 0 10px", letterSpacing: 1 }}>SIGNATURE MOVES</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {form.moves.map((mv) => {
+            const def = getMove(mv);
+            return (
+              <div key={mv} style={S.moveCard}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <span style={{ color: "#fff", fontSize: 15, fontWeight: 600 }}>{mv}</span>
+                  <span style={{ ...S.typePill, background: TYPE_COLORS[def.type] || "#666", padding: "3px 10px", fontSize: 11 }}>{def.type}</span>
+                </div>
+                <div style={S.moveStatsGrid}>
+                  <div style={S.moveStatBox}><div style={S.moveStatLab}>Power</div><div style={S.moveStatVal}>{def.power || "—"}</div></div>
+                  <div style={S.moveStatBox}><div style={S.moveStatLab}>Accuracy</div><div style={S.moveStatVal}>{def.accuracy ? `${def.accuracy}%` : "—"}</div></div>
+                  <div style={S.moveStatBox}><div style={S.moveStatLab}>Category</div><div style={S.moveStatVal}>{def.category}</div></div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ height: 30 }} />
       </div>
     </div>
   );
@@ -169,11 +374,13 @@ function DexDetail({
   onBack,
   onHome,
   onJump,
+  isShiny = false,
 }: {
   mon: PokemonTemplate;
   onBack: () => void;
   onHome: () => void;
   onJump: (id: number) => void;
+  isShiny?: boolean;
 }) {
   const [extra, setExtra] = useState<DexExtra | null>(dexCache?.[String(mon.id)] || null);
   const [evoOpen, setEvoOpen] = useState(false);
@@ -284,10 +491,10 @@ function DexDetail({
         {/* Hero sprite – tap to play cry */}
         <div style={S.spriteCard} onClick={playCry} title="Tap to play cry">
           <img
-            src={spriteAniUrl(mon.sprite)}
+            src={formSpriteUrl(mon.sprite, isShiny)}
             alt={mon.name}
             style={{ width: 200, height: 200, imageRendering: "pixelated", objectFit: "contain" }}
-            onError={(e) => { (e.target as HTMLImageElement).src = spriteUrl(mon.sprite); }}
+            onError={(e) => { (e.target as HTMLImageElement).src = formSpriteFallback(mon.sprite, isShiny); }}
           />
           <div style={S.cryHint}>
             <i className="fa-solid fa-volume-high" /> Tap to play cry
