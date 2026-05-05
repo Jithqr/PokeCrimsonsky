@@ -347,8 +347,8 @@ export default function BattleArena(props: Props) {
                   style={{ width: 110, height: 110, imageRendering: "pixelated", objectFit: "contain", background: "transparent", filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.5))" }}
                 />
                 {oppDmgFloat && (
-                  <div key={oppDmgFloat.key} style={{ position: "absolute", top: 0, left: "50%", pointerEvents: "none", zIndex: 20 }}>
-                    <div className="pq-dmg-float">{oppDmgFloat.dmg}</div>
+                  <div key={oppDmgFloat.key} style={{ position: "absolute", top: 20, left: 8, pointerEvents: "none", zIndex: 20 }}>
+                    <div className="pq-dmg-float">-{oppDmgFloat.dmg}</div>
                     {oppDmgFloat.eff >= 2 && <div className="pq-dmg-eff">Super effective!</div>}
                     {oppDmgFloat.eff > 0 && oppDmgFloat.eff < 1 && <div className="pq-dmg-eff" style={{ color: "#90caf9" }}>Not very effective…</div>}
                   </div>
@@ -370,8 +370,8 @@ export default function BattleArena(props: Props) {
                   style={{ width: 170, height: 170, imageRendering: "pixelated", objectFit: "contain", background: "transparent" }}
                 />
                 {myDmgFloat && (
-                  <div key={myDmgFloat.key} style={{ position: "absolute", top: 0, left: "50%", pointerEvents: "none", zIndex: 20 }}>
-                    <div className="pq-dmg-float">{myDmgFloat.dmg}</div>
+                  <div key={myDmgFloat.key} style={{ position: "absolute", top: 0, right: 8, pointerEvents: "none", zIndex: 20 }}>
+                    <div className="pq-dmg-float">-{myDmgFloat.dmg}</div>
                     {myDmgFloat.eff >= 2 && <div className="pq-dmg-eff">Super effective!</div>}
                     {myDmgFloat.eff > 0 && myDmgFloat.eff < 1 && <div className="pq-dmg-eff" style={{ color: "#90caf9" }}>Not very effective…</div>}
                   </div>
@@ -642,11 +642,11 @@ const css = `
 
 /* ── Floating damage number ── */
 @keyframes pq-dmg-float-kf {
-  0%   { transform: translateX(-50%) translateY(0)   scale(0.6); opacity: 1; }
-  10%  { transform: translateX(-50%) translateY(-8px) scale(1.1); opacity: 1; }
-  20%  { transform: translateX(-50%) translateY(-14px) scale(1);  opacity: 1; }
+  0%   { transform: translateY(0)    scale(0.6); opacity: 1; }
+  10%  { transform: translateY(-8px)  scale(1.1); opacity: 1; }
+  20%  { transform: translateY(-14px) scale(1);   opacity: 1; }
   65%  { opacity: 1; }
-  100% { transform: translateX(-50%) translateY(-60px) scale(1); opacity: 0; }
+  100% { transform: translateY(-60px) scale(1);   opacity: 0; }
 }
 .pq-dmg-float {
   position: absolute; top: 0; left: 0; white-space: nowrap; pointer-events: none;
@@ -657,10 +657,10 @@ const css = `
                0 0 12px #f43f5e, 0 0 24px rgba(244,63,94,0.5);
 }
 @keyframes pq-dmg-eff-kf {
-  0%   { transform: translateX(-50%) translateY(16px) scale(0.8); opacity: 0; }
+  0%   { transform: translateY(16px) scale(0.8); opacity: 0; }
   15%  { opacity: 1; }
   65%  { opacity: 1; }
-  100% { transform: translateX(-50%) translateY(-44px); opacity: 0; }
+  100% { transform: translateY(-44px); opacity: 0; }
 }
 .pq-dmg-eff {
   position: absolute; top: 0; left: 0; white-space: nowrap; pointer-events: none;

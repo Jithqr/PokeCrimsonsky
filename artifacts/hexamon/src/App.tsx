@@ -2437,9 +2437,9 @@ export default function App() {
     @keyframes hunt-pq-arena-hit-kf { 0%{box-shadow:inset 0 0 60px rgba(0,0,0,0.7);transform:translate(0,0)} 15%{box-shadow:inset 0 0 80px rgba(255,80,80,0.45);transform:translate(-4px,2px)} 30%{box-shadow:inset 0 0 80px rgba(255,80,80,0.45);transform:translate(3px,-2px)} 50%{box-shadow:inset 0 0 60px rgba(255,80,80,0.20);transform:translate(-2px,1px)} 70%{transform:translate(2px,-1px)} 100%{box-shadow:inset 0 0 60px rgba(0,0,0,0.7);transform:translate(0,0)} }
     .hunt-pq-arena-hit { animation: hunt-pq-arena-hit-kf 260ms ease-out; }
 
-    @keyframes hunt-pq-dmg-float-kf { 0%{transform:translateX(-50%) translateY(0) scale(0.6);opacity:1} 10%{transform:translateX(-50%) translateY(-8px) scale(1.1);opacity:1} 20%{transform:translateX(-50%) translateY(-14px) scale(1);opacity:1} 65%{opacity:1} 100%{transform:translateX(-50%) translateY(-60px) scale(1);opacity:0} }
+    @keyframes hunt-pq-dmg-float-kf { 0%{transform:translateY(0) scale(0.6);opacity:1} 10%{transform:translateY(-8px) scale(1.1);opacity:1} 20%{transform:translateY(-14px) scale(1);opacity:1} 65%{opacity:1} 100%{transform:translateY(-60px) scale(1);opacity:0} }
     .hunt-pq-dmg-float { position:absolute;top:0;left:0;white-space:nowrap;pointer-events:none;animation:hunt-pq-dmg-float-kf 1000ms ease-out forwards;font-family:'Press Start 2P','Courier New',monospace;font-size:13px;font-weight:900;color:#f43f5e;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 0 12px #f43f5e,0 0 24px rgba(244,63,94,0.5); }
-    @keyframes hunt-pq-dmg-eff-kf { 0%{transform:translateX(-50%) translateY(16px) scale(0.8);opacity:0} 15%{opacity:1} 65%{opacity:1} 100%{transform:translateX(-50%) translateY(-44px);opacity:0} }
+    @keyframes hunt-pq-dmg-eff-kf { 0%{transform:translateY(16px) scale(0.8);opacity:0} 15%{opacity:1} 65%{opacity:1} 100%{transform:translateY(-44px);opacity:0} }
     .hunt-pq-dmg-eff { position:absolute;top:0;left:0;white-space:nowrap;pointer-events:none;animation:hunt-pq-dmg-eff-kf 1100ms 80ms ease-out forwards;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:9px;font-weight:700;color:#ffd54f;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000; }
     .btn {
       background: transparent;
@@ -4604,8 +4604,8 @@ export default function App() {
                 <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className="mon-suck" style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
               )}
               {wildDmgFloat && (
-                <div key={wildDmgFloat.key} style={{ position: "absolute", top: 0, left: "50%", pointerEvents: "none", zIndex: 20 }}>
-                  <div className="hunt-pq-dmg-float">{wildDmgFloat.dmg}</div>
+                <div key={wildDmgFloat.key} style={{ position: "absolute", top: 20, left: 8, pointerEvents: "none", zIndex: 20 }}>
+                  <div className="hunt-pq-dmg-float">-{wildDmgFloat.dmg}</div>
                   {wildDmgFloat.eff >= 2 && <div className="hunt-pq-dmg-eff">Super effective!</div>}
                   {wildDmgFloat.eff > 0 && wildDmgFloat.eff < 1 && <div className="hunt-pq-dmg-eff" style={{ color: "#90caf9" }}>Not very effective…</div>}
                 </div>
@@ -4616,8 +4616,8 @@ export default function App() {
             <div style={{ position: "absolute", bottom: 12, left: 12, zIndex: 3 }} className={pMonHitClass}>
               <MonSprite sprite={pMon.sprite} size={95} back isShiny={pMon.isShiny} className="mon-float" style={{ filter: pMon.isShiny ? "drop-shadow(0 6px 18px rgba(255,215,0,0.8))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.8))" }} />
               {pMonDmgFloat && (
-                <div key={pMonDmgFloat.key} style={{ position: "absolute", top: 0, left: "50%", pointerEvents: "none", zIndex: 20 }}>
-                  <div className="hunt-pq-dmg-float">{pMonDmgFloat.dmg}</div>
+                <div key={pMonDmgFloat.key} style={{ position: "absolute", top: 0, right: 8, pointerEvents: "none", zIndex: 20 }}>
+                  <div className="hunt-pq-dmg-float">-{pMonDmgFloat.dmg}</div>
                   {pMonDmgFloat.eff >= 2 && <div className="hunt-pq-dmg-eff">Super effective!</div>}
                   {pMonDmgFloat.eff > 0 && pMonDmgFloat.eff < 1 && <div className="hunt-pq-dmg-eff" style={{ color: "#90caf9" }}>Not very effective…</div>}
                 </div>
