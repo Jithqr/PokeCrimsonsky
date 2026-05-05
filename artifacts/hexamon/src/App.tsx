@@ -2728,11 +2728,22 @@ export default function App() {
     const customList = custom ? [custom] : [];
     // For forms without Showdown sprite, fall back to base Pokémon
     const baseClean = clean
-      .replace(/-megax$/, "").replace(/-megay$/, "").replace(/-megaz$/, "")
-      .replace(/-mega$/, "").replace(/-gmax$/, "")
-      .replace(/-alola$/, "").replace(/-galar$/, "")
-      .replace(/-hisui$/, "").replace(/-paldea$/, "")
-      .replace(/-paldeacombat$/, "").replace(/-paldeafire$/, "").replace(/-paldeawater$/, "");
+      .replace(/-?megax$/, "").replace(/-?megay$/, "").replace(/-?megaz$/, "")
+      .replace(/-?mega$/, "").replace(/-?gmax$/, "")
+      .replace(/-?alola$/, "").replace(/-?galar$/, "")
+      .replace(/-?hisui$/, "").replace(/-?paldea$/, "")
+      .replace(/-?paldeacombat$/, "").replace(/-?paldeafire$/, "").replace(/-?paldeawater$/, "")
+      // Default forms Showdown serves under the bare base name:
+      .replace(/-?normal$/, "").replace(/-?altered$/, "").replace(/-?land$/, "")
+      .replace(/-?ordinary$/, "").replace(/-?aria$/, "").replace(/-?incarnate$/, "")
+      .replace(/-?male$/, "").replace(/-?female$/, "").replace(/-?shield$/, "")
+      .replace(/-?average$/, "").replace(/-?standard$/, "").replace(/-?plant$/, "")
+      .replace(/-?baile$/, "").replace(/-?midday$/, "").replace(/-?solo$/, "")
+      .replace(/-?redmeteor$/, "").replace(/-?disguised$/, "").replace(/-?amped$/, "")
+      .replace(/-?fullbelly$/, "").replace(/-?singlestrike$/, "").replace(/-?greenplumage$/, "")
+      .replace(/-?familyoffour$/, "").replace(/-?zero$/, "").replace(/-?curly$/, "")
+      .replace(/-?twosegment$/, "").replace(/-?redstriped$/, "").replace(/-?50$/, "")
+      .replace(/-?ice$/, "");
     const baseExtras = baseClean !== clean
       ? [
           `https://play.pokemonshowdown.com/sprites/ani/${baseClean}.gif`,
