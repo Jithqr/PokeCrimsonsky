@@ -53,6 +53,26 @@ const CUSTOM_SPRITES: Record<string, string> = {
   "venusaur-gmax-shiny": "sprites/custom/venusaur-gmax-shiny.gif",
   "blastoise-gmax": "sprites/custom/blastoise-gmax.gif",
   "blastoise-gmax-shiny": "sprites/custom/blastoise-gmax-shiny.gif",
+  // Gen 9 shiny sprites
+  "wochien-shiny": "sprites/custom/wochien-shiny.gif",
+  "chienpao-shiny": "sprites/custom/chienpao-shiny.gif",
+  "tinglu-shiny": "sprites/custom/tinglu-shiny.gif",
+  "chiyu-shiny": "sprites/custom/chiyu-shiny.gif",
+  "ironvaliant-shiny": "sprites/custom/ironvaliant-shiny.gif",
+  "miraidon-shiny": "sprites/custom/miraidon-shiny.gif",
+  "ironleaves-shiny": "sprites/custom/ironleaves-shiny.gif",
+  "okidogi-shiny": "sprites/custom/okidogi-shiny.gif",
+  "munkidori-shiny": "sprites/custom/munkidori-shiny.gif",
+  "fezandipiti-shiny": "sprites/custom/fezandipiti-shiny.gif",
+  "ogerpon-shiny": "sprites/custom/ogerpon-shiny.gif",
+  "ironboulder-shiny": "sprites/custom/ironboulder-shiny.gif",
+  "ironcrown-shiny": "sprites/custom/ironcrown-shiny.gif",
+  "terapagos-shiny": "sprites/custom/terapagos-shiny.gif",
+  "pecharunt-shiny": "sprites/custom/pecharunt-shiny.gif",
+  "ironhands-shiny": "sprites/custom/ironhands-shiny.gif",
+  "ironjugulis-shiny": "sprites/custom/ironjugulis-shiny.gif",
+  "ironmoth-shiny": "sprites/custom/ironmoth-shiny.gif",
+  "ironthorns-shiny": "sprites/custom/ironthorns-shiny.gif",
   "urshifu-gmax": "sprites/custom/urshifu-gmax.gif",
   "urshifu-rapid-strike-gmax": "sprites/custom/urshifu-rapid-strike-gmax.gif",
   "cinderace-gmax": "sprites/custom/cinderace-gmax.gif",
@@ -99,6 +119,43 @@ const CUSTOM_SPRITES: Record<string, string> = {
   "darkrai-mega": "sprites/custom/mega/darkrai-mega.gif",
   "magearna-mega": "sprites/custom/mega/magearna-mega.gif",
   "zeraora-mega": "sprites/custom/mega/zeraora-mega.gif",
+  // Alolan forms
+  "sandshrew-alola": "sprites/custom/sandshrew-alola.gif",
+  "sandslash-alola": "sprites/custom/sandslash-alola.gif",
+  "vulpix-alola": "sprites/custom/vulpix-alola.gif",
+  "ninetales-alola": "sprites/custom/ninetales-alola.gif",
+  "dugtrio-alola": "sprites/custom/dugtrio-alola.gif",
+  "persian-alola": "sprites/custom/persian-alola.gif",
+  "geodude-alola": "sprites/custom/geodude-alola.gif",
+  "graveler-alola": "sprites/custom/graveler-alola.gif",
+  "golem-alola": "sprites/custom/golem-alola.gif",
+  "exeggutor-alola": "sprites/custom/exeggutor-alola.gif",
+  // Galarian forms
+  "meowth-galar": "sprites/custom/meowth-galar.gif",
+  "slowbro-galar": "sprites/custom/slowbro-galar.gif",
+  "slowking-galar": "sprites/custom/slowking-galar.gif",
+  "zapdos-galar": "sprites/custom/zapdos-galar.gif",
+  "weezing-galar": "sprites/custom/weezing-galar.gif",
+  "moltres-galar": "sprites/custom/moltres-galar.gif",
+  // Hisuian forms
+  "voltorb-hisui": "sprites/custom/voltorb-hisui.gif",
+  "growlithe-hisui": "sprites/custom/growlithe-hisui.gif",
+  "arcanine-hisui": "sprites/custom/arcanine-hisui.gif",
+  "electrode-hisui": "sprites/custom/electrode-hisui.gif",
+  "typhlosion-hisui": "sprites/custom/typhlosion-hisui.gif",
+  "qwilfish-hisui": "sprites/custom/qwilfish-hisui.gif",
+  "sneasel-hisui": "sprites/custom/sneasel-hisui.gif",
+  "samurott-hisui": "sprites/custom/samurott-hisui.gif",
+  "lilligant-hisui": "sprites/custom/lilligant-hisui.gif",
+  "zorua-hisui": "sprites/custom/zorua-hisui.gif",
+  "zoroark-hisui": "sprites/custom/zoroark-hisui.gif",
+  "braviary-hisui": "sprites/custom/braviary-hisui.gif",
+  "goodra-hisui": "sprites/custom/goodra-hisui.gif",
+  "avalugg-hisui": "sprites/custom/avalugg-hisui.gif",
+  "decidueye-hisui": "sprites/custom/decidueye-hisui.gif",
+  // Paldean forms
+  "wooper-paldea": "sprites/custom/wooper-paldea.gif",
+  "tauros-paldeacombat": "sprites/custom/tauros-paldeacombat.gif",
 };
 function spriteUrl(name: string) {
   const clean = name.toLowerCase().replace(/[^a-z0-9-]/g, "");
@@ -158,6 +215,16 @@ function formSpriteUrl(sprite: string, shiny = false) {
   if (!shiny && CUSTOM_SPRITES[clean]) return `${import.meta.env.BASE_URL}${CUSTOM_SPRITES[clean]}`;
   if (shiny) return `https://play.pokemonshowdown.com/sprites/ani-shiny/${clean}.gif`;
   return `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`;
+}
+function formSpriteBaseFallback(sprite: string) {
+  const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
+  const base = clean
+    .replace(/-megax$/, "").replace(/-megay$/, "").replace(/-megaz$/, "")
+    .replace(/-mega$/, "").replace(/-gmax$/, "")
+    .replace(/-alola$/, "").replace(/-galar$/, "")
+    .replace(/-hisui$/, "").replace(/-paldea$/, "")
+    .replace(/-paldeacombat$/, "").replace(/-paldeafire$/, "").replace(/-paldeawater$/, "");
+  return `https://play.pokemonshowdown.com/sprites/ani/${base}.gif`;
 }
 function formSpriteFallback(sprite: string, shiny = false) {
   const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
@@ -293,8 +360,14 @@ export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: (
                     onError={(e) => {
                       const el = e.target as HTMLImageElement;
                       const clean = f.sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
-                      if (el.src.includes("sprites/ani/")) el.src = `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
-                      else if (el.src.includes("gen5")) el.src = `https://play.pokemonshowdown.com/sprites/home/${clean}.png`;
+                      if (el.src.includes("sprites/ani/") && !el.dataset.baseTried) {
+                        el.dataset.baseTried = "1";
+                        el.src = formSpriteBaseFallback(f.sprite);
+                      } else if (el.src.includes("sprites/ani/") || el.src.includes("baseTried")) {
+                        el.src = `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
+                      } else if (el.src.includes("gen5")) {
+                        el.src = `https://play.pokemonshowdown.com/sprites/home/${clean}.png`;
+                      }
                     }}
                   />
                 </div>
@@ -853,7 +926,7 @@ function DexDetail({
                       src={formSpriteUrl(form.sprite)}
                       alt={form.name}
                       style={{ width: 72, height: 72, imageRendering: "pixelated", objectFit: "contain", display: "block", margin: "0 auto 6px" }}
-                      onError={(e) => { (e.target as HTMLImageElement).src = `https://play.pokemonshowdown.com/sprites/dex/${form.sprite.replace(/-mega[xyz]?$|-mega$|-gmax$/,"")}.png`; }}
+                      onError={(e) => { const el = e.target as HTMLImageElement; if (!el.dataset.b) { el.dataset.b="1"; el.src = formSpriteBaseFallback(form.sprite); } else el.src = `https://play.pokemonshowdown.com/sprites/dex/${form.sprite.toLowerCase().replace(/[^a-z0-9-]/g,"")}.png`; }}
                     />
                     <div style={{ fontSize: 11, fontWeight: 600, color: "#fff", marginBottom: 6, lineHeight: 1.3 }}>{form.name}</div>
                     <div style={{ display: "flex", gap: 4, justifyContent: "center", marginBottom: 6 }}>

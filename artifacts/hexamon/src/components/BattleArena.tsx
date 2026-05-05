@@ -4,8 +4,53 @@ import { calcMaxHp } from "../lib/battle-engine";
 import { getMove } from "../lib/move-data";
 import { TYPE_COLORS } from "../lib/type-chart";
 
+const BASE = import.meta.env.BASE_URL ?? "/";
+
+// Build fallback URL list for a sprite key, checking local custom sprites first
+function spriteFallbacks(sprite: string, back = false): string[] {
+  const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, ""); // keep hyphens for local path
+  const ps = clean.replace(/-/g, ""); // no hyphens for PokéShowdown
+  const psBase = ps
+    .replace(/megax$/, "").replace(/megay$/, "").replace(/megaz$/, "")
+    .replace(/mega$/, "").replace(/gmax$/, "")
+    .replace(/alola$/, "").replace(/galar$/, "")
+    .replace(/hisui$/, "").replace(/paldea$/, "")
+    .replace(/paldeacombat$/, "").replace(/paldeafire$/, "").replace(/paldeawater$/, "");
+  const extras = psBase !== ps
+    ? [`https://play.pokemonshowdown.com/sprites/ani/${psBase}.gif`,
+       `https://play.pokemonshowdown.com/sprites/dex/${psBase}.png`]
+    : [];
+  return [
+    `${BASE}sprites/custom/${clean}.gif`,
+    back
+      ? `https://play.pokemonshowdown.com/sprites/ani-back/${ps}.gif`
+      : `https://play.pokemonshowdown.com/sprites/ani/${ps}.gif`,
+    `https://play.pokemonshowdown.com/sprites/gen5${back ? "-back" : ""}/${ps}.png`,
+    `https://play.pokemonshowdown.com/sprites/dex/${ps}.png`,
+    ...extras,
+  ];
+}
+
+function BattleSprite({ sprite, back = false, style }: { sprite: string; back?: boolean; style?: React.CSSProperties }) {
+  const urls = spriteFallbacks(sprite, back);
+  return (
+    <img
+      src={urls[0]}
+      data-step="0"
+      alt={sprite}
+      style={style}
+      onError={(e) => {
+        const img = e.target as HTMLImageElement;
+        const step = Number(img.dataset.step ?? "0") + 1;
+        if (step < urls.length) { img.dataset.step = String(step); img.src = urls[step]; }
+        else img.style.opacity = "0";
+      }}
+    />
+  );
+}
+
 const SPRITE_FRONT = (clean: string) =>
-  `https://play.pokemonshowdown.com/sprites/ani/${clean.replace(/[^a-z0-9]/g, "")}.gif`;
+  `${BASE}sprites/custom/${clean.toLowerCase().replace(/[^a-z0-9-]/g, "")}.gif`;
 const SPRITE_BACK = (clean: string) =>
   `https://play.pokemonshowdown.com/sprites/ani-back/${clean.replace(/[^a-z0-9]/g, "")}.gif`;
 
@@ -220,10 +265,9 @@ export default function BattleArena(props: Props) {
             {intro ? (
               <div className="bx-pokeball-throw bx-pokeball-throw-opp"><Pokeball alive size={28} /></div>
             ) : (
-              <img
-                src={SPRITE_FRONT(oppActive.sprite || oppActive.name.toLowerCase())}
-                alt={oppActive.name}
-                onError={(e) => { (e.currentTarget as HTMLImageElement).src = SPRITE_FRONT(oppActive.name.toLowerCase()); }}
+              <BattleSprite
+                sprite={oppActive.sprite || oppActive.name.toLowerCase()}
+                back={false}
                 style={{ width: 110, height: 110, imageRendering: "pixelated", objectFit: "contain", background: "transparent" }}
               />
             )}
@@ -235,10 +279,9 @@ export default function BattleArena(props: Props) {
             {intro ? (
               <div className="bx-pokeball-throw bx-pokeball-throw-me"><Pokeball alive size={28} /></div>
             ) : (
-              <img
-                src={SPRITE_BACK(myActive.sprite || myActive.name.toLowerCase())}
-                alt={myActive.name}
-                onError={(e) => { (e.currentTarget as HTMLImageElement).src = SPRITE_FRONT(myActive.sprite || myActive.name.toLowerCase()); }}
+              <BattleSprite
+                sprite={myActive.sprite || myActive.name.toLowerCase()}
+                back={true}
                 style={{ width: 170, height: 170, imageRendering: "pixelated", objectFit: "contain", background: "transparent" }}
               />
             )}
@@ -391,10 +434,9 @@ function BenchCard({ mon }: { mon: BattleMon }) {
   const max = calcMaxHp(mon);
   const pct = Math.max(0, Math.min(100, (mon.currentHp / max) * 100));
   const fainted = mon.currentHp <= 0;
-  const url = SPRITE_FRONT(mon.sprite || mon.name.toLowerCase());
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, opacity: fainted ? 0.4 : 1, filter: fainted ? "grayscale(1)" : "none" }}>
-      <img src={url} alt={mon.name} style={{ width: 54, height: 54, imageRendering: "pixelated", objectFit: "contain" }} />
+      <BattleSprite sprite={mon.sprite || mon.name.toLowerCase()} style={{ width: 54, height: 54, imageRendering: "pixelated", objectFit: "contain" }} />
       <div style={{ width: "100%" }}>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, color: "#fff", marginBottom: 2 }}>
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{mon.name}</span>

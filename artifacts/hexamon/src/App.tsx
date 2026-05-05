@@ -144,6 +144,26 @@ const CUSTOM_SPRITES: Record<string, string> = {
   "venusaur-gmax-shiny": "sprites/custom/venusaur-gmax-shiny.gif",
   "blastoise-gmax": "sprites/custom/blastoise-gmax.gif",
   "blastoise-gmax-shiny": "sprites/custom/blastoise-gmax-shiny.gif",
+  // Gen 9 shiny sprites
+  "wochien-shiny": "sprites/custom/wochien-shiny.gif",
+  "chienpao-shiny": "sprites/custom/chienpao-shiny.gif",
+  "tinglu-shiny": "sprites/custom/tinglu-shiny.gif",
+  "chiyu-shiny": "sprites/custom/chiyu-shiny.gif",
+  "ironvaliant-shiny": "sprites/custom/ironvaliant-shiny.gif",
+  "miraidon-shiny": "sprites/custom/miraidon-shiny.gif",
+  "ironleaves-shiny": "sprites/custom/ironleaves-shiny.gif",
+  "okidogi-shiny": "sprites/custom/okidogi-shiny.gif",
+  "munkidori-shiny": "sprites/custom/munkidori-shiny.gif",
+  "fezandipiti-shiny": "sprites/custom/fezandipiti-shiny.gif",
+  "ogerpon-shiny": "sprites/custom/ogerpon-shiny.gif",
+  "ironboulder-shiny": "sprites/custom/ironboulder-shiny.gif",
+  "ironcrown-shiny": "sprites/custom/ironcrown-shiny.gif",
+  "terapagos-shiny": "sprites/custom/terapagos-shiny.gif",
+  "pecharunt-shiny": "sprites/custom/pecharunt-shiny.gif",
+  "ironhands-shiny": "sprites/custom/ironhands-shiny.gif",
+  "ironjugulis-shiny": "sprites/custom/ironjugulis-shiny.gif",
+  "ironmoth-shiny": "sprites/custom/ironmoth-shiny.gif",
+  "ironthorns-shiny": "sprites/custom/ironthorns-shiny.gif",
   "chesnaught-mega": "sprites/custom/mega/chesnaught-mega.gif",
   "delphox-mega": "sprites/custom/mega/delphox-mega.gif",
   "emboar-mega": "sprites/custom/mega/emboar-mega.gif",
@@ -186,6 +206,43 @@ const CUSTOM_SPRITES: Record<string, string> = {
   "darkrai-mega": "sprites/custom/mega/darkrai-mega.gif",
   "magearna-mega": "sprites/custom/mega/magearna-mega.gif",
   "zeraora-mega": "sprites/custom/mega/zeraora-mega.gif",
+  // Alolan forms
+  "sandshrew-alola": "sprites/custom/sandshrew-alola.gif",
+  "sandslash-alola": "sprites/custom/sandslash-alola.gif",
+  "vulpix-alola": "sprites/custom/vulpix-alola.gif",
+  "ninetales-alola": "sprites/custom/ninetales-alola.gif",
+  "dugtrio-alola": "sprites/custom/dugtrio-alola.gif",
+  "persian-alola": "sprites/custom/persian-alola.gif",
+  "geodude-alola": "sprites/custom/geodude-alola.gif",
+  "graveler-alola": "sprites/custom/graveler-alola.gif",
+  "golem-alola": "sprites/custom/golem-alola.gif",
+  "exeggutor-alola": "sprites/custom/exeggutor-alola.gif",
+  // Galarian forms
+  "meowth-galar": "sprites/custom/meowth-galar.gif",
+  "slowbro-galar": "sprites/custom/slowbro-galar.gif",
+  "slowking-galar": "sprites/custom/slowking-galar.gif",
+  "zapdos-galar": "sprites/custom/zapdos-galar.gif",
+  "weezing-galar": "sprites/custom/weezing-galar.gif",
+  "moltres-galar": "sprites/custom/moltres-galar.gif",
+  // Hisuian forms
+  "voltorb-hisui": "sprites/custom/voltorb-hisui.gif",
+  "growlithe-hisui": "sprites/custom/growlithe-hisui.gif",
+  "arcanine-hisui": "sprites/custom/arcanine-hisui.gif",
+  "electrode-hisui": "sprites/custom/electrode-hisui.gif",
+  "typhlosion-hisui": "sprites/custom/typhlosion-hisui.gif",
+  "qwilfish-hisui": "sprites/custom/qwilfish-hisui.gif",
+  "sneasel-hisui": "sprites/custom/sneasel-hisui.gif",
+  "samurott-hisui": "sprites/custom/samurott-hisui.gif",
+  "lilligant-hisui": "sprites/custom/lilligant-hisui.gif",
+  "zorua-hisui": "sprites/custom/zorua-hisui.gif",
+  "zoroark-hisui": "sprites/custom/zoroark-hisui.gif",
+  "braviary-hisui": "sprites/custom/braviary-hisui.gif",
+  "goodra-hisui": "sprites/custom/goodra-hisui.gif",
+  "avalugg-hisui": "sprites/custom/avalugg-hisui.gif",
+  "decidueye-hisui": "sprites/custom/decidueye-hisui.gif",
+  // Paldean forms
+  "wooper-paldea": "sprites/custom/wooper-paldea.gif",
+  "tauros-paldeacombat": "sprites/custom/tauros-paldeacombat.gif",
 };
 const CUSTOM_SPRITE_URL = (clean: string) =>
   CUSTOM_SPRITES[clean] ? `${import.meta.env.BASE_URL}${CUSTOM_SPRITES[clean]}` : null;
@@ -2641,10 +2698,13 @@ export default function App() {
     const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
     const custom = CUSTOM_SPRITE_URL(clean);
     const customList = custom ? [custom] : [];
-    // For game-exclusive forms (mega/gmax) with no Showdown sprite, fall back to base Pokemon
+    // For forms without Showdown sprite, fall back to base Pokémon
     const baseClean = clean
       .replace(/-megax$/, "").replace(/-megay$/, "").replace(/-megaz$/, "")
-      .replace(/-mega$/, "").replace(/-gmax$/, "");
+      .replace(/-mega$/, "").replace(/-gmax$/, "")
+      .replace(/-alola$/, "").replace(/-galar$/, "")
+      .replace(/-hisui$/, "").replace(/-paldea$/, "")
+      .replace(/-paldeacombat$/, "").replace(/-paldeafire$/, "").replace(/-paldeawater$/, "");
     const baseExtras = baseClean !== clean
       ? [
           `https://play.pokemonshowdown.com/sprites/ani/${baseClean}.gif`,
