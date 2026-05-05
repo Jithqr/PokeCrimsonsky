@@ -2356,8 +2356,8 @@ export default function App() {
     .m-team-sprite img { width:30px; image-rendering:pixelated; }
 
     .m-menu { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding: 0 16px; margin-bottom: 16px; }
-    .m-menu-btn { background: var(--m-card); border:2px solid var(--m-border); border-radius:16px; padding:22px 8px 18px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; font-size:13px; font-weight:700; text-transform:uppercase; cursor:pointer; transition: background-color .2s, transform .15s; letter-spacing: 1px; color: var(--m-text); }
-    .m-menu-btn i { font-size: 28px; }
+    .m-menu-btn { background: var(--m-card); border:2px solid var(--m-border); border-radius:14px; padding:13px 6px 11px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; font-size:11px; font-weight:700; text-transform:uppercase; cursor:pointer; transition: background-color .2s, transform .15s; letter-spacing: 0.8px; color: var(--m-text); }
+    .m-menu-btn i { font-size: 20px; }
     .m-menu-btn:hover { background: #1f1f24; }
     .m-menu-btn:active { transform: scale(0.97); }
     .m-menu-btn.locked { opacity: 0.45; cursor: not-allowed; color: var(--m-muted); border-style: dashed; }
