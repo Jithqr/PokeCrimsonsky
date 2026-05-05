@@ -1,0 +1,51 @@
+Battle VFX — Full Breakdown
+💥 Damage Display
+damageFloat + .pq-dmg-float
+Floating damage number pops up from the defender, scales from 0.6→1.1→1, rises 60px, fades out over 1000ms
+Styled in pixel font (Press Start 2P), red color (#f43f5e) with a glowing red text-shadow + black outline
+A secondary .pq-dmg-eff label shows "Super effective!" / "Not very effective..." underneath, same float animation
+✨ Sprite Glow Effects
+pq-glow-green + .pq-glow
+Pulses a green box-shadow (rgba(74,222,128,0.55)) on and off every 2.4s — used for the active/selected Pokémon
+.pq-flash-red
+Hit flash on the defender: brightness(1.4) sepia(1) saturate(8) hue-rotate(-25deg) drop-shadow(0 0 6px #ff3030)
+Fires at 20% and 60% of the 320ms animation — gives a sharp red glow burst on impact
+Sprite drop-shadow (inline style)
+Enemy sprite always has filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)) for a subtle depth shadow
+🌊 Move Type FX (.pq-move-fx)
+A 60×60px div flies across the arena per move type:
+Type
+Effect
+🔥 Fire
+Slides right, shrinks + fades, orange→red
+💧 Water
+Slides right with skew
+⚡ Electric
+Flickers yellow with box-shadow: 0 0 20px yellow glow
+🌿 Grass
+Arcs up-right while spinning 360°
+🔮 Psychic
+Expands from scale(0)→scale(4), pink radial burst
+❄️ Ice
+Slides at 45° rotation, light blue
+🌍 Ground
+Shakes the entire arena (translateX zig-zag)
+☠️ Poison
+Floats upward, purple bubble shrinking
+👻 Ghost
+Slides + grows, purple glow, semi-transparent
+🪨 Rock
+Tumbles diagonally with 180° rotation
+🌀 Flying
+Squishes vertically mid-flight
+🐉 Dragon
+Spins + scales up/down, purple glow
+Normal/Fighting
+Short lunge forward and back
+🤸 Sprite Movement Animations
+.pq-bob — Player's Pokémon idle bobbing + slight tilt (loops infinitely)
+.pq-shake — Horizontal shake on hit (both enemy and player, 450ms)
+.pq-lunge-right / .pq-lunge-left — Attacker lurches 34px toward enemy on attack (180ms)
+🖥️ Arena/Screen Effects
+.pq-arena-hit — Screen micro-shakes (translate zig-zag) + brief inset 0 0 60px rgba(255,80,80,0.30) red vignette (260ms)
+.bt-scanlines — CSS scanline overlay on the battle arena using repeating-linear-gradient

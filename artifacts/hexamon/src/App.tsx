@@ -1063,6 +1063,11 @@ export default function App() {
   const [dexFormDetail, setDexFormDetail] = useState<FormEntry|null>(null);
   const [pickedMacro, setPickedMacro] = useState(0);
   const [huntCount, setHuntCount] = useState(0);
+  const [wildHitClass, setWildHitClass] = useState("");
+  const [pMonHitClass, setPMonHitClass] = useState("");
+  const [wildDmgFloat, setWildDmgFloat] = useState<{ dmg: number; eff: number; key: number } | null>(null);
+  const [pMonDmgFloat, setPMonDmgFloat] = useState<{ dmg: number; eff: number; key: number } | null>(null);
+  const [huntArenaHit, setHuntArenaHit] = useState(false);
   const [legendThreshold, setLegendThreshold] = useState(() => 20 + Math.floor(Math.random() * 16));
   const [safariBalls, setSafariBalls] = useState(initial?.safariBalls ?? 0);
   const [safariEnc, setSafariEnc] = useState<Mon | null>(initial?.safariEnc ?? null);
@@ -2041,6 +2046,11 @@ export default function App() {
         else if (eff > 0 && eff < 1) setTimeout(() => sfx.notVeryEffective(), 100);
         // Animate HP bar to new value
         setBattle((prev) => prev ? { ...prev, wild: { ...prev.wild, currentHp: wild.currentHp } } : null);
+        // VFX: wild hit flash + damage float + arena shake
+        setWildHitClass("hunt-pq-hit");
+        setWildDmgFloat({ dmg, eff, key: Date.now() });
+        setHuntArenaHit(true);
+        setTimeout(() => { setWildHitClass(""); setHuntArenaHit(false); }, 520);
       }
 
       // T=350+350=700: Log damage result
@@ -2084,6 +2094,11 @@ export default function App() {
               else if (eEff > 0 && eEff < 1) setTimeout(() => sfx.notVeryEffective(), 100);
               // Animate HP bar to new value
               setBattle((prev) => prev ? { ...prev, pMon: { ...prev.pMon, currentHp: pMon.currentHp } } : null);
+              // VFX: player mon hit flash + damage float + arena shake
+              setPMonHitClass("hunt-pq-hit");
+              setPMonDmgFloat({ dmg: eDmg, eff: eEff, key: Date.now() });
+              setHuntArenaHit(true);
+              setTimeout(() => { setPMonHitClass(""); setHuntArenaHit(false); }, 520);
             }
 
             // T=1250+350=1600: Log enemy result + resolve turn
@@ -2413,6 +2428,19 @@ export default function App() {
     .pokeball:after{content:"";position:absolute;left:50%;top:50%;width:10px;height:10px;background:#fff;border:2px solid #111;border-radius:50%;transform:translate(-50%,-50%)}
     .mon-float { }
     .mon-shake { animation: shake 0.35s; }
+
+    @keyframes hunt-pq-shake-kf { 0%,100%{transform:translateX(0)} 18%{transform:translateX(-9px)} 36%{transform:translateX(9px)} 54%{transform:translateX(-5px)} 72%{transform:translateX(5px)} 90%{transform:translateX(-2px)} }
+    @keyframes hunt-pq-flash-red { 0%{filter:brightness(1.4) sepia(1) saturate(8) hue-rotate(-25deg) drop-shadow(0 0 8px #ff3030)} 20%{filter:brightness(1.4) sepia(1) saturate(8) hue-rotate(-25deg) drop-shadow(0 0 8px #ff3030)} 60%{filter:brightness(1.4) sepia(1) saturate(8) hue-rotate(-25deg) drop-shadow(0 0 6px #ff3030)} 100%{filter:none} }
+    .hunt-pq-hit { animation: hunt-pq-shake-kf 450ms ease-out; }
+    .hunt-pq-hit img, .hunt-pq-hit canvas { animation: hunt-pq-flash-red 320ms ease-out forwards; }
+
+    @keyframes hunt-pq-arena-hit-kf { 0%{box-shadow:inset 0 0 60px rgba(0,0,0,0.7);transform:translate(0,0)} 15%{box-shadow:inset 0 0 80px rgba(255,80,80,0.45);transform:translate(-4px,2px)} 30%{box-shadow:inset 0 0 80px rgba(255,80,80,0.45);transform:translate(3px,-2px)} 50%{box-shadow:inset 0 0 60px rgba(255,80,80,0.20);transform:translate(-2px,1px)} 70%{transform:translate(2px,-1px)} 100%{box-shadow:inset 0 0 60px rgba(0,0,0,0.7);transform:translate(0,0)} }
+    .hunt-pq-arena-hit { animation: hunt-pq-arena-hit-kf 260ms ease-out; }
+
+    @keyframes hunt-pq-dmg-float-kf { 0%{transform:translateX(-50%) translateY(0) scale(0.6);opacity:1} 10%{transform:translateX(-50%) translateY(-8px) scale(1.1);opacity:1} 20%{transform:translateX(-50%) translateY(-14px) scale(1);opacity:1} 65%{opacity:1} 100%{transform:translateX(-50%) translateY(-60px) scale(1);opacity:0} }
+    .hunt-pq-dmg-float { position:absolute;top:0;left:0;white-space:nowrap;pointer-events:none;animation:hunt-pq-dmg-float-kf 1000ms ease-out forwards;font-family:'Press Start 2P','Courier New',monospace;font-size:13px;font-weight:900;color:#f43f5e;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 0 12px #f43f5e,0 0 24px rgba(244,63,94,0.5); }
+    @keyframes hunt-pq-dmg-eff-kf { 0%{transform:translateX(-50%) translateY(16px) scale(0.8);opacity:0} 15%{opacity:1} 65%{opacity:1} 100%{transform:translateX(-50%) translateY(-44px);opacity:0} }
+    .hunt-pq-dmg-eff { position:absolute;top:0;left:0;white-space:nowrap;pointer-events:none;animation:hunt-pq-dmg-eff-kf 1100ms 80ms ease-out forwards;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:9px;font-weight:700;color:#ffd54f;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000; }
     .btn {
       background: transparent;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -4533,7 +4561,7 @@ export default function App() {
           </div>
 
           {/* Battle arena */}
-          <div style={{
+          <div className={huntArenaHit ? "hunt-pq-arena-hit" : ""} style={{
             height: 260,
             borderRadius: 16,
             border: "1px solid rgba(180,30,30,0.35)",
@@ -4568,18 +4596,32 @@ export default function App() {
             </div>
 
             {/* Enemy sprite — top-right */}
-            <div style={{ position: "absolute", top: 10, right: 14, zIndex: 3 }}>
+            <div style={{ position: "absolute", top: 10, right: 14, zIndex: 3 }} className={wildHitClass}>
               {ballAnim !== "capture" && ballAnim !== "wobble" && ballAnim !== "success" && (
                 <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className={ballAnim === "fail" ? "" : "mon-float"} style={{ filter: wild.isShiny ? "drop-shadow(0 6px 18px rgba(255,215,0,0.8))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
               )}
               {ballAnim === "capture" && (
                 <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className="mon-suck" style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
               )}
+              {wildDmgFloat && (
+                <div key={wildDmgFloat.key} style={{ position: "absolute", top: 0, left: "50%", pointerEvents: "none", zIndex: 20 }}>
+                  <div className="hunt-pq-dmg-float">{wildDmgFloat.dmg}</div>
+                  {wildDmgFloat.eff >= 2 && <div className="hunt-pq-dmg-eff">Super effective!</div>}
+                  {wildDmgFloat.eff > 0 && wildDmgFloat.eff < 1 && <div className="hunt-pq-dmg-eff" style={{ color: "#90caf9" }}>Not very effective…</div>}
+                </div>
+              )}
             </div>
 
             {/* Player sprite — bottom-left */}
-            <div style={{ position: "absolute", bottom: 12, left: 12, zIndex: 3 }}>
+            <div style={{ position: "absolute", bottom: 12, left: 12, zIndex: 3 }} className={pMonHitClass}>
               <MonSprite sprite={pMon.sprite} size={95} back isShiny={pMon.isShiny} className="mon-float" style={{ filter: pMon.isShiny ? "drop-shadow(0 6px 18px rgba(255,215,0,0.8))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.8))" }} />
+              {pMonDmgFloat && (
+                <div key={pMonDmgFloat.key} style={{ position: "absolute", top: 0, left: "50%", pointerEvents: "none", zIndex: 20 }}>
+                  <div className="hunt-pq-dmg-float">{pMonDmgFloat.dmg}</div>
+                  {pMonDmgFloat.eff >= 2 && <div className="hunt-pq-dmg-eff">Super effective!</div>}
+                  {pMonDmgFloat.eff > 0 && pMonDmgFloat.eff < 1 && <div className="hunt-pq-dmg-eff" style={{ color: "#90caf9" }}>Not very effective…</div>}
+                </div>
+              )}
             </div>
 
             {/* Player info card — bottom-right */}

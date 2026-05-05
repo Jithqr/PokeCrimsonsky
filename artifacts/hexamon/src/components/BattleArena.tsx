@@ -167,6 +167,18 @@ export default function BattleArena(props: Props) {
   const prevOppUid = useRef(oppActive.uid);
   const logRef = useRef<HTMLDivElement | null>(null);
 
+  // VFX state
+  const [myHitClass, setMyHitClass] = useState("");
+  const [oppHitClass, setOppHitClass] = useState("");
+  const [myLunge, setMyLunge] = useState(false);
+  const [oppLunge, setOppLunge] = useState(false);
+  const [myDmgFloat, setMyDmgFloat] = useState<{ dmg: number; eff: number; key: number } | null>(null);
+  const [oppDmgFloat, setOppDmgFloat] = useState<{ dmg: number; eff: number; key: number } | null>(null);
+  const [moveFx, setMoveFx] = useState<{ type: string; fromMy: boolean; key: number } | null>(null);
+  const [arenaHit, setArenaHit] = useState(false);
+  const pendingEffRef = useRef<number>(1);
+  const prevShownCountForVfxRef = useRef(0);
+
   // Battle-start intro animation
   useEffect(() => {
     const t = setTimeout(() => setIntro(false), 1100);
@@ -214,6 +226,59 @@ export default function BattleArena(props: Props) {
     else if (!awaitingMyAction) setActionMode("main");
   }, [awaitingForceSwitch, awaitingMyAction]);
 
+  // VFX: process newly-shown log entries to drive animations
+  useEffect(() => {
+    if (shownCount <= prevShownCountForVfxRef.current) return;
+    for (let i = prevShownCountForVfxRef.current; i < shownCount; i++) {
+      const entry = state.log[i];
+      if (!entry) continue;
+      const iMeAttacking = entry.side === mySide;
+
+      if (entry.kind === "move") {
+        const match = entry.text.match(/used (.+?)!$/);
+        if (match) {
+          try {
+            const def = getMove(match[1]);
+            setMoveFx({ type: def.type.toLowerCase(), fromMy: iMeAttacking, key: Date.now() + i });
+          } catch {}
+        }
+        if (iMeAttacking) {
+          setMyLunge(true);
+          setTimeout(() => setMyLunge(false), 320);
+        } else {
+          setOppLunge(true);
+          setTimeout(() => setOppLunge(false), 320);
+        }
+      }
+
+      if (entry.kind === "info" && /super effective/i.test(entry.text)) pendingEffRef.current = 2;
+      if (entry.kind === "info" && /not very effective/i.test(entry.text)) pendingEffRef.current = 0.5;
+
+      if (entry.kind === "info" && /took \d+ damage/i.test(entry.text)) {
+        const dmgMatch = entry.text.match(/took (\d+) damage/i);
+        if (dmgMatch) {
+          const dmgAmt = parseInt(dmgMatch[1]);
+          const eff = pendingEffRef.current;
+          pendingEffRef.current = 1;
+          const defName = entry.text.split(" took")[0].trim();
+          const oppHit = defName === oppActive.name;
+          if (oppHit) {
+            setOppHitClass("pq-hit");
+            setOppDmgFloat({ dmg: dmgAmt, eff, key: Date.now() + i });
+            setTimeout(() => setOppHitClass(""), 520);
+          } else {
+            setMyHitClass("pq-hit");
+            setMyDmgFloat({ dmg: dmgAmt, eff, key: Date.now() + i });
+            setTimeout(() => setMyHitClass(""), 520);
+          }
+          setArenaHit(true);
+          setTimeout(() => setArenaHit(false), 280);
+        }
+      }
+    }
+    prevShownCountForVfxRef.current = shownCount;
+  }, [shownCount]);
+
   const benchMe = me.mons.map((m, i) => ({ m, i })).filter((x) => x.i !== me.activeIdx);
   const displayedLog = state.log.slice(Math.max(0, shownCount - 2), shownCount);
   const headerLabel =
@@ -248,10 +313,20 @@ export default function BattleArena(props: Props) {
         </div>
 
         {/* Battle stage */}
-        <div className="bx-stage">
+        <div className={`bx-stage ${arenaHit ? "pq-arena-hit" : ""}`}>
           {/* Sky/ground */}
           <div className="bx-sky" />
           <div className="bx-ground" />
+          {/* CRT scanline overlay */}
+          <div className="bt-scanlines" />
+
+          {/* Move type FX particle */}
+          {moveFx && (
+            <div
+              key={moveFx.key}
+              className={`pq-move-fx pq-fx-${moveFx.type} ${moveFx.fromMy ? "pq-fx-from-me" : "pq-fx-from-opp"}`}
+            />
+          )}
 
           {/* Opponent: name plate top-left, sprite further right */}
           <div className="bx-opp-plate">
@@ -261,29 +336,47 @@ export default function BattleArena(props: Props) {
             </div>
           </div>
           <div className={`bx-opp-platform ${intro ? "bx-slide-in-right" : ""}`} />
-          <div className={`bx-opp-sprite ${intro ? "bx-slide-in-right" : ""} ${oppFainted ? "bx-faint" : ""}`}>
+          <div className={`bx-opp-sprite ${intro ? "bx-slide-in-right" : ""} ${oppFainted ? "bx-faint" : ""} ${oppLunge ? "pq-lunge-left" : ""} ${oppHitClass}`}>
             {intro ? (
               <div className="bx-pokeball-throw bx-pokeball-throw-opp"><Pokeball alive size={28} /></div>
             ) : (
-              <BattleSprite
-                sprite={oppActive.sprite || oppActive.name.toLowerCase()}
-                back={false}
-                style={{ width: 110, height: 110, imageRendering: "pixelated", objectFit: "contain", background: "transparent" }}
-              />
+              <>
+                <BattleSprite
+                  sprite={oppActive.sprite || oppActive.name.toLowerCase()}
+                  back={false}
+                  style={{ width: 110, height: 110, imageRendering: "pixelated", objectFit: "contain", background: "transparent", filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.5))" }}
+                />
+                {oppDmgFloat && (
+                  <div key={oppDmgFloat.key} style={{ position: "absolute", top: 0, left: "50%", pointerEvents: "none", zIndex: 20 }}>
+                    <div className="pq-dmg-float">{oppDmgFloat.dmg}</div>
+                    {oppDmgFloat.eff >= 2 && <div className="pq-dmg-eff">Super effective!</div>}
+                    {oppDmgFloat.eff > 0 && oppDmgFloat.eff < 1 && <div className="pq-dmg-eff" style={{ color: "#90caf9" }}>Not very effective…</div>}
+                  </div>
+                )}
+              </>
             )}
           </div>
 
           {/* Player: sprite bottom-left, name plate bottom-right */}
           <div className={`bx-me-platform ${intro ? "bx-slide-in-left" : ""}`} />
-          <div className={`bx-me-sprite ${intro ? "bx-slide-in-left" : ""} ${myFainted ? "bx-faint" : ""}`}>
+          <div className={`bx-me-sprite ${intro ? "bx-slide-in-left" : ""} ${myFainted ? "bx-faint" : ""} ${myLunge ? "pq-lunge-right" : ""} ${myHitClass} pq-bob`}>
             {intro ? (
               <div className="bx-pokeball-throw bx-pokeball-throw-me"><Pokeball alive size={28} /></div>
             ) : (
-              <BattleSprite
-                sprite={myActive.sprite || myActive.name.toLowerCase()}
-                back={true}
-                style={{ width: 170, height: 170, imageRendering: "pixelated", objectFit: "contain", background: "transparent" }}
-              />
+              <>
+                <BattleSprite
+                  sprite={myActive.sprite || myActive.name.toLowerCase()}
+                  back={true}
+                  style={{ width: 170, height: 170, imageRendering: "pixelated", objectFit: "contain", background: "transparent" }}
+                />
+                {myDmgFloat && (
+                  <div key={myDmgFloat.key} style={{ position: "absolute", top: 0, left: "50%", pointerEvents: "none", zIndex: 20 }}>
+                    <div className="pq-dmg-float">{myDmgFloat.dmg}</div>
+                    {myDmgFloat.eff >= 2 && <div className="pq-dmg-eff">Super effective!</div>}
+                    {myDmgFloat.eff > 0 && myDmgFloat.eff < 1 && <div className="pq-dmg-eff" style={{ color: "#90caf9" }}>Not very effective…</div>}
+                  </div>
+                )}
+              </>
             )}
           </div>
           <div className="bx-me-plate">
@@ -452,12 +545,20 @@ function BenchCard({ mon }: { mon: BattleMon }) {
 
 /* ---------- CSS (animations + layout) ---------- */
 const css = `
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
 .bx-stage {
   position: relative; height: 380px; width: 100%; overflow: hidden;
   background: linear-gradient(180deg, #b6e7ff 0%, #b6e7ff 50%, #d6c08a 50%, #c2a866 100%);
 }
 .bx-sky { position: absolute; inset: 0 0 50% 0; background: linear-gradient(180deg,#9adfff 0%,#cfeeff 100%); }
 .bx-ground { position: absolute; inset: 50% 0 0 0; background: linear-gradient(180deg,#d6c08a 0%,#a88e58 100%); }
+
+/* ── Scanlines ── */
+.bt-scanlines {
+  position: absolute; inset: 0; pointer-events: none; z-index: 10;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
+}
 
 .bx-opp-plate { position: absolute; top: 10px; left: 10px; z-index: 5; }
 /* Player plate sits in the band above the dialog, lower-right */
@@ -497,11 +598,6 @@ const css = `
 .bx-slide-in-right { animation: bx-slide-in-right 700ms cubic-bezier(0.22, 1, 0.36, 1); }
 .bx-slide-in-left  { animation: bx-slide-in-left  700ms cubic-bezier(0.22, 1, 0.36, 1); }
 
-@keyframes bx-hit { 0% { filter: brightness(0) sepia(1) saturate(10000%) hue-rotate(-20deg); transform: translate(0,0); } 22% { filter: brightness(0) sepia(1) saturate(10000%) hue-rotate(-20deg); transform: translate(-6px,3px); } 44% { filter: brightness(2.5) saturate(3); transform: translate(5px,-2px); } 66% { filter: brightness(1.4); transform: translate(-3px,1px); } 85% { filter: none; transform: translate(2px,0); } 100% { filter: none; transform: translate(0,0); } }
-.bx-hit img { animation: bx-hit 420ms ease-out forwards; }
-
-@keyframes bx-dmg-float { 0% { transform: translateX(-50%) translateY(0px); opacity: 1; } 65% { opacity: 1; } 100% { transform: translateX(-50%) translateY(-44px); opacity: 0; } }
-
 @keyframes bx-faint { from { transform: translateY(0); opacity: 1; } to { transform: translateY(40px); opacity: 0; } }
 .bx-faint img { animation: bx-faint 600ms forwards ease-in; }
 
@@ -509,6 +605,112 @@ const css = `
 @keyframes bx-throw-me  { 0% { transform: translate(160px, 60px) rotate(0deg); opacity: 0; }  30% { opacity: 1; } 70% { transform: translate(-20px, -10px) rotate(-540deg); } 100% { transform: translate(0,0) rotate(-720deg); opacity: 0; } }
 .bx-pokeball-throw-opp { animation: bx-throw-opp 900ms ease-out forwards; }
 .bx-pokeball-throw-me  { animation: bx-throw-me  900ms ease-out forwards; }
+
+/* ── Idle bob (player sprite) ── */
+@keyframes pq-bob { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-6px) rotate(0.8deg)} }
+.pq-bob { animation: pq-bob 2.6s ease-in-out infinite; }
+.pq-bob.bx-faint { animation: bx-faint 600ms forwards ease-in; }
+
+/* ── Hit flash (red burst on img) ── */
+@keyframes pq-flash-red-img {
+  0%  { filter: brightness(1.4) sepia(1) saturate(8) hue-rotate(-25deg) drop-shadow(0 0 8px #ff3030); }
+  20% { filter: brightness(1.4) sepia(1) saturate(8) hue-rotate(-25deg) drop-shadow(0 0 8px #ff3030); }
+  60% { filter: brightness(1.4) sepia(1) saturate(8) hue-rotate(-25deg) drop-shadow(0 0 6px #ff3030); }
+  100%{ filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); }
+}
+/* ── Shake on hit (container) ── */
+@keyframes pq-shake-kf { 0%,100%{transform:translateX(0)} 18%{transform:translateX(-9px)} 36%{transform:translateX(9px)} 54%{transform:translateX(-5px)} 72%{transform:translateX(5px)} 90%{transform:translateX(-2px)} }
+.pq-hit { animation: pq-shake-kf 450ms ease-out; }
+.pq-hit img { animation: pq-flash-red-img 320ms ease-out forwards; }
+
+/* ── Lunge ── */
+@keyframes pq-lunge-r { 0%{transform:translateX(0)} 40%{transform:translateX(34px)} 100%{transform:translateX(0)} }
+@keyframes pq-lunge-l { 0%{transform:translateX(0)} 40%{transform:translateX(-34px)} 100%{transform:translateX(0)} }
+.pq-lunge-right { animation: pq-lunge-r 200ms ease-out; }
+.pq-lunge-left  { animation: pq-lunge-l 200ms ease-out; }
+
+/* ── Arena screen shake + red vignette ── */
+@keyframes pq-arena-hit-kf {
+  0%   { box-shadow: inset 0 0 0 transparent; transform: translate(0,0); }
+  15%  { box-shadow: inset 0 0 60px rgba(255,80,80,0.30); transform: translate(-4px, 2px); }
+  30%  { box-shadow: inset 0 0 60px rgba(255,80,80,0.30); transform: translate(3px,-2px); }
+  50%  { box-shadow: inset 0 0 30px rgba(255,80,80,0.15); transform: translate(-2px, 1px); }
+  70%  { transform: translate(2px,-1px); }
+  100% { box-shadow: none; transform: translate(0,0); }
+}
+.pq-arena-hit { animation: pq-arena-hit-kf 260ms ease-out; }
+
+/* ── Floating damage number ── */
+@keyframes pq-dmg-float-kf {
+  0%   { transform: translateX(-50%) translateY(0)   scale(0.6); opacity: 1; }
+  10%  { transform: translateX(-50%) translateY(-8px) scale(1.1); opacity: 1; }
+  20%  { transform: translateX(-50%) translateY(-14px) scale(1);  opacity: 1; }
+  65%  { opacity: 1; }
+  100% { transform: translateX(-50%) translateY(-60px) scale(1); opacity: 0; }
+}
+.pq-dmg-float {
+  position: absolute; top: 0; left: 0; white-space: nowrap; pointer-events: none;
+  animation: pq-dmg-float-kf 1000ms ease-out forwards;
+  font-family: 'Press Start 2P', 'Courier New', monospace; font-size: 14px; font-weight: 900;
+  color: #f43f5e;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000,
+               0 0 12px #f43f5e, 0 0 24px rgba(244,63,94,0.5);
+}
+@keyframes pq-dmg-eff-kf {
+  0%   { transform: translateX(-50%) translateY(16px) scale(0.8); opacity: 0; }
+  15%  { opacity: 1; }
+  65%  { opacity: 1; }
+  100% { transform: translateX(-50%) translateY(-44px); opacity: 0; }
+}
+.pq-dmg-eff {
+  position: absolute; top: 0; left: 0; white-space: nowrap; pointer-events: none;
+  animation: pq-dmg-eff-kf 1100ms 80ms ease-out forwards;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 9px; font-weight: 700; color: #ffd54f;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+/* ── Move type FX particle ── */
+.pq-move-fx {
+  position: absolute; width: 54px; height: 54px; border-radius: 50%;
+  pointer-events: none; z-index: 15;
+}
+/* from-me: start bottom-left, fly toward top-right */
+.pq-fx-from-me  { bottom: 130px; left: 60px; }
+/* from-opp: start top-right, fly toward bottom-left (mirrored) */
+.pq-fx-from-opp { top: 60px; right: 80px; transform: scaleX(-1); }
+
+@keyframes pq-fx-slide-r   { 0%{opacity:1;transform:translateX(0)} 100%{opacity:0;transform:translateX(100px) translateY(-30px)} }
+@keyframes pq-fx-slide-shrink { 0%{opacity:1;transform:translateX(0) scale(1)} 100%{opacity:0;transform:translateX(90px) translateY(-20px) scale(0.3)} }
+@keyframes pq-fx-flicker   { 0%,20%,40%,60%,80%{opacity:1} 10%,30%,50%,70%{opacity:0.2} 100%{opacity:0;transform:translateX(70px)} }
+@keyframes pq-fx-arc       { 0%{opacity:1;transform:translate(0,0) rotate(0deg)} 50%{transform:translate(50px,-32px) rotate(180deg)} 100%{opacity:0;transform:translate(90px,0) rotate(360deg)} }
+@keyframes pq-fx-burst     { 0%{opacity:1;transform:scale(0)} 50%{opacity:0.9;transform:scale(2.5)} 100%{opacity:0;transform:scale(4.5)} }
+@keyframes pq-fx-diag      { 0%{opacity:1;transform:translate(0,0) rotate(0deg)} 100%{opacity:0;transform:translate(70px,20px) rotate(180deg)} }
+@keyframes pq-fx-up        { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-70px) scale(0.4)} }
+@keyframes pq-fx-grow      { 0%{opacity:0.8;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(70px,0) scale(1.6)} }
+@keyframes pq-fx-squish    { 0%{opacity:1;transform:translateX(0) scaleY(1)} 50%{transform:translateX(40px) scaleY(0.25)} 100%{opacity:0;transform:translateX(90px) scaleY(1)} }
+@keyframes pq-fx-spin      { 0%{opacity:1;transform:scale(1) rotate(0deg)} 50%{transform:scale(1.5) rotate(180deg)} 100%{opacity:0;transform:scale(0.4) rotate(360deg)} }
+@keyframes pq-fx-lunge     { 0%{opacity:1;transform:translateX(0)} 50%{transform:translateX(30px)} 100%{opacity:0;transform:translateX(50px)} }
+@keyframes pq-fx-skew      { 0%{opacity:1;transform:translateX(0) skewX(0deg)} 100%{opacity:0;transform:translateX(90px) skewX(-25deg)} }
+
+.pq-fx-fire     { animation: pq-fx-slide-shrink 380ms ease-in  forwards; background: radial-gradient(circle,#ff8c00,#ff4400); box-shadow: 0 0 16px #ff6600; }
+.pq-fx-water    { animation: pq-fx-skew         380ms ease-out forwards; background: radial-gradient(circle,#6dd5ed,#2193b0); }
+.pq-fx-electric { animation: pq-fx-flicker      340ms linear   forwards; background: radial-gradient(circle,#ffe600,#ffb700); box-shadow: 0 0 20px #ffe600; }
+.pq-fx-grass    { animation: pq-fx-arc          480ms ease-in-out forwards; background: radial-gradient(circle,#74b955,#228B22); }
+.pq-fx-psychic  { animation: pq-fx-burst        480ms ease-out forwards; background: radial-gradient(circle,#ff85d0,#e040fb,transparent); }
+.pq-fx-ice      { animation: pq-fx-diag         380ms ease-out forwards; background: radial-gradient(circle,#a8edea,#5ab4d4); transform: rotate(45deg); }
+.pq-fx-ground   { animation: pq-fx-slide-r      380ms ease-out forwards; background: radial-gradient(circle,#d2b48c,#8B4513); }
+.pq-fx-poison   { animation: pq-fx-up           560ms ease-out forwards; background: radial-gradient(circle,#c77dff,#7b2d8b); }
+.pq-fx-ghost    { animation: pq-fx-grow         460ms ease-out forwards; background: radial-gradient(circle,rgba(149,117,205,0.85),rgba(94,53,177,0.5)); box-shadow: 0 0 14px rgba(149,117,205,0.7); }
+.pq-fx-rock     { animation: pq-fx-diag         380ms ease-in  forwards; background: radial-gradient(circle,#a0937d,#6d5944); border-radius: 28%; }
+.pq-fx-flying   { animation: pq-fx-squish       400ms ease-out forwards; background: radial-gradient(circle,#98d8f0,#5fb8d4); }
+.pq-fx-dragon   { animation: pq-fx-spin         480ms ease-in-out forwards; background: radial-gradient(circle,#9d4edd,#5a189a); box-shadow: 0 0 18px rgba(157,78,221,0.7); }
+.pq-fx-dark     { animation: pq-fx-slide-r      360ms ease-in  forwards; background: radial-gradient(circle,#424242,#212121); box-shadow: 0 0 10px rgba(0,0,0,0.8); }
+.pq-fx-steel    { animation: pq-fx-slide-r      360ms ease-out forwards; background: radial-gradient(circle,#b8c0cc,#7a8395); box-shadow: 0 0 8px #b8c0cc; }
+.pq-fx-fairy    { animation: pq-fx-burst        460ms ease-out forwards; background: radial-gradient(circle,#ffb3d9,#ff69b4,transparent); }
+.pq-fx-bug      { animation: pq-fx-arc          420ms ease-in-out forwards; background: radial-gradient(circle,#a8b820,#6d7a10); }
+.pq-fx-normal   { animation: pq-fx-lunge        200ms ease-out forwards; background: radial-gradient(circle,#a8a8a8,#686868); }
+.pq-fx-fighting { animation: pq-fx-lunge        200ms ease-out forwards; background: radial-gradient(circle,#c07030,#9a3824); }
 
 .bx-dialog {
   position: absolute; left: 12px; right: 12px; bottom: 8px; z-index: 6;

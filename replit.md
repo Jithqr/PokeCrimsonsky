@@ -33,6 +33,7 @@ I prefer concise and accurate responses. When making changes, prioritize correct
 - **Mon Generation**: New Pokémon spawns (wild, marketplace, NPC) are assigned random natures and weighted IVs, with a total IV cap.
 - **Evolution**: Streamlined evolution process with no candy cost, preserving original Pokémon attributes (UID, nickname, IVs, EVs, nature, exp).
 - **Wild Battle Mechanics**: Wild battles now incorporate move power, accuracy, type effectiveness, and critical hits, with corresponding SFX.
+- **Battle VFX System**: Full animation suite across all battle modes (League, PvP/Battle Box, Hunt): floating damage numbers (pixel font, red glow), "Super effective!" / "Not very effective…" labels, red hit-flash on sprites, screen shake + red vignette on damage, attacker lunge (player lunges right, enemy lunges left), per-type move FX particles (Fire, Water, Electric, Grass, Psychic, Ice, Ground, Poison, Ghost, Rock, Flying, Dragon, Dark, Steel, Fairy, Bug, Normal/Fighting), player idle-bob animation, and CRT scanline overlay.
 - **Audio System**: Utilizes bundled audio assets (cries, sound effects, UI sounds, battle animations, BGM) for an immersive experience. Features an audio service for managing playback, volumes, and context-specific music.
 - **Inventory Management**: Categorized inventory system with a dedicated "OTHERS" tab for miscellaneous items.
 - **Ranked PvP**: Simplified ranking system with a flat ±50 rank change per match.
