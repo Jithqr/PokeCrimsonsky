@@ -944,6 +944,8 @@ export default function App() {
   const [battle, setBattle] = useState<Battle | null>(null);
   const [shakeE, setShakeE] = useState(false);
   const [shakeP, setShakeP] = useState(false);
+  const [flashE, setFlashE] = useState(false);
+  const [flashP, setFlashP] = useState(false);
   const [ballAnim, setBallAnim] = useState<null | "throw" | "capture" | "wobble" | "success" | "fail">(null);
   const [ringActive, setRingActive] = useState(false);
   const [ringRadius, setRingRadius] = useState(110);
@@ -1895,115 +1897,141 @@ export default function App() {
   function doPlayerMove(move: string) {
     if (!battle || battle.phase !== "choose") return;
     let { wild, pMon } = battle;
-    const logs: [string, string][] = [];
     wild = { ...wild }; pMon = { ...pMon };
 
-    // Use real move data (power + accuracy) from move-data.ts so wild battles
-    // line up with what's shown on the move buttons.
+    // Pre-calculate all outcomes synchronously so RNG is determined upfront
     const md = getMove(move);
     const pwr = md.power;
-    const accuracy = md.accuracy;
-    const hit = Math.random() * 100 < accuracy;
+    const hit = Math.random() * 100 < md.accuracy;
+    const wTypes = [wild.type1, wild.type2].filter(Boolean) as PType[];
+    const eff = hit && pwr > 0 ? typeMultiplier(moveTypeOf(move) as PType, wTypes) : 1;
+    const isCrit = hit && pwr > 0 && Math.random() < 1 / 24;
+    const dmg = hit && pwr > 0 ? Math.floor(calcDmg(pMon.atk, wild.def, pwr) * eff * (isCrit ? 1.5 : 1)) : 0;
+    if (dmg > 0) wild.currentHp = Math.max(0, wild.currentHp - dmg);
+    const wildFainted = wild.currentHp <= 0;
+
+    // Pre-calculate enemy move (only if wild survives)
+    let eMove = "", ePwr = 0, eHit = false, eEff = 1, eCrit = false, eDmg = 0;
+    if (!wildFainted) {
+      eMove = wild.moves[Math.floor(Math.random() * wild.moves.length)];
+      const eMd = getMove(eMove);
+      ePwr = eMd.power;
+      eHit = Math.random() * 100 < eMd.accuracy;
+      const pTypes = [pMon.type1, pMon.type2].filter(Boolean) as PType[];
+      eEff = eHit && ePwr > 0 ? typeMultiplier(moveTypeOf(eMove) as PType, pTypes) : 1;
+      eCrit = eHit && ePwr > 0 && Math.random() < 1 / 24;
+      eDmg = eHit && ePwr > 0 ? Math.floor(calcDmg(wild.atk, pMon.def, ePwr) * eEff * (eCrit ? 1.5 : 1)) : 0;
+      if (eDmg > 0) pMon.currentHp = Math.max(0, pMon.currentHp - eDmg);
+    }
+
+    // ── PHASE 1 · Player attack ──────────────────────────────────────
+    // T=0: Declare attack + move animation
     playMoveSfx(move);
     setMoveAnim({ target: "enemy", type: moveTypeOf(move), key: Date.now() });
     setTimeout(() => setMoveAnim(null), 600);
-    if (!hit) {
-      logs.push([`💨 ${pMon.name}'s ${move} missed!`, "#FFB74D"]);
-    } else {
-      // Type-effectiveness multiplier vs the wild's type(s).
-      const wTypes = [wild.type1, wild.type2].filter(Boolean) as PType[];
-      const eff = pwr > 0 ? typeMultiplier(moveTypeOf(move) as PType, wTypes) : 1;
-      // Crit roll (1/24, vanilla rate).
-      const isCrit = pwr > 0 && Math.random() < 1 / 24;
-      const dmg = Math.floor(calcDmg(pMon.atk, wild.def, pwr) * eff * (isCrit ? 1.5 : 1));
-      if (dmg > 0) {
-        wild.currentHp = Math.max(0, wild.currentHp - dmg);
-        setShakeE(true); setTimeout(() => setShakeE(false), 350);
-        setTimeout(() => sfx.hit(), 250);
-        if (isCrit) setTimeout(() => sfx.crit(), 320);
-        if (eff > 1) setTimeout(() => sfx.superEffective(), 380);
-        else if (eff > 0 && eff < 1) setTimeout(() => sfx.notVeryEffective(), 380);
-        const tag = isCrit ? " 🎯CRIT" : "";
-        const effTag = eff > 1 ? " (super effective!)" : eff === 0 ? " (no effect)" : eff < 1 ? " (not very effective…)" : "";
-        logs.push([`⚔️ ${pMon.name} used ${move}! (${dmg} dmg${tag})${effTag}`, "#81D4FA"]);
-      } else if (eff === 0) {
-        logs.push([`✨ ${move} had no effect on ${wild.name}…`, "#aaa"]);
-      } else {
-        logs.push([`✨ ${pMon.name} used ${move}!`, "#aaa"]);
-      }
-    }
+    addLog(`⚔️ ${pMon.name} used ${move}!`, "#81D4FA");
 
-    if (wild.currentHp <= 0) {
-      const expGain = Math.floor(wild.level * (wild.atk + wild.def) / 8);
-      pMon.exp += expGain;
-      const killReward = 40 + Math.floor(Math.random() * 51); // 40–90 ₽
-      setPlayer((p) => ({ ...p, money: p.money + killReward }));
-      logs.push([`⭐ Wild ${wild.name} fainted! +${expGain} EXP, +₽${killReward}`, "#F44336"]);
-      logs.forEach(([m, c]) => addLog(m, c));
-      setTimeout(() => sfx.faint(), 400);
-      setTimeout(() => sfx.victory(), 1100);
-      finishBattle(pMon, true, expGain);
-      return;
-    }
-
-    const eMove = wild.moves[Math.floor(Math.random() * wild.moves.length)];
-    const eMd = getMove(eMove);
-    const ePwr = eMd.power;
-    const eAcc = eMd.accuracy;
-    const eHit = Math.random() * 100 < eAcc;
+    // T=350: Apply hit / flash + update HP bar
     setTimeout(() => {
-      playMoveSfx(eMove);
-      setMoveAnim({ target: "player", type: moveTypeOf(eMove), key: Date.now() });
-      setTimeout(() => setMoveAnim(null), 600);
-    }, 700);
-    if (!eHit) {
-      logs.push([`💨 ${wild.name}'s ${eMove} missed!`, "#FFB74D"]);
-    } else {
-      const pTypes = [pMon.type1, pMon.type2].filter(Boolean) as PType[];
-      const eEff = ePwr > 0 ? typeMultiplier(moveTypeOf(eMove) as PType, pTypes) : 1;
-      const eCrit = ePwr > 0 && Math.random() < 1 / 24;
-      const eDmg = Math.floor(calcDmg(wild.atk, pMon.def, ePwr) * eEff * (eCrit ? 1.5 : 1));
-      if (eDmg > 0) {
-        pMon.currentHp = Math.max(0, pMon.currentHp - eDmg);
-        setShakeP(true); setTimeout(() => setShakeP(false), 350);
-        setTimeout(() => sfx.hurt(), 950);
-        if (eCrit) setTimeout(() => sfx.crit(), 1020);
-        if (eEff > 1) setTimeout(() => sfx.superEffective(), 1080);
-        else if (eEff > 0 && eEff < 1) setTimeout(() => sfx.notVeryEffective(), 1080);
-        const tag = eCrit ? " 🎯CRIT" : "";
-        const effTag = eEff > 1 ? " (super effective!)" : eEff === 0 ? " (no effect)" : eEff < 1 ? " (not very effective…)" : "";
-        logs.push([`💢 ${wild.name} used ${eMove}! (${eDmg} dmg${tag})${effTag}`, "#FF7043"]);
-      } else if (eEff === 0) {
-        logs.push([`${eMove} had no effect on ${pMon.name}…`, "#aaa"]);
-      } else {
-        logs.push([`${wild.name} used ${eMove}!`, "#aaa"]);
+      if (!hit) {
+        addLog(`💨 ${pMon.name}'s ${move} missed!`, "#FFB74D");
+      } else if (dmg > 0) {
+        setFlashE(true); setTimeout(() => setFlashE(false), 320);
+        setShakeE(true); setTimeout(() => setShakeE(false), 350);
+        sfx.hit();
+        if (isCrit) setTimeout(() => sfx.crit(), 80);
+        if (eff > 1) setTimeout(() => sfx.superEffective(), 100);
+        else if (eff > 0 && eff < 1) setTimeout(() => sfx.notVeryEffective(), 100);
+        // Animate HP bar to new value
+        setBattle((prev) => prev ? { ...prev, wild: { ...prev.wild, currentHp: wild.currentHp } } : null);
       }
-    }
 
-    logs.forEach(([m, c]) => addLog(m, c));
+      // T=350+350=700: Log damage result
+      setTimeout(() => {
+        if (hit && dmg > 0) {
+          const tag = isCrit ? " 🎯CRIT" : "";
+          const effTag = eff > 1 ? " (super effective!)" : eff === 0 ? " (no effect)" : eff < 1 ? " (not very effective…)" : "";
+          addLog(`It dealt ${dmg} dmg${tag}${effTag}`, "#81D4FA");
+        } else if (hit && eff === 0) {
+          addLog(`✨ ${move} had no effect on ${wild.name}…`, "#aaa");
+        } else if (hit) {
+          addLog(`✨ ${pMon.name} used ${move}!`, "#aaa");
+        }
 
-    if (pMon.currentHp <= 0) {
-      setTimeout(() => sfx.faint(), 1000);
-      addLog(`💀 ${pMon.name} fainted!`, "#F44336");
-      // Persist the fainted state into the team
-      setTeam((prev) => prev.map((m) => (m.id === pMon.id && m.level === pMon.level) ? { ...m, currentHp: 0 } : m));
-      // Look for next available
-      const aliveOthers = team.filter((m) => m.currentHp > 0 && !(m.id === pMon.id && m.level === pMon.level));
-      if (aliveOthers.length === 0) {
-        addLog("All your Pokémon fainted! You blacked out...", "#F44336");
-        setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })));
-        sfx.heal(); addLog("Your team was fully healed!", "#4CAF50");
-        sfx.stopMusic();
-        setBattle(null);
-        setScreen("world");
-        return;
-      }
-      addLog(`Choose your next Pokémon!`, "#FFD700");
-      setBattle((prev) => prev && ({ ...prev, wild, pMon, turnCount: prev.turnCount + 1 }));
-      setShowSwitchPicker(true);
-      return;
-    }
-    setBattle((prev) => prev && ({ ...prev, wild, pMon, turnCount: prev.turnCount + 1 }));
+        if (wildFainted) {
+          const expGain = Math.floor(wild.level * (wild.atk + wild.def) / 8);
+          pMon.exp += expGain;
+          const killReward = 40 + Math.floor(Math.random() * 51);
+          setPlayer((p) => ({ ...p, money: p.money + killReward }));
+          addLog(`⭐ Wild ${wild.name} fainted! +${expGain} EXP, +₽${killReward}`, "#F44336");
+          sfx.faint();
+          setTimeout(() => sfx.victory(), 700);
+          finishBattle(pMon, true, expGain);
+          return;
+        }
+
+        // ── PHASE 2 · Enemy attack ────────────────────────────────────
+        // T=700+200=900: Declare enemy attack
+        setTimeout(() => {
+          playMoveSfx(eMove);
+          setMoveAnim({ target: "player", type: moveTypeOf(eMove), key: Date.now() });
+          setTimeout(() => setMoveAnim(null), 600);
+          addLog(`💢 ${wild.name} used ${eMove}!`, "#FF7043");
+
+          // T=900+350=1250: Apply enemy hit / flash + update HP bar
+          setTimeout(() => {
+            if (!eHit) {
+              addLog(`💨 ${wild.name}'s ${eMove} missed!`, "#FFB74D");
+            } else if (eDmg > 0) {
+              setFlashP(true); setTimeout(() => setFlashP(false), 320);
+              setShakeP(true); setTimeout(() => setShakeP(false), 350);
+              sfx.hurt();
+              if (eCrit) setTimeout(() => sfx.crit(), 80);
+              if (eEff > 1) setTimeout(() => sfx.superEffective(), 100);
+              else if (eEff > 0 && eEff < 1) setTimeout(() => sfx.notVeryEffective(), 100);
+              // Animate HP bar to new value
+              setBattle((prev) => prev ? { ...prev, pMon: { ...prev.pMon, currentHp: pMon.currentHp } } : null);
+            }
+
+            // T=1250+350=1600: Log enemy result + resolve turn
+            setTimeout(() => {
+              if (eHit && eDmg > 0) {
+                const etag = eCrit ? " 🎯CRIT" : "";
+                const eeffTag = eEff > 1 ? " (super effective!)" : eEff === 0 ? " (no effect)" : eEff < 1 ? " (not very effective…)" : "";
+                addLog(`It dealt ${eDmg} dmg${etag}${eeffTag}`, "#FF7043");
+              } else if (eHit && eEff === 0) {
+                addLog(`${eMove} had no effect on ${pMon.name}…`, "#aaa");
+              } else if (eHit) {
+                addLog(`${wild.name} used ${eMove}!`, "#aaa");
+              }
+
+              if (pMon.currentHp <= 0) {
+                sfx.faint();
+                addLog(`💀 ${pMon.name} fainted!`, "#F44336");
+                setTeam((prev) => prev.map((m) => (m.id === pMon.id && m.level === pMon.level) ? { ...m, currentHp: 0 } : m));
+                const aliveOthers = team.filter((m) => m.currentHp > 0 && !(m.id === pMon.id && m.level === pMon.level));
+                if (aliveOthers.length === 0) {
+                  addLog("All your Pokémon fainted! You blacked out...", "#F44336");
+                  setTeam((prev) => prev.map((m) => ({ ...m, currentHp: m.maxHp, status: null })));
+                  sfx.heal(); addLog("Your team was fully healed!", "#4CAF50");
+                  sfx.stopMusic();
+                  setBattle(null);
+                  setScreen("world");
+                  return;
+                }
+                addLog(`Choose your next Pokémon!`, "#FFD700");
+                setBattle((prev) => prev && ({ ...prev, wild, pMon, turnCount: prev.turnCount + 1 }));
+                setShowSwitchPicker(true);
+                return;
+              }
+
+              // Both alive — commit final state with incremented turn
+              setBattle((prev) => prev && ({ ...prev, wild, pMon, turnCount: prev.turnCount + 1 }));
+            }, 350);
+          }, 350);
+        }, 200);
+      }, 350);
+    }, 350);
   }
 
   function openSwitchPicker() {
@@ -4328,6 +4356,21 @@ export default function App() {
             0%, 100% { box-shadow: 0 0 20px rgba(219,39,119,0.6), 0 0 40px rgba(124,58,237,0.4); transform: scale(1); }
             50% { box-shadow: 0 0 30px rgba(219,39,119,0.9), 0 0 60px rgba(124,58,237,0.7); transform: scale(1.02); }
           }
+          @keyframes wb-hit-flash {
+            0%   { opacity: 1; }
+            40%  { opacity: 0.85; }
+            100% { opacity: 0; }
+          }
+          .wb-hit-flash {
+            position: absolute;
+            inset: 0;
+            border-radius: 8px;
+            background: rgba(255, 80, 10, 0.95);
+            pointer-events: none;
+            mix-blend-mode: hard-light;
+            animation: wb-hit-flash 320ms ease-out forwards;
+            z-index: 10;
+          }
         `}</style>
         <div style={{ ...S.wrap, background: "#0a0a0c", fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", padding: "16px 16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
 
@@ -4377,20 +4420,26 @@ export default function App() {
 
             {/* Enemy sprite — top-right */}
             <div style={{ position: "absolute", top: 10, right: 14, zIndex: 3 }}>
-              {ballAnim !== "capture" && ballAnim !== "wobble" && ballAnim !== "success" && (
-                <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className={
-                  shakeE ? "mon-shake" : (ballAnim === "fail" ? "" : "mon-float")
-                } style={{ filter: wild.isShiny ? "drop-shadow(0 6px 18px rgba(255,215,0,0.8))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
-              )}
-              {ballAnim === "capture" && (
-                <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className="mon-suck" style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
-              )}
+              <div style={{ position: "relative", display: "inline-block" }}>
+                {ballAnim !== "capture" && ballAnim !== "wobble" && ballAnim !== "success" && (
+                  <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className={
+                    shakeE ? "mon-shake" : (ballAnim === "fail" ? "" : "mon-float")
+                  } style={{ filter: wild.isShiny ? "drop-shadow(0 6px 18px rgba(255,215,0,0.8))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
+                )}
+                {ballAnim === "capture" && (
+                  <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className="mon-suck" style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
+                )}
+                {flashE && <div className="wb-hit-flash" />}
+              </div>
               {moveAnim?.target === "enemy" && <MoveFx key={moveAnim.key} type={moveAnim.type} />}
             </div>
 
             {/* Player sprite — bottom-left */}
             <div style={{ position: "absolute", bottom: 12, left: 12, zIndex: 3 }}>
-              <MonSprite sprite={pMon.sprite} size={95} back isShiny={pMon.isShiny} className={shakeP ? "mon-shake" : "mon-float"} style={{ filter: pMon.isShiny ? "drop-shadow(0 6px 18px rgba(255,215,0,0.8))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.8))" }} />
+              <div style={{ position: "relative", display: "inline-block" }}>
+                <MonSprite sprite={pMon.sprite} size={95} back isShiny={pMon.isShiny} className={shakeP ? "mon-shake" : "mon-float"} style={{ filter: pMon.isShiny ? "drop-shadow(0 6px 18px rgba(255,215,0,0.8))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.8))" }} />
+                {flashP && <div className="wb-hit-flash" />}
+              </div>
               {moveAnim?.target === "player" && <MoveFx key={moveAnim.key} type={moveAnim.type} />}
             </div>
 

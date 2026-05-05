@@ -163,6 +163,20 @@ export default function BattleArena(props: Props) {
     if (el) el.scrollTop = el.scrollHeight;
   }, [state.log.length]);
 
+  // Sequential log display — reveal entries one at a time with a delay
+  const shownCountRef = useRef(0);
+  const [shownCount, setShownCount] = useState(0);
+  useEffect(() => {
+    if (state.log.length <= shownCountRef.current) return;
+    const step = () => {
+      if (shownCountRef.current >= state.log.length) return;
+      shownCountRef.current++;
+      setShownCount(shownCountRef.current);
+      setTimeout(step, 480);
+    };
+    step();
+  }, [state.log.length]);
+
   // Auto-open switch mode if forced
   useEffect(() => {
     if (awaitingForceSwitch) setActionMode("switch");
@@ -170,7 +184,7 @@ export default function BattleArena(props: Props) {
   }, [awaitingForceSwitch, awaitingMyAction]);
 
   const benchMe = me.mons.map((m, i) => ({ m, i })).filter((x) => x.i !== me.activeIdx);
-  const lastLog = state.log.slice(-2);
+  const displayedLog = state.log.slice(Math.max(0, shownCount - 2), shownCount);
   const headerLabel =
     mode === "pvp" ? `BATTLE BOX · ${(opp.ownerName || "Opponent").toUpperCase()}` :
     `LEAGUE BATTLE · ${(opp.ownerName || "Trainer").toUpperCase()}`;
@@ -263,7 +277,7 @@ export default function BattleArena(props: Props) {
                 Go, {myActive.name}!
               </div>
             )}
-            {!intro && lastLog.map((l: LogEntry, i: number) => (
+            {!intro && displayedLog.map((l: LogEntry, i: number) => (
               <div key={i} className="bx-dialog-text" style={{
                 color: l.kind === "faint" ? "#FF8A80" : l.kind === "move" ? "#FFE082" : l.kind === "status" ? "#B39DDB" : "#fff",
               }}>{l.text}</div>
@@ -455,8 +469,8 @@ const css = `
 .bx-slide-in-right { animation: bx-slide-in-right 700ms cubic-bezier(0.22, 1, 0.36, 1); }
 .bx-slide-in-left  { animation: bx-slide-in-left  700ms cubic-bezier(0.22, 1, 0.36, 1); }
 
-@keyframes bx-hit { 0%,100% { transform: translate(0,0); filter: none; } 20% { transform: translate(-4px,2px); filter: brightness(2.2) hue-rotate(-30deg); } 40% { transform: translate(4px,-2px); } 60% { transform: translate(-3px,1px); filter: brightness(1.6); } 80% { transform: translate(2px,0); } }
-.bx-hit img { animation: bx-hit 420ms steps(8); }
+@keyframes bx-hit { 0% { filter: brightness(0) sepia(1) saturate(10000%) hue-rotate(-20deg); transform: translate(0,0); } 22% { filter: brightness(0) sepia(1) saturate(10000%) hue-rotate(-20deg); transform: translate(-6px,3px); } 44% { filter: brightness(2.5) saturate(3); transform: translate(5px,-2px); } 66% { filter: brightness(1.4); transform: translate(-3px,1px); } 85% { filter: none; transform: translate(2px,0); } 100% { filter: none; transform: translate(0,0); } }
+.bx-hit img { animation: bx-hit 420ms ease-out forwards; }
 
 @keyframes bx-faint { from { transform: translateY(0); opacity: 1; } to { transform: translateY(40px); opacity: 0; } }
 .bx-faint img { animation: bx-faint 600ms forwards ease-in; }
