@@ -703,7 +703,6 @@ export default function App() {
   const [menuPage, setMenuPage] = useState(0);
   const [bagCat, setBagCat] = useState<string>("balls");
   const [scoutedWild, setScoutedWild] = useState<Mon | null>(null);
-  const [moveAnim, setMoveAnim] = useState<{ target: "enemy" | "player"; type: string; key: number } | null>(null);
   // BGM mute state. Persisted to a dedicated localStorage key so it survives
   // page refreshes (and even brand-new sessions before any save data exists).
   const [muted, setMuted] = useState<boolean>(() => {
@@ -942,12 +941,6 @@ export default function App() {
   const [lastStreakDay, setLastStreakDay] = useState<string>(initial?.lastStreakDay ?? "");
   const [log, setLog] = useState<LogEntry[]>([]);
   const [battle, setBattle] = useState<Battle | null>(null);
-  const [shakeE, setShakeE] = useState(false);
-  const [shakeP, setShakeP] = useState(false);
-  const [flashE, setFlashE] = useState(false);
-  const [flashP, setFlashP] = useState(false);
-  const [dmgPopE, setDmgPopE] = useState<{ val: number; id: number } | null>(null);
-  const [dmgPopP, setDmgPopP] = useState<{ val: number; id: number } | null>(null);
   const [ballAnim, setBallAnim] = useState<null | "throw" | "capture" | "wobble" | "success" | "fail">(null);
   const [ringActive, setRingActive] = useState(false);
   const [ringRadius, setRingRadius] = useState(110);
@@ -1927,20 +1920,15 @@ export default function App() {
     }
 
     // ── PHASE 1 · Player attack ──────────────────────────────────────
-    // T=0: Declare attack + move animation
+    // T=0: Declare attack
     playMoveSfx(move);
-    setMoveAnim({ target: "enemy", type: moveTypeOf(move), key: Date.now() });
-    setTimeout(() => setMoveAnim(null), 600);
     addLog(`⚔️ ${pMon.name} used ${move}!`, "#81D4FA");
 
-    // T=350: Apply hit / flash + update HP bar
+    // T=350: Apply damage + update HP bar
     setTimeout(() => {
       if (!hit) {
         addLog(`💨 ${pMon.name}'s ${move} missed!`, "#FFB74D");
       } else if (dmg > 0) {
-        setFlashE(true); setTimeout(() => setFlashE(false), 320);
-        setShakeE(true); setTimeout(() => setShakeE(false), 350);
-        setDmgPopE({ val: dmg, id: Date.now() }); setTimeout(() => setDmgPopE(null), 750);
         sfx.hit();
         if (isCrit) setTimeout(() => sfx.crit(), 80);
         if (eff > 1) setTimeout(() => sfx.superEffective(), 100);
@@ -1977,18 +1965,13 @@ export default function App() {
         // T=700+200=900: Declare enemy attack
         setTimeout(() => {
           playMoveSfx(eMove);
-          setMoveAnim({ target: "player", type: moveTypeOf(eMove), key: Date.now() });
-          setTimeout(() => setMoveAnim(null), 600);
           addLog(`💢 ${wild.name} used ${eMove}!`, "#FF7043");
 
-          // T=900+350=1250: Apply enemy hit / flash + update HP bar
+          // T=900+350=1250: Apply enemy damage + update HP bar
           setTimeout(() => {
             if (!eHit) {
               addLog(`💨 ${wild.name}'s ${eMove} missed!`, "#FFB74D");
             } else if (eDmg > 0) {
-              setFlashP(true); setTimeout(() => setFlashP(false), 320);
-              setShakeP(true); setTimeout(() => setShakeP(false), 350);
-              setDmgPopP({ val: eDmg, id: Date.now() }); setTimeout(() => setDmgPopP(null), 750);
               sfx.hurt();
               if (eCrit) setTimeout(() => sfx.crit(), 80);
               if (eEff > 1) setTimeout(() => sfx.superEffective(), 100);
@@ -4360,42 +4343,6 @@ export default function App() {
             0%, 100% { box-shadow: 0 0 20px rgba(219,39,119,0.6), 0 0 40px rgba(124,58,237,0.4); transform: scale(1); }
             50% { box-shadow: 0 0 30px rgba(219,39,119,0.9), 0 0 60px rgba(124,58,237,0.7); transform: scale(1.02); }
           }
-          @keyframes wb-hit-flash {
-            0%   { opacity: 1; }
-            40%  { opacity: 0.85; }
-            100% { opacity: 0; }
-          }
-          .wb-hit-flash {
-            position: absolute;
-            inset: 0;
-            border-radius: 8px;
-            background: rgba(255, 80, 10, 0.95);
-            pointer-events: none;
-            mix-blend-mode: hard-light;
-            animation: wb-hit-flash 320ms ease-out forwards;
-            z-index: 10;
-          }
-          @keyframes wb-dmg-float {
-            0%   { transform: translateX(-50%) translateY(0px); opacity: 1; }
-            65%  { opacity: 1; }
-            100% { transform: translateX(-50%) translateY(-42px); opacity: 0; }
-          }
-          .wb-dmg-pop {
-            position: absolute;
-            top: -4px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 17px;
-            font-weight: 900;
-            color: #ff3030;
-            text-shadow: 0 1px 4px rgba(0,0,0,1), 0 0 10px rgba(255,40,0,0.7);
-            pointer-events: none;
-            white-space: nowrap;
-            z-index: 30;
-            animation: wb-dmg-float 720ms ease-out forwards;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            letter-spacing: 0.5px;
-          }
         `}</style>
         <div style={{ ...S.wrap, background: "#0a0a0c", fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", padding: "16px 16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
 
@@ -4445,29 +4392,17 @@ export default function App() {
 
             {/* Enemy sprite — top-right */}
             <div style={{ position: "absolute", top: 10, right: 14, zIndex: 3 }}>
-              <div style={{ position: "relative", display: "inline-block" }}>
-                {ballAnim !== "capture" && ballAnim !== "wobble" && ballAnim !== "success" && (
-                  <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className={
-                    shakeE ? "mon-shake" : (ballAnim === "fail" ? "" : "mon-float")
-                  } style={{ filter: wild.isShiny ? "drop-shadow(0 6px 18px rgba(255,215,0,0.8))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
-                )}
-                {ballAnim === "capture" && (
-                  <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className="mon-suck" style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
-                )}
-                {flashE && <div className="wb-hit-flash" />}
-                {dmgPopE && <div key={dmgPopE.id} className="wb-dmg-pop">-{dmgPopE.val}</div>}
-              </div>
-              {moveAnim?.target === "enemy" && <MoveFx key={moveAnim.key} type={moveAnim.type} />}
+              {ballAnim !== "capture" && ballAnim !== "wobble" && ballAnim !== "success" && (
+                <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className={ballAnim === "fail" ? "" : "mon-float"} style={{ filter: wild.isShiny ? "drop-shadow(0 6px 18px rgba(255,215,0,0.8))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
+              )}
+              {ballAnim === "capture" && (
+                <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className="mon-suck" style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
+              )}
             </div>
 
             {/* Player sprite — bottom-left */}
             <div style={{ position: "absolute", bottom: 12, left: 12, zIndex: 3 }}>
-              <div style={{ position: "relative", display: "inline-block" }}>
-                <MonSprite sprite={pMon.sprite} size={95} back isShiny={pMon.isShiny} className={shakeP ? "mon-shake" : "mon-float"} style={{ filter: pMon.isShiny ? "drop-shadow(0 6px 18px rgba(255,215,0,0.8))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.8))" }} />
-                {flashP && <div className="wb-hit-flash" />}
-                {dmgPopP && <div key={dmgPopP.id} className="wb-dmg-pop">-{dmgPopP.val}</div>}
-              </div>
-              {moveAnim?.target === "player" && <MoveFx key={moveAnim.key} type={moveAnim.type} />}
+              <MonSprite sprite={pMon.sprite} size={95} back isShiny={pMon.isShiny} className="mon-float" style={{ filter: pMon.isShiny ? "drop-shadow(0 6px 18px rgba(255,215,0,0.8))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.8))" }} />
             </div>
 
             {/* Player info card — bottom-right */}

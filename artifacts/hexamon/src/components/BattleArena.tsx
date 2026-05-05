@@ -116,10 +116,6 @@ export default function BattleArena(props: Props) {
 
   const [actionMode, setActionMode] = useState<"main" | "fight" | "switch" | "items">("main");
   const [intro, setIntro] = useState(true); // true while pokeball intro plays
-  const [hitMe, setHitMe] = useState(false);
-  const [hitOpp, setHitOpp] = useState(false);
-  const [dmgMe, setDmgMe] = useState<{ val: number; id: number } | null>(null);
-  const [dmgOpp, setDmgOpp] = useState<{ val: number; id: number } | null>(null);
   const prevMyHp = useRef(myActive.currentHp);
   const prevOppHp = useRef(oppActive.currentHp);
   const prevMyUid = useRef(myActive.uid);
@@ -132,37 +128,19 @@ export default function BattleArena(props: Props) {
     return () => clearTimeout(t);
   }, []);
 
-  // Detect HP drops on either active mon → trigger hit flash/shake + floating damage number
+  // Track HP changes to keep refs in sync
   useEffect(() => {
     if (myActive.uid !== prevMyUid.current) {
-      prevMyUid.current = myActive.uid; prevMyHp.current = myActive.currentHp;
-    } else if (myActive.currentHp < prevMyHp.current) {
-      const dmgVal = prevMyHp.current - myActive.currentHp;
-      setHitMe(true);
-      setDmgMe({ val: dmgVal, id: Date.now() });
-      const t1 = setTimeout(() => setHitMe(false), 420);
-      const t2 = setTimeout(() => setDmgMe(null), 750);
-      prevMyHp.current = myActive.currentHp;
-      return () => { clearTimeout(t1); clearTimeout(t2); };
-    } else {
-      prevMyHp.current = myActive.currentHp;
+      prevMyUid.current = myActive.uid;
     }
+    prevMyHp.current = myActive.currentHp;
   }, [myActive.currentHp, myActive.uid]);
 
   useEffect(() => {
     if (oppActive.uid !== prevOppUid.current) {
-      prevOppUid.current = oppActive.uid; prevOppHp.current = oppActive.currentHp;
-    } else if (oppActive.currentHp < prevOppHp.current) {
-      const dmgVal = prevOppHp.current - oppActive.currentHp;
-      setHitOpp(true);
-      setDmgOpp({ val: dmgVal, id: Date.now() });
-      const t1 = setTimeout(() => setHitOpp(false), 420);
-      const t2 = setTimeout(() => setDmgOpp(null), 750);
-      prevOppHp.current = oppActive.currentHp;
-      return () => { clearTimeout(t1); clearTimeout(t2); };
-    } else {
-      prevOppHp.current = oppActive.currentHp;
+      prevOppUid.current = oppActive.uid;
     }
+    prevOppHp.current = oppActive.currentHp;
   }, [oppActive.currentHp, oppActive.uid]);
 
   // Auto-scroll log
@@ -238,18 +216,7 @@ export default function BattleArena(props: Props) {
             </div>
           </div>
           <div className={`bx-opp-platform ${intro ? "bx-slide-in-right" : ""}`} />
-          <div className={`bx-opp-sprite ${intro ? "bx-slide-in-right" : ""} ${hitOpp ? "bx-hit" : ""} ${oppFainted ? "bx-faint" : ""}`} style={{ overflow: "visible" }}>
-            {dmgOpp && (
-              <div key={dmgOpp.id} style={{
-                position: "absolute", top: -4, left: "50%",
-                transform: "translateX(-50%)",
-                fontSize: 18, fontWeight: 900, color: "#ff3030",
-                textShadow: "0 1px 4px rgba(0,0,0,1), 0 0 10px rgba(255,40,0,0.7)",
-                pointerEvents: "none", whiteSpace: "nowrap", zIndex: 30,
-                animation: "bx-dmg-float 720ms ease-out forwards",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-              }}>-{dmgOpp.val}</div>
-            )}
+          <div className={`bx-opp-sprite ${intro ? "bx-slide-in-right" : ""} ${oppFainted ? "bx-faint" : ""}`}>
             {intro ? (
               <div className="bx-pokeball-throw bx-pokeball-throw-opp"><Pokeball alive size={28} /></div>
             ) : (
@@ -264,18 +231,7 @@ export default function BattleArena(props: Props) {
 
           {/* Player: sprite bottom-left, name plate bottom-right */}
           <div className={`bx-me-platform ${intro ? "bx-slide-in-left" : ""}`} />
-          <div className={`bx-me-sprite ${intro ? "bx-slide-in-left" : ""} ${hitMe ? "bx-hit" : ""} ${myFainted ? "bx-faint" : ""}`} style={{ overflow: "visible" }}>
-            {dmgMe && (
-              <div key={dmgMe.id} style={{
-                position: "absolute", top: -4, left: "50%",
-                transform: "translateX(-50%)",
-                fontSize: 18, fontWeight: 900, color: "#ff3030",
-                textShadow: "0 1px 4px rgba(0,0,0,1), 0 0 10px rgba(255,40,0,0.7)",
-                pointerEvents: "none", whiteSpace: "nowrap", zIndex: 30,
-                animation: "bx-dmg-float 720ms ease-out forwards",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-              }}>-{dmgMe.val}</div>
-            )}
+          <div className={`bx-me-sprite ${intro ? "bx-slide-in-left" : ""} ${myFainted ? "bx-faint" : ""}`}>
             {intro ? (
               <div className="bx-pokeball-throw bx-pokeball-throw-me"><Pokeball alive size={28} /></div>
             ) : (
