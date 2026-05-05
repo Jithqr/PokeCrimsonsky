@@ -58,6 +58,8 @@ export const tradeProposals = pgTable("trade_proposals", {
   proposerMonName: text("proposer_mon_name").notNull(),
   targetMonJson: jsonb("target_mon_json"),
   targetMonName: text("target_mon_name"),
+  mode: text("mode").notNull().default("swap"),
+  price: integer("price").notNull().default(0),
   status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   resolvedAt: timestamp("resolved_at"),

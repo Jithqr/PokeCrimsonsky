@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { eq, and, isNull, desc } from "drizzle-orm";
+import { eq, and, or, isNull, desc } from "drizzle-orm";
 import {
   db,
   playerRegistry,
@@ -140,9 +140,11 @@ router.post("/transfer/claim", async (req: Request, res: Response) => {
 // ── Trades ────────────────────────────────────────────────────────────────────
 router.post("/trade/propose", async (req: Request, res: Response) => {
   try {
-    const { proposerId, proposerName, targetId, monJson, monName } = req.body ?? {};
+    const { proposerId, proposerName, targetId, monJson, monName, mode, price } = req.body ?? {};
     if (!proposerId || !targetId || !monJson) { res.status(400).json({ error: "Missing fields." }); return; }
     if (String(proposerId) === String(targetId)) { res.status(400).json({ error: "Cannot trade with yourself." }); return; }
+    const tradeMode = mode === "sell" ? "sell" : "swap";
+    const tradePrice = tradeMode === "sell" ? Math.max(0, Number(price) || 0) : 0;
     const active = await db.select({ id: tradeProposals.id }).from(tradeProposals)
       .where(and(eq(tradeProposals.proposerId, String(proposerId)), eq(tradeProposals.status, "pending"))).limit(1);
     if (active.length > 0) { res.status(400).json({ error: "You already have a pending trade. Cancel it first." }); return; }
@@ -150,13 +152,17 @@ router.post("/trade/propose", async (req: Request, res: Response) => {
       proposerId: String(proposerId), proposerName: String(proposerName || "Unknown").slice(0, 64),
       targetId: String(targetId), proposerMonJson: monJson,
       proposerMonName: String(monName || "Unknown").slice(0, 64),
+      mode: tradeMode, price: tradePrice,
     }).returning();
+    const subject = tradeMode === "sell"
+      ? `${proposerName} is selling ${monName} for ₽${tradePrice.toLocaleString()}`
+      : `Trade Offer: ${monName}`;
+    const body = tradeMode === "sell"
+      ? `${proposerName} wants to sell their ${monName} for ₽${tradePrice.toLocaleString()}. Open the Trade screen to preview and buy it.`
+      : `${proposerName} wants to trade their ${monName} with you. Open the Trade screen to accept or decline.`;
     await db.insert(mailItems).values({
-      playerId: String(targetId),
-      fromName: String(proposerName || "Unknown").slice(0, 64),
-      subject: `Trade Offer: ${monName}`,
-      body: `${proposerName} wants to trade their ${monName} with you. Open the Trade screen to accept or decline.`,
-      data: { type: "trade_notify", tradeId: row.id },
+      playerId: String(targetId), fromName: String(proposerName || "Unknown").slice(0, 64),
+      subject, body, data: { type: "trade_notify", tradeId: row.id },
     });
     res.json({ ok: true, tradeId: row.id });
   } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
@@ -180,22 +186,38 @@ router.get("/trade/pending/:playerId", async (req: Request, res: Response) => {
 router.post("/trade/accept", async (req: Request, res: Response) => {
   try {
     const { tradeId, targetId, targetMonJson, targetMonName } = req.body ?? {};
-    if (!tradeId || !targetId || !targetMonJson) { res.status(400).json({ error: "Missing fields." }); return; }
+    if (!tradeId || !targetId) { res.status(400).json({ error: "Missing fields." }); return; }
     const rows = await db.select().from(tradeProposals)
       .where(and(eq(tradeProposals.id, Number(tradeId)), eq(tradeProposals.targetId, String(targetId)), eq(tradeProposals.status, "pending"))).limit(1);
     if (!rows[0]) { res.status(404).json({ error: "Trade not found or already resolved." }); return; }
     const trade = rows[0];
-    await db.update(tradeProposals).set({
-      status: "accepted", targetMonJson, targetMonName: String(targetMonName || "Unknown").slice(0, 64), resolvedAt: new Date(),
-    }).where(eq(tradeProposals.id, Number(tradeId)));
-    await db.insert(mailItems).values({
-      playerId: trade.proposerId,
-      fromName: String(targetId).slice(0, 64),
-      subject: `Trade Complete! You received ${targetMonName}`,
-      body: `Your trade was accepted! You received ${targetMonName} in exchange for your ${trade.proposerMonName}. Open the Trade screen to claim your new Pokémon.`,
-      data: { type: "trade_reward", mon: targetMonJson, tradeId: Number(tradeId) },
-    });
-    res.json({ ok: true, proposerMon: trade.proposerMonJson });
+
+    if (trade.mode === "sell") {
+      await db.update(tradeProposals).set({
+        status: "accepted", resolvedAt: new Date(),
+      }).where(eq(tradeProposals.id, Number(tradeId)));
+      await db.insert(mailItems).values({
+        playerId: trade.proposerId,
+        fromName: "System",
+        subject: `Sale Complete! ₽${trade.price.toLocaleString()} received`,
+        body: `Your ${trade.proposerMonName} was sold for ₽${trade.price.toLocaleString()}!`,
+        data: { type: "sell_reward", amount: trade.price, tradeId: Number(tradeId) },
+      });
+      res.json({ ok: true, proposerMon: trade.proposerMonJson, mode: "sell", price: trade.price });
+    } else {
+      if (!targetMonJson) { res.status(400).json({ error: "Missing target Pokémon for swap trade." }); return; }
+      await db.update(tradeProposals).set({
+        status: "accepted", targetMonJson, targetMonName: String(targetMonName || "Unknown").slice(0, 64), resolvedAt: new Date(),
+      }).where(eq(tradeProposals.id, Number(tradeId)));
+      await db.insert(mailItems).values({
+        playerId: trade.proposerId,
+        fromName: String(targetId).slice(0, 64),
+        subject: `Trade Complete! You received ${targetMonName}`,
+        body: `Your trade was accepted! You received ${targetMonName} in exchange for your ${trade.proposerMonName}. Open the Trade screen to claim your new Pokémon.`,
+        data: { type: "trade_reward", mon: targetMonJson, tradeId: Number(tradeId) },
+      });
+      res.json({ ok: true, proposerMon: trade.proposerMonJson, mode: "swap" });
+    }
   } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
 });
 
@@ -212,8 +234,10 @@ router.post("/trade/decline", async (req: Request, res: Response) => {
     await db.insert(mailItems).values({
       playerId: trade.proposerId,
       fromName: "System",
-      subject: `Trade Declined`,
-      body: `Your trade offer for ${trade.proposerMonName} was declined. Your Pokémon has been returned to you.`,
+      subject: trade.mode === "sell" ? `Sale Declined` : `Trade Declined`,
+      body: trade.mode === "sell"
+        ? `Your sale offer for ${trade.proposerMonName} was declined. Your Pokémon has been returned.`
+        : `Your trade offer for ${trade.proposerMonName} was declined. Your Pokémon has been returned to you.`,
       data: { type: "trade_return", mon: trade.proposerMonJson, tradeId: Number(tradeId) },
     });
     res.json({ ok: true, proposerMon: trade.proposerMonJson });

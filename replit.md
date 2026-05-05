@@ -41,10 +41,13 @@ I prefer concise and accurate responses. When making changes, prioritize correct
   - **Mails**: Server-side inbox for receiving system messages, drops, trade results, and announcements. Supports "Claim" for money/item/Pokémon rewards.
   - **Transfer**: Send money to any player by ID. Recipient claims from Transfer screen. Sender deducted immediately.
   - **Trade**: Propose Pokémon trades by player ID. Proposer's mon is removed locally and held server-side. Target accepts with their mon — both swap atomically. Results delivered via mail.
-  - **Mod Panel**: Admin-key-protected dashboard for Spectate (lookup players), Ban/Unban, Announce (broadcast mail), Drop (give money/items globally or to one player), and Redeem Code creation/management.
+  - **Mod Panel**: Admin-key-protected dashboard with 8 tabs — Spectate (lookup players), Ban/Unban, Announce (broadcast mail), Drop (give money/items globally or to one player), Codes (create + list + revoke redeem codes), Reset Acc. (wipe player save via mail), Tx History (last 20 transfers for a player), Trade Log (last 10 trades for a player).
+  - **Redeem Store**: Player-facing screen (accessible from menu) to enter redeem codes. Codes grant money and/or items. Results delivered via mail and claimable.
+  - **Trade System Overhaul**: Trades now support two modes — Swap (original mon-for-mon) and Sell (proposer lists a price; target pays to acquire the mon). Trade screen includes a live preview panel showing the mon's sprite, stats, IVs, EVs, and moves before accepting. Dual confirmation (preview → confirm accept). Sell rewards sent via mail to proposer.
   - **Admin Key**: Default `CRIMSON_ADMIN_2024` (override via `ADMIN_KEY` env var).
   - **Player Registry**: All players auto-register on login for social lookups and ban enforcement.
-- **G-Max GIF Sprites**: Custom local GIFs for Urshifu (Single Strike), Urshifu (Rapid Strike), Cinderace, and Rillaboom G-Max forms. Melmetal G-Max uses Showdown's hosted sprite.
+  - **Mail claim types**: `drop`, `redeem_reward`, `trade_reward`, `trade_return`, `sell_reward` (money), `admin_reset` (wipes save + reloads).
+- **G-Max GIF Sprites**: Custom local GIFs for Venusaur G-Max, Blastoise G-Max (+ shiny variants), Urshifu (Single Strike), Urshifu (Rapid Strike), Cinderace, and Rillaboom G-Max forms. Melmetal G-Max uses Showdown's hosted sprite.
 - **28 New Crimson Sky Exclusive Mega Forms**: Mega Melmetal, Chesnaught, Delphox, Emboar, Feraligatr, Greninja, Meganium, Barbaracle, Chandelure, Dragalge, Dragonite, Drampa, Eelektross, Excadrill, Froslass, Hawlucha, Malamar, Pyroar, Scolipede, Scrafty, Skarmory, Victreebel, Banette-Y, Tropius, Tatsugiri (Droopy & Stretchy), plus Floette (Eternal Form). IDs 10068–10094.
 - **Arceus Type Forms**: All 17 type-specific Arceus forms added (IDs 10700–10716) with Judgment + type-matching moves.
 

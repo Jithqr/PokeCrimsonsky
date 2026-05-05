@@ -17,9 +17,10 @@ import {
 } from "./lib/marketApi";
 import {
   fetchMails, markMailRead, markAllMailRead, sendTransfer, fetchPendingTransfers, claimTransfers,
-  proposeTrade, fetchPendingTrades, acceptTrade, declineTrade, cancelTrade,
+  proposeTrade, fetchPendingTrades, acceptTrade, acceptSellTrade, declineTrade, cancelTrade,
   registerPlayer, checkBanned, redeemDbCode,
   verifyAdmin, adminGetPlayer, adminBanPlayer, adminUnban, adminAnnounce, adminDrop, adminCreateCode, adminListCodes, adminDeleteCode,
+  adminResetAccount, adminGetTransferHistory, adminGetTradeHistory,
   type SocialMail, type PendingTransfer, type TradeProp,
 } from "./lib/socialApi";
 import { PokeTalesDex } from "./components/PokeTalesDex";
@@ -137,6 +138,10 @@ const CUSTOM_SPRITES: Record<string, string> = {
   "cinderace-gmax": "sprites/custom/cinderace-gmax.gif",
   "rillaboom-gmax": "sprites/custom/rillaboom-gmax.gif",
   "melmetal-gmax": "sprites/custom/melmetal-gmax.gif",
+  "venusaur-gmax": "sprites/custom/venusaur-gmax.gif",
+  "venusaur-gmax-shiny": "sprites/custom/venusaur-gmax-shiny.gif",
+  "blastoise-gmax": "sprites/custom/blastoise-gmax.gif",
+  "blastoise-gmax-shiny": "sprites/custom/blastoise-gmax-shiny.gif",
   "chesnaught-mega": "sprites/custom/mega/chesnaught-mega.gif",
   "delphox-mega": "sprites/custom/mega/delphox-mega.gif",
   "emboar-mega": "sprites/custom/mega/emboar-mega.gif",
@@ -745,12 +750,23 @@ export default function App() {
   const [tradeLoading, setTradeLoading] = useState(false);
   const [pendingTrades, setPendingTrades] = useState<{incoming:TradeProp[];outgoing:TradeProp[];completed:TradeProp[]}>({incoming:[],outgoing:[],completed:[]});
   const [tradeSource, setTradeSource] = useState<"team"|"box">("team");
+  const [tradeMode, setTradeMode] = useState<"swap"|"sell">("swap");
+  const [tradePrice, setTradePrice] = useState("");
+  const [tradePreviewTrade, setTradePreviewTrade] = useState<TradeProp | null>(null);
+  const [redeemStoreInput, setRedeemStoreInput] = useState("");
+  const [redeemStoreMsg, setRedeemStoreMsg] = useState<{text:string;ok:boolean}|null>(null);
+  const [redeemStoreLoading, setRedeemStoreLoading] = useState(false);
   const [adminAuthed, setAdminAuthed] = useState(false);
   const [adminKeyInput, setAdminKeyInput] = useState("");
   const [adminMsg, setAdminMsg] = useState<{text:string;ok:boolean}|null>(null);
-  const [adminTab, setAdminTab] = useState<"spectate"|"ban"|"announce"|"drop"|"codes">("spectate");
+  const [adminTab, setAdminTab] = useState<"spectate"|"ban"|"announce"|"drop"|"codes"|"reset"|"transfers"|"trades">("spectate");
   const [adminTargetId, setAdminTargetId] = useState("");
   const [adminTargetInfo, setAdminTargetInfo] = useState<any>(null);
+  const [adminResetTarget, setAdminResetTarget] = useState("");
+  const [adminResetResult, setAdminResetResult] = useState<string|null>(null);
+  const [adminHistTarget, setAdminHistTarget] = useState("");
+  const [adminHistTransfers, setAdminHistTransfers] = useState<any[]>([]);
+  const [adminHistTrades, setAdminHistTrades] = useState<any[]>([]);
   const [adminAnnounceSubj, setAdminAnnounceSubj] = useState("");
   const [adminAnnounceBody, setAdminAnnounceBody] = useState("");
   const [adminAnnounceTarget, setAdminAnnounceTarget] = useState("");
@@ -2760,6 +2776,7 @@ export default function App() {
       { label: "Mails",    icon: "fa-envelope",      color: "var(--m-blue)",   action: () => { loadMails(); setScreen("mails"); } },
       { label: "Transfer", icon: "fa-money-bill-transfer", color: "var(--m-green)", action: () => { loadTransfers(); setScreen("transfer"); } },
       { label: "Trade",    icon: "fa-arrows-rotate",  color: "var(--m-orange)", action: () => { loadTrades(); setScreen("trade"); } },
+      { label: "Redeem",   icon: "fa-ticket",         color: "var(--m-pink)",   action: () => { setRedeemStoreInput(""); setRedeemStoreMsg(null); setScreen("redeem-store"); } },
       { label: "Mod",      icon: "fa-shield-halved",  color: "var(--m-purple)", action: () => { setAdminMsg(null); setScreen("mod"); } },
       { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
     ];
@@ -3473,6 +3490,12 @@ export default function App() {
       if ((d.money || 0) > 0) setPlayer(p => ({...p, money: p.money + (d.money || 0)}));
       if (d.item && (d.qty || d.itemQty || 0) > 0) addItemToInventory(d.item, d.qty || d.itemQty || 1);
       if ((d.type === "trade_reward" || d.type === "trade_return") && d.mon) setBox(prev => [...prev, d.mon]);
+      if (d.type === "sell_reward" && d.amount > 0) setPlayer(p => ({ ...p, money: p.money + d.amount }));
+      if (d.type === "admin_reset") {
+        try { localStorage.removeItem(SAVE_KEY); } catch { /* ignore */ }
+        window.location.reload();
+        return;
+      }
       markMailRead(mail.id, String(player.id)).catch(() => {});
       setMailItems(prev => prev.map(m => m.id === mail.id ? {...m, read: true, data: null} : m));
       setSelectedMail(null);
@@ -3481,7 +3504,7 @@ export default function App() {
       const d = mail.data as any;
       if (!d) return false;
       const t = d.type;
-      return t === "drop" || t === "redeem_reward" || t === "trade_reward" || t === "trade_return";
+      return t === "drop" || t === "redeem_reward" || t === "trade_reward" || t === "trade_return" || t === "sell_reward" || t === "admin_reset";
     };
     return (
       <div style={S.root}><style>{css}</style>
@@ -3606,6 +3629,64 @@ export default function App() {
     );
   }
 
+  // ── REDEEM STORE SCREEN ─────────────────────────────────────────────────
+  if (screen === "redeem-store") {
+    const doRedeem = async () => {
+      const code = redeemStoreInput.trim().toUpperCase();
+      if (!code) { setRedeemStoreMsg({ text: "Enter a code.", ok: false }); return; }
+      setRedeemStoreLoading(true);
+      try {
+        const r = await redeemDbCode(code, String(player.id), player.name);
+        const { money, item, qty } = r.reward ?? {};
+        let msg = "Code redeemed!";
+        if (money > 0) { msg += ` +₽${money.toLocaleString()}`; setPlayer(p => ({ ...p, money: p.money + money })); }
+        if (item && qty > 0) { msg += ` +×${qty} ${item}`; addItemToInventory(item, qty); }
+        setRedeemStoreMsg({ text: msg, ok: true });
+        setRedeemStoreInput("");
+      } catch (e: any) {
+        setRedeemStoreMsg({ text: e.message || "Invalid or expired code.", ok: false });
+      } finally { setRedeemStoreLoading(false); }
+    };
+    return (
+      <div style={S.root}><style>{css}</style>
+        <div style={S.wrap}>
+          <div style={S.header}>
+            <BackBtn onClick={() => setScreen("world")} />
+            <span className="page-header-title"><i className="fa-solid fa-ticket" style={{ marginRight: 6 }} />Redeem Store</span>
+            <div style={{ width: 60 }} />
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+            <div style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 16, padding: 24, textAlign: "center", marginBottom: 20 }}>
+              <div style={{ fontSize: 44, marginBottom: 12 }}>🎫</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Got a code?</div>
+              <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 20 }}>Enter your alphanumeric code to claim rewards — items, Pokédollars, or special Pokémon.</div>
+              {redeemStoreMsg && (
+                <div style={{ background: redeemStoreMsg.ok ? "#14532d" : "#7f1d1d", border: `1px solid ${redeemStoreMsg.ok ? "#166534" : "#991b1b"}`, borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13, color: "#fff" }}>
+                  {redeemStoreMsg.text}
+                </div>
+              )}
+              <input
+                value={redeemStoreInput}
+                onChange={e => setRedeemStoreInput(e.target.value.toUpperCase())}
+                onKeyDown={e => e.key === "Enter" && doRedeem()}
+                placeholder="E.G. LAUNCH2024"
+                style={{ width: "100%", background: "#0d0d1a", border: "2px solid #374151", color: "#fff", borderRadius: 10, padding: "14px 16px", fontSize: 15, fontFamily: "'Courier New', monospace", boxSizing: "border-box", marginBottom: 12, letterSpacing: 2, textAlign: "center" }}
+              />
+              <button
+                onClick={doRedeem}
+                disabled={redeemStoreLoading || !redeemStoreInput.trim()}
+                style={{ width: "100%", background: "linear-gradient(135deg,#ec4899,#db2777)", color: "#fff", border: "none", borderRadius: 10, padding: "14px", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", opacity: (redeemStoreLoading || !redeemStoreInput.trim()) ? 0.5 : 1 }}
+              >
+                {redeemStoreLoading ? "Redeeming..." : "Redeem Code"}
+              </button>
+            </div>
+            <div style={{ fontSize: 11, color: "#4b5563", textAlign: "center" }}>Codes are case-insensitive and can only be redeemed once per account. Check Mails after redeeming to claim your reward.</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── TRADE SCREEN ────────────────────────────────────────────────────────
   if (screen === "trade") {
     const tradeSrcMons = tradeSource === "team" ? team : box;
@@ -3613,22 +3694,75 @@ export default function App() {
       const key = (m.formSprite || (m.species || m.name).toLowerCase().replace(/[^a-z0-9-]/g, "")).replace(/\s/g, "-");
       return CUSTOM_SPRITE_URL(key) ?? `https://play.pokemonshowdown.com/sprites/ani/${key}.gif`;
     };
+    const STAT_LABELS: Record<string, string> = { hp: "HP", atk: "Atk", def: "Def", spa: "SpA", spd: "SpD", spe: "Spe" };
+    const renderMonPreview = (t: TradeProp) => {
+      const m = t.proposerMonJson as any;
+      if (!m) return null;
+      const sprKey = (m.formSprite || (m.species || m.name || "").toLowerCase().replace(/[^a-z0-9-]/g, "")).replace(/\s/g, "-");
+      const sprUrl = CUSTOM_SPRITE_URL(sprKey) ?? `https://play.pokemonshowdown.com/sprites/ani/${sprKey}.gif`;
+      const statKeys = ["hp", "atk", "def", "spa", "spd", "spe"];
+      return (
+        <div style={{ background: "#0a0a1a", border: "1px solid #4c1d95", borderRadius: 10, padding: 12, marginBottom: 10 }}>
+          <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10 }}>
+            <img src={sprUrl} alt={m.name} style={{ width: 72, height: 72, imageRendering: "pixelated", objectFit: "contain" }}
+              onError={(e) => { (e.target as HTMLImageElement).src = `https://play.pokemonshowdown.com/sprites/dex/${(m.species || m.name || "").toLowerCase().replace(/[^a-z0-9]/g, "")}.png`; }} />
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{m.name}</div>
+              <div style={{ fontSize: 11, color: "#a78bfa" }}>{m.species}{m.form ? ` (${m.form})` : ""}</div>
+              <div style={{ fontSize: 11, color: "#9ca3af" }}>Lv. {m.level} · {m.gender || "—"}</div>
+              <div style={{ fontSize: 11, color: "#9ca3af" }}>{m.nature} · {m.ability}</div>
+            </div>
+          </div>
+          {m.moves && m.moves.length > 0 && (
+            <div style={{ marginBottom: 8 }}>
+              <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4, fontWeight: 700 }}>MOVES</div>
+              <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                {m.moves.map((mv: any, i: number) => (
+                  <span key={i} style={{ background: "#1f2937", borderRadius: 4, padding: "3px 7px", fontSize: 10, color: "#d1d5db" }}>{mv.name || mv}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          {m.stats && (
+            <div>
+              <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4, fontWeight: 700 }}>STATS (Base / IV / EV)</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2px 8px" }}>
+                {statKeys.map(k => (
+                  <div key={k} style={{ fontSize: 10, color: "#d1d5db", display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "#9ca3af" }}>{STAT_LABELS[k]}</span>
+                    <span>{m.stats[k] ?? "—"} / <span style={{ color: "#60a5fa" }}>{m.ivs?.[k] ?? "—"}</span> / <span style={{ color: "#4ade80" }}>{m.evs?.[k] ?? "—"}</span></span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
     const doProposeTrade = async () => {
       if (!tradeMyMon) { setTradeMsg({ text: "Select a Pokémon to offer.", ok: false }); return; }
       if (!tradeTargetId.trim()) { setTradeMsg({ text: "Enter the target Player ID.", ok: false }); return; }
+      if (tradeMode === "sell") {
+        const p = Number(tradePrice);
+        if (!p || p <= 0) { setTradeMsg({ text: "Enter a valid price for sell mode.", ok: false }); return; }
+      }
       setTradeLoading(true);
       try {
-        await proposeTrade(String(player.id), player.name, tradeTargetId.trim(), tradeMyMon, tradeMyMon.name);
+        const price = tradeMode === "sell" ? Number(tradePrice) : 0;
+        await proposeTrade(String(player.id), player.name, tradeTargetId.trim(), tradeMyMon, tradeMyMon.name, tradeMode, price);
         if (tradeSource === "team") setTeam(prev => prev.filter(m => m !== tradeMyMon));
         else setBox(prev => prev.filter(m => m !== tradeMyMon));
-        setTradeMsg({ text: `Offer sent! ${tradeMyMon.name} is held until accepted or cancelled.`, ok: true });
-        setTradeMyMon(null); setTradeTargetId("");
+        const msg = tradeMode === "sell"
+          ? `Sale posted! ${tradeMyMon.name} is listed for ₽${Number(tradePrice).toLocaleString()} until bought or cancelled.`
+          : `Offer sent! ${tradeMyMon.name} is held until accepted or cancelled.`;
+        setTradeMsg({ text: msg, ok: true });
+        setTradeMyMon(null); setTradeTargetId(""); setTradePrice("");
         await loadTrades();
       } catch (e: any) {
         setTradeMsg({ text: e.message || "Error sending trade.", ok: false });
       } finally { setTradeLoading(false); }
     };
-    const doAcceptTrade = async (t: TradeProp) => {
+    const doAcceptSwapTrade = async (t: TradeProp) => {
       if (!tradeMyMon) { setTradeMsg({ text: "Select a Pokémon to offer in return.", ok: false }); return; }
       setTradeLoading(true);
       try {
@@ -3637,14 +3771,29 @@ export default function App() {
         else setBox(prev => prev.filter(m => m !== tradeMyMon));
         if (r.proposerMon) setBox(prev => [...prev, r.proposerMon as Mon]);
         setTradeMsg({ text: `Trade complete! You received ${t.proposerMonName}!`, ok: true });
-        setTradeMyMon(null);
+        setTradeMyMon(null); setTradePreviewTrade(null);
         await loadTrades();
       } catch (e: any) {
         setTradeMsg({ text: e.message || "Error accepting trade.", ok: false });
       } finally { setTradeLoading(false); }
     };
+    const doAcceptSellTrade = async (t: TradeProp) => {
+      const price = t.price ?? 0;
+      if (player.money < price) { setTradeMsg({ text: `Not enough Pokédollars. Need ₽${price.toLocaleString()}.`, ok: false }); return; }
+      setTradeLoading(true);
+      try {
+        const r = await acceptSellTrade(t.id, String(player.id));
+        setPlayer(p => ({ ...p, money: p.money - price }));
+        if (r.proposerMon) setBox(prev => [...prev, r.proposerMon as Mon]);
+        setTradeMsg({ text: `Purchase complete! You bought ${t.proposerMonName} for ₽${price.toLocaleString()}!`, ok: true });
+        setTradePreviewTrade(null);
+        await loadTrades();
+      } catch (e: any) {
+        setTradeMsg({ text: e.message || "Error completing purchase.", ok: false });
+      } finally { setTradeLoading(false); }
+    };
     const doDeclineTrade = async (t: TradeProp) => {
-      try { await declineTrade(t.id, String(player.id)); setTradeMsg({ text: "Trade declined.", ok: true }); await loadTrades(); } catch { /* ignore */ }
+      try { await declineTrade(t.id, String(player.id)); setTradeMsg({ text: "Trade declined.", ok: true }); setTradePreviewTrade(null); await loadTrades(); } catch { /* ignore */ }
     };
     const doCancelTrade = async (t: TradeProp) => {
       try {
@@ -3658,7 +3807,7 @@ export default function App() {
       <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           <div style={S.header}>
-            <BackBtn onClick={() => { setTradeMyMon(null); setScreen("world"); }} />
+            <BackBtn onClick={() => { setTradeMyMon(null); setTradePreviewTrade(null); setScreen("world"); }} />
             <span className="page-header-title"><i className="fa-solid fa-arrows-rotate" style={{ marginRight: 6 }} />Trade</span>
             <div style={{ width: 60 }} />
           </div>
@@ -3667,18 +3816,54 @@ export default function App() {
             {pendingTrades.incoming.length > 0 && (
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 10 }}>Incoming Offers ({pendingTrades.incoming.length})</div>
-                {pendingTrades.incoming.map(t => (
-                  <div key={t.id} style={{ background: "#1a0f2e", border: "1px solid #7c3aed", borderRadius: 12, padding: 12, marginBottom: 10 }}>
-                    <div style={{ fontSize: 12, color: "#c4b5fd", marginBottom: 4 }}><strong style={{ color: "#fff" }}>{t.proposerName}</strong> offers <strong style={{ color: "#a78bfa" }}>{t.proposerMonName}</strong></div>
-                    <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 10 }}>Select your Pokémon below, then accept.</div>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button onClick={() => doAcceptTrade(t)} disabled={!tradeMyMon || tradeLoading} style={{ flex: 1, background: "linear-gradient(135deg,#16a34a,#15803d)", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", opacity: (!tradeMyMon || tradeLoading) ? 0.5 : 1 }}>
-                        Accept{tradeMyMon ? ` (get ${t.proposerMonName})` : " (pick mon)"}
+                {pendingTrades.incoming.map(t => {
+                  const isPreviewing = tradePreviewTrade?.id === t.id;
+                  const isSell = (t.mode ?? "swap") === "sell";
+                  return (
+                    <div key={t.id} style={{ background: "#1a0f2e", border: `1px solid ${isPreviewing ? "#a78bfa" : "#7c3aed"}`, borderRadius: 12, padding: 12, marginBottom: 10 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                        <div>
+                          <span style={{ fontSize: 12, color: "#fff", fontWeight: 700 }}>{t.proposerName}</span>
+                          <span style={{ fontSize: 11, color: "#c4b5fd" }}> {isSell ? "is selling" : "offers"} </span>
+                          <span style={{ fontSize: 12, color: "#a78bfa", fontWeight: 700 }}>{t.proposerMonName}</span>
+                          {isSell && <span style={{ fontSize: 12, color: "#4ade80", fontWeight: 700 }}> · ₽{(t.price ?? 0).toLocaleString()}</span>}
+                        </div>
+                        <span style={{ fontSize: 10, color: "#6b7280", background: isSell ? "#14532d" : "#1e1b4b", padding: "2px 7px", borderRadius: 4 }}>{isSell ? "SELL" : "SWAP"}</span>
+                      </div>
+                      <button onClick={() => setTradePreviewTrade(isPreviewing ? null : t)} style={{ width: "100%", background: "#1f2937", color: "#c4b5fd", border: "1px solid #374151", borderRadius: 8, padding: "7px", fontSize: 11, cursor: "pointer", fontFamily: "inherit", marginBottom: isPreviewing ? 10 : 0 }}>
+                        {isPreviewing ? "Hide Details ▲" : "Preview Details ▼"}
                       </button>
-                      <button onClick={() => doDeclineTrade(t)} disabled={tradeLoading} style={{ background: "transparent", border: "1px solid #ef4444", color: "#ef4444", borderRadius: 8, padding: "9px 12px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>Decline</button>
+                      {isPreviewing && (
+                        <>
+                          {renderMonPreview(t)}
+                          {isSell ? (
+                            <div>
+                              <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 8, textAlign: "center" }}>
+                                Your balance: <strong style={{ color: "#4ade80" }}>₽{player.money.toLocaleString()}</strong>
+                              </div>
+                              <div style={{ display: "flex", gap: 8 }}>
+                                <button onClick={() => doAcceptSellTrade(t)} disabled={tradeLoading || player.money < (t.price ?? 0)} style={{ flex: 1, background: "linear-gradient(135deg,#16a34a,#15803d)", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", opacity: (tradeLoading || player.money < (t.price ?? 0)) ? 0.5 : 1 }}>
+                                  Buy for ₽{(t.price ?? 0).toLocaleString()}
+                                </button>
+                                <button onClick={() => doDeclineTrade(t)} disabled={tradeLoading} style={{ background: "transparent", border: "1px solid #ef4444", color: "#ef4444", borderRadius: 8, padding: "10px 12px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>Pass</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 8 }}>Select your Pokémon below to offer in return, then accept.</div>
+                              <div style={{ display: "flex", gap: 8 }}>
+                                <button onClick={() => doAcceptSwapTrade(t)} disabled={!tradeMyMon || tradeLoading} style={{ flex: 1, background: "linear-gradient(135deg,#16a34a,#15803d)", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", opacity: (!tradeMyMon || tradeLoading) ? 0.5 : 1 }}>
+                                  {tradeMyMon ? `Swap ${tradeMyMon.name} → get ${t.proposerMonName}` : "Pick a Pokémon below first"}
+                                </button>
+                                <button onClick={() => doDeclineTrade(t)} disabled={tradeLoading} style={{ background: "transparent", border: "1px solid #ef4444", color: "#ef4444", borderRadius: 8, padding: "10px 12px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>Decline</button>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
             {pendingTrades.outgoing.length > 0 && (
@@ -3687,7 +3872,11 @@ export default function App() {
                 {pendingTrades.outgoing.map(t => (
                   <div key={t.id} style={{ background: "#0d0d1a", border: "1px solid #374151", borderRadius: 12, padding: 12, marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
-                      <div style={{ fontSize: 12, color: "#d1d5db" }}>{t.proposerMonName} → …{String(t.targetId).slice(-4)}</div>
+                      <div style={{ fontSize: 12, color: "#d1d5db" }}>
+                        {t.proposerMonName}
+                        {(t.mode ?? "swap") === "sell" ? <span style={{ color: "#4ade80" }}> · ₽{(t.price ?? 0).toLocaleString()}</span> : " ⇄ swap"}
+                        <span style={{ color: "#6b7280" }}> → …{String(t.targetId).slice(-4)}</span>
+                      </div>
                       <div style={{ fontSize: 10, color: "#6b7280" }}>Waiting...</div>
                     </div>
                     <button onClick={() => doCancelTrade(t)} style={{ background: "transparent", border: "1px solid #4b5563", color: "#9ca3af", borderRadius: 8, padding: "6px 10px", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
@@ -3696,23 +3885,34 @@ export default function App() {
               </div>
             )}
             <div style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 12, padding: 14, marginBottom: 14 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 12 }}>New Trade Offer</div>
-              <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                <button onClick={() => setTradeSource("team")} style={{ flex: 1, background: tradeSource === "team" ? "#7c3aed" : "#1f2937", color: "#fff", border: "none", borderRadius: 8, padding: "8px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>Team</button>
-                <button onClick={() => setTradeSource("box")} style={{ flex: 1, background: tradeSource === "box" ? "#7c3aed" : "#1f2937", color: "#fff", border: "none", borderRadius: 8, padding: "8px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>Box ({box.length})</button>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 10 }}>New Trade Offer</div>
+              <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                <button onClick={() => setTradeMode("swap")} style={{ flex: 1, background: tradeMode === "swap" ? "#7c3aed" : "#1f2937", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 11, cursor: "pointer", fontFamily: "inherit", fontWeight: tradeMode === "swap" ? 700 : 400 }}>
+                  Swap (mon for mon)
+                </button>
+                <button onClick={() => setTradeMode("sell")} style={{ flex: 1, background: tradeMode === "sell" ? "#15803d" : "#1f2937", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 11, cursor: "pointer", fontFamily: "inherit", fontWeight: tradeMode === "sell" ? 700 : 400 }}>
+                  Sell (mon for ₽)
+                </button>
+              </div>
+              <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+                <button onClick={() => setTradeSource("team")} style={{ flex: 1, background: tradeSource === "team" ? "#4c1d95" : "#1f2937", color: "#fff", border: "none", borderRadius: 6, padding: "7px", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>Team</button>
+                <button onClick={() => setTradeSource("box")} style={{ flex: 1, background: tradeSource === "box" ? "#4c1d95" : "#1f2937", color: "#fff", border: "none", borderRadius: 6, padding: "7px", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>Box ({box.length})</button>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6, marginBottom: 10, maxHeight: 200, overflowY: "auto" }}>
                 {tradeSrcMons.map((m, i) => (
                   <div key={i} onClick={() => setTradeMyMon(m === tradeMyMon ? null : m)} style={{ background: m === tradeMyMon ? "#4c1d95" : "#0d0d1a", border: `1px solid ${m === tradeMyMon ? "#7c3aed" : "#1f2937"}`, borderRadius: 8, padding: 6, cursor: "pointer", textAlign: "center" }}>
-                    <img src={monSpriteUrl(m)} alt={m.name} style={{ width: 52, height: 52, imageRendering: "pixelated", objectFit: "contain" }} onError={(e) => { const t = e.target as HTMLImageElement; t.src = `https://play.pokemonshowdown.com/sprites/dex/${(m.species || m.name).toLowerCase().replace(/[^a-z0-9]/g,"")}.png`; }} />
+                    <img src={monSpriteUrl(m)} alt={m.name} style={{ width: 52, height: 52, imageRendering: "pixelated", objectFit: "contain" }} onError={(e) => { const t2 = e.target as HTMLImageElement; t2.src = `https://play.pokemonshowdown.com/sprites/dex/${(m.species || m.name).toLowerCase().replace(/[^a-z0-9]/g,"")}.png`; }} />
                     <div style={{ fontSize: 9, color: "#e5e7eb", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</div>
                     <div style={{ fontSize: 8, color: "#6b7280" }}>Lv.{m.level}</div>
                   </div>
                 ))}
               </div>
+              {tradeMode === "sell" && (
+                <input value={tradePrice} onChange={e => setTradePrice(e.target.value)} type="number" placeholder="Sale price in Pokédollars" min={1} style={{ width: "100%", background: "#0d0d1a", border: "1px solid #374151", color: "#fff", borderRadius: 8, padding: "10px 12px", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box", marginBottom: 8 }} />
+              )}
               <input value={tradeTargetId} onChange={e => setTradeTargetId(e.target.value)} placeholder="Target Player ID (10 digits)" style={{ width: "100%", background: "#0d0d1a", border: "1px solid #374151", color: "#fff", borderRadius: 8, padding: "10px 12px", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box", marginBottom: 10 }} />
-              <button onClick={doProposeTrade} disabled={!tradeMyMon || tradeLoading} style={{ width: "100%", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff", border: "none", borderRadius: 8, padding: "12px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", opacity: (!tradeMyMon || tradeLoading) ? 0.5 : 1 }}>
-                {tradeLoading ? "Sending..." : `Offer ${tradeMyMon?.name || "..."}`}
+              <button onClick={doProposeTrade} disabled={!tradeMyMon || tradeLoading} style={{ width: "100%", background: tradeMode === "sell" ? "linear-gradient(135deg,#16a34a,#15803d)" : "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff", border: "none", borderRadius: 8, padding: "12px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", opacity: (!tradeMyMon || tradeLoading) ? 0.5 : 1 }}>
+                {tradeLoading ? "Sending..." : tradeMode === "sell" ? `List ${tradeMyMon?.name || "..."} for ₽${Number(tradePrice)||0}` : `Offer ${tradeMyMon?.name || "..."}`}
               </button>
               <div style={{ fontSize: 11, color: "#6b7280", marginTop: 8, textAlign: "center" }}>Your ID: {player.id}</div>
             </div>
@@ -3724,9 +3924,11 @@ export default function App() {
 
   // ── MOD SCREEN ──────────────────────────────────────────────────────────
   if (screen === "mod") {
-    const TAB_BTNS: Array<{id: "spectate"|"ban"|"announce"|"drop"|"codes"; label: string}> = [
+    const TAB_BTNS: Array<{id: "spectate"|"ban"|"announce"|"drop"|"codes"|"reset"|"transfers"|"trades"; label: string}> = [
       { id: "spectate", label: "Spectate" }, { id: "ban", label: "Ban/Unban" },
-      { id: "announce", label: "Announce" }, { id: "drop", label: "Drop" }, { id: "codes", label: "Codes" },
+      { id: "announce", label: "Announce" }, { id: "drop", label: "Drop" },
+      { id: "codes", label: "Codes" }, { id: "reset", label: "Reset Acc." },
+      { id: "transfers", label: "Tx History" }, { id: "trades", label: "Trade Log" },
     ];
     const inp: React.CSSProperties = { width: "100%", background: "#0d0d1a", border: "1px solid #374151", color: "#fff", borderRadius: 8, padding: "10px 12px", fontSize: 12, fontFamily: "inherit", boxSizing: "border-box", marginBottom: 8 };
     const doVerify = async () => {
@@ -3768,6 +3970,38 @@ export default function App() {
         adminListCodes(adminKeyInput).then(r2 => setAdminCodesList(r2.codes || [])).catch(() => {});
       } catch (e: any) { setAdminMsg({ text: e.message, ok: false }); }
     };
+    const doRevokeCode = async (code: string) => {
+      try {
+        await adminDeleteCode(adminKeyInput, code);
+        setAdminMsg({ text: `Code "${code}" revoked.`, ok: true });
+        adminListCodes(adminKeyInput).then(r => setAdminCodesList(r.codes || [])).catch(() => {});
+      } catch (e: any) { setAdminMsg({ text: e.message, ok: false }); }
+    };
+    const doResetAccount = async () => {
+      if (!adminResetTarget.trim()) { setAdminMsg({ text: "Enter a Player ID.", ok: false }); return; }
+      try {
+        const r = await adminResetAccount(adminKeyInput, adminResetTarget.trim());
+        setAdminResetResult(`Reset mail sent to ${r.name} (${adminResetTarget.trim()}). They will start fresh on next login.`);
+        setAdminMsg({ text: `Account reset for ${r.name}.`, ok: true });
+        setAdminResetTarget("");
+      } catch (e: any) { setAdminMsg({ text: e.message, ok: false }); setAdminResetResult(null); }
+    };
+    const doGetTransferHistory = async () => {
+      if (!adminHistTarget.trim()) { setAdminMsg({ text: "Enter a Player ID.", ok: false }); return; }
+      try {
+        const r = await adminGetTransferHistory(adminKeyInput, adminHistTarget.trim());
+        setAdminHistTransfers(r.transfers || []);
+        setAdminMsg({ text: `Loaded ${(r.transfers || []).length} transfers.`, ok: true });
+      } catch (e: any) { setAdminMsg({ text: e.message, ok: false }); }
+    };
+    const doGetTradeHistory = async () => {
+      if (!adminHistTarget.trim()) { setAdminMsg({ text: "Enter a Player ID.", ok: false }); return; }
+      try {
+        const r = await adminGetTradeHistory(adminKeyInput, adminHistTarget.trim());
+        setAdminHistTrades(r.trades || []);
+        setAdminMsg({ text: `Loaded ${(r.trades || []).length} trades.`, ok: true });
+      } catch (e: any) { setAdminMsg({ text: e.message, ok: false }); }
+    };
     return (
       <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
@@ -3788,7 +4022,7 @@ export default function App() {
               <>
                 <div style={{ display: "flex", gap: 4, marginBottom: 14, flexWrap: "wrap" }}>
                   {TAB_BTNS.map(t => (
-                    <button key={t.id} onClick={() => setAdminTab(t.id)} style={{ background: adminTab === t.id ? "#7c3aed" : "#1f2937", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>{t.label}</button>
+                    <button key={t.id} onClick={() => setAdminTab(t.id)} style={{ background: adminTab === t.id ? "#7c3aed" : "#1f2937", color: "#fff", border: "none", borderRadius: 8, padding: "8px 10px", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>{t.label}</button>
                   ))}
                 </div>
                 <div style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 12, padding: 14 }}>
@@ -3829,16 +4063,74 @@ export default function App() {
                     <input value={adminCodeItem} onChange={e => setAdminCodeItem(e.target.value)} placeholder="Item reward (optional)" style={inp} />
                     <input value={adminCodeQty} onChange={e => setAdminCodeQty(e.target.value)} placeholder="Item qty" type="number" style={inp} />
                     <input value={adminCodeUses} onChange={e => setAdminCodeUses(e.target.value)} placeholder="Max uses (default 1)" type="number" style={inp} />
-                    <button onClick={doCreateCode} style={{ width: "100%", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff", border: "none", borderRadius: 8, padding: "11px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", marginBottom: adminCodesList.length > 0 ? 14 : 0 }}>Create Code</button>
-                    {adminCodesList.length > 0 && <>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", marginBottom: 8 }}>Active Codes ({adminCodesList.length})</div>
-                      {adminCodesList.map((c, i) => (
-                        <div key={i} style={{ background: "#0d0d1a", border: "1px solid #1f2937", borderRadius: 6, padding: "7px 10px", marginBottom: 4, fontSize: 10, color: "#d1d5db", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <div><strong>{c.code}</strong>{c.money > 0 && <span style={{ color: "#4ade80" }}> +₽{c.money}</span>}{c.item && <span style={{ color: "#a78bfa" }}> ×{c.itemQty} {c.item}</span>}</div>
-                          <span style={{ color: "#6b7280" }}>{c.useCount}/{c.maxUses}</span>
+                    <button onClick={doCreateCode} style={{ width: "100%", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff", border: "none", borderRadius: 8, padding: "11px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", marginBottom: 14 }}>Create Code</button>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af" }}>Active Codes ({adminCodesList.length})</div>
+                      <button onClick={() => adminListCodes(adminKeyInput).then(r => setAdminCodesList(r.codes || [])).catch(() => {})} style={{ background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", borderRadius: 6, padding: "4px 8px", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>Refresh</button>
+                    </div>
+                    {adminCodesList.map((c, i) => (
+                      <div key={i} style={{ background: "#0d0d1a", border: "1px solid #1f2937", borderRadius: 6, padding: "7px 10px", marginBottom: 4, fontSize: 10, color: "#d1d5db", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                        <div style={{ minWidth: 0 }}>
+                          <strong style={{ color: "#fff" }}>{c.code}</strong>
+                          {c.money > 0 && <span style={{ color: "#4ade80" }}> +₽{c.money.toLocaleString()}</span>}
+                          {c.item && <span style={{ color: "#a78bfa" }}> ×{c.itemQty} {c.item}</span>}
+                          <span style={{ color: "#6b7280" }}> ({c.useCount}/{c.maxUses} uses)</span>
                         </div>
-                      ))}
-                    </>}
+                        <button onClick={() => doRevokeCode(c.code)} style={{ flexShrink: 0, background: "#7f1d1d", color: "#fca5a5", border: "1px solid #991b1b", borderRadius: 5, padding: "4px 8px", fontSize: 9, cursor: "pointer", fontFamily: "inherit", fontWeight: 700 }}>Revoke</button>
+                      </div>
+                    ))}
+                    {adminCodesList.length === 0 && <div style={{ fontSize: 11, color: "#4b5563", textAlign: "center" }}>No active codes. Create one above.</div>}
+                  </>}
+                  {adminTab === "reset" && <>
+                    <div style={{ fontSize: 12, color: "#fca5a5", marginBottom: 10, background: "#7f1d1d", border: "1px solid #991b1b", borderRadius: 6, padding: "8px 10px" }}>
+                      Warning: This sends a reset command to the player. Their progress will be wiped on next login.
+                    </div>
+                    <input value={adminResetTarget} onChange={e => setAdminResetTarget(e.target.value)} placeholder="Player ID to reset" style={inp} />
+                    <button onClick={doResetAccount} style={{ width: "100%", background: "linear-gradient(135deg,#dc2626,#b91c1c)", color: "#fff", border: "none", borderRadius: 8, padding: "11px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", marginBottom: 10 }}>Reset Account</button>
+                    {adminResetResult && <div style={{ background: "#0d0d1a", border: "1px solid #374151", borderRadius: 8, padding: 10, fontSize: 11, color: "#9ca3af" }}>{adminResetResult}</div>}
+                  </>}
+                  {adminTab === "transfers" && <>
+                    <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 8 }}>Shows last 20 transactions (sent + received) for the player.</div>
+                    <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                      <input value={adminHistTarget} onChange={e => setAdminHistTarget(e.target.value)} placeholder="Player ID" style={{ ...inp, marginBottom: 0, flex: 1 }} />
+                      <button onClick={doGetTransferHistory} style={{ flexShrink: 0, background: "linear-gradient(135deg,#2563eb,#1d4ed8)", color: "#fff", border: "none", borderRadius: 8, padding: "10px 14px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Search</button>
+                    </div>
+                    {adminHistTransfers.length === 0 && <div style={{ fontSize: 11, color: "#4b5563", textAlign: "center" }}>No results yet.</div>}
+                    {adminHistTransfers.map((t, i) => (
+                      <div key={i} style={{ background: "#0d0d1a", border: "1px solid #1f2937", borderRadius: 6, padding: "7px 10px", marginBottom: 4, fontSize: 10, color: "#d1d5db" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <span style={{ color: t.fromId === adminHistTarget ? "#ef4444" : "#4ade80" }}>
+                            {t.fromId === adminHistTarget ? `→ ${String(t.toId).slice(-6)}` : `← ${t.fromName}`}
+                          </span>
+                          <span style={{ color: t.fromId === adminHistTarget ? "#ef4444" : "#4ade80", fontWeight: 700 }}>
+                            {t.fromId === adminHistTarget ? "-" : "+"}₽{t.amount.toLocaleString()}
+                          </span>
+                        </div>
+                        {t.note && <div style={{ color: "#6b7280", fontSize: 9, marginTop: 2 }}>"{t.note}"</div>}
+                        <div style={{ color: "#4b5563", fontSize: 9 }}>{new Date(t.createdAt).toLocaleString()}</div>
+                      </div>
+                    ))}
+                  </>}
+                  {adminTab === "trades" && <>
+                    <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 8 }}>Shows last 10 trades involving this player.</div>
+                    <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                      <input value={adminHistTarget} onChange={e => setAdminHistTarget(e.target.value)} placeholder="Player ID" style={{ ...inp, marginBottom: 0, flex: 1 }} />
+                      <button onClick={doGetTradeHistory} style={{ flexShrink: 0, background: "linear-gradient(135deg,#ea580c,#c2410c)", color: "#fff", border: "none", borderRadius: 8, padding: "10px 14px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Search</button>
+                    </div>
+                    {adminHistTrades.length === 0 && <div style={{ fontSize: 11, color: "#4b5563", textAlign: "center" }}>No results yet.</div>}
+                    {adminHistTrades.map((t, i) => (
+                      <div key={i} style={{ background: "#0d0d1a", border: "1px solid #1f2937", borderRadius: 6, padding: "7px 10px", marginBottom: 4, fontSize: 10, color: "#d1d5db" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                          <span style={{ color: "#a78bfa", fontWeight: 700 }}>{t.proposerMonName}</span>
+                          <span style={{ background: t.status === "accepted" ? "#14532d" : t.status === "declined" ? "#7f1d1d" : "#1f2937", padding: "1px 6px", borderRadius: 3, fontSize: 9, color: "#fff" }}>{t.mode === "sell" ? "SELL" : "SWAP"} · {t.status}</span>
+                        </div>
+                        <div style={{ color: "#6b7280" }}>
+                          {t.proposerName} → …{String(t.targetId).slice(-4)}
+                          {t.mode === "sell" && <span style={{ color: "#4ade80" }}> · ₽{(t.price||0).toLocaleString()}</span>}
+                        </div>
+                        <div style={{ color: "#4b5563", fontSize: 9 }}>{new Date(t.createdAt).toLocaleString()}</div>
+                      </div>
+                    ))}
                   </>}
                 </div>
               </>

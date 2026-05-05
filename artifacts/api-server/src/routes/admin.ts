@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { eq, and } from "drizzle-orm";
+import { eq, and, or, desc } from "drizzle-orm";
 import {
   db,
   playerRegistry,
@@ -76,6 +76,49 @@ router.post("/unban", async (req: Request, res: Response) => {
     await db.update(playerRegistry).set({ isBanned: false, banReason: null })
       .where(eq(playerRegistry.playerId, String(playerId)));
     res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
+});
+
+// ── Reset account ─────────────────────────────────────────────────────────────
+router.post("/reset-account", async (req: Request, res: Response) => {
+  if (!checkAdmin(req, res)) return;
+  try {
+    const { playerId } = req.body ?? {};
+    if (!playerId) { res.status(400).json({ error: "Missing playerId." }); return; }
+    const rows = await db.select({ playerId: playerRegistry.playerId, name: playerRegistry.name })
+      .from(playerRegistry).where(eq(playerRegistry.playerId, String(playerId))).limit(1);
+    if (!rows[0]) { res.status(404).json({ error: "Player not found." }); return; }
+    await db.insert(mailItems).values({
+      playerId: String(playerId), fromName: "System",
+      subject: "Account Reset",
+      body: "An admin has reset your account. Your progress has been cleared and you will start fresh on next login.",
+      data: { type: "admin_reset" },
+    });
+    res.json({ ok: true, name: rows[0].name });
+  } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
+});
+
+// ── Transfer history ──────────────────────────────────────────────────────────
+router.get("/transfer-history/:playerId", async (req: Request, res: Response) => {
+  if (!checkAdmin(req, res)) return;
+  try {
+    const pid = req.params.playerId;
+    const rows = await db.select().from(moneyTransfers)
+      .where(or(eq(moneyTransfers.fromId, pid), eq(moneyTransfers.toId, pid)))
+      .orderBy(desc(moneyTransfers.createdAt)).limit(20);
+    res.json({ transfers: rows });
+  } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
+});
+
+// ── Trade history ─────────────────────────────────────────────────────────────
+router.get("/trade-history/:playerId", async (req: Request, res: Response) => {
+  if (!checkAdmin(req, res)) return;
+  try {
+    const pid = req.params.playerId;
+    const rows = await db.select().from(tradeProposals)
+      .where(or(eq(tradeProposals.proposerId, pid), eq(tradeProposals.targetId, pid)))
+      .orderBy(desc(tradeProposals.createdAt)).limit(10);
+    res.json({ trades: rows });
   } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
 });
 

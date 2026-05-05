@@ -37,6 +37,8 @@ export type TradeProp = {
   proposerMonName: string;
   targetMonJson: any;
   targetMonName: string | null;
+  mode: string;
+  price: number;
   status: string;
   createdAt: string;
 };
@@ -81,16 +83,20 @@ export async function claimTransfers(playerId: string): Promise<{ total: number;
 }
 
 // ── Trades ────────────────────────────────────────────────────────────────────
-export async function proposeTrade(proposerId: string, proposerName: string, targetId: string, monJson: any, monName: string) {
-  return apiFetch(`${BASE}/trade/propose`, { method: "POST", body: JSON.stringify({ proposerId, proposerName, targetId, monJson, monName }) });
+export async function proposeTrade(proposerId: string, proposerName: string, targetId: string, monJson: any, monName: string, mode: "swap" | "sell" = "swap", price = 0) {
+  return apiFetch(`${BASE}/trade/propose`, { method: "POST", body: JSON.stringify({ proposerId, proposerName, targetId, monJson, monName, mode, price }) });
 }
 
 export async function fetchPendingTrades(playerId: string): Promise<{ incoming: TradeProp[]; outgoing: TradeProp[]; completed: TradeProp[] }> {
   return apiFetch(`${BASE}/trade/pending/${playerId}`);
 }
 
-export async function acceptTrade(tradeId: number, targetId: string, targetMonJson: any, targetMonName: string): Promise<{ proposerMon: any }> {
+export async function acceptTrade(tradeId: number, targetId: string, targetMonJson: any, targetMonName: string): Promise<{ proposerMon: any; mode: string; price: number }> {
   return apiFetch(`${BASE}/trade/accept`, { method: "POST", body: JSON.stringify({ tradeId, targetId, targetMonJson, targetMonName }) });
+}
+
+export async function acceptSellTrade(tradeId: number, targetId: string): Promise<{ proposerMon: any; mode: string; price: number }> {
+  return apiFetch(`${BASE}/trade/accept`, { method: "POST", body: JSON.stringify({ tradeId, targetId }) });
 }
 
 export async function declineTrade(tradeId: number, targetId: string): Promise<{ proposerMon: any }> {
@@ -121,6 +127,18 @@ export async function adminBanPlayer(adminKey: string, playerId: string, reason:
 
 export async function adminUnban(adminKey: string, playerId: string) {
   return apiFetch(`${ADMIN_BASE}/unban`, { method: "POST", body: JSON.stringify({ adminKey, playerId }) });
+}
+
+export async function adminResetAccount(adminKey: string, playerId: string) {
+  return apiFetch(`${ADMIN_BASE}/reset-account`, { method: "POST", body: JSON.stringify({ adminKey, playerId }) });
+}
+
+export async function adminGetTransferHistory(adminKey: string, playerId: string) {
+  return apiFetch(`${ADMIN_BASE}/transfer-history/${playerId}`, { headers: { "Content-Type": "application/json", "x-admin-key": adminKey } });
+}
+
+export async function adminGetTradeHistory(adminKey: string, playerId: string) {
+  return apiFetch(`${ADMIN_BASE}/trade-history/${playerId}`, { headers: { "Content-Type": "application/json", "x-admin-key": adminKey } });
 }
 
 export async function adminAnnounce(adminKey: string, subject: string, body: string, targetId?: string) {

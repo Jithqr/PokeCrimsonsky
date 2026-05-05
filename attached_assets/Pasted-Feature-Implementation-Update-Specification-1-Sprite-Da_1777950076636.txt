@@ -1,0 +1,40 @@
+Feature Implementation & Update Specification
+​1. Sprite Database Updates
+​Update the game's sprite dictionary/database with the following Gigantamax URLs:
+​Venusaur (G-Max Normal): https://projectpokemon.org/home/docs/spriteindex_148/3d-models-generation-8-pok%C3%A9mon-r123/ (Note to dev: This is a documentation page link. The direct GIF link is likely https://projectpokemon.org/images/sprites-models/swsh-normal-sprites/venusaur-gigantamax.gif)
+​Venusaur (G-Max Shiny): https://projectpokemon.org/images/sprites-models/swsh-shiny-sprites/venusaur-gigantamax.gif
+​Blastoise (G-Max Normal): https://projectpokemon.org/images/sprites-models/swsh-normal-sprites/blastoise-gigantamax.gif
+​Blastoise (G-Max Shiny): https://projectpokemon.org/images/sprites-models/swsh-shiny-sprites/blastoise-gigantamax.gif
+​2. Redeem Code System Updates
+​New UI Button: Redeem Store
+​Placement: Main user navigation.
+​Function: Provides an input field where users can submit active alphanumeric codes to claim Admin-created rewards (Items, Pokedollars, or Mons).
+​Update to Create Redeem Code (Mod Dashboard):
+​New Functionality: Add an "Active Codes" list for Admins with a Delete/Revoke button next to each. This allows Admins to manually expire or remove codes before their intended usage limit is reached.
+​3. Mod Dashboard Additions (Confirmed)
+​Add the following search-by-ID tools to the Admin/Mod dashboard:
+​Reset Account Tool:
+​Function: Search for a user via their unique ID.
+​Action: Wipes their current progress and resets their account back to the default starting state.
+​Transfer History:
+​Function: Search for a user via their unique ID.
+​Display: Retrieves and displays a list of the user's last 20 Pokedollar/item transfer transactions.
+​Trade History:
+​Function: Search for a user via their unique ID.
+​Display: Retrieves and displays a log of the user's last 10 Pokemon trades.
+​4. Trade System Overhaul (Two-Step Verification & Selling)
+​The Trade button functionality must be upgraded to support a secure preview phase and a new "Sell" mechanic.
+​A. Trade Modes
+​When initiating a trade, the user can choose between two modes:
+​Pokemon for Pokemon: Both users select a Pokemon from their inventory to swap.
+​Pokemon for Money (Sell): User 1 selects "Sell", chooses a Pokemon, and inputs a Pokedollar amount. User 2 must pay the specified amount to receive the Pokemon.
+​B. The "Preview Phase" (Crucial Update)
+​To prevent scams, trades will no longer happen instantly. Once both parties have made their selections (or one party sets a price and the other agrees to review it), a Preview UI must render for both players.
+​The Preview UI must display the following details of the other player's offered Pokemon:
+​Visual: Sprite Image of the Pokemon being offered.
+​General Info Page: Level, Nature, Ability, Gender.
+​Moveset Page: Current equipped moves.
+​Stats Page: Base stats, IVs (Individual Values), and EVs (Effort Values).
+​C. Confirmation Phase
+​Below the Preview UI, render an [ Accept Trade ] and [ Cancel ] button for both users.
+​Execution Logic: The backend must require an accepted = true flag from both User IDs before executing the database swap (swapping the Mons, or swapping the Mon for Pokedollars). If either user clicks Cancel, the trade session is terminated.
