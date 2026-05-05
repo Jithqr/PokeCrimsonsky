@@ -3591,8 +3591,8 @@ export default function App() {
   if (screen === "trade") {
     const tradeSrcMons = tradeSource === "team" ? team : box;
     const monSpriteUrl = (m: Mon) => {
-      const key = (m.formSprite || (m.species || m.name).toLowerCase().replace(/[^a-z0-9]/g, "")).replace(/\s/g, "-");
-      return `https://play.pokemonshowdown.com/sprites/ani/${key}.gif`;
+      const key = (m.formSprite || (m.species || m.name).toLowerCase().replace(/[^a-z0-9-]/g, "")).replace(/\s/g, "-");
+      return CUSTOM_SPRITE_URL(key) ?? `https://play.pokemonshowdown.com/sprites/ani/${key}.gif`;
     };
     const doProposeTrade = async () => {
       if (!tradeMyMon) { setTradeMsg({ text: "Select a Pokémon to offer.", ok: false }); return; }
@@ -5834,8 +5834,9 @@ export default function App() {
     const needNext = Math.max(0, m.expNeeded - m.exp);
     const gender = m.id % 8 === 0 ? "Genderless" : m.id % 2 === 0 ? "Female" : "Male";
 
-    // Sprite URL for the new UI — animated showdown gif if available.
-    const spriteUrl = `https://play.pokemonshowdown.com/sprites/ani/${(m.sprite || m.name).toLowerCase()}.gif`;
+    // Sprite URL for the new UI — custom sprite if available, otherwise Showdown animated gif.
+    const _spriteKey = (m.sprite || m.name).toLowerCase().replace(/[^a-z0-9-]/g, "");
+    const spriteUrl = CUSTOM_SPRITE_URL(_spriteKey) ?? `https://play.pokemonshowdown.com/sprites/ani/${_spriteKey}.gif`;
 
     // Plays this Pokémon's cry from the bundled PokeRogue assets, falling
     // back to PokéAPI's cries CDN if the local file is missing.

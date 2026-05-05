@@ -48,6 +48,34 @@ const CUSTOM_SPRITES: Record<string, string> = {
   ogerpon: "sprites/custom/ogerpon.gif", ironboulder: "sprites/custom/ironboulder.gif",
   ironcrown: "sprites/custom/ironcrown.gif", terapagos: "sprites/custom/terapagos.gif",
   pecharunt: "sprites/custom/pecharunt.gif",
+  "melmetal-gmax": "sprites/custom/melmetal-gmax.gif",
+  "urshifu-gmax": "sprites/custom/urshifu-gmax.gif",
+  "urshifu-rapid-strike-gmax": "sprites/custom/urshifu-rapid-strike-gmax.gif",
+  "cinderace-gmax": "sprites/custom/cinderace-gmax.gif",
+  "rillaboom-gmax": "sprites/custom/rillaboom-gmax.gif",
+  "chesnaught-mega": "sprites/custom/mega/chesnaught-mega.gif",
+  "delphox-mega": "sprites/custom/mega/delphox-mega.gif",
+  "emboar-mega": "sprites/custom/mega/emboar-mega.gif",
+  "feraligatr-mega": "sprites/custom/mega/feraligatr-mega.gif",
+  "greninja-mega": "sprites/custom/mega/greninja-mega.gif",
+  "meganium-mega": "sprites/custom/mega/meganium-mega.gif",
+  "barbaracle-mega": "sprites/custom/mega/barbaracle-mega.gif",
+  "chandelure-mega": "sprites/custom/mega/chandelure-mega.gif",
+  "dragalge-mega": "sprites/custom/mega/dragalge-mega.gif",
+  "dragonite-mega": "sprites/custom/mega/dragonite-mega.gif",
+  "drampa-mega": "sprites/custom/mega/drampa-mega.gif",
+  "eelektross-mega": "sprites/custom/mega/eelektross-mega.gif",
+  "excadrill-mega": "sprites/custom/mega/excadrill-mega.gif",
+  "froslass-mega": "sprites/custom/mega/froslass-mega.gif",
+  "hawlucha-mega": "sprites/custom/mega/hawlucha-mega.gif",
+  "malamar-mega": "sprites/custom/mega/malamar-mega.gif",
+  "pyroar-mega": "sprites/custom/mega/pyroar-mega.gif",
+  "scolipede-mega": "sprites/custom/mega/scolipede-mega.gif",
+  "scrafty-mega": "sprites/custom/mega/scrafty-mega.gif",
+  "skarmory-mega": "sprites/custom/mega/skarmory-mega.gif",
+  "victreebel-mega": "sprites/custom/mega/victreebel-mega.gif",
+  "tatsugiri-droopy-mega": "sprites/custom/mega/tatsugiri-droopy-mega.gif",
+  "tatsugiri-stretchy-mega": "sprites/custom/mega/tatsugiri-stretchy-mega.gif",
 };
 function spriteUrl(name: string) {
   const clean = name.toLowerCase().replace(/[^a-z0-9-]/g, "");
@@ -104,6 +132,7 @@ const FORM_TABS: { key: DexMode; label: string; color: string }[] = [
 
 function formSpriteUrl(sprite: string, shiny = false) {
   const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
+  if (!shiny && CUSTOM_SPRITES[clean]) return `${import.meta.env.BASE_URL}${CUSTOM_SPRITES[clean]}`;
   if (shiny) return `https://play.pokemonshowdown.com/sprites/ani-shiny/${clean}.gif`;
   return `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`;
 }
@@ -798,7 +827,7 @@ function DexDetail({
                 {myForms.map(form => (
                   <div key={form.id} style={{ background: "#111", border: "1px solid #27272a", borderRadius: 12, padding: 10, textAlign: "center" }}>
                     <img
-                      src={`https://play.pokemonshowdown.com/sprites/ani/${form.sprite}.gif`}
+                      src={formSpriteUrl(form.sprite)}
                       alt={form.name}
                       style={{ width: 72, height: 72, imageRendering: "pixelated", objectFit: "contain", display: "block", margin: "0 auto 6px" }}
                       onError={(e) => { (e.target as HTMLImageElement).src = `https://play.pokemonshowdown.com/sprites/dex/${form.sprite.replace(/-mega[xyz]?$|-mega$|-gmax$/,"")}.png`; }}
