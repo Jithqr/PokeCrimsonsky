@@ -2778,7 +2778,7 @@ export default function App() {
       { label: "Trade",    icon: "fa-arrows-rotate",  color: "var(--m-orange)", action: () => { loadTrades(); setScreen("trade"); } },
       { label: "Redeem",   icon: "fa-ticket",         color: "var(--m-pink)",   action: () => { setRedeemStoreInput(""); setRedeemStoreMsg(null); setScreen("redeem-store"); } },
       { label: "Mod",      icon: "fa-shield-halved",  color: "var(--m-purple)", action: () => { setAdminMsg(null); setScreen("mod"); } },
-      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
+      { label: "New", icon: "fa-star", color: "var(--m-yellow)", action: () => setScreen("new-page") },
     ];
     const menuPages = [menuPage1, menuPage2];
     return (
@@ -7651,6 +7651,27 @@ export default function App() {
             setScreen("battleBox");
           }}
         />
+      </div>
+    );
+  }
+
+  if (screen === "new-page") {
+    return (
+      <div style={S.root}><style>{css}</style>
+        <div style={S.wrap}>
+          <div style={S.header}>
+            <BackBtn onClick={() => setScreen("world")} />
+            <span className="page-header-title"><i className="fa-solid fa-star" style={{ marginRight: 6 }} />New Page</span>
+            <div style={{ width: 60 }} />
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 16, padding: 40, textAlign: "center" }}>
+              <div style={{ fontSize: 56, marginBottom: 16 }}>🚧</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Coming Soon</div>
+              <div style={{ fontSize: 12, color: "#6b7280" }}>This page is under construction. Check back later!</div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
