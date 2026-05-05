@@ -2365,6 +2365,8 @@ export default function App() {
     .m-menu-carousel { overflow: hidden; padding: 0 16px; margin-bottom: 10px; touch-action: pan-y; }
     .m-menu-track { display: flex; gap: 17px; transition: transform 0.3s ease; }
     .m-menu-page { flex: 0 0 100%; display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    .m-menu-page.large .m-menu-btn { padding: 20px 8px; font-size: 13px; border-radius: 18px; }
+    .m-menu-page.large .m-menu-btn i { font-size: 24px; }
     .m-menu-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
     .m-menu-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--m-border); cursor: pointer; transition: all 0.2s; border: none; padding: 0; }
     .m-menu-dot.active { background: var(--m-pink); width: 22px; border-radius: 4px; }
@@ -2778,9 +2780,13 @@ export default function App() {
       { label: "Trade",    icon: "fa-arrows-rotate",  color: "var(--m-orange)", action: () => { loadTrades(); setScreen("trade"); } },
       { label: "Redeem",   icon: "fa-ticket",         color: "var(--m-pink)",   action: () => { setRedeemStoreInput(""); setRedeemStoreMsg(null); setScreen("redeem-store"); } },
       { label: "Mod",      icon: "fa-shield-halved",  color: "var(--m-purple)", action: () => { setAdminMsg(null); setScreen("mod"); } },
-      { label: "New", icon: "fa-star", color: "var(--m-yellow)", action: () => setScreen("new-page") },
     ];
-    const menuPages = [menuPage1, menuPage2];
+    const menuPage3: MenuBtn[] = [
+      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
+      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
+      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
+    ];
+    const menuPages = [menuPage1, menuPage2, menuPage3];
     return (
       <div style={S.root}><style>{css}</style>
         <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
@@ -2921,7 +2927,7 @@ export default function App() {
           >
             <div className="m-menu-track" style={{ transform: `translateX(calc(${menuPage} * (-100% - 17px)))` }}>
               {menuPages.map((page, pi) => (
-                <div key={pi} className="m-menu-page">
+                <div key={pi} className={`m-menu-page ${pi === 0 ? "large" : ""}`}>
                   {page.map((b, bi) => (
                     <div key={`${pi}-${bi}-${b.label}`}
                       className={`m-menu-btn ${b.locked ? "locked" : ""}`}
