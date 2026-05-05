@@ -1,0 +1,20 @@
+Feature Update: Friends System & Social Flow
+​1. Search & Friend Request Flow
+​Search Functionality: Users must be able to search the player database using either a specific Player ID or Username.
+​Search Results UI: When a match is found, the target user's name (and avatar, if applicable) should render below the search bar.
+​Action Button: Next to the search result, display a + Request (Add Friend) button.
+​Trigger: Clicking the + Request button automatically generates and sends an internal system mail/notification to the target user.
+​2. Mailbox & Request Handling
+​Notification Delivery: The target user receives a message in their in-game mailbox or notification center.
+​Message Template: > "User [Sender Username] has sent a friend request. Do you want to be friends with them?"
+​Call to Action (CTA): The mail must include two interactive buttons: 
+​[Agree]: Adds both players to each other's Friends List and deletes the mail.
+​[Decline]: Deletes/Dismisses the request without modifying either Friends List.
+​3. Friends List Interface
+​List Rendering: Display a dedicated "Friends List" UI populating all users who have mutually agreed to a friend request.
+​Real-Time Online Status: Implement an online presence indicator (e.g., a green dot or "Online" text) that dynamically updates when a friend logs in or out.
+​Profile Routing: The entries on the Friends List must be clickable. Clicking on any friend's name or card should route the user directly to that specific friend's full Player Profile.
+​4. Technical Implementation Notes (For the Developer)
+​Database Schema: Ensure the user schema includes arrays for friends (storing accepted IDs) and pending_requests (storing incoming request IDs).
+​Presence Tracking: Utilize WebSockets or a similar real-time listener to accurately push "Online/Offline" status updates to the Friends List without requiring a page refresh.
+​Mail System: Ensure the mail system can handle interactive payloads (accept/reject triggers) rather than just static text.

@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { eq, and, or, isNull, desc } from "drizzle-orm";
+import { eq, and, or, desc, ilike, sql } from "drizzle-orm";
 import {
   db,
   playerRegistry,
@@ -7,7 +7,9 @@ import {
   moneyTransfers,
   tradeProposals,
   dbRedeemCodes,
+  friendships,
 } from "@workspace/db";
+import { isOnline } from "../ws/presence-ws";
 
 const router: IRouter = Router();
 
@@ -15,6 +17,11 @@ function pid(req: Request): string | null {
   const raw = req.header("x-player-id") ?? req.body?.playerId;
   if (!raw) return null;
   return String(raw).trim().slice(0, 64) || null;
+}
+
+/** Normalize a friendship pair so player1Id < player2Id (lexicographic). */
+function normPair(a: string, b: string): [string, string] {
+  return a < b ? [a, b] : [b, a];
 }
 
 // ── Register / heartbeat ──────────────────────────────────────────────────────
@@ -43,6 +50,37 @@ router.get("/player/:id", async (req: Request, res: Response) => {
     if (!rows[0]) { res.status(404).json({ error: "Player not found." }); return; }
     const { isBanned, banReason, name, sprite, hometown, lastSeen } = rows[0];
     res.json({ player: { name, sprite, hometown, lastSeen, isBanned, banReason } });
+  } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
+});
+
+// ── Player search (by ID or name) ─────────────────────────────────────────────
+router.get("/search", async (req: Request, res: Response) => {
+  try {
+    const q = String(req.query.q ?? "").trim().slice(0, 64);
+    if (!q) { res.json({ results: [] }); return; }
+    // Try exact player ID first
+    const byId = await db.select({
+      playerId: playerRegistry.playerId,
+      name: playerRegistry.name,
+      sprite: playerRegistry.sprite,
+      hometown: playerRegistry.hometown,
+    }).from(playerRegistry)
+      .where(and(eq(playerRegistry.playerId, q), eq(playerRegistry.isBanned, false)))
+      .limit(1);
+    if (byId.length > 0) {
+      res.json({ results: byId.map(r => ({ ...r, isOnline: isOnline(r.playerId) })) });
+      return;
+    }
+    // Otherwise search by name (case-insensitive partial match)
+    const byName = await db.select({
+      playerId: playerRegistry.playerId,
+      name: playerRegistry.name,
+      sprite: playerRegistry.sprite,
+      hometown: playerRegistry.hometown,
+    }).from(playerRegistry)
+      .where(and(ilike(playerRegistry.name, `%${q}%`), eq(playerRegistry.isBanned, false)))
+      .limit(10);
+    res.json({ results: byName.map(r => ({ ...r, isOnline: isOnline(r.playerId) })) });
   } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
 });
 
@@ -82,6 +120,162 @@ router.post("/mail/read-all", async (req: Request, res: Response) => {
     const playerId = pid(req);
     if (!playerId) { res.status(400).json({ error: "Missing player id." }); return; }
     await db.update(mailItems).set({ read: true }).where(eq(mailItems.playerId, playerId));
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
+});
+
+router.delete("/mail/:mailId", async (req: Request, res: Response) => {
+  try {
+    const playerId = pid(req);
+    if (!playerId) { res.status(400).json({ error: "Missing player id." }); return; }
+    await db.delete(mailItems)
+      .where(and(eq(mailItems.id, Number(req.params.mailId)), eq(mailItems.playerId, playerId)));
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
+});
+
+// ── Friends ───────────────────────────────────────────────────────────────────
+
+// Send a friend request — creates a mail in the target's inbox
+router.post("/friend/request", async (req: Request, res: Response) => {
+  try {
+    const { senderId, senderName, senderSprite, targetId } = req.body ?? {};
+    if (!senderId || !targetId) { res.status(400).json({ error: "Missing fields." }); return; }
+    if (String(senderId) === String(targetId)) { res.status(400).json({ error: "Cannot add yourself." }); return; }
+
+    // Check target exists
+    const target = await db.select({ playerId: playerRegistry.playerId, name: playerRegistry.name })
+      .from(playerRegistry).where(eq(playerRegistry.playerId, String(targetId))).limit(1);
+    if (!target[0]) { res.status(404).json({ error: "Player not found." }); return; }
+
+    // Check not already friends
+    const [p1, p2] = normPair(String(senderId), String(targetId));
+    const existing = await db.select({ id: friendships.id }).from(friendships)
+      .where(and(eq(friendships.player1Id, p1), eq(friendships.player2Id, p2))).limit(1);
+    if (existing.length > 0) { res.status(400).json({ error: "Already friends." }); return; }
+
+    // Check no pending request already sent by this sender to this target
+    const pendingCheck = await db.select({ id: mailItems.id }).from(mailItems)
+      .where(and(
+        eq(mailItems.playerId, String(targetId)),
+        sql`data->>'type' = 'friend_request' AND data->>'senderId' = ${String(senderId)}`,
+      )).limit(1);
+    if (pendingCheck.length > 0) { res.status(400).json({ error: "Request already sent." }); return; }
+
+    await db.insert(mailItems).values({
+      playerId: String(targetId),
+      fromName: String(senderName || "A trainer").slice(0, 64),
+      subject: `Friend Request from ${String(senderName || "A trainer").slice(0, 40)}`,
+      body: `${String(senderName || "A trainer")} has sent you a friend request. Do you want to be friends with them?`,
+      data: {
+        type: "friend_request",
+        senderId: String(senderId),
+        senderName: String(senderName || "").slice(0, 64),
+        senderSprite: String(senderSprite || "hilbert").slice(0, 64),
+      },
+    });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
+});
+
+// Accept a friend request — creates the friendship + deletes the mail
+router.post("/friend/accept", async (req: Request, res: Response) => {
+  try {
+    const { playerId, senderId, mailId } = req.body ?? {};
+    if (!playerId || !senderId || !mailId) { res.status(400).json({ error: "Missing fields." }); return; }
+
+    const [p1, p2] = normPair(String(playerId), String(senderId));
+
+    // Upsert friendship (idempotent)
+    await db.insert(friendships).values({ player1Id: p1, player2Id: p2 })
+      .onConflictDoNothing();
+
+    // Delete the request mail
+    await db.delete(mailItems)
+      .where(and(eq(mailItems.id, Number(mailId)), eq(mailItems.playerId, String(playerId))));
+
+    // Notify the sender
+    const meRow = await db.select({ name: playerRegistry.name }).from(playerRegistry)
+      .where(eq(playerRegistry.playerId, String(playerId))).limit(1);
+    const myName = meRow[0]?.name ?? "A trainer";
+    await db.insert(mailItems).values({
+      playerId: String(senderId),
+      fromName: "System",
+      subject: `${myName} accepted your friend request!`,
+      body: `You and ${myName} are now friends. Check your Friends list to see them online!`,
+      data: { type: "friend_accepted", friendId: String(playerId), friendName: myName },
+    });
+
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
+});
+
+// Decline a friend request — just deletes the mail
+router.post("/friend/decline", async (req: Request, res: Response) => {
+  try {
+    const { playerId, mailId } = req.body ?? {};
+    if (!playerId || !mailId) { res.status(400).json({ error: "Missing fields." }); return; }
+    await db.delete(mailItems)
+      .where(and(eq(mailItems.id, Number(mailId)), eq(mailItems.playerId, String(playerId))));
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
+});
+
+// Get friends list with online status
+router.get("/friends/:playerId", async (req: Request, res: Response) => {
+  try {
+    const me = req.params.playerId;
+    const rows = await db.select({
+      player1Id: friendships.player1Id,
+      player2Id: friendships.player2Id,
+      createdAt: friendships.createdAt,
+    }).from(friendships)
+      .where(or(eq(friendships.player1Id, me), eq(friendships.player2Id, me)));
+
+    const friendIds = rows.map(r => r.player1Id === me ? r.player2Id : r.player1Id);
+    const createdAtMap = new Map(rows.map(r => {
+      const fid = r.player1Id === me ? r.player2Id : r.player1Id;
+      return [fid, r.createdAt];
+    }));
+
+    if (friendIds.length === 0) { res.json({ friends: [] }); return; }
+
+    // Look up friend profiles
+    const profiles = await db.select({
+      playerId: playerRegistry.playerId,
+      name: playerRegistry.name,
+      sprite: playerRegistry.sprite,
+      hometown: playerRegistry.hometown,
+    }).from(playerRegistry)
+      .where(or(...friendIds.map(id => eq(playerRegistry.playerId, id))));
+
+    const friends = profiles.map(p => ({
+      playerId: p.playerId,
+      name: p.name,
+      sprite: p.sprite,
+      hometown: p.hometown,
+      createdAt: createdAtMap.get(p.playerId)?.toISOString() ?? "",
+      isOnline: isOnline(p.playerId),
+    }));
+
+    // Sort: online first, then alphabetically
+    friends.sort((a, b) => {
+      if (a.isOnline !== b.isOnline) return a.isOnline ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    res.json({ friends });
+  } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
+});
+
+// Remove a friendship
+router.post("/friend/remove", async (req: Request, res: Response) => {
+  try {
+    const { playerId, friendId } = req.body ?? {};
+    if (!playerId || !friendId) { res.status(400).json({ error: "Missing fields." }); return; }
+    const [p1, p2] = normPair(String(playerId), String(friendId));
+    await db.delete(friendships)
+      .where(and(eq(friendships.player1Id, p1), eq(friendships.player2Id, p2)));
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
 });

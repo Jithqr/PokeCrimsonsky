@@ -21,7 +21,9 @@ import {
   registerPlayer, checkBanned, redeemDbCode,
   verifyAdmin, adminGetPlayer, adminBanPlayer, adminUnban, adminAnnounce, adminDrop, adminCreateCode, adminListCodes, adminDeleteCode,
   adminResetAccount, adminGetTransferHistory, adminGetTradeHistory,
-  type SocialMail, type PendingTransfer, type TradeProp,
+  searchPlayers, sendFriendRequest, acceptFriendRequest, declineFriendRequest,
+  fetchServerFriends, removeServerFriend,
+  type SocialMail, type PendingTransfer, type TradeProp, type ServerFriend, type PlayerSearchResult,
 } from "./lib/socialApi";
 import { PokeTalesDex } from "./components/PokeTalesDex";
 import { SplashLoader } from "./components/SplashLoader";
@@ -868,8 +870,55 @@ export default function App() {
   }, [player.id]);
   const [friendInput, setFriendInput] = useState<string>("");
   const [friendMsg, setFriendMsg] = useState<{ text: string; ok: boolean } | null>(null);
-  const [friendSearchResult, setFriendSearchResult] = useState<{ id: number; name: string; hometown: string; sprite: string; rank: number } | null>(null);
-  const [friendProfileModal, setFriendProfileModal] = useState<{ id: number; name: string; hometown: string; sprite: string; rank: number; addedAt: number } | null>(null);
+  const [friendSearchResults, setFriendSearchResults] = useState<PlayerSearchResult[]>([]);
+  const [friendSearchLoading, setFriendSearchLoading] = useState(false);
+  const [serverFriends, setServerFriends] = useState<ServerFriend[]>([]);
+  const [serverFriendsLoading, setServerFriendsLoading] = useState(false);
+  const [onlineFriendIds, setOnlineFriendIds] = useState<Set<string>>(new Set());
+  const [friendTab, setFriendTab] = useState<"find" | "list">("list");
+  const [friendProfileModal, setFriendProfileModal] = useState<ServerFriend | null>(null);
+  const presenceWsRef = useRef<WebSocket | null>(null);
+
+  // Presence WebSocket — connect once player is registered
+  useEffect(() => {
+    const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const url = `${proto}//${window.location.host}/api/ws/presence`;
+    let ws: WebSocket;
+    let dead = false;
+    function connect() {
+      if (dead) return;
+      ws = new WebSocket(url);
+      presenceWsRef.current = ws;
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ type: "connect", playerId: String(player.id) }));
+      };
+      ws.onmessage = (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (msg.type === "presence_update" && Array.isArray(msg.online)) {
+            setOnlineFriendIds(new Set(msg.online));
+          }
+        } catch { /* ignore */ }
+      };
+      ws.onclose = () => {
+        if (!dead) setTimeout(connect, 5000);
+      };
+      ws.onerror = () => { try { ws.close(); } catch { /* ignore */ } };
+    }
+    connect();
+    return () => { dead = true; try { ws?.close(); } catch { /* ignore */ } };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player.id]);
+
+  const loadServerFriends = useCallback(async () => {
+    setServerFriendsLoading(true);
+    try {
+      const list = await fetchServerFriends(String(player.id));
+      setServerFriends(list);
+    } catch { /* ignore */ } finally {
+      setServerFriendsLoading(false);
+    }
+  }, [player.id]);
 
   const [caught, setCaught] = useState<Set<number>>(new Set(initial?.caught ?? []));
   const [seen, setSeen] = useState<Set<number>>(new Set(initial?.seen ?? initial?.caught ?? []));
@@ -2787,7 +2836,7 @@ export default function App() {
       { label: "Battle Box",    icon: "fa-shield-halved", color: "var(--m-pink)",   action: () => { setBbMode(null); setBbRoom(null); setScreen("battleBox"); } },
       { label: "Training Zone", icon: "fa-dumbbell",      color: "var(--m-orange)", action: () => { setScreen("training"); } },
       { label: "League",        icon: "fa-trophy",        color: "var(--m-yellow)", action: () => { setScreen("league"); } },
-      { label: "Friends",       icon: "fa-user-plus",     color: "var(--m-green)",  action: () => { setFriendInput(""); setFriendMsg(null); setScreen("friends"); } },
+      { label: "Friends",       icon: "fa-user-plus",     color: "var(--m-green)",  action: () => { setFriendInput(""); setFriendMsg(null); setFriendSearchResults([]); setFriendTab("list"); loadServerFriends(); setScreen("friends"); } },
       { label: "Mails",    icon: "fa-envelope",      color: "var(--m-blue)",   action: () => { loadMails(); setScreen("mails"); } },
       { label: "Transfer", icon: "fa-money-bill-transfer", color: "var(--m-green)", action: () => { loadTransfers(); setScreen("transfer"); } },
       { label: "Trade",    icon: "fa-arrows-rotate",  color: "var(--m-orange)", action: () => { loadTrades(); setScreen("trade"); } },
@@ -3326,55 +3375,58 @@ export default function App() {
   }
 
   if (screen === "friends") {
-    const myCardCode = encodeMyCard({
-      id: player.id,
-      name: player.name,
-      hometown: player.hometown,
-      sprite: player.sprite,
-      rank: rankFromExp(player.exp),
-    });
     const showMsg = (text: string, ok: boolean) => {
       setFriendMsg({ text, ok });
       setTimeout(() => setFriendMsg(null), 4000);
     };
-    const handleSearch = () => {
+
+    const handleSearch = async () => {
+      const q = friendInput.trim();
+      if (!q) return;
       sfx.click();
-      const decoded = decodeFriendCode(friendInput);
-      if (!decoded) { showMsg("Invalid friend code or trainer ID.", false); setFriendSearchResult(null); return; }
-      setFriendSearchResult({ id: decoded.id, name: decoded.name, hometown: decoded.hometown ?? "Unknown", sprite: decoded.sprite ?? "hilbert", rank: decoded.rank ?? 1 });
-      setFriendMsg(null);
-    };
-    const handleAddFromResult = () => {
-      if (!friendSearchResult) return;
-      sfx.click();
-      const decoded = decodeFriendCode(friendInput);
-      if (!decoded) return;
-      const result = addFriendOp(friends, decoded, player.id);
-      if (!result.ok || !result.friend) { showMsg(result.reason ?? "Could not add friend.", false); return; }
-      setFriends((prev) => [...prev, result.friend!]);
-      setFriendInput("");
-      setFriendSearchResult(null);
-      showMsg(`Added ${result.friend.name} to your friends!`, true);
-      addLog(`👋 Added ${result.friend.name} (#${result.friend.id}) to friends.`, "#4ade80");
-    };
-    const handleCopy = async () => {
-      sfx.click();
+      setFriendSearchLoading(true);
+      setFriendSearchResults([]);
       try {
-        if (navigator?.clipboard?.writeText) {
-          await navigator.clipboard.writeText(myCardCode);
-          showMsg("Friend code copied!", true);
-        } else {
-          showMsg(myCardCode, true);
-        }
+        const results = await searchPlayers(q);
+        const filtered = results.filter(r => r.playerId !== String(player.id));
+        setFriendSearchResults(filtered);
+        if (filtered.length === 0) showMsg("No trainer found with that ID or name.", false);
+        else setFriendMsg(null);
       } catch {
-        showMsg(myCardCode, true);
+        showMsg("Search failed. Try again.", false);
+      } finally {
+        setFriendSearchLoading(false);
       }
     };
-    const handleRemove = (id: number, name: string) => {
+
+    const handleSendRequest = async (target: PlayerSearchResult) => {
       sfx.click();
-      setFriends((prev) => removeFriendOp(prev, id));
-      addLog(`🗑️ Removed ${name} from friends.`, "#F44336");
+      try {
+        await sendFriendRequest(String(player.id), player.name, player.sprite, target.playerId);
+        showMsg(`Friend request sent to ${target.name}!`, true);
+        setFriendSearchResults([]);
+        setFriendInput("");
+      } catch (e: any) {
+        showMsg(e.message || "Could not send request.", false);
+      }
     };
+
+    const handleRemoveFriend = async (f: ServerFriend) => {
+      sfx.click();
+      try {
+        await removeServerFriend(String(player.id), f.playerId);
+        setServerFriends(prev => prev.filter(x => x.playerId !== f.playerId));
+        addLog(`Removed ${f.name} from friends.`, "#F44336");
+      } catch {
+        showMsg("Could not remove friend.", false);
+      }
+    };
+
+    const friendsWithLiveStatus = serverFriends.map(f => ({
+      ...f,
+      isOnline: onlineFriendIds.has(f.playerId),
+    }));
+
     return (
       <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
@@ -3384,95 +3436,118 @@ export default function App() {
             <div style={{ width: 88 }} />
           </div>
 
-          {/* Your friend card */}
-          <div style={{ margin: 16, background: "#0d0d1a", border: "2px solid #4ade80", borderRadius: 12, padding: 14 }}>
-            <div style={{ fontSize: 12, color: "#4ade80", marginBottom: 8, letterSpacing: 1 }}>YOUR FRIEND CODE</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-              <img src={TRAINER_SPRITE(player.sprite)} alt="me" style={{ width: 56, height: 56, imageRendering: "pixelated" }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 11, color: "#fff", fontWeight: 700 }}>{player.name}</div>
-                <div style={{ fontSize: 12, color: "#aaa", marginTop: 2 }}>#{player.id} • Rank {rankFromExp(player.exp)}</div>
-                <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>{player.hometown}</div>
-              </div>
+          {/* My card */}
+          <div style={{ margin: "12px 16px 0", background: "#0d0d1a", border: "2px solid #4ade80", borderRadius: 12, padding: 12, display: "flex", alignItems: "center", gap: 12 }}>
+            <img src={TRAINER_SPRITE(player.sprite)} alt="me" style={{ width: 48, height: 48, imageRendering: "pixelated" }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, color: "#4ade80", fontWeight: 700 }}>{player.name}</div>
+              <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>ID: {player.id} · Rank {rankFromExp(player.exp)}</div>
+              <div style={{ fontSize: 11, color: "#6b7280" }}>{player.hometown}</div>
             </div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <code style={{ flex: 1, minWidth: 0, fontSize: 12, color: "#9ca3af", background: "#181820", border: "1px solid #2a2a32", padding: "8px 10px", borderRadius: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "ui-monospace, Menlo, monospace" }}>{myCardCode}</code>
-              <button onClick={handleCopy} className="btn" style={{ padding: "8px 14px", borderRadius: 6, background: "#4ade80", color: "#062b16", fontWeight: 700, fontSize: 11, border: "none" }}>
-                <i className="fa-solid fa-copy" /> Copy
-              </button>
-            </div>
-            <div style={{ fontSize: 11, color: "#777", marginTop: 6 }}>Share this code with another HexaMon trainer to add each other.</div>
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#4ade80", boxShadow: "0 0 6px #4ade80", flexShrink: 0 }} title="Online" />
           </div>
 
-          {/* Search a trainer */}
-          <div style={{ margin: "0 16px 16px", background: "#15151b", border: "1px solid #26262d", borderRadius: 12, padding: 12 }}>
-            <div style={{ fontSize: 12, color: "#bbb", marginBottom: 8 }}>FIND A TRAINER</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input
-                value={friendInput}
-                onChange={(e) => { setFriendInput(e.target.value); setFriendSearchResult(null); }}
-                onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
-                placeholder="Paste friend code or Trainer ID"
-                style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #2a2a32", background: "#0d0d12", color: "#fff", fontSize: 12, outline: "none", borderRadius: 6 }}
-              />
-              <button onClick={handleSearch} className="btn" style={{ padding: "10px 16px", borderRadius: 6, background: "#2f7bff", color: "#fff", fontWeight: 700, fontSize: 12, border: "none" }}>
-                <i className="fa-solid fa-magnifying-glass" />
+          {/* Tabs */}
+          <div style={{ display: "flex", margin: "12px 16px 0", gap: 0, borderRadius: 10, overflow: "hidden", border: "1px solid #26262d" }}>
+            {(["list", "find"] as const).map(tab => (
+              <button key={tab} onClick={() => { sfx.click(); setFriendTab(tab); if (tab === "list") loadServerFriends(); }}
+                style={{ flex: 1, padding: "10px 0", background: friendTab === tab ? "#4ade80" : "#15151b", color: friendTab === tab ? "#062b16" : "#9ca3af", border: "none", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>
+                {tab === "list" ? `My Friends (${serverFriends.length})` : "Find Trainer"}
               </button>
+            ))}
+          </div>
+
+          {friendMsg && (
+            <div style={{ margin: "8px 16px 0", padding: "8px 12px", borderRadius: 8, background: friendMsg.ok ? "#14532d" : "#7f1d1d", border: `1px solid ${friendMsg.ok ? "#166534" : "#991b1b"}`, fontSize: 12, color: "#fff" }}>
+              {friendMsg.text}
             </div>
-            {friendMsg && (
-              <div style={{ marginTop: 8, fontSize: 10, color: friendMsg.ok ? "#4ade80" : "#f87171", fontWeight: 600 }}>
-                {friendMsg.text}
-              </div>
-            )}
-            {friendSearchResult && (
-              <div style={{ marginTop: 10, background: "rgba(255,255,255,0.04)", border: "1px solid #2a2a32", borderRadius: 10, padding: 10, display: "flex", alignItems: "center", gap: 12 }}>
-                <img src={TRAINER_SPRITE(friendSearchResult.sprite)} alt={friendSearchResult.name} style={{ width: 48, height: 48, imageRendering: "pixelated", flexShrink: 0 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, color: "#fff", fontWeight: 700 }}>{friendSearchResult.name}</div>
-                  <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>#{friendSearchResult.id} · Rank {friendSearchResult.rank}</div>
-                  <div style={{ fontSize: 11, color: "#6b7280" }}>{friendSearchResult.hometown}</div>
-                </div>
-                <button onClick={handleAddFromResult} className="btn" style={{ padding: "8px 12px", borderRadius: 6, background: "#4ade80", color: "#062b16", fontWeight: 700, fontSize: 11, border: "none", flexShrink: 0 }}>
-                  <i className="fa-solid fa-user-plus" /> Add
+          )}
+
+          {friendTab === "find" && (
+            <div style={{ margin: "12px 16px 0", flex: 1, overflowY: "auto" }}>
+              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                <input
+                  value={friendInput}
+                  onChange={(e) => { setFriendInput(e.target.value); setFriendSearchResults([]); }}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+                  placeholder="Search by Player ID or Username"
+                  style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #2a2a32", background: "#0d0d12", color: "#fff", fontSize: 12, outline: "none", borderRadius: 8 }}
+                />
+                <button onClick={handleSearch} disabled={friendSearchLoading}
+                  style={{ padding: "10px 16px", borderRadius: 8, background: "#2f7bff", color: "#fff", fontWeight: 700, fontSize: 12, border: "none", cursor: "pointer", opacity: friendSearchLoading ? 0.6 : 1 }}>
+                  {friendSearchLoading ? "…" : <i className="fa-solid fa-magnifying-glass" />}
                 </button>
               </div>
-            )}
-          </div>
-
-          {/* Friends list */}
-          <div style={{ padding: "0 16px 24px", flex: 1, overflowY: "auto" }}>
-            <div style={{ fontSize: 10, color: "#bbb", marginBottom: 8, letterSpacing: 0.5 }}>
-              YOUR FRIENDS ({friends.length})
+              {friendSearchResults.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {friendSearchResults.map(r => {
+                    const alreadyFriend = serverFriends.some(f => f.playerId === r.playerId);
+                    return (
+                      <div key={r.playerId} style={{ display: "flex", alignItems: "center", gap: 12, background: "#15151b", border: "1px solid #26262d", borderRadius: 10, padding: 10 }}>
+                        <div style={{ position: "relative", flexShrink: 0 }}>
+                          <img src={TRAINER_SPRITE(r.sprite || "hilbert")} alt={r.name} style={{ width: 48, height: 48, imageRendering: "pixelated" }} />
+                          {r.isOnline && <div style={{ position: "absolute", bottom: 2, right: 2, width: 8, height: 8, borderRadius: "50%", background: "#4ade80", border: "1px solid #0d0d1a" }} />}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, color: "#fff", fontWeight: 700 }}>{r.name}</div>
+                          <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>ID: {r.playerId}{r.hometown ? ` · ${r.hometown}` : ""}</div>
+                          {r.isOnline && <div style={{ fontSize: 10, color: "#4ade80", marginTop: 2 }}>● Online</div>}
+                        </div>
+                        {alreadyFriend ? (
+                          <span style={{ fontSize: 11, color: "#4ade80", padding: "6px 10px" }}>Friends ✓</span>
+                        ) : (
+                          <button onClick={() => handleSendRequest(r)} className="btn"
+                            style={{ padding: "8px 10px", borderRadius: 8, background: "#4ade80", color: "#062b16", fontWeight: 700, fontSize: 11, border: "none", flexShrink: 0, cursor: "pointer" }}>
+                            <i className="fa-solid fa-user-plus" /> Request
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {friendSearchResults.length === 0 && !friendSearchLoading && !friendMsg && (
+                <div style={{ textAlign: "center", padding: "24px 0", color: "#6b7280", fontSize: 12 }}>
+                  Search by Player ID or username to find trainers.
+                </div>
+              )}
             </div>
-            {friends.length === 0 ? (
-              <div style={{ background: "#15151b", border: "1px dashed #2a2a32", borderRadius: 12, padding: 20, textAlign: "center", color: "#777", fontSize: 11 }}>
-                No friends yet. Share your friend code to get started!
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {friends.map((f) => (
-                  <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "#15151b", border: "1px solid #26262d", borderRadius: 10, padding: 10 }}>
-                    <div style={{ cursor: "pointer" }} onClick={() => { sfx.click(); setFriendProfileModal({ id: f.id, name: f.name, hometown: f.hometown ?? "", sprite: f.sprite || "hilbert", rank: f.rank ?? 1, addedAt: f.addedAt }); }}>
-                      <img src={TRAINER_SPRITE(f.sprite || "hilbert")} alt={f.name} style={{ width: 44, height: 44, imageRendering: "pixelated", opacity: f.sprite ? 1 : 0.6 }} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0, cursor: "pointer" }} onClick={() => { sfx.click(); setFriendProfileModal({ id: f.id, name: f.name, hometown: f.hometown ?? "", sprite: f.sprite || "hilbert", rank: f.rank ?? 1, addedAt: f.addedAt }); }}>
-                      <div style={{ fontSize: 12, color: "#fff", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</div>
-                      <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>
-                        #{f.id}{f.rank ? ` · Rank ${f.rank}` : ""}{f.hometown ? ` · ${f.hometown}` : ""}
+          )}
+
+          {friendTab === "list" && (
+            <div style={{ padding: "12px 16px 24px", flex: 1, overflowY: "auto" }}>
+              {serverFriendsLoading ? (
+                <div style={{ textAlign: "center", padding: 32, color: "#6b7280", fontSize: 13 }}>Loading...</div>
+              ) : serverFriends.length === 0 ? (
+                <div style={{ background: "#15151b", border: "1px dashed #2a2a32", borderRadius: 12, padding: 24, textAlign: "center", color: "#777", fontSize: 12 }}>
+                  No friends yet. Use the <strong style={{ color: "#4ade80" }}>Find Trainer</strong> tab to send a request!
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {friendsWithLiveStatus.map(f => (
+                    <div key={f.playerId} onClick={() => { sfx.click(); setFriendProfileModal(f); }}
+                      style={{ display: "flex", alignItems: "center", gap: 12, background: "#15151b", border: `1px solid ${f.isOnline ? "#14532d" : "#26262d"}`, borderRadius: 10, padding: 10, cursor: "pointer" }}>
+                      <div style={{ position: "relative", flexShrink: 0 }}>
+                        <img src={TRAINER_SPRITE(f.sprite || "hilbert")} alt={f.name} style={{ width: 44, height: 44, imageRendering: "pixelated" }} />
+                        <div style={{ position: "absolute", bottom: 2, right: 2, width: 9, height: 9, borderRadius: "50%", background: f.isOnline ? "#4ade80" : "#374151", border: "1.5px solid #0d0d1a", transition: "background 0.3s" }} title={f.isOnline ? "Online" : "Offline"} />
                       </div>
-                      <div style={{ fontSize: 11, color: "#666", marginTop: 2 }}>
-                        Added {new Date(f.addedAt).toLocaleDateString()}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, color: f.isOnline ? "#fff" : "#9ca3af", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</div>
+                        <div style={{ fontSize: 11, color: f.isOnline ? "#4ade80" : "#4b5563", marginTop: 2 }}>{f.isOnline ? "● Online" : "○ Offline"}</div>
+                        <div style={{ fontSize: 10, color: "#4b5563", marginTop: 1 }}>{f.hometown || ""}</div>
                       </div>
+                      <button onClick={(e) => { e.stopPropagation(); handleRemoveFriend(f); }} className="btn"
+                        style={{ padding: "6px 10px", borderRadius: 6, background: "#7f1d1d", color: "#fff", fontSize: 10, border: "none", flexShrink: 0 }}>
+                        <i className="fa-solid fa-trash" />
+                      </button>
                     </div>
-                    <button onClick={() => handleRemove(f.id, f.name)} className="btn" style={{ padding: "6px 10px", borderRadius: 6, background: "#7f1d1d", color: "#fff", fontSize: 10, border: "none" }}>
-                      <i className="fa-solid fa-trash" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
+
         {/* Friend profile modal */}
         {friendProfileModal && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" }}
@@ -3484,18 +3559,27 @@ export default function App() {
                 <button onClick={() => setFriendProfileModal(null)} style={{ background: "none", border: "none", color: "#9ca3af", fontSize: 18, cursor: "pointer", lineHeight: 1 }}>×</button>
               </div>
               <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 16 }}>
-                <img src={TRAINER_SPRITE(friendProfileModal.sprite)} alt={friendProfileModal.name} style={{ width: 72, height: 72, imageRendering: "pixelated" }} />
+                <div style={{ position: "relative" }}>
+                  <img src={TRAINER_SPRITE(friendProfileModal.sprite || "hilbert")} alt={friendProfileModal.name} style={{ width: 72, height: 72, imageRendering: "pixelated" }} />
+                  <div style={{ position: "absolute", bottom: 3, right: 3, width: 12, height: 12, borderRadius: "50%", background: onlineFriendIds.has(friendProfileModal.playerId) ? "#4ade80" : "#374151", border: "2px solid #0d0d1a", boxShadow: onlineFriendIds.has(friendProfileModal.playerId) ? "0 0 6px #4ade80" : "none" }} />
+                </div>
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>{friendProfileModal.name}</div>
-                  <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>#{friendProfileModal.id} · Rank {friendProfileModal.rank}</div>
+                  <div style={{ fontSize: 12, color: onlineFriendIds.has(friendProfileModal.playerId) ? "#4ade80" : "#6b7280", marginTop: 4 }}>
+                    {onlineFriendIds.has(friendProfileModal.playerId) ? "● Online now" : "○ Offline"}
+                  </div>
                   <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>{friendProfileModal.hometown || "Unknown Town"}</div>
                 </div>
               </div>
-              <div style={{ background: "#171022", border: "1px solid #312440", borderRadius: 8, padding: 10, display: "flex", justifyContent: "space-between" }}>
-                <div style={{ fontSize: 11, color: "#aaa" }}>Friends since</div>
-                <div style={{ fontSize: 11, color: "#fff" }}>{new Date(friendProfileModal.addedAt).toLocaleDateString()}</div>
+              <div style={{ background: "#171022", border: "1px solid #312440", borderRadius: 8, padding: 10, display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <div style={{ fontSize: 11, color: "#aaa" }}>Player ID</div>
+                <div style={{ fontSize: 11, color: "#fff", fontFamily: "monospace" }}>{friendProfileModal.playerId}</div>
               </div>
-              <button onClick={() => setFriendProfileModal(null)} style={{ marginTop: 14, width: "100%", background: "transparent", border: "1px solid #26262d", color: "#9ca3af", padding: "10px", borderRadius: 8, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>Close</button>
+              <div style={{ background: "#171022", border: "1px solid #312440", borderRadius: 8, padding: 10, display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
+                <div style={{ fontSize: 11, color: "#aaa" }}>Friends since</div>
+                <div style={{ fontSize: 11, color: "#fff" }}>{new Date(friendProfileModal.createdAt).toLocaleDateString()}</div>
+              </div>
+              <button onClick={() => setFriendProfileModal(null)} style={{ width: "100%", background: "transparent", border: "1px solid #26262d", color: "#9ca3af", padding: "10px", borderRadius: 8, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>Close</button>
             </div>
           </div>
         )}
@@ -3557,6 +3641,39 @@ export default function App() {
                     <i className="fa-solid fa-gift" style={{ marginRight: 8 }} />Claim Reward
                   </button>
                 )}
+                {(selectedMail.data as any)?.type === "friend_request" && (() => {
+                  const d = selectedMail.data as any;
+                  return (
+                    <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                      <button onClick={async () => {
+                        sfx.click();
+                        try {
+                          await acceptFriendRequest(String(player.id), d.senderId, selectedMail.id);
+                          setMailItems(prev => prev.filter(m => m.id !== selectedMail.id));
+                          setSelectedMail(null);
+                          loadServerFriends();
+                          addLog(`You and ${d.senderName} are now friends!`, "#4ade80");
+                        } catch (e: any) {
+                          addLog(e.message || "Error accepting request.", "#f87171");
+                        }
+                      }} style={{ flex: 1, background: "#16a34a", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                        <i className="fa-solid fa-user-check" style={{ marginRight: 8 }} />Agree
+                      </button>
+                      <button onClick={async () => {
+                        sfx.click();
+                        try {
+                          await declineFriendRequest(String(player.id), selectedMail.id);
+                          setMailItems(prev => prev.filter(m => m.id !== selectedMail.id));
+                          setSelectedMail(null);
+                        } catch (e: any) {
+                          addLog(e.message || "Error declining request.", "#f87171");
+                        }
+                      }} style={{ flex: 1, background: "#7f1d1d", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                        <i className="fa-solid fa-user-xmark" style={{ marginRight: 8 }} />Decline
+                      </button>
+                    </div>
+                  );
+                })()}
                 <button onClick={() => setSelectedMail(null)} style={{ width: "100%", background: "transparent", border: "1px solid #374151", color: "#9ca3af", borderRadius: 8, padding: "10px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>← Back to Inbox</button>
               </div>
             ) : !mailLoading && mailItems.length === 0 ? (

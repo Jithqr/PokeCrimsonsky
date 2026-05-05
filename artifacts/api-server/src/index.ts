@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { attachBattleWs } from "./ws/battle-ws";
+import { attachPresenceWs } from "./ws/presence-ws";
 
 const rawPort = process.env["PORT"];
 
@@ -26,3 +27,4 @@ const server = app.listen(port, (err) => {
 });
 
 attachBattleWs(server);
+attachPresenceWs(server);

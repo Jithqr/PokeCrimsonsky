@@ -43,6 +43,23 @@ export type TradeProp = {
   createdAt: string;
 };
 
+export type ServerFriend = {
+  playerId: string;
+  name: string;
+  sprite: string;
+  hometown: string;
+  createdAt: string;
+  isOnline: boolean;
+};
+
+export type PlayerSearchResult = {
+  playerId: string;
+  name: string;
+  sprite: string;
+  hometown: string;
+  isOnline: boolean;
+};
+
 // ── Player Registry ───────────────────────────────────────────────────────────
 export async function registerPlayer(p: { playerId: string; name: string; sprite: string; hometown: string }) {
   try { await apiFetch(`${BASE}/register`, { method: "POST", body: JSON.stringify(p) }); } catch { /* silent */ }
@@ -56,6 +73,10 @@ export async function checkBanned(playerId: string): Promise<{ banned: boolean; 
   try { return await apiFetch(`${BASE}/check-ban/${playerId}`); } catch { return { banned: false }; }
 }
 
+export async function searchPlayers(q: string): Promise<PlayerSearchResult[]> {
+  try { return (await apiFetch(`${BASE}/search?q=${encodeURIComponent(q)}`)).results ?? []; } catch { return []; }
+}
+
 // ── Mails ─────────────────────────────────────────────────────────────────────
 export async function fetchMails(playerId: string): Promise<SocialMail[]> {
   return (await apiFetch(`${BASE}/mail/${playerId}`)).mails ?? [];
@@ -67,6 +88,46 @@ export async function markMailRead(mailId: number, playerId: string) {
 
 export async function markAllMailRead(playerId: string) {
   await apiFetch(`${BASE}/mail/read-all`, { method: "POST", body: JSON.stringify({ playerId }) });
+}
+
+export async function deleteMail(mailId: number, playerId: string) {
+  await apiFetch(`${BASE}/mail/${mailId}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json", "x-player-id": playerId },
+  });
+}
+
+// ── Friends ───────────────────────────────────────────────────────────────────
+export async function sendFriendRequest(senderId: string, senderName: string, senderSprite: string, targetId: string) {
+  return apiFetch(`${BASE}/friend/request`, {
+    method: "POST",
+    body: JSON.stringify({ senderId, senderName, senderSprite, targetId }),
+  });
+}
+
+export async function acceptFriendRequest(playerId: string, senderId: string, mailId: number) {
+  return apiFetch(`${BASE}/friend/accept`, {
+    method: "POST",
+    body: JSON.stringify({ playerId, senderId, mailId }),
+  });
+}
+
+export async function declineFriendRequest(playerId: string, mailId: number) {
+  return apiFetch(`${BASE}/friend/decline`, {
+    method: "POST",
+    body: JSON.stringify({ playerId, mailId }),
+  });
+}
+
+export async function fetchServerFriends(playerId: string): Promise<ServerFriend[]> {
+  return (await apiFetch(`${BASE}/friends/${playerId}`)).friends ?? [];
+}
+
+export async function removeServerFriend(playerId: string, friendId: string) {
+  return apiFetch(`${BASE}/friend/remove`, {
+    method: "POST",
+    body: JSON.stringify({ playerId, friendId }),
+  });
 }
 
 // ── Transfers ─────────────────────────────────────────────────────────────────

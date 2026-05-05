@@ -1,5 +1,5 @@
 import {
-  pgTable, serial, integer, text, boolean, jsonb, timestamp, index,
+  pgTable, serial, integer, text, boolean, jsonb, timestamp, index, uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 export const playerRegistry = pgTable("player_registry", {
@@ -85,3 +85,20 @@ export const dbRedeemCodes = pgTable("db_redeem_codes", {
 }));
 
 export type DbRedeemCode = typeof dbRedeemCodes.$inferSelect;
+
+/**
+ * Friendships — one row per accepted mutual friendship.
+ * player1Id is always lexicographically < player2Id to ensure uniqueness.
+ */
+export const friendships = pgTable("friendships", {
+  id: serial("id").primaryKey(),
+  player1Id: text("player1_id").notNull(),
+  player2Id: text("player2_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => ({
+  pairIdx: uniqueIndex("fs_pair_idx").on(t.player1Id, t.player2Id),
+  p1Idx: index("fs_p1_idx").on(t.player1Id),
+  p2Idx: index("fs_p2_idx").on(t.player2Id),
+}));
+
+export type Friendship = typeof friendships.$inferSelect;
