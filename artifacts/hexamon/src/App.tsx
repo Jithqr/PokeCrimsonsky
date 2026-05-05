@@ -946,6 +946,8 @@ export default function App() {
   const [shakeP, setShakeP] = useState(false);
   const [flashE, setFlashE] = useState(false);
   const [flashP, setFlashP] = useState(false);
+  const [dmgPopE, setDmgPopE] = useState<{ val: number; id: number } | null>(null);
+  const [dmgPopP, setDmgPopP] = useState<{ val: number; id: number } | null>(null);
   const [ballAnim, setBallAnim] = useState<null | "throw" | "capture" | "wobble" | "success" | "fail">(null);
   const [ringActive, setRingActive] = useState(false);
   const [ringRadius, setRingRadius] = useState(110);
@@ -1938,6 +1940,7 @@ export default function App() {
       } else if (dmg > 0) {
         setFlashE(true); setTimeout(() => setFlashE(false), 320);
         setShakeE(true); setTimeout(() => setShakeE(false), 350);
+        setDmgPopE({ val: dmg, id: Date.now() }); setTimeout(() => setDmgPopE(null), 750);
         sfx.hit();
         if (isCrit) setTimeout(() => sfx.crit(), 80);
         if (eff > 1) setTimeout(() => sfx.superEffective(), 100);
@@ -1985,6 +1988,7 @@ export default function App() {
             } else if (eDmg > 0) {
               setFlashP(true); setTimeout(() => setFlashP(false), 320);
               setShakeP(true); setTimeout(() => setShakeP(false), 350);
+              setDmgPopP({ val: eDmg, id: Date.now() }); setTimeout(() => setDmgPopP(null), 750);
               sfx.hurt();
               if (eCrit) setTimeout(() => sfx.crit(), 80);
               if (eEff > 1) setTimeout(() => sfx.superEffective(), 100);
@@ -4371,6 +4375,27 @@ export default function App() {
             animation: wb-hit-flash 320ms ease-out forwards;
             z-index: 10;
           }
+          @keyframes wb-dmg-float {
+            0%   { transform: translateX(-50%) translateY(0px); opacity: 1; }
+            65%  { opacity: 1; }
+            100% { transform: translateX(-50%) translateY(-42px); opacity: 0; }
+          }
+          .wb-dmg-pop {
+            position: absolute;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 17px;
+            font-weight: 900;
+            color: #ff3030;
+            text-shadow: 0 1px 4px rgba(0,0,0,1), 0 0 10px rgba(255,40,0,0.7);
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 30;
+            animation: wb-dmg-float 720ms ease-out forwards;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            letter-spacing: 0.5px;
+          }
         `}</style>
         <div style={{ ...S.wrap, background: "#0a0a0c", fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", padding: "16px 16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
 
@@ -4430,6 +4455,7 @@ export default function App() {
                   <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className="mon-suck" style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
                 )}
                 {flashE && <div className="wb-hit-flash" />}
+                {dmgPopE && <div key={dmgPopE.id} className="wb-dmg-pop">-{dmgPopE.val}</div>}
               </div>
               {moveAnim?.target === "enemy" && <MoveFx key={moveAnim.key} type={moveAnim.type} />}
             </div>
@@ -4439,6 +4465,7 @@ export default function App() {
               <div style={{ position: "relative", display: "inline-block" }}>
                 <MonSprite sprite={pMon.sprite} size={95} back isShiny={pMon.isShiny} className={shakeP ? "mon-shake" : "mon-float"} style={{ filter: pMon.isShiny ? "drop-shadow(0 6px 18px rgba(255,215,0,0.8))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.8))" }} />
                 {flashP && <div className="wb-hit-flash" />}
+                {dmgPopP && <div key={dmgPopP.id} className="wb-dmg-pop">-{dmgPopP.val}</div>}
               </div>
               {moveAnim?.target === "player" && <MoveFx key={moveAnim.key} type={moveAnim.type} />}
             </div>
