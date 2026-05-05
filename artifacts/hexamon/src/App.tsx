@@ -2356,8 +2356,8 @@ export default function App() {
     .m-team-sprite img { width:30px; image-rendering:pixelated; }
 
     .m-menu { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding: 0 16px; margin-bottom: 16px; }
-    .m-menu-btn { background: var(--m-card); border:1px solid var(--m-border); border-radius:16px; padding:14px 6px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; font-size:12px; font-weight:600; text-transform:uppercase; cursor:pointer; transition: background-color .2s, transform .15s; letter-spacing: 0.5px; color: var(--m-text); }
-    .m-menu-btn i { font-size: 18px; }
+    .m-menu-btn { background: var(--m-card); border:2px solid var(--m-border); border-radius:16px; padding:22px 8px 18px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; font-size:13px; font-weight:700; text-transform:uppercase; cursor:pointer; transition: background-color .2s, transform .15s; letter-spacing: 1px; color: var(--m-text); }
+    .m-menu-btn i { font-size: 28px; }
     .m-menu-btn:hover { background: #1f1f24; }
     .m-menu-btn:active { transform: scale(0.97); }
     .m-menu-btn.locked { opacity: 0.45; cursor: not-allowed; color: var(--m-muted); border-style: dashed; }
@@ -2365,8 +2365,6 @@ export default function App() {
     .m-menu-carousel { overflow: hidden; padding: 0 16px; margin-bottom: 10px; touch-action: pan-y; }
     .m-menu-track { display: flex; gap: 17px; transition: transform 0.3s ease; }
     .m-menu-page { flex: 0 0 100%; display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
-    .m-menu-page.large .m-menu-btn { padding: 20px 8px; font-size: 13px; border-radius: 18px; }
-    .m-menu-page.large .m-menu-btn i { font-size: 24px; }
     .m-menu-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
     .m-menu-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--m-border); cursor: pointer; transition: all 0.2s; border: none; padding: 0; }
     .m-menu-dot.active { background: var(--m-pink); width: 22px; border-radius: 4px; }
@@ -2785,6 +2783,12 @@ export default function App() {
       { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
       { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
       { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
+      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
+      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
+      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
+      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
+      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
+      { label: "—", icon: "fa-lock", color: "var(--m-muted)", locked: true },
     ];
     const menuPages = [menuPage1, menuPage2, menuPage3];
     return (
@@ -2927,7 +2931,7 @@ export default function App() {
           >
             <div className="m-menu-track" style={{ transform: `translateX(calc(${menuPage} * (-100% - 17px)))` }}>
               {menuPages.map((page, pi) => (
-                <div key={pi} className={`m-menu-page ${pi === 0 ? "large" : ""}`}>
+                <div key={pi} className="m-menu-page">
                   {page.map((b, bi) => (
                     <div key={`${pi}-${bi}-${b.label}`}
                       className={`m-menu-btn ${b.locked ? "locked" : ""}`}
