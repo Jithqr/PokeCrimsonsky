@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { CUSTOM_SPRITES, CUSTOM_SPRITE_URL } from "./lib/sprites";
 import { sfx, playMoveSfx, moveTypeOf, TYPE_COLOR as MOVE_TYPE_COLOR } from "./sfx";
 import { ALL_POKEMON, TOTAL_POKEMON, GEN_NAMES, movesForLevel, type PokemonTemplate } from "./lib/pokemon-data";
 import { rankFromExp, rankProgress, rankTier, MAX_RANK } from "./lib/rank-system";
@@ -44,10 +45,6 @@ import { chooseBotAction, pickBotForceSwitch } from "./lib/bot-ai";
 import { getMove } from "./lib/move-data";
 import { typeMultiplier, type PType } from "./lib/type-chart";
 
-const SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/ani/${name.replace(/[^a-z0-9]/g, "")}.gif`;
-const SPRITE_BACK = (name: string) => `https://play.pokemonshowdown.com/sprites/ani-back/${name.replace(/[^a-z0-9]/g, "")}.gif`;
-const SPRITE_SHINY = (name: string) => `https://play.pokemonshowdown.com/sprites/ani-shiny/${name.replace(/[^a-z0-9]/g, "")}.gif`;
-const SPRITE_BACK_SHINY = (name: string) => `https://play.pokemonshowdown.com/sprites/ani-back-shiny/${name.replace(/[^a-z0-9]/g, "")}.gif`;
 
 type MegaData = { megaSprite: string; type1: string; type2?: string | null; hp: number; atk: number; def: number; spa: number; spd: number; spe: number };
 const MEGA_STONES: Record<string, MegaData> = {
@@ -113,139 +110,6 @@ const STONE_TO_SPRITE: Record<string, string> = {
 const TRAINER_SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/trainers/${name}.png`;
 
 
-const CUSTOM_SPRITES: Record<string, string> = {
-  irontreads: "sprites/custom/irontreads.gif",
-  ironbundle: "sprites/custom/ironbundle.gif",
-  ironhands: "sprites/custom/ironhands.gif",
-  ironjugulis: "sprites/custom/ironjugulis.gif",
-  ironmoth: "sprites/custom/ironmoth.gif",
-  ironthorns: "sprites/custom/ironthorns.gif",
-  wochien: "sprites/custom/wochien.gif",
-  chienpao: "sprites/custom/chienpao.gif",
-  tinglu: "sprites/custom/tinglu.gif",
-  chiyu: "sprites/custom/chiyu.gif",
-  ironvaliant: "sprites/custom/ironvaliant.gif",
-  miraidon: "sprites/custom/miraidon.gif",
-  ironleaves: "sprites/custom/ironleaves.gif",
-  okidogi: "sprites/custom/okidogi.gif",
-  munkidori: "sprites/custom/munkidori.gif",
-  fezandipiti: "sprites/custom/fezandipiti.gif",
-  ogerpon: "sprites/custom/ogerpon.gif",
-  ironboulder: "sprites/custom/ironboulder.gif",
-  ironcrown: "sprites/custom/ironcrown.gif",
-  terapagos: "sprites/custom/terapagos.gif",
-  pecharunt: "sprites/custom/pecharunt.gif",
-  "urshifu-gmax": "sprites/custom/urshifu-gmax.gif",
-  "urshifu-rapid-strike-gmax": "sprites/custom/urshifu-rapid-strike-gmax.gif",
-  "cinderace-gmax": "sprites/custom/cinderace-gmax.gif",
-  "rillaboom-gmax": "sprites/custom/rillaboom-gmax.gif",
-  "melmetal-gmax": "sprites/custom/melmetal-gmax.gif",
-  "venusaur-gmax": "sprites/custom/venusaur-gmax.gif",
-  "venusaur-gmax-shiny": "sprites/custom/venusaur-gmax-shiny.gif",
-  "blastoise-gmax": "sprites/custom/blastoise-gmax.gif",
-  "blastoise-gmax-shiny": "sprites/custom/blastoise-gmax-shiny.gif",
-  // Gen 9 shiny sprites
-  "wochien-shiny": "sprites/custom/wochien-shiny.gif",
-  "chienpao-shiny": "sprites/custom/chienpao-shiny.gif",
-  "tinglu-shiny": "sprites/custom/tinglu-shiny.gif",
-  "chiyu-shiny": "sprites/custom/chiyu-shiny.gif",
-  "ironvaliant-shiny": "sprites/custom/ironvaliant-shiny.gif",
-  "miraidon-shiny": "sprites/custom/miraidon-shiny.gif",
-  "ironleaves-shiny": "sprites/custom/ironleaves-shiny.gif",
-  "okidogi-shiny": "sprites/custom/okidogi-shiny.gif",
-  "munkidori-shiny": "sprites/custom/munkidori-shiny.gif",
-  "fezandipiti-shiny": "sprites/custom/fezandipiti-shiny.gif",
-  "ogerpon-shiny": "sprites/custom/ogerpon-shiny.gif",
-  "ironboulder-shiny": "sprites/custom/ironboulder-shiny.gif",
-  "ironcrown-shiny": "sprites/custom/ironcrown-shiny.gif",
-  "terapagos-shiny": "sprites/custom/terapagos-shiny.gif",
-  "pecharunt-shiny": "sprites/custom/pecharunt-shiny.gif",
-  "ironhands-shiny": "sprites/custom/ironhands-shiny.gif",
-  "ironjugulis-shiny": "sprites/custom/ironjugulis-shiny.gif",
-  "ironmoth-shiny": "sprites/custom/ironmoth-shiny.gif",
-  "ironthorns-shiny": "sprites/custom/ironthorns-shiny.gif",
-  "chesnaught-mega": "sprites/custom/mega/chesnaught-mega.gif",
-  "delphox-mega": "sprites/custom/mega/delphox-mega.gif",
-  "emboar-mega": "sprites/custom/mega/emboar-mega.gif",
-  "feraligatr-mega": "sprites/custom/mega/feraligatr-mega.gif",
-  "greninja-mega": "sprites/custom/mega/greninja-mega.gif",
-  "meganium-mega": "sprites/custom/mega/meganium-mega.gif",
-  "barbaracle-mega": "sprites/custom/mega/barbaracle-mega.gif",
-  "chandelure-mega": "sprites/custom/mega/chandelure-mega.gif",
-  "dragalge-mega": "sprites/custom/mega/dragalge-mega.gif",
-  "dragonite-mega": "sprites/custom/mega/dragonite-mega.gif",
-  "drampa-mega": "sprites/custom/mega/drampa-mega.gif",
-  "eelektross-mega": "sprites/custom/mega/eelektross-mega.gif",
-  "excadrill-mega": "sprites/custom/mega/excadrill-mega.gif",
-  "froslass-mega": "sprites/custom/mega/froslass-mega.gif",
-  "hawlucha-mega": "sprites/custom/mega/hawlucha-mega.gif",
-  "malamar-mega": "sprites/custom/mega/malamar-mega.gif",
-  "pyroar-mega": "sprites/custom/mega/pyroar-mega.gif",
-  "scolipede-mega": "sprites/custom/mega/scolipede-mega.gif",
-  "scrafty-mega": "sprites/custom/mega/scrafty-mega.gif",
-  "skarmory-mega": "sprites/custom/mega/skarmory-mega.gif",
-  "victreebel-mega": "sprites/custom/mega/victreebel-mega.gif",
-  "tatsugiri-droopy-mega": "sprites/custom/mega/tatsugiri-droopy-mega.gif",
-  "tatsugiri-stretchy-mega": "sprites/custom/mega/tatsugiri-stretchy-mega.gif",
-  "raichu-megax": "sprites/custom/mega/raichu-megax.gif",
-  "raichu-megay": "sprites/custom/mega/raichu-megay.gif",
-  "absol-megaz": "sprites/custom/mega/absol-megaz.gif",
-  "garchomp-megaz": "sprites/custom/mega/garchomp-megaz.gif",
-  "lucario-megaz": "sprites/custom/mega/lucario-megaz.gif",
-  "chimecho-mega": "sprites/custom/mega/chimecho-mega.gif",
-  "staraptor-mega": "sprites/custom/mega/staraptor-mega.gif",
-  "golurk-mega": "sprites/custom/mega/golurk-mega.gif",
-  "meowstic-mega": "sprites/custom/mega/meowstic-mega.gif",
-  "crabominable-mega": "sprites/custom/mega/crabominable-mega.gif",
-  "golisopod-mega": "sprites/custom/mega/golisopod-mega.gif",
-  "scovillain-mega": "sprites/custom/mega/scovillain-mega.gif",
-  "glimmora-mega": "sprites/custom/mega/glimmora-mega.gif",
-  "tatsugiri-mega": "sprites/custom/mega/tatsugiri-mega.gif",
-  "baxcalibur-mega": "sprites/custom/mega/baxcalibur-mega.gif",
-  "heatran-mega": "sprites/custom/mega/heatran-mega.gif",
-  "darkrai-mega": "sprites/custom/mega/darkrai-mega.gif",
-  "magearna-mega": "sprites/custom/mega/magearna-mega.gif",
-  "zeraora-mega": "sprites/custom/mega/zeraora-mega.gif",
-  // Alolan forms
-  "sandshrew-alola": "sprites/custom/sandshrew-alola.gif",
-  "sandslash-alola": "sprites/custom/sandslash-alola.gif",
-  "vulpix-alola": "sprites/custom/vulpix-alola.gif",
-  "ninetales-alola": "sprites/custom/ninetales-alola.gif",
-  "dugtrio-alola": "sprites/custom/dugtrio-alola.gif",
-  "persian-alola": "sprites/custom/persian-alola.gif",
-  "geodude-alola": "sprites/custom/geodude-alola.gif",
-  "graveler-alola": "sprites/custom/graveler-alola.gif",
-  "golem-alola": "sprites/custom/golem-alola.gif",
-  "exeggutor-alola": "sprites/custom/exeggutor-alola.gif",
-  // Galarian forms
-  "meowth-galar": "sprites/custom/meowth-galar.gif",
-  "slowbro-galar": "sprites/custom/slowbro-galar.gif",
-  "slowking-galar": "sprites/custom/slowking-galar.gif",
-  "zapdos-galar": "sprites/custom/zapdos-galar.gif",
-  "weezing-galar": "sprites/custom/weezing-galar.gif",
-  "moltres-galar": "sprites/custom/moltres-galar.gif",
-  // Hisuian forms
-  "voltorb-hisui": "sprites/custom/voltorb-hisui.gif",
-  "growlithe-hisui": "sprites/custom/growlithe-hisui.gif",
-  "arcanine-hisui": "sprites/custom/arcanine-hisui.gif",
-  "electrode-hisui": "sprites/custom/electrode-hisui.gif",
-  "typhlosion-hisui": "sprites/custom/typhlosion-hisui.gif",
-  "qwilfish-hisui": "sprites/custom/qwilfish-hisui.gif",
-  "sneasel-hisui": "sprites/custom/sneasel-hisui.gif",
-  "samurott-hisui": "sprites/custom/samurott-hisui.gif",
-  "lilligant-hisui": "sprites/custom/lilligant-hisui.gif",
-  "zorua-hisui": "sprites/custom/zorua-hisui.gif",
-  "zoroark-hisui": "sprites/custom/zoroark-hisui.gif",
-  "braviary-hisui": "sprites/custom/braviary-hisui.gif",
-  "goodra-hisui": "sprites/custom/goodra-hisui.gif",
-  "avalugg-hisui": "sprites/custom/avalugg-hisui.gif",
-  "decidueye-hisui": "sprites/custom/decidueye-hisui.gif",
-  // Paldean forms
-  "wooper-paldea": "sprites/custom/wooper-paldea.gif",
-  "tauros-paldeacombat": "sprites/custom/tauros-paldeacombat.gif",
-};
-const CUSTOM_SPRITE_URL = (clean: string) =>
-  CUSTOM_SPRITES[clean] ? `${import.meta.env.BASE_URL}${CUSTOM_SPRITES[clean]}` : null;
 const GEN_V_TRAINERS = [
   "hilbert", "hilda", "cheren", "bianca", "n", "ghetsis", "alder",
   "cilan", "chili", "cress", "lenora", "burgh", "elesa", "clay", "skyla", "brycen", "drayden", "iris",
@@ -3073,7 +2937,7 @@ export default function App() {
             {team.length === 0 && <span style={{ fontSize: 11, color: "var(--m-muted)" }}>—</span>}
             {team.map((m, i) => (
               <div key={i} className="m-team-sprite" style={{ opacity: m.currentHp <= 0 ? 0.35 : 1 }}>
-                <img src={SPRITE(m.sprite)} alt={m.name} />
+                <MonSprite sprite={m.sprite} size={40} className="" />
               </div>
             ))}
           </div>
@@ -3931,22 +3795,17 @@ export default function App() {
   // ── TRADE SCREEN ────────────────────────────────────────────────────────
   if (screen === "trade") {
     const tradeSrcMons = tradeSource === "team" ? team : box;
-    const monSpriteUrl = (m: Mon) => {
-      const key = (m.formSprite || (m.species || m.name).toLowerCase().replace(/[^a-z0-9-]/g, "")).replace(/\s/g, "-");
-      return CUSTOM_SPRITE_URL(key) ?? `https://play.pokemonshowdown.com/sprites/ani/${key}.gif`;
-    };
+    const monSpriteKey = (m: Mon) => (m.formSprite || (m.species || m.name).toLowerCase().replace(/[^a-z0-9-]/g, "")).replace(/\s/g, "-");
     const STAT_LABELS: Record<string, string> = { hp: "HP", atk: "Atk", def: "Def", spa: "SpA", spd: "SpD", spe: "Spe" };
     const renderMonPreview = (t: TradeProp) => {
       const m = t.proposerMonJson as any;
       if (!m) return null;
       const sprKey = (m.formSprite || (m.species || m.name || "").toLowerCase().replace(/[^a-z0-9-]/g, "")).replace(/\s/g, "-");
-      const sprUrl = CUSTOM_SPRITE_URL(sprKey) ?? `https://play.pokemonshowdown.com/sprites/ani/${sprKey}.gif`;
       const statKeys = ["hp", "atk", "def", "spa", "spd", "spe"];
       return (
         <div style={{ background: "#0a0a1a", border: "1px solid #4c1d95", borderRadius: 10, padding: 12, marginBottom: 10 }}>
           <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10 }}>
-            <img src={sprUrl} alt={m.name} style={{ width: 72, height: 72, imageRendering: "pixelated", objectFit: "contain" }}
-              onError={(e) => { (e.target as HTMLImageElement).src = `https://play.pokemonshowdown.com/sprites/dex/${(m.species || m.name || "").toLowerCase().replace(/[^a-z0-9]/g, "")}.png`; }} />
+            <MonSprite sprite={sprKey} size={72} className="" />
             <div>
               <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{m.name}</div>
               <div style={{ fontSize: 11, color: "#a78bfa" }}>{m.species}{m.form ? ` (${m.form})` : ""}</div>
@@ -4142,7 +4001,7 @@ export default function App() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6, marginBottom: 10, maxHeight: 200, overflowY: "auto" }}>
                 {tradeSrcMons.map((m, i) => (
                   <div key={i} onClick={() => setTradeMyMon(m === tradeMyMon ? null : m)} style={{ background: m === tradeMyMon ? "#4c1d95" : "#0d0d1a", border: `1px solid ${m === tradeMyMon ? "#7c3aed" : "#1f2937"}`, borderRadius: 8, padding: 6, cursor: "pointer", textAlign: "center" }}>
-                    <img src={monSpriteUrl(m)} alt={m.name} style={{ width: 52, height: 52, imageRendering: "pixelated", objectFit: "contain" }} onError={(e) => { const t2 = e.target as HTMLImageElement; t2.src = `https://play.pokemonshowdown.com/sprites/dex/${(m.species || m.name).toLowerCase().replace(/[^a-z0-9]/g,"")}.png`; }} />
+                    <MonSprite sprite={monSpriteKey(m)} size={52} className="" />
                     <div style={{ fontSize: 9, color: "#e5e7eb", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</div>
                     <div style={{ fontSize: 8, color: "#6b7280" }}>Lv.{m.level}</div>
                   </div>
@@ -5943,7 +5802,7 @@ export default function App() {
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
                         {list.map((p) => (
                           <div key={p.id} className="m-card" style={{ padding: 8, borderRadius: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                            <img src={SPRITE(p.sprite)} alt={p.name} style={{ width: 48, height: 48, imageRendering: "pixelated" }} />
+                            <MonSprite sprite={p.sprite} size={48} className="" />
                             <div style={{ fontSize: 12, color: "var(--m-muted)" }}>#{String(p.id).padStart(3, "0")}</div>
                             <div style={{ fontSize: 10, fontWeight: 600, color: "var(--m-text)", textAlign: "center", lineHeight: 1.1 }}>{p.name}</div>
                           </div>
@@ -6398,7 +6257,6 @@ export default function App() {
 
     // Sprite URL for the new UI — custom sprite if available, otherwise Showdown animated gif.
     const _spriteKey = (m.sprite || m.name).toLowerCase().replace(/[^a-z0-9-]/g, "");
-    const spriteUrl = CUSTOM_SPRITE_URL(_spriteKey) ?? `https://play.pokemonshowdown.com/sprites/ani/${_spriteKey}.gif`;
 
     // Plays this Pokémon's cry from the bundled PokeRogue assets, falling
     // back to PokéAPI's cries CDN if the local file is missing.
@@ -6472,18 +6330,7 @@ export default function App() {
               userSelect: "none",
             }}
           >
-            <img
-              src={spriteUrl}
-              alt={`${m.name} sprite`}
-              style={{ height: 120, imageRendering: "pixelated", pointerEvents: "none" }}
-              onError={(e) => {
-                const t = e.currentTarget;
-                if (!t.dataset.fallback) {
-                  t.dataset.fallback = "1";
-                  t.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${m.id}.png`;
-                }
-              }}
-            />
+            <MonSprite sprite={_spriteKey} size={120} className="" style={{ pointerEvents: "none" }} />
             <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 6, color: C.textMuted, fontSize: 12 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill={C.textMuted}>
                 <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
@@ -6959,7 +6806,7 @@ export default function App() {
                         <div key={it.id} className={`m-pcard ${sold ? "sold" : ""}`}
                           onClick={() => { if (!sold) { sfx.click(); setMarketDetailMon({ type: "global", item: it }); } }}>
                           {sold && <span className="m-soldout">SOLD OUT</span>}
-                          <img src={SPRITE(it.pokemonSprite)} alt={it.pokemonName} />
+                          <MonSprite sprite={it.pokemonSprite} size={80} className="" />
                           <div className="ovr">
                             <span className="m-nature">Lv {it.level} · {it.nature}</span>
                             <span className="m-pname">{it.pokemonName}</span>
@@ -6976,7 +6823,7 @@ export default function App() {
                       return (
                         <div key={it.id} className="m-card" style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: 12, opacity: sold ? 0.5 : 1, cursor: sold ? "default" : "pointer" }}
                           onClick={() => { if (!sold) { sfx.click(); setMarketDetailMon({ type: "global", item: it }); } }}>
-                          <img src={SPRITE(it.pokemonSprite)} alt={it.pokemonName} style={{ width: 44, height: 44, imageRendering: "pixelated" }} />
+                          <MonSprite sprite={it.pokemonSprite} size={44} className="" />
                           <div style={{ flex: 1 }}>
                             <div style={{ fontSize: 14, fontWeight: 600, color: "var(--m-text)" }}>{it.pokemonName}</div>
                             <div style={{ fontSize: 11, color: "var(--m-muted)" }}>Lv {it.level} · {it.nature}{sold ? " · SOLD OUT" : ""}</div>
@@ -7032,7 +6879,7 @@ export default function App() {
                         <div key={l.id} className="m-pcard" style={{ cursor: mine ? "default" : "pointer" }}
                           onClick={() => { if (!mine && !busy) { sfx.click(); setMarketDetailMon({ type: "user", listing: l }); } }}>
                           {mine && <span className="m-mine-tag">MINE</span>}
-                          <img src={SPRITE(l.pokemonSprite)} alt={l.pokemonName} />
+                          <MonSprite sprite={l.pokemonSprite} size={80} className="" />
                           <div className="ovr">
                             <span className="m-seller"><i className="fa-solid fa-user" style={{ marginRight: 4, fontSize: 12 }} />{l.sellerName}</span>
                             <span className="m-pname">{l.pokemonName}</span>
@@ -7057,7 +6904,7 @@ export default function App() {
                       return (
                         <div key={l.id} className="m-card" style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: 12, cursor: mine ? "default" : "pointer" }}
                           onClick={() => { if (!mine && !busy) { sfx.click(); setMarketDetailMon({ type: "user", listing: l }); } }}>
-                          <img src={SPRITE(l.pokemonSprite)} alt={l.pokemonName} style={{ width: 44, height: 44, imageRendering: "pixelated" }} />
+                          <MonSprite sprite={l.pokemonSprite} size={44} className="" />
                           <div style={{ flex: 1 }}>
                             <div style={{ fontSize: 14, fontWeight: 600, color: "var(--m-text)" }}>{l.pokemonName}</div>
                             <div style={{ fontSize: 11, color: "var(--m-muted)" }}>Lv {l.level} · {l.nature} · {l.sellerName}{mine ? " (Mine)" : ""}</div>
@@ -7261,7 +7108,7 @@ export default function App() {
             <div className="m-modal-back" onClick={() => setMarketDetailMon(null)}>
               <div className="m-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 340 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-                  <img src={SPRITE(sprite)} alt={name} style={{ width: 72, height: 72, imageRendering: "pixelated", flexShrink: 0 }} />
+                  <MonSprite sprite={sprite} size={72} className="" style={{ flexShrink: 0 }} />
                   <div>
                     <h3 style={{ margin: "0 0 4px" }}>{name}</h3>
                     <div style={{ fontSize: 12, color: "var(--m-muted)" }}>Lv {level} · {nature}</div>

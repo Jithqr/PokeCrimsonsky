@@ -1,8 +1,27 @@
 import { useState, useEffect } from "react";
 import { ALL_POKEMON, type PokemonTemplate } from "../lib/pokemon-data";
 import { BackBtn } from "./BackBtn";
+import { buildSpriteFallbacks } from "../lib/sprites";
 
-const SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/ani/${name.replace(/[^a-z0-9]/g, "")}.gif`;
+function FallbackSprite({ sprite, size, style }: { sprite: string; size: number; style?: React.CSSProperties }) {
+  const fallbacks = buildSpriteFallbacks(sprite);
+  return (
+    <img
+      src={fallbacks[0]}
+      data-step="0"
+      alt={sprite}
+      style={{ imageRendering: "pixelated", width: size, height: size, objectFit: "contain", ...style }}
+      onError={(e) => {
+        const img = e.target as HTMLImageElement;
+        const step = Number(img.dataset.step ?? "0") + 1;
+        if (step < fallbacks.length) {
+          img.dataset.step = String(step);
+          img.src = fallbacks[step];
+        }
+      }}
+    />
+  );
+}
 
 type EvKey = "hp" | "atk" | "def" | "spa" | "spd" | "spe";
 
@@ -164,7 +183,7 @@ function TraineePicker({ trainable, activeIdx, setActiveIdx }: { trainable: Mon[
               borderColor: i === activeIdx ? "#4CAF50" : "rgba(255,255,255,0.15)",
               background: i === activeIdx ? "rgba(76,175,80,0.18)" : "rgba(255,255,255,0.05)",
             }}>
-            <img src={SPRITE(m.sprite)} alt={m.name} style={{ width: 48, height: 48, imageRendering: "pixelated" }} />
+            <FallbackSprite sprite={m.sprite} size={48} />
             <div style={{ fontSize: 11, fontWeight: 700 }}>{m.name}</div>
             <div style={{ fontSize: 10, opacity: 0.75 }}>Lv{m.level} · EV {evTotal(m)}/{EV_TOTAL_CAP}</div>
           </button>
@@ -179,7 +198,7 @@ function ActiveMonSummary({ mon }: { mon: Mon }) {
   return (
     <div style={card}>
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <img src={SPRITE(mon.sprite)} alt={mon.name} style={{ width: 80, height: 80, imageRendering: "pixelated" }} />
+        <FallbackSprite sprite={mon.sprite} size={80} />
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 800, fontSize: 16 }}>{mon.name} <span style={{ color: "#9aa3b8", fontSize: 12, fontWeight: 600 }}>Lv {mon.level}</span></div>
           <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 4 }}>
@@ -372,7 +391,7 @@ function PaidZone({ mon, money, onBack, onCommitEv, onMutateMon, onSpendMoney, t
             <span style={{ marginLeft: "auto", fontSize: 12, color: "#94a3b8" }}>Lv {mon.level}</span>
           </div>
           <div style={{ background: "#1a1a1f", borderRadius: 12, padding: 16, display: "flex", justifyContent: "center", alignItems: "center", minHeight: 160 }}>
-            <img src={SPRITE(mon.sprite)} alt={mon.name} style={{ width: 150, height: 150, imageRendering: "pixelated" }} />
+            <FallbackSprite sprite={mon.sprite} size={150} />
           </div>
         </div>
 
@@ -582,16 +601,12 @@ function FreeZoneHunt({ mon, stat, onUpdateMon, onExit, toast }: {
           <div style={{ height: 220, position: "relative", background: "linear-gradient(180deg,#3a8a4f 0%,#1d4d2c 60%,#0e3318 100%)" }}>
             {!done && current && (
               <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <img
-                  src={SPRITE(current.p.sprite)} alt={current.p.name}
-                  style={{
-                    width: 130, height: 130, imageRendering: "pixelated",
-                    filter: hitFlash ? "brightness(2.2) hue-rotate(-30deg)" : "drop-shadow(0 4px 8px rgba(0,0,0,0.5))",
-                    transform: hitFlash ? "translate(4px, -2px)" : "none",
-                    transition: "transform 80ms steps(2)",
-                    opacity: defeating && !hitFlash ? 0.0 : 1,
-                  }}
-                />
+                <FallbackSprite sprite={current.p.sprite} size={130} style={{
+                  filter: hitFlash ? "brightness(2.2) hue-rotate(-30deg)" : "drop-shadow(0 4px 8px rgba(0,0,0,0.5))",
+                  transform: hitFlash ? "translate(4px, -2px)" : "none",
+                  transition: "transform 80ms steps(2)",
+                  opacity: defeating && !hitFlash ? 0.0 : 1,
+                }} />
               </div>
             )}
             {done && (
@@ -607,7 +622,7 @@ function FreeZoneHunt({ mon, stat, onUpdateMon, onExit, toast }: {
 
           {/* Active mon strip */}
           <div style={{ display: "flex", gap: 10, alignItems: "center", padding: 10, background: "rgba(0,0,0,0.4)" }}>
-            <img src={SPRITE(mon.sprite)} alt={mon.name} style={{ width: 44, height: 44, imageRendering: "pixelated" }} />
+            <FallbackSprite sprite={mon.sprite} size={44} />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 13 }}>{mon.name} <span style={{ fontSize: 11, color: "#9aa3b8", marginLeft: 4 }}>Lv {mon.level}</span></div>
               <div style={{ fontSize: 11, opacity: 0.75 }}>Total EVs: {evTotal(mon)}/{EV_TOTAL_CAP}</div>
@@ -645,9 +660,9 @@ function EvolvePopup({ mon, to, onAccept, onReject }: {
           Whoa! Your {mon.name} is evolving!
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, padding: "8px 0" }}>
-          <img src={SPRITE(mon.sprite)} alt={mon.name} style={{ width: 80, height: 80, imageRendering: "pixelated" }} />
+          <FallbackSprite sprite={mon.sprite} size={80} />
           <div style={{ fontSize: 28 }}>→</div>
-          <img src={SPRITE(to.sprite)} alt={to.name} style={{ width: 90, height: 90, imageRendering: "pixelated", filter: "drop-shadow(0 0 12px rgba(255,215,0,0.8))" }} />
+          <FallbackSprite sprite={to.sprite} size={90} style={{ filter: "drop-shadow(0 0 12px rgba(255,215,0,0.8))" }} />
         </div>
         <div style={{ textAlign: "center", fontSize: 13, opacity: 0.85, marginBottom: 14 }}>
           Evolve into <strong style={{ color: "#FFD700" }}>{to.name}</strong>?
