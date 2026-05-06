@@ -26,7 +26,7 @@ import {
   fetchServerFriends, removeServerFriend,
   type SocialMail, type PendingTransfer, type TradeProp, type ServerFriend, type PlayerSearchResult,
 } from "./lib/socialApi";
-import { PokeTalesDex } from "./components/PokeTalesDex";
+import { CrimsonSkyDex } from "./components/CrimsonSkyDex";
 import { SplashLoader } from "./components/SplashLoader";
 import { StoryIntro } from "./components/StoryIntro";
 import BattleArena from "./components/BattleArena";
@@ -486,6 +486,96 @@ function ballMultiplier(name: string, ctx: BallCtx): number {
 }
 
 const SAVE_KEY = "hexamon:save:v2";
+
+// ── MonSprite — standalone component (outside App to keep a stable identity and
+//    prevent React from remounting it on every parent re-render, which was the
+//    root cause of the sprite-flickering bug).
+function MonSprite({
+  sprite, size = 80, back = false, isShiny = false,
+  className = "mon-float", style = {},
+}: {
+  sprite: string; size?: number; back?: boolean; isShiny?: boolean;
+  className?: string; style?: React.CSSProperties;
+}) {
+  const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
+  const custom = CUSTOM_SPRITE_URL(clean);
+  const customList = custom ? [custom] : [];
+  const baseClean = clean
+    .replace(/-?megax$/, "").replace(/-?megay$/, "").replace(/-?megaz$/, "")
+    .replace(/-?mega$/, "").replace(/-?gmax$/, "")
+    .replace(/-?alola$/, "").replace(/-?galar$/, "")
+    .replace(/-?hisui$/, "").replace(/-?paldea$/, "")
+    .replace(/-?paldeacombat$/, "").replace(/-?paldeafire$/, "").replace(/-?paldeawater$/, "")
+    .replace(/-?normal$/, "").replace(/-?altered$/, "").replace(/-?land$/, "")
+    .replace(/-?ordinary$/, "").replace(/-?aria$/, "").replace(/-?incarnate$/, "")
+    .replace(/-?male$/, "").replace(/-?female$/, "").replace(/-?shield$/, "")
+    .replace(/-?average$/, "").replace(/-?standard$/, "").replace(/-?plant$/, "")
+    .replace(/-?baile$/, "").replace(/-?midday$/, "").replace(/-?solo$/, "")
+    .replace(/-?redmeteor$/, "").replace(/-?disguised$/, "").replace(/-?amped$/, "")
+    .replace(/-?fullbelly$/, "").replace(/-?singlestrike$/, "").replace(/-?greenplumage$/, "")
+    .replace(/-?familyoffour$/, "").replace(/-?zero$/, "").replace(/-?curly$/, "")
+    .replace(/-?twosegment$/, "").replace(/-?redstriped$/, "").replace(/-?50$/, "")
+    .replace(/-?ice$/, "");
+  const baseExtras = baseClean !== clean
+    ? [
+        `https://play.pokemonshowdown.com/sprites/ani/${baseClean}.gif`,
+        `https://play.pokemonshowdown.com/sprites/dex/${baseClean}.png`,
+        `https://play.pokemonshowdown.com/sprites/home/${baseClean}.png`,
+      ]
+    : [];
+  const frontUrls = [
+    ...customList,
+    isShiny ? `https://play.pokemonshowdown.com/sprites/ani-shiny/${clean}.gif` : `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`,
+    isShiny ? `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif` : "",
+    `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
+    `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
+    `https://play.pokemonshowdown.com/sprites/home/${clean}.png`,
+    ...baseExtras,
+  ].filter(Boolean) as string[];
+  const backUrls = [
+    ...customList,
+    isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back-shiny/${clean}.gif` : `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif`,
+    isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif` : "",
+    `https://play.pokemonshowdown.com/sprites/gen5-back/${clean}.png`,
+    `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
+    `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
+    `https://play.pokemonshowdown.com/sprites/home/${clean}.png`,
+    ...baseExtras,
+  ].filter(Boolean) as string[];
+  const [idx, setIdx] = useState(0);
+  // flipped = back sprite exhausted; now showing mirrored front sprite
+  const [flipped, setFlipped] = useState(false);
+  useEffect(() => { setIdx(0); setFlipped(false); }, [sprite, back, isShiny]);
+  const fallbacks = back ? backUrls : frontUrls;
+  const src = flipped
+    ? frontUrls[Math.min(idx, frontUrls.length - 1)]
+    : fallbacks[Math.min(idx, fallbacks.length - 1)];
+  const computedStyle: React.CSSProperties = {
+    imageRendering: "pixelated",
+    width: size,
+    height: size,
+    objectFit: "contain",
+    ...style,
+    ...(flipped ? { transform: `scaleX(-1)` } : {}),
+  };
+  return (
+    <img
+      src={src}
+      alt={sprite}
+      className={className}
+      style={computedStyle}
+      onError={() => {
+        if (flipped) {
+          setIdx(i => Math.min(i + 1, frontUrls.length - 1));
+        } else if (back && idx + 1 >= backUrls.length) {
+          setFlipped(true); setIdx(0);
+        } else {
+          setIdx(i => Math.min(i + 1, fallbacks.length - 1));
+        }
+      }}
+    />
+  );
+}
 export type TeamGroup = { id: string; name: string; mons: Mon[] };
 type SaveData = {
   screen: string;
@@ -2583,76 +2673,6 @@ export default function App() {
           animation: "mvSpark 0.5s ease-out forwards",
         }} />
       </div>
-    );
-  }
-
-  function MonSprite({ sprite, size = 80, back = false, isShiny = false, className = "mon-float", style = {} }: { sprite: string; size?: number; back?: boolean; isShiny?: boolean; className?: string; style?: React.CSSProperties }) {
-    const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
-    const custom = CUSTOM_SPRITE_URL(clean);
-    const customList = custom ? [custom] : [];
-    // For forms without Showdown sprite, fall back to base Pokémon
-    const baseClean = clean
-      .replace(/-?megax$/, "").replace(/-?megay$/, "").replace(/-?megaz$/, "")
-      .replace(/-?mega$/, "").replace(/-?gmax$/, "")
-      .replace(/-?alola$/, "").replace(/-?galar$/, "")
-      .replace(/-?hisui$/, "").replace(/-?paldea$/, "")
-      .replace(/-?paldeacombat$/, "").replace(/-?paldeafire$/, "").replace(/-?paldeawater$/, "")
-      // Default forms Showdown serves under the bare base name:
-      .replace(/-?normal$/, "").replace(/-?altered$/, "").replace(/-?land$/, "")
-      .replace(/-?ordinary$/, "").replace(/-?aria$/, "").replace(/-?incarnate$/, "")
-      .replace(/-?male$/, "").replace(/-?female$/, "").replace(/-?shield$/, "")
-      .replace(/-?average$/, "").replace(/-?standard$/, "").replace(/-?plant$/, "")
-      .replace(/-?baile$/, "").replace(/-?midday$/, "").replace(/-?solo$/, "")
-      .replace(/-?redmeteor$/, "").replace(/-?disguised$/, "").replace(/-?amped$/, "")
-      .replace(/-?fullbelly$/, "").replace(/-?singlestrike$/, "").replace(/-?greenplumage$/, "")
-      .replace(/-?familyoffour$/, "").replace(/-?zero$/, "").replace(/-?curly$/, "")
-      .replace(/-?twosegment$/, "").replace(/-?redstriped$/, "").replace(/-?50$/, "")
-      .replace(/-?ice$/, "");
-    const baseExtras = baseClean !== clean
-      ? [
-          `https://play.pokemonshowdown.com/sprites/ani/${baseClean}.gif`,
-          `https://play.pokemonshowdown.com/sprites/dex/${baseClean}.png`,
-          `https://play.pokemonshowdown.com/sprites/home/${baseClean}.png`,
-        ]
-      : [];
-    const fallbacks = back
-      ? [
-          ...customList,
-          isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back-shiny/${clean}.gif` : `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif`,
-          isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif` : "",
-          `https://play.pokemonshowdown.com/sprites/gen5-back/${clean}.png`,
-          `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
-          `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
-          `https://play.pokemonshowdown.com/sprites/home/${clean}.png`,
-          ...baseExtras,
-        ].filter(Boolean)
-      : [
-          ...customList,
-          isShiny ? `https://play.pokemonshowdown.com/sprites/ani-shiny/${clean}.gif` : `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`,
-          isShiny ? `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif` : "",
-          `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
-          `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
-          `https://play.pokemonshowdown.com/sprites/home/${clean}.png`,
-          ...baseExtras,
-        ].filter(Boolean);
-    return (
-      <img
-        src={fallbacks[0]}
-        data-step="0"
-        alt={sprite}
-        className={className}
-        style={{ imageRendering: "pixelated", width: size, height: size, objectFit: "contain", ...style }}
-        onError={(e) => {
-          const img = e.target as HTMLImageElement;
-          const step = Number(img.dataset.step ?? "0") + 1;
-          if (step < fallbacks.length) {
-            img.dataset.step = String(step);
-            img.src = fallbacks[step];
-          } else {
-            img.style.display = "none";
-          }
-        }}
-      />
     );
   }
 
@@ -7452,7 +7472,7 @@ export default function App() {
   }
 
   if (screen === "poketalesDex") {
-    return <PokeTalesDex onBack={() => setScreen("world")} onHome={() => setScreen("world")} />;
+    return <CrimsonSkyDex onBack={() => setScreen("world")} onHome={() => setScreen("world")} />;
   }
 
   if (screen === "dex") {

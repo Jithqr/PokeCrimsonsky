@@ -43,18 +43,32 @@ function spriteFallbacks(sprite: string, back = false): string[] {
 }
 
 function BattleSprite({ sprite, back = false, style }: { sprite: string; back?: boolean; style?: React.CSSProperties }) {
-  const urls = spriteFallbacks(sprite, back);
+  const backUrls = spriteFallbacks(sprite, true);
+  const frontUrls = spriteFallbacks(sprite, false);
+  const urls = back ? backUrls : frontUrls;
+  const [idx, setIdx] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  useEffect(() => { setIdx(0); setFlipped(false); }, [sprite, back]);
+  const src = flipped
+    ? frontUrls[Math.min(idx, frontUrls.length - 1)]
+    : urls[Math.min(idx, urls.length - 1)];
+  const computedStyle: React.CSSProperties = {
+    ...style,
+    ...(flipped ? { transform: `scaleX(-1)` } : {}),
+  };
   return (
     <img
-      src={urls[0]}
-      data-step="0"
+      src={src}
       alt={sprite}
-      style={style}
-      onError={(e) => {
-        const img = e.target as HTMLImageElement;
-        const step = Number(img.dataset.step ?? "0") + 1;
-        if (step < urls.length) { img.dataset.step = String(step); img.src = urls[step]; }
-        else img.style.opacity = "0";
+      style={computedStyle}
+      onError={() => {
+        if (flipped) {
+          setIdx(i => Math.min(i + 1, frontUrls.length - 1));
+        } else if (back && idx + 1 >= backUrls.length) {
+          setFlipped(true); setIdx(0);
+        } else {
+          setIdx(i => Math.min(i + 1, urls.length - 1));
+        }
       }}
     />
   );

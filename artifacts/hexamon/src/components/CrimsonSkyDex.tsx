@@ -115,7 +115,7 @@ function formSpriteFallback(sprite: string, shiny = false) {
 // ============================================================
 // Crimson Sky Dex – grid view
 // ============================================================
-export function PokeTalesDex({ onBack, onHome }: { onBack: () => void; onHome: () => void }) {
+export function CrimsonSkyDex({ onBack, onHome }: { onBack: () => void; onHome: () => void }) {
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<DexMode>("base");
   const [selected, setSelected] = useState<PokemonTemplate | null>(null);

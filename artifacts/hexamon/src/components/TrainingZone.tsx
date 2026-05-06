@@ -5,20 +5,14 @@ import { buildSpriteFallbacks } from "../lib/sprites";
 
 function FallbackSprite({ sprite, size, style }: { sprite: string; size: number; style?: React.CSSProperties }) {
   const fallbacks = buildSpriteFallbacks(sprite);
+  const [idx, setIdx] = useState(0);
+  useEffect(() => { setIdx(0); }, [sprite]);
   return (
     <img
-      src={fallbacks[0]}
-      data-step="0"
+      src={fallbacks[Math.min(idx, fallbacks.length - 1)]}
       alt={sprite}
       style={{ imageRendering: "pixelated", width: size, height: size, objectFit: "contain", ...style }}
-      onError={(e) => {
-        const img = e.target as HTMLImageElement;
-        const step = Number(img.dataset.step ?? "0") + 1;
-        if (step < fallbacks.length) {
-          img.dataset.step = String(step);
-          img.src = fallbacks[step];
-        }
-      }}
+      onError={() => setIdx(i => Math.min(i + 1, fallbacks.length - 1))}
     />
   );
 }
