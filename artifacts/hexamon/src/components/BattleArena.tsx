@@ -52,6 +52,13 @@ function BattleSprite({ sprite, back = false, style }: { sprite: string; back?: 
   const [idx, setIdx] = useState(0);
   const [flipped, setFlipped] = useState(false);
   useEffect(() => { setIdx(0); setFlipped(false); }, [sprite, back]);
+  // Preload front URLs immediately when used as a back sprite so the mirrored
+  // flip appears instantly rather than waiting for ani-back to fail first.
+  useEffect(() => {
+    if (!back) return;
+    frontUrls.slice(0, 2).forEach(url => { const img = new Image(); img.src = url; });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sprite, back]);
   const src = flipped
     ? frontUrls[Math.min(idx, frontUrls.length - 1)]
     : urls[Math.min(idx, urls.length - 1)];

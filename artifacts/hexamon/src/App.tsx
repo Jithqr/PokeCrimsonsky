@@ -540,6 +540,13 @@ function MonSprite({
   // flipped = back sprite exhausted; now showing mirrored front sprite
   const [flipped, setFlipped] = useState(false);
   useEffect(() => { setIdx(0); setFlipped(false); }, [sprite, back, isShiny]);
+  // When showing as a back sprite, preload the front URLs immediately so
+  // the mirrored flip is instant once the ani-back request fails.
+  useEffect(() => {
+    if (!back) return;
+    frontUrls.slice(0, 3).forEach(url => { const img = new Image(); img.src = url; });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sprite, back, isShiny]);
   const fallbacks = back ? backUrls : frontUrls;
   const src = flipped
     ? frontUrls[Math.min(idx, frontUrls.length - 1)]
