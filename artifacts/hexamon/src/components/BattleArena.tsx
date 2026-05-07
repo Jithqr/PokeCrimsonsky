@@ -31,12 +31,17 @@ function spriteFallbacks(sprite: string, back = false): string[] {
     ? [`https://play.pokemonshowdown.com/sprites/ani/${psBase}.gif`,
        `https://play.pokemonshowdown.com/sprites/dex/${psBase}.png`]
     : [];
+  if (back) {
+    return [
+      `${BASE}sprites/custom/${clean}.gif`,
+      `https://play.pokemonshowdown.com/sprites/ani-back/${ps}.gif`,
+      `https://play.pokemonshowdown.com/sprites/gen5-back/${ps}.png`,
+    ];
+  }
   return [
     `${BASE}sprites/custom/${clean}.gif`,
-    back
-      ? `https://play.pokemonshowdown.com/sprites/ani-back/${ps}.gif`
-      : `https://play.pokemonshowdown.com/sprites/ani/${ps}.gif`,
-    `https://play.pokemonshowdown.com/sprites/gen5${back ? "-back" : ""}/${ps}.png`,
+    `https://play.pokemonshowdown.com/sprites/ani/${ps}.gif`,
+    `https://play.pokemonshowdown.com/sprites/gen5/${ps}.png`,
     `https://play.pokemonshowdown.com/sprites/dex/${ps}.png`,
     ...extras,
   ];

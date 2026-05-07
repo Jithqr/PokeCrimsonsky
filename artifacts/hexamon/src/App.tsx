@@ -537,10 +537,6 @@ function MonSprite({
     isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back-shiny/${clean}.gif` : `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif`,
     isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif` : "",
     `https://play.pokemonshowdown.com/sprites/gen5-back/${clean}.png`,
-    `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
-    `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
-    `https://play.pokemonshowdown.com/sprites/home/${clean}.png`,
-    ...baseExtras,
   ].filter(Boolean) as string[];
   const [idx, setIdx] = useState(0);
   // flipped = back sprite exhausted; now showing mirrored front sprite
