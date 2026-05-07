@@ -533,7 +533,6 @@ function MonSprite({
     ...baseExtras,
   ].filter(Boolean) as string[];
   const backUrls = [
-    ...customList,
     isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back-shiny/${clean}.gif` : `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif`,
     isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif` : "",
     `https://play.pokemonshowdown.com/sprites/gen5-back/${clean}.png`,
