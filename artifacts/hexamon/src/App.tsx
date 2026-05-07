@@ -5356,7 +5356,12 @@ export default function App() {
           }}>
             {scoutedWild ? (
               <div style={{ filter: "drop-shadow(0px 10px 20px rgba(0,0,0,0.8))", zIndex: 2 }}>
-                <MonSprite sprite={scoutedWild.sprite} size={160} className="mon-float" />
+                <img
+                  src={`https://play.pokemonshowdown.com/sprites/ani/${scoutedWild.sprite.toLowerCase().replace(/[^a-z0-9-]/g, "")}.gif`}
+                  alt={scoutedWild.name}
+                  className="mon-float"
+                  style={{ imageRendering: "pixelated", width: 160, height: 160, objectFit: "contain" }}
+                />
               </div>
             ) : (
               <div style={{ color: "#f0f0f0", fontSize: 13, textAlign: "center", lineHeight: 1.7, padding: 20, textShadow: "0 2px 8px rgba(0,0,0,0.9)", zIndex: 2 }}>
@@ -7291,7 +7296,12 @@ export default function App() {
                 <div style={{ animation: safariThrowAnim === "wobble" ? "ballWobble 0.9s" : "none", zIndex: 2 }}>
                   {safariThrowAnim !== "throw" && safariThrowAnim !== "wobble" && (
                     <div style={{ filter: "drop-shadow(0px 15px 15px rgba(0,0,0,0.6))" }}>
-                      <MonSprite sprite={safariEnc.sprite} size={150} className="mon-float" />
+                      <img
+                        src={`https://play.pokemonshowdown.com/sprites/ani/${safariEnc.sprite.toLowerCase().replace(/[^a-z0-9-]/g, "")}.gif`}
+                        alt={safariEnc.name}
+                        className="mon-float"
+                        style={{ imageRendering: "pixelated", width: 150, height: 150, objectFit: "contain" }}
+                      />
                     </div>
                   )}
                 </div>
