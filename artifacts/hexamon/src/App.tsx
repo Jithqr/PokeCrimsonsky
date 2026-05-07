@@ -535,7 +535,6 @@ function MonSprite({
   const backUrls = [
     isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back-shiny/${clean}.gif` : `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif`,
     isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif` : "",
-    `https://play.pokemonshowdown.com/sprites/gen5-back/${clean}.png`,
   ].filter(Boolean) as string[];
   const [idx, setIdx] = useState(0);
   // flipped = back sprite exhausted; now showing mirrored front sprite

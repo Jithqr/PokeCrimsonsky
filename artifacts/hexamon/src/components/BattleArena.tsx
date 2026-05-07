@@ -34,7 +34,6 @@ function spriteFallbacks(sprite: string, back = false): string[] {
   if (back) {
     return [
       `https://play.pokemonshowdown.com/sprites/ani-back/${ps}.gif`,
-      `https://play.pokemonshowdown.com/sprites/gen5-back/${ps}.png`,
     ];
   }
   return [
