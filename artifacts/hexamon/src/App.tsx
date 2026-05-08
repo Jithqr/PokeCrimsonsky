@@ -719,13 +719,7 @@ export default function App() {
   const [scoutedWild, setScoutedWild] = useState<Mon | null>(null);
   const [huntSpriteReady, setHuntSpriteReady] = useState(false);
   useEffect(() => {
-    if (!scoutedWild) { setHuntSpriteReady(false); return; }
     setHuntSpriteReady(false);
-    const url = `https://play.pokemonshowdown.com/sprites/ani/${scoutedWild.sprite.toLowerCase().replace(/[^a-z0-9-]/g, "")}.gif`;
-    const img = new Image();
-    img.onload = () => setHuntSpriteReady(true);
-    img.onerror = () => setHuntSpriteReady(true);
-    img.src = url;
   }, [scoutedWild?.sprite]);
   // BGM mute state. Persisted to a dedicated localStorage key so it survives
   // page refreshes (and even brand-new sessions before any save data exists).
@@ -1038,13 +1032,7 @@ export default function App() {
   const [safariEnc, setSafariEnc] = useState<Mon | null>(initial?.safariEnc ?? null);
   const [safariSpriteReady, setSafariSpriteReady] = useState(false);
   useEffect(() => {
-    if (!safariEnc) { setSafariSpriteReady(false); return; }
     setSafariSpriteReady(false);
-    const url = `https://play.pokemonshowdown.com/sprites/ani/${safariEnc.sprite.toLowerCase().replace(/[^a-z0-9-]/g, "")}.gif`;
-    const img = new Image();
-    img.onload = () => setSafariSpriteReady(true);
-    img.onerror = () => setSafariSpriteReady(true);
-    img.src = url;
   }, [safariEnc?.sprite]);
   const [safariCounter, setSafariCounter] = useState(initial?.safariCounter ?? 0);
   const [safariNextLegend, setSafariNextLegend] = useState(() => initial?.safariNextLegend ?? (3 + Math.floor(Math.random() * 3)));
@@ -5374,13 +5362,14 @@ export default function App() {
             boxShadow: "inset 0 0 60px rgba(0,0,0,0.75)",
             overflow: "hidden",
           }}>
-            {scoutedWild && huntSpriteReady ? (
+            {scoutedWild ? (
               <div style={{ filter: "drop-shadow(0px 10px 20px rgba(0,0,0,0.8))", zIndex: 2 }}>
                 <img
-                  src={`https://play.pokemonshowdown.com/sprites/ani/${scoutedWild.sprite.toLowerCase().replace(/[^a-z0-9-]/g, "")}.gif`}
+                  src={(() => { const c = scoutedWild.sprite.toLowerCase().replace(/[^a-z0-9-]/g, ""); return CUSTOM_SPRITE_URL(c) ?? `https://play.pokemonshowdown.com/sprites/ani/${c}.gif`; })()}
                   alt={scoutedWild.name}
                   className="mon-float"
-                  style={{ imageRendering: "pixelated", width: 160, height: 160, objectFit: "contain" }}
+                  onLoad={() => setHuntSpriteReady(true)}
+                  style={{ imageRendering: "pixelated", width: 160, height: 160, objectFit: "contain", opacity: huntSpriteReady ? 1 : 0, transition: "opacity 0.2s ease" }}
                 />
               </div>
             ) : (
@@ -5402,7 +5391,7 @@ export default function App() {
             backdropFilter: "blur(10px)",
             color: "#f0f0f0",
           }}>
-            {scoutedWild && huntSpriteReady ? (
+            {scoutedWild ? (
               <>A wild <span style={{ color: "#fb923c" }}>{scoutedWild.name}</span>
                 <span style={{ background: "#1e1e26", padding: "2px 8px", borderRadius: 20, fontSize: 11, color: "#888890", margin: "0 4px", border: "1px solid #333" }}>Lv. {scoutedWild.level}</span>
                 has appeared!
@@ -7311,16 +7300,17 @@ export default function App() {
             boxShadow: `${isLegend ? "0 0 24px rgba(255,215,0,0.35), " : ""}inset 0 0 50px rgba(0,0,0,0.8)`,
             overflow: "hidden",
           }}>
-            {safariEnc && safariSpriteReady && (
+            {safariEnc && (
               <>
                 <div style={{ animation: safariThrowAnim === "wobble" ? "ballWobble 0.9s" : "none", zIndex: 2 }}>
                   {safariThrowAnim !== "throw" && safariThrowAnim !== "wobble" && (
                     <div style={{ filter: "drop-shadow(0px 15px 15px rgba(0,0,0,0.6))" }}>
                       <img
-                        src={`https://play.pokemonshowdown.com/sprites/ani/${safariEnc.sprite.toLowerCase().replace(/[^a-z0-9-]/g, "")}.gif`}
+                        src={(() => { const c = safariEnc.sprite.toLowerCase().replace(/[^a-z0-9-]/g, ""); return CUSTOM_SPRITE_URL(c) ?? `https://play.pokemonshowdown.com/sprites/ani/${c}.gif`; })()}
                         alt={safariEnc.name}
                         className="mon-float"
-                        style={{ imageRendering: "pixelated", width: 150, height: 150, objectFit: "contain" }}
+                        onLoad={() => setSafariSpriteReady(true)}
+                        style={{ imageRendering: "pixelated", width: 150, height: 150, objectFit: "contain", opacity: safariSpriteReady ? 1 : 0, transition: "opacity 0.2s ease" }}
                       />
                     </div>
                   )}
@@ -7383,7 +7373,7 @@ export default function App() {
                   </span>
                 )}
               </span>
-            ) : (safariEnc && safariSpriteReady) ? (
+            ) : safariEnc ? (
               <span>
                 A wild {safariEnc.name}
                 <span style={{ background: "#222", padding: "2px 6px", borderRadius: 4, fontSize: 11, color: "#888890", margin: "0 6px", border: "1px solid #333" }}>Lv. {safariEnc.level}</span>
