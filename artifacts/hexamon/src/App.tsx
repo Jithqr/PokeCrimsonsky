@@ -501,33 +501,25 @@ function MonSprite({ sprite, size = 80, back = false, isShiny = false, className
         `https://play.pokemonshowdown.com/sprites/home/${baseClean}.png`,
       ]
     : [];
-  const fallbacks = back
-    ? [
-        ...customList,
-        isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back-shiny/${clean}.gif` : `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif`,
-        isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif` : "",
-        `https://play.pokemonshowdown.com/sprites/gen5-back/${clean}.png`,
-        `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
-        `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
-        `https://play.pokemonshowdown.com/sprites/home/${clean}.png`,
-        ...baseExtras,
-      ].filter(Boolean)
-    : [
-        ...customList,
-        isShiny ? `https://play.pokemonshowdown.com/sprites/ani-shiny/${clean}.gif` : `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`,
-        isShiny ? `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif` : "",
-        `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
-        `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
-        `https://play.pokemonshowdown.com/sprites/home/${clean}.png`,
-        ...baseExtras,
-      ].filter(Boolean);
+  // Always use the front-facing animated GIF. When back=true (player's mon),
+  // flip horizontally with scaleX(-1) so it faces right toward the enemy.
+  const fallbacks = [
+    ...customList,
+    isShiny ? `https://play.pokemonshowdown.com/sprites/ani-shiny/${clean}.gif` : `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`,
+    isShiny ? `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif` : "",
+    `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
+    `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
+    `https://play.pokemonshowdown.com/sprites/home/${clean}.png`,
+    ...baseExtras,
+  ].filter(Boolean);
+  const flipStyle: React.CSSProperties = back ? { transform: "scaleX(-1)" } : {};
   return (
     <img
       src={fallbacks[0] as string}
       data-step="0"
       alt={sprite}
       className={className}
-      style={{ imageRendering: "pixelated", width: size, height: size, objectFit: "contain", ...style }}
+      style={{ imageRendering: "pixelated", width: size, height: size, objectFit: "contain", ...flipStyle, ...style }}
       onError={(e) => {
         const img = e.target as HTMLImageElement;
         const step = Number(img.dataset.step ?? "0") + 1;

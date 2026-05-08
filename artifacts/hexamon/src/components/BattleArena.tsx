@@ -46,40 +46,22 @@ function spriteFallbacks(sprite: string, back = false): string[] {
 }
 
 function BattleSprite({ sprite, back = false, style }: { sprite: string; back?: boolean; style?: React.CSSProperties }) {
-  const backUrls = spriteFallbacks(sprite, true);
+  // Always use the front-facing animated GIF. When rendering the player's mon
+  // (back=true), flip it horizontally so it faces right toward the enemy.
   const frontUrls = spriteFallbacks(sprite, false);
-  const urls = back ? backUrls : frontUrls;
   const [idx, setIdx] = useState(0);
-  const [flipped, setFlipped] = useState(false);
-  useEffect(() => { setIdx(0); setFlipped(false); }, [sprite, back]);
-  // Preload front URLs immediately when used as a back sprite so the mirrored
-  // flip appears instantly rather than waiting for ani-back to fail first.
-  useEffect(() => {
-    if (!back) return;
-    frontUrls.slice(0, 2).forEach(url => { const img = new Image(); img.src = url; });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sprite, back]);
-  const src = flipped
-    ? frontUrls[Math.min(idx, frontUrls.length - 1)]
-    : urls[Math.min(idx, urls.length - 1)];
+  useEffect(() => { setIdx(0); }, [sprite, back]);
+  const src = frontUrls[Math.min(idx, frontUrls.length - 1)];
   const computedStyle: React.CSSProperties = {
     ...style,
-    ...(flipped ? { transform: `scaleX(-1)` } : {}),
+    ...(back ? { transform: style?.transform ? `scaleX(-1) ${style.transform}` : "scaleX(-1)" } : {}),
   };
   return (
     <img
       src={src}
       alt={sprite}
       style={computedStyle}
-      onError={() => {
-        if (flipped) {
-          setIdx(i => Math.min(i + 1, frontUrls.length - 1));
-        } else if (back && idx + 1 >= backUrls.length) {
-          setFlipped(true); setIdx(0);
-        } else {
-          setIdx(i => Math.min(i + 1, urls.length - 1));
-        }
-      }}
+      onError={() => setIdx(i => Math.min(i + 1, frontUrls.length - 1))}
     />
   );
 }
