@@ -717,10 +717,6 @@ export default function App() {
   const [menuPage, setMenuPage] = useState(0);
   const [bagCat, setBagCat] = useState<string>("balls");
   const [scoutedWild, setScoutedWild] = useState<Mon | null>(null);
-  const [huntSpriteReady, setHuntSpriteReady] = useState(false);
-  useEffect(() => {
-    setHuntSpriteReady(false);
-  }, [scoutedWild?.sprite]);
   // BGM mute state. Persisted to a dedicated localStorage key so it survives
   // page refreshes (and even brand-new sessions before any save data exists).
   const [muted, setMuted] = useState<boolean>(() => {
@@ -1030,10 +1026,6 @@ export default function App() {
   const [legendThreshold, setLegendThreshold] = useState(() => 20 + Math.floor(Math.random() * 16));
   const [safariBalls, setSafariBalls] = useState(initial?.safariBalls ?? 0);
   const [safariEnc, setSafariEnc] = useState<Mon | null>(initial?.safariEnc ?? null);
-  const [safariSpriteReady, setSafariSpriteReady] = useState(false);
-  useEffect(() => {
-    setSafariSpriteReady(false);
-  }, [safariEnc?.sprite]);
   const [safariCounter, setSafariCounter] = useState(initial?.safariCounter ?? 0);
   const [safariNextLegend, setSafariNextLegend] = useState(() => initial?.safariNextLegend ?? (3 + Math.floor(Math.random() * 3)));
   const [safariCaught, setSafariCaught] = useState(initial?.safariCaught ?? 0);
@@ -5364,13 +5356,7 @@ export default function App() {
           }}>
             {scoutedWild ? (
               <div style={{ filter: "drop-shadow(0px 10px 20px rgba(0,0,0,0.8))", zIndex: 2 }}>
-                <img
-                  src={(() => { const c = scoutedWild.sprite.toLowerCase().replace(/[^a-z0-9-]/g, ""); return CUSTOM_SPRITE_URL(c) ?? `https://play.pokemonshowdown.com/sprites/ani/${c}.gif`; })()}
-                  alt={scoutedWild.name}
-                  className="mon-float"
-                  onLoad={() => setHuntSpriteReady(true)}
-                  style={{ imageRendering: "pixelated", width: 160, height: 160, objectFit: "contain", opacity: huntSpriteReady ? 1 : 0, transition: "opacity 0.2s ease" }}
-                />
+                <MonSprite sprite={scoutedWild.sprite} size={160} className="mon-float" />
               </div>
             ) : (
               <div style={{ color: "#f0f0f0", fontSize: 13, textAlign: "center", lineHeight: 1.7, padding: 20, textShadow: "0 2px 8px rgba(0,0,0,0.9)", zIndex: 2 }}>
@@ -7305,13 +7291,7 @@ export default function App() {
                 <div style={{ animation: safariThrowAnim === "wobble" ? "ballWobble 0.9s" : "none", zIndex: 2 }}>
                   {safariThrowAnim !== "throw" && safariThrowAnim !== "wobble" && (
                     <div style={{ filter: "drop-shadow(0px 15px 15px rgba(0,0,0,0.6))" }}>
-                      <img
-                        src={(() => { const c = safariEnc.sprite.toLowerCase().replace(/[^a-z0-9-]/g, ""); return CUSTOM_SPRITE_URL(c) ?? `https://play.pokemonshowdown.com/sprites/ani/${c}.gif`; })()}
-                        alt={safariEnc.name}
-                        className="mon-float"
-                        onLoad={() => setSafariSpriteReady(true)}
-                        style={{ imageRendering: "pixelated", width: 150, height: 150, objectFit: "contain", opacity: safariSpriteReady ? 1 : 0, transition: "opacity 0.2s ease" }}
-                      />
+                      <MonSprite sprite={safariEnc.sprite} size={150} className="mon-float" />
                     </div>
                   )}
                 </div>
