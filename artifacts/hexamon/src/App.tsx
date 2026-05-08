@@ -501,9 +501,15 @@ function MonSprite({ sprite, size = 80, back = false, isShiny = false, className
         `https://play.pokemonshowdown.com/sprites/home/${baseClean}.png`,
       ]
     : [];
-  // Always use the front-facing animated GIF. When back=true (player's mon),
-  // flip horizontally with scaleX(-1) so it faces right toward the enemy.
-  const fallbacks = [
+  // Back URLs (unflipped) tried first when back=true; front URLs used as
+  // fallback with scaleX(-1) applied the moment we cross the boundary.
+  const backUrls = back
+    ? [
+        isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back-shiny/${clean}.gif` : `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif`,
+        isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif` : "",
+      ].filter(Boolean)
+    : [];
+  const frontUrls = [
     ...customList,
     isShiny ? `https://play.pokemonshowdown.com/sprites/ani-shiny/${clean}.gif` : `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`,
     isShiny ? `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif` : "",
@@ -512,20 +518,25 @@ function MonSprite({ sprite, size = 80, back = false, isShiny = false, className
     `https://play.pokemonshowdown.com/sprites/home/${clean}.png`,
     ...baseExtras,
   ].filter(Boolean);
-  const flipStyle: React.CSSProperties = back ? { transform: "scaleX(-1)" } : {};
+  const backCount = backUrls.length;
+  const fallbacks = [...backUrls, ...frontUrls];
   return (
     <img
       src={fallbacks[0] as string}
       data-step="0"
       alt={sprite}
       className={className}
-      style={{ imageRendering: "pixelated", width: size, height: size, objectFit: "contain", ...flipStyle, ...style }}
+      style={{ imageRendering: "pixelated", width: size, height: size, objectFit: "contain", ...style }}
       onError={(e) => {
         const img = e.target as HTMLImageElement;
         const step = Number(img.dataset.step ?? "0") + 1;
         if (step < fallbacks.length) {
           img.dataset.step = String(step);
           img.src = fallbacks[step] as string;
+          // Once we exhaust back sprites, flip front sprites to face right
+          if (back && step >= backCount) {
+            img.style.transform = "scaleX(-1)";
+          }
         } else {
           img.style.display = "none";
         }
