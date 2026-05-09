@@ -217,18 +217,17 @@ export function buildSpriteFallbacks(sprite: string, back = false, isShiny = fal
        `https://play.pokemonshowdown.com/sprites/dex/${psBase}.png`]
     : [];
   if (back) {
+    // Only animated back GIFs — no static PNG fallbacks here.
+    // BattleSprite flips to the front GIF list (with scaleX(-1)) when these are exhausted,
+    // which looks far better than a static back PNG.
     return [
       ...(customBackUrl ? [customBackUrl] : []),
       isShiny
         ? `https://play.pokemonshowdown.com/sprites/ani-back-shiny/${ps}.gif`
         : `https://play.pokemonshowdown.com/sprites/ani-back/${ps}.gif`,
-      // Non-shiny back as fallback when shiny back is unavailable
+      // Non-shiny back as last-resort when shiny back is unavailable
       ...(isShiny ? [`https://play.pokemonshowdown.com/sprites/ani-back/${ps}.gif`] : []),
-      `https://play.pokemonshowdown.com/sprites/gen5-back/${ps}.png`,
-      `https://play.pokemonshowdown.com/sprites/dex/${ps}.png`,
-      ...(resolvedCustomUrl ? [resolvedCustomUrl] : []),
-      ...extras,
-    ];
+    ].filter(Boolean);
   }
   return [
     ...(resolvedCustomUrl ? [resolvedCustomUrl] : []),
