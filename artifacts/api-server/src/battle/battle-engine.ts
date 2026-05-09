@@ -30,6 +30,7 @@ export type BattleMon = {
   pp?: Record<string, number>;
   // Sprite / display key (for UI use only)
   sprite?: string;
+  isShiny?: boolean;
 };
 
 export type Team = {
@@ -409,7 +410,7 @@ export function fromAppMon(m: {
   hp: number; atk: number; def: number; spa: number; spd?: number; spe: number;
   ivAtk?: number; ivDef?: number; ivHp?: number; ivSpa?: number; ivSpd?: number; ivSpe?: number;
   evHp?: number; evAtk?: number; evDef?: number; evSpa?: number; evSpd?: number; evSpe?: number;
-  nature?: string; moves: string[]; uid?: string; sprite?: string;
+  nature?: string; moves: string[]; uid?: string; sprite?: string; isShiny?: boolean;
 }, ownerNature?: string): BattleMon {
   const ivs = {
     hp: m.ivHp ?? 0, atk: m.ivAtk ?? 0, def: m.ivDef ?? 0,
@@ -441,6 +442,7 @@ export function fromAppMon(m: {
     stages: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
     pp: {},
     sprite: m.sprite,
+    isShiny: m.isShiny,
   };
   bm.currentHp = calcMaxHp(bm);
   for (const mv of bm.moves) {

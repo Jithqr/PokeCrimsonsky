@@ -177,6 +177,7 @@ function toShippableMon(m: Mon) {
     nature: m.nature ?? "Hardy",
     moves: (m.moves ?? []).slice(0, 4),
     uid: m.uid,
+    isShiny: m.isShiny,
   };
 }
 

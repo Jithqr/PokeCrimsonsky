@@ -9,13 +9,13 @@ import leagueBg from "@assets/IMG_20260509_103322_1778303016233.jpg";
 import pvpBg from "@assets/IMG_20260509_103250_1778303016308.jpg";
 
 // Build fallback URL list for a sprite key, checking local custom sprites first
-function spriteFallbacks(sprite: string, back = false): string[] {
-  return buildSpriteFallbacks(sprite, back);
+function spriteFallbacks(sprite: string, back = false, isShiny = false): string[] {
+  return buildSpriteFallbacks(sprite, back, isShiny);
 }
 
-function BattleSprite({ sprite, back = false, style }: { sprite: string; back?: boolean; style?: React.CSSProperties }) {
-  const backUrls = spriteFallbacks(sprite, true);
-  const frontUrls = spriteFallbacks(sprite, false);
+function BattleSprite({ sprite, back = false, isShiny = false, style }: { sprite: string; back?: boolean; isShiny?: boolean; style?: React.CSSProperties }) {
+  const backUrls = spriteFallbacks(sprite, true, isShiny);
+  const frontUrls = spriteFallbacks(sprite, false, isShiny);
   // When back=true: try the real back GIF first (unflipped).
   // If it fails, fall through to the front GIF flipped with scaleX(-1).
   const [idx, setIdx] = useState(0);
@@ -350,7 +350,8 @@ export default function BattleArena(props: Props) {
                 <BattleSprite
                   sprite={oppActive.sprite || oppActive.name.toLowerCase()}
                   back={false}
-                  style={{ width: 110, height: 110, imageRendering: "pixelated", objectFit: "contain", background: "transparent", filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.5))" }}
+                  isShiny={oppActive.isShiny}
+                  style={{ width: 110, height: 110, imageRendering: "pixelated", objectFit: "contain", background: "transparent", filter: oppActive.isShiny ? "drop-shadow(0 4px 14px rgba(255,215,0,0.7))" : "drop-shadow(0 4px 6px rgba(0,0,0,0.5))" }}
                 />
                 {oppDmgFloat && (
                   <div key={oppDmgFloat.key} style={{ position: "absolute", top: 20, left: 8, pointerEvents: "none", zIndex: 20 }}>
@@ -373,7 +374,8 @@ export default function BattleArena(props: Props) {
                 <BattleSprite
                   sprite={myActive.sprite || myActive.name.toLowerCase()}
                   back={true}
-                  style={{ width: 170, height: 170, imageRendering: "pixelated", objectFit: "contain", background: "transparent" }}
+                  isShiny={myActive.isShiny}
+                  style={{ width: 170, height: 170, imageRendering: "pixelated", objectFit: "contain", background: "transparent", filter: myActive.isShiny ? "drop-shadow(0 6px 18px rgba(255,215,0,0.8))" : undefined }}
                 />
                 {myDmgFloat && (
                   <div key={myDmgFloat.key} style={{ position: "absolute", top: 0, right: 8, pointerEvents: "none", zIndex: 20 }}>

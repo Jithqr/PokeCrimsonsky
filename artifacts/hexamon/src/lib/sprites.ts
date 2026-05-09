@@ -200,13 +200,18 @@ export function stripToShowdownBase(ps: string): string {
 /**
  * Build a prioritised fallback URL list for a sprite key.
  * Tries: local custom GIF → Showdown ani/ → gen5/ → dex/ → base-name extras.
+ * When isShiny=true, shiny animated variants are tried before falling back to normal.
  */
-export function buildSpriteFallbacks(sprite: string, back = false): string[] {
+export function buildSpriteFallbacks(sprite: string, back = false, isShiny = false): string[] {
   const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
   const ps = clean.replace(/-/g, "");
   const psBase = stripToShowdownBase(ps);
+  // For shiny, check custom shiny key first, then regular custom
+  const shinyClean = `${clean}-shiny`;
+  const customShinyUrl = isShiny ? CUSTOM_SPRITE_URL(shinyClean) : null;
   const customUrl = CUSTOM_SPRITE_URL(clean);
   const customBackUrl = CUSTOM_BACK_SPRITE_URL(clean);
+  const resolvedCustomUrl = customShinyUrl ?? customUrl;
   const extras = psBase !== ps
     ? [`https://play.pokemonshowdown.com/sprites/ani/${psBase}.gif`,
        `https://play.pokemonshowdown.com/sprites/dex/${psBase}.png`]
@@ -214,16 +219,24 @@ export function buildSpriteFallbacks(sprite: string, back = false): string[] {
   if (back) {
     return [
       ...(customBackUrl ? [customBackUrl] : []),
-      `https://play.pokemonshowdown.com/sprites/ani-back/${ps}.gif`,
+      isShiny
+        ? `https://play.pokemonshowdown.com/sprites/ani-back-shiny/${ps}.gif`
+        : `https://play.pokemonshowdown.com/sprites/ani-back/${ps}.gif`,
+      // Non-shiny back as fallback when shiny back is unavailable
+      ...(isShiny ? [`https://play.pokemonshowdown.com/sprites/ani-back/${ps}.gif`] : []),
       `https://play.pokemonshowdown.com/sprites/gen5-back/${ps}.png`,
       `https://play.pokemonshowdown.com/sprites/dex/${ps}.png`,
-      ...(customUrl ? [customUrl] : []),
+      ...(resolvedCustomUrl ? [resolvedCustomUrl] : []),
       ...extras,
     ];
   }
   return [
-    ...(customUrl ? [customUrl] : []),
-    `https://play.pokemonshowdown.com/sprites/ani/${ps}.gif`,
+    ...(resolvedCustomUrl ? [resolvedCustomUrl] : []),
+    isShiny
+      ? `https://play.pokemonshowdown.com/sprites/ani-shiny/${ps}.gif`
+      : `https://play.pokemonshowdown.com/sprites/ani/${ps}.gif`,
+    // Non-shiny animated as fallback when shiny variant is unavailable
+    ...(isShiny ? [`https://play.pokemonshowdown.com/sprites/ani/${ps}.gif`] : []),
     `https://play.pokemonshowdown.com/sprites/gen5/${ps}.png`,
     `https://play.pokemonshowdown.com/sprites/dex/${ps}.png`,
     ...extras,
