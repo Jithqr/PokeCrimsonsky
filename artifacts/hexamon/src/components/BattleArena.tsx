@@ -336,7 +336,7 @@ export default function BattleArena(props: Props) {
 
           {/* Opponent: name plate top-left, sprite further right */}
           <div className="bx-opp-plate">
-            <NamePlate mon={oppActive} side="opp" />
+            <NamePlate mon={oppActive} side="opp" showHpNumbers />
             <div style={{ marginTop: 4, paddingLeft: 4 }}>
               <PokeballRow mons={opp.mons} align="left" />
             </div>
