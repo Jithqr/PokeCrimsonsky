@@ -4,45 +4,11 @@ import { calcMaxHp } from "../lib/battle-engine";
 import { getMove } from "../lib/move-data";
 import { TYPE_COLORS } from "../lib/type-chart";
 
-const BASE = import.meta.env.BASE_URL ?? "/";
+import { buildSpriteFallbacks } from "../lib/sprites";
 
 // Build fallback URL list for a sprite key, checking local custom sprites first
 function spriteFallbacks(sprite: string, back = false): string[] {
-  const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, ""); // keep hyphens for local path
-  const ps = clean.replace(/-/g, ""); // no hyphens for PokéShowdown
-  const psBase = ps
-    .replace(/megax$/, "").replace(/megay$/, "").replace(/megaz$/, "")
-    .replace(/mega$/, "").replace(/gmax$/, "")
-    .replace(/alola$/, "").replace(/galar$/, "")
-    .replace(/hisui$/, "").replace(/paldea$/, "")
-    .replace(/paldeacombat$/, "").replace(/paldeafire$/, "").replace(/paldeawater$/, "")
-    // Default forms that Showdown serves under the bare base name:
-    .replace(/normal$/, "").replace(/altered$/, "").replace(/land$/, "")
-    .replace(/ordinary$/, "").replace(/aria$/, "").replace(/incarnate$/, "")
-    .replace(/male$/, "").replace(/female$/, "").replace(/shield$/, "")
-    .replace(/average$/, "").replace(/standard$/, "").replace(/plant$/, "")
-    .replace(/baile$/, "").replace(/midday$/, "").replace(/solo$/, "")
-    .replace(/redmeteor$/, "").replace(/disguised$/, "").replace(/amped$/, "")
-    .replace(/fullbelly$/, "").replace(/singlestrike$/, "").replace(/greenplumage$/, "")
-    .replace(/familyoffour$/, "").replace(/zero$/, "").replace(/curly$/, "")
-    .replace(/twosegment$/, "").replace(/redstriped$/, "").replace(/50$/, "")
-    .replace(/ice$/, "");
-  const extras = psBase !== ps
-    ? [`https://play.pokemonshowdown.com/sprites/ani/${psBase}.gif`,
-       `https://play.pokemonshowdown.com/sprites/dex/${psBase}.png`]
-    : [];
-  if (back) {
-    return [
-      `https://play.pokemonshowdown.com/sprites/ani-back/${ps}.gif`,
-    ];
-  }
-  return [
-    `${BASE}sprites/custom/${clean}.gif`,
-    `https://play.pokemonshowdown.com/sprites/ani/${ps}.gif`,
-    `https://play.pokemonshowdown.com/sprites/gen5/${ps}.png`,
-    `https://play.pokemonshowdown.com/sprites/dex/${ps}.png`,
-    ...extras,
-  ];
+  return buildSpriteFallbacks(sprite, back);
 }
 
 function BattleSprite({ sprite, back = false, style }: { sprite: string; back?: boolean; style?: React.CSSProperties }) {

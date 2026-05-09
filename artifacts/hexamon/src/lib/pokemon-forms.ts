@@ -332,7 +332,7 @@ export const POKEMON_FORMS: FormEntry[] = [
   { id:10618, name:"Wishiwashi (School)", sprite:"wishiwashi-school", type1:"Water", type2:null, hp:45, atk:140, def:130, spa:140, spd:135, spe:30, moves:["Aqua Tail","Liquidation","Ice Beam","Endeavor"], category:"other", baseId:746, gen:7 },
 
   // ── MINIOR CORE COLORS ────────────────────────────────────────
-  { id:10619, name:"Minior (Red Core)",    sprite:"minior-red",    type1:"Rock", type2:"Flying", hp:60, atk:100, def:60, spa:100, spd:60, spe:120, moves:["Acrobatics","Power Gem","Shell Smash","Swift"], category:"other", baseId:774, gen:7 },
+  { id:10619, name:"Minior (Core)",        sprite:"minior-red",    type1:"Rock", type2:"Flying", hp:60, atk:100, def:60, spa:100, spd:60, spe:120, moves:["Acrobatics","Power Gem","Shell Smash","Swift"], category:"other", baseId:774, gen:7 },
   { id:10620, name:"Minior (Orange Core)", sprite:"minior-orange", type1:"Rock", type2:"Flying", hp:60, atk:100, def:60, spa:100, spd:60, spe:120, moves:["Acrobatics","Power Gem","Shell Smash","Swift"], category:"other", baseId:774, gen:7 },
   { id:10621, name:"Minior (Yellow Core)", sprite:"minior-yellow", type1:"Rock", type2:"Flying", hp:60, atk:100, def:60, spa:100, spd:60, spe:120, moves:["Acrobatics","Power Gem","Shell Smash","Swift"], category:"other", baseId:774, gen:7 },
   { id:10622, name:"Minior (Green Core)",  sprite:"minior-green",  type1:"Rock", type2:"Flying", hp:60, atk:100, def:60, spa:100, spd:60, spe:120, moves:["Acrobatics","Power Gem","Shell Smash","Swift"], category:"other", baseId:774, gen:7 },
@@ -385,7 +385,8 @@ export const POKEMON_FORMS: FormEntry[] = [
   { id:10680, name:"Overqwil",         sprite:"overqwil",       type1:"Dark",     type2:"Poison",   hp:85, atk:115, def:95,  spa:65,  spd:65,  spe:85,  moves:["Barb Barrage","Crunch","Poison Jab","Pin Missile"],         category:"hisuian", baseId:211, gen:8 },
   { id:10681, name:"Sneasler",         sprite:"sneasler",       type1:"Fighting", type2:"Poison",   hp:80, atk:130, def:60,  spa:40,  spd:80,  spe:120, moves:["Close Combat","Dire Claw","Poison Jab","Swords Dance"],     category:"hisuian", baseId:215, gen:8 },
   { id:10682, name:"Ursaluna",         sprite:"ursaluna",       type1:"Ground",   type2:"Normal",   hp:130, atk:140, def:105, spa:45, spd:80,  spe:50,  moves:["Headlong Rush","Hammer Arm","High Horsepower","Play Rough"], category:"hisuian", baseId:216, gen:8 },
-  { id:10683, name:"Basculegion-Male", sprite:"basculegionmale",type1:"Water",    type2:"Ghost",    hp:120, atk:112, def:65,  spa:80,  spd:75,  spe:78,  moves:["Wave Crash","Double Edge","Shadow Ball","Phantom Force"],   category:"hisuian", baseId:550, gen:8 },
+  { id:10683, name:"Basculegion-Male",   sprite:"basculegionmale", type1:"Water",  type2:"Ghost",    hp:120, atk:112, def:65,  spa:80,  spd:75,  spe:78,  moves:["Wave Crash","Double Edge","Shadow Ball","Phantom Force"],   category:"hisuian", baseId:550, gen:8 },
+  { id:10684, name:"Basculegion-Female", sprite:"basculegion-f",   type1:"Water",  type2:"Ghost",    hp:120, atk:92,  def:65,  spa:100, spd:75,  spe:78,  moves:["Wave Crash","Double Edge","Shadow Ball","Phantom Force"],   category:"hisuian", baseId:550, gen:8 },
 
   // ── GIGANTAMAX FORMS (Gen 8 – dex only, not spawnable) ───────────────────────────────────────
   { id:10639, name:"Charizard (G-Max)",    sprite:"charizard-gmax",      type1:"Fire",     type2:"Flying",   hp:78,  atk:84,  def:78,  spa:109, spd:85,  spe:100, moves:["G-Max Wildfire","Flare Blitz","Dragon Dance","Air Slash"],            category:"gmax", baseId:6,   gen:8 },

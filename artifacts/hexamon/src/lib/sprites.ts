@@ -1,4 +1,12 @@
 export const CUSTOM_SPRITES: Record<string, string> = {
+  // Maushold family-of-three uses the standard maushold Showdown sprite
+  "maushold-three": "https://play.pokemonshowdown.com/sprites/ani/maushold.gif",
+  // Minior Core — external front sprite
+  "minior-red": "https://projectpokemon.org/images/normal-sprite/minior.gif",
+  // Zygarde 10% — external front sprite
+  "zygarde10": "https://projectpokemon.org/images/normal-sprite/zygarde-10.gif",
+  // Basculegion-Female
+  "basculegion-f": "https://play.pokemonshowdown.com/sprites/ani/basculegion-f.gif",
   irontreads: "sprites/custom/irontreads.gif",
   ironbundle: "sprites/custom/ironbundle.gif",
   ironhands: "sprites/custom/ironhands.gif",
@@ -130,8 +138,20 @@ export const CUSTOM_SPRITES: Record<string, string> = {
   "tauros-paldeacombat": "sprites/custom/tauros-paldeacombat.gif",
 };
 
-export const CUSTOM_SPRITE_URL = (clean: string): string | null =>
-  CUSTOM_SPRITES[clean] ? `${import.meta.env.BASE_URL}${CUSTOM_SPRITES[clean]}` : null;
+export const CUSTOM_BACK_SPRITES: Record<string, string> = {
+  "minior-red": "https://projectpokemon.org/images/sprites-models/normal-back/minior.gif",
+  "zygarde10": "https://projectpokemon.org/images/sprites-models/normal-back/zygarde-10.gif",
+};
+
+export const CUSTOM_SPRITE_URL = (clean: string): string | null => {
+  const val = CUSTOM_SPRITES[clean];
+  if (!val) return null;
+  if (val.startsWith("http")) return val;
+  return `${import.meta.env.BASE_URL}${val}`;
+};
+
+export const CUSTOM_BACK_SPRITE_URL = (clean: string): string | null =>
+  CUSTOM_BACK_SPRITES[clean] ?? null;
 
 /** Strip default-form and mega/regional suffixes to get the bare Showdown base name (no hyphens). */
 export function stripToShowdownBase(ps: string): string {
@@ -162,16 +182,25 @@ export function buildSpriteFallbacks(sprite: string, back = false): string[] {
   const ps = clean.replace(/-/g, "");
   const psBase = stripToShowdownBase(ps);
   const customUrl = CUSTOM_SPRITE_URL(clean);
+  const customBackUrl = CUSTOM_BACK_SPRITE_URL(clean);
   const extras = psBase !== ps
     ? [`https://play.pokemonshowdown.com/sprites/ani/${psBase}.gif`,
        `https://play.pokemonshowdown.com/sprites/dex/${psBase}.png`]
     : [];
+  if (back) {
+    return [
+      ...(customBackUrl ? [customBackUrl] : []),
+      `https://play.pokemonshowdown.com/sprites/ani-back/${ps}.gif`,
+      `https://play.pokemonshowdown.com/sprites/gen5-back/${ps}.png`,
+      `https://play.pokemonshowdown.com/sprites/dex/${ps}.png`,
+      ...(customUrl ? [customUrl] : []),
+      ...extras,
+    ];
+  }
   return [
     ...(customUrl ? [customUrl] : []),
-    back
-      ? `https://play.pokemonshowdown.com/sprites/ani-back/${ps}.gif`
-      : `https://play.pokemonshowdown.com/sprites/ani/${ps}.gif`,
-    `https://play.pokemonshowdown.com/sprites/gen5${back ? "-back" : ""}/${ps}.png`,
+    `https://play.pokemonshowdown.com/sprites/ani/${ps}.gif`,
+    `https://play.pokemonshowdown.com/sprites/gen5/${ps}.png`,
     `https://play.pokemonshowdown.com/sprites/dex/${ps}.png`,
     ...extras,
   ];

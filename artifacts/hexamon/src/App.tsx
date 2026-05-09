@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { CUSTOM_SPRITES, CUSTOM_SPRITE_URL } from "./lib/sprites";
+import { CUSTOM_SPRITES, CUSTOM_SPRITE_URL, CUSTOM_BACK_SPRITE_URL } from "./lib/sprites";
 import { sfx, playMoveSfx, moveTypeOf, TYPE_COLOR as MOVE_TYPE_COLOR } from "./sfx";
 import { ALL_POKEMON, TOTAL_POKEMON, GEN_NAMES, movesForLevel, type PokemonTemplate } from "./lib/pokemon-data";
 import { rankFromExp, rankProgress, rankTier, MAX_RANK } from "./lib/rank-system";
@@ -503,8 +503,10 @@ function MonSprite({ sprite, size = 80, back = false, isShiny = false, className
     : [];
   // Back URLs (unflipped) tried first when back=true; front URLs used as
   // fallback with scaleX(-1) applied the moment we cross the boundary.
+  const customBack = CUSTOM_BACK_SPRITE_URL(clean);
   const backUrls = back
     ? [
+        ...(customBack ? [customBack] : []),
         isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back-shiny/${clean}.gif` : `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif`,
         isShiny ? `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif` : "",
       ].filter(Boolean)
