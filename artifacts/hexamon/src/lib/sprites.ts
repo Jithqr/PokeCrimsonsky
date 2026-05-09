@@ -136,11 +136,31 @@ export const CUSTOM_SPRITES: Record<string, string> = {
   // Paldean forms
   "wooper-paldea": "sprites/custom/wooper-paldea.gif",
   "tauros-paldeacombat": "sprites/custom/tauros-paldeacombat.gif",
+  "tauros-paldeafire": "sprites/custom/tauros-paldeafire.gif",
+  "tauros-paldeawater": "sprites/custom/tauros-paldeawater.gif",
+  // Maushold family-of-four
+  maushold: "sprites/custom/maushold.gif",
+  "maushold-shiny": "sprites/custom/maushold-shiny.gif",
+  // Ogerpon forms
+  "ogerpon-wellspring": "sprites/custom/ogerpon-wellspring.gif",
+  "ogerpon-hearthflame": "sprites/custom/ogerpon-hearthflame.gif",
+  "ogerpon-cornerstone": "sprites/custom/ogerpon-cornerstone.gif",
+  // Terapagos Stellar
+  "terapagos-stellar": "sprites/custom/terapagos-stellar.gif",
 };
 
 export const CUSTOM_BACK_SPRITES: Record<string, string> = {
+  // External back sprites
   "minior-red": "https://projectpokemon.org/images/sprites-models/normal-back/minior.gif",
   "zygarde10": "https://projectpokemon.org/images/sprites-models/normal-back/zygarde-10.gif",
+  // Local back sprites from zip
+  "tauros-paldeacombat": "sprites/custom/tauros-paldeacombat-back.gif",
+  "tauros-paldeafire": "sprites/custom/tauros-paldeafire-back.gif",
+  "tauros-paldeawater": "sprites/custom/tauros-paldeawater-back.gif",
+  ogerpon: "sprites/custom/ogerpon-back.gif",
+  "ogerpon-hearthflame": "sprites/custom/ogerpon-hearthflame-back.gif",
+  "ogerpon-cornerstone": "sprites/custom/ogerpon-cornerstone-back.gif",
+  "ogerpon-wellspring": "sprites/custom/ogerpon-wellspring-back.gif",
 };
 
 export const CUSTOM_SPRITE_URL = (clean: string): string | null => {
@@ -150,8 +170,12 @@ export const CUSTOM_SPRITE_URL = (clean: string): string | null => {
   return `${import.meta.env.BASE_URL}${val}`;
 };
 
-export const CUSTOM_BACK_SPRITE_URL = (clean: string): string | null =>
-  CUSTOM_BACK_SPRITES[clean] ?? null;
+export const CUSTOM_BACK_SPRITE_URL = (clean: string): string | null => {
+  const val = CUSTOM_BACK_SPRITES[clean];
+  if (!val) return null;
+  if (val.startsWith("http")) return val;
+  return `${import.meta.env.BASE_URL}${val}`;
+};
 
 /** Strip default-form and mega/regional suffixes to get the bare Showdown base name (no hyphens). */
 export function stripToShowdownBase(ps: string): string {

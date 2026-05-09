@@ -3,7 +3,7 @@ import { ALL_POKEMON, type PokemonTemplate } from "../lib/pokemon-data";
 import { POKEMON_FORMS, type FormEntry, type FormCategory } from "../lib/pokemon-forms";
 import { getMove } from "../lib/move-data";
 import { BackBtn } from "./BackBtn";
-import { CUSTOM_SPRITES, CUSTOM_SPRITE_URL } from "../lib/sprites";
+import { CUSTOM_SPRITE_URL } from "../lib/sprites";
 
 // ---------- Constants ----------
 const TYPE_COLORS: Record<string, string> = {
@@ -39,13 +39,11 @@ const NATURE_MOD: Record<string, { plus?: string; minus?: string }> = {
 
 function spriteUrl(name: string) {
   const clean = name.toLowerCase().replace(/[^a-z0-9-]/g, "");
-  if (CUSTOM_SPRITES[clean]) return `${import.meta.env.BASE_URL}${CUSTOM_SPRITES[clean]}`;
-  return `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
+  return CUSTOM_SPRITE_URL(clean) ?? `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
 }
 function spriteAniUrl(name: string) {
   const clean = name.toLowerCase().replace(/[^a-z0-9-]/g, "");
-  if (CUSTOM_SPRITES[clean]) return `${import.meta.env.BASE_URL}${CUSTOM_SPRITES[clean]}`;
-  return `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`;
+  return CUSTOM_SPRITE_URL(clean) ?? `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`;
 }
 
 function calcStat(base: number, ev: number, iv: number, level: number, isHP: boolean, natureMul = 1) {
@@ -92,9 +90,8 @@ const FORM_TABS: { key: DexMode; label: string; color: string }[] = [
 
 function formSpriteUrl(sprite: string, shiny = false) {
   const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
-  if (!shiny && CUSTOM_SPRITES[clean]) return `${import.meta.env.BASE_URL}${CUSTOM_SPRITES[clean]}`;
   if (shiny) return `https://play.pokemonshowdown.com/sprites/ani-shiny/${clean}.gif`;
-  return `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`;
+  return CUSTOM_SPRITE_URL(clean) ?? `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`;
 }
 function formSpriteBaseFallback(sprite: string) {
   const clean = sprite.toLowerCase().replace(/[^a-z0-9-]/g, "");
