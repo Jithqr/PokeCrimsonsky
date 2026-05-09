@@ -366,7 +366,7 @@ export default function BattleArena(props: Props) {
 
           {/* Player: sprite bottom-left, name plate bottom-right */}
           <div className={`bx-me-platform ${intro ? "bx-slide-in-left" : ""}`} />
-          <div className={`bx-me-sprite ${intro ? "bx-slide-in-left" : ""} ${myFainted ? "bx-faint" : ""} ${myLunge ? "pq-lunge-right" : ""} ${myHitClass} pq-bob`}>
+          <div className={`bx-me-sprite ${intro ? "bx-slide-in-left" : ""} ${myFainted ? "bx-faint" : ""} ${myLunge ? "pq-lunge-right" : ""} ${myHitClass}`}>
             {intro ? (
               <div className="bx-pokeball-throw bx-pokeball-throw-me"><Pokeball alive size={28} /></div>
             ) : (
@@ -613,11 +613,6 @@ const css = `
 @keyframes bx-throw-me  { 0% { transform: translate(160px, 60px) rotate(0deg); opacity: 0; }  30% { opacity: 1; } 70% { transform: translate(-20px, -10px) rotate(-540deg); } 100% { transform: translate(0,0) rotate(-720deg); opacity: 0; } }
 .bx-pokeball-throw-opp { animation: bx-throw-opp 900ms ease-out forwards; }
 .bx-pokeball-throw-me  { animation: bx-throw-me  900ms ease-out forwards; }
-
-/* ── Idle bob (player sprite) ── */
-@keyframes pq-bob { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-6px) rotate(0.8deg)} }
-.pq-bob { animation: pq-bob 2.6s ease-in-out infinite; }
-.pq-bob.bx-faint { animation: bx-faint 600ms forwards ease-in; }
 
 /* ── Hit flash (red burst on img) ── */
 @keyframes pq-flash-red-img {
