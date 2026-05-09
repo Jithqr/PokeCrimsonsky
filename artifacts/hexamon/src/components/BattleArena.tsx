@@ -386,7 +386,7 @@ export default function BattleArena(props: Props) {
             )}
           </div>
           <div className="bx-me-plate">
-            <NamePlate mon={myActive} side="me" showHpNumbers showExp />
+            <NamePlate mon={myActive} side="me" showHpNumbers />
             <div style={{ marginTop: 4, display: "flex", justifyContent: "flex-end", paddingRight: 4 }}>
               <PokeballRow mons={me.mons} align="right" />
             </div>
