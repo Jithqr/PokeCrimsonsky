@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trainer Profile — Ywye6d</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Syne:wght@400;700;800&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #F5C842;
+    --red: #FF4D6D;
+    --blue: #58C4F6;
+    --purple: #B78BFA;
+    --green: #4FFFB0;
+    --glass: rgba(255,255,255,0.04);
+    --glass-border: rgba(255,255,255,0.09);
+    --text: #F0F0F8;
+    --muted: rgba(255,255,255,0.35);
+    --radius: 18px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #000;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .ambient {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 10%, rgba(88,196,246,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 35% at 80% 80%, rgba(183,139,250,0.05) 0%, transparent 55%),
+      radial-gradient(ellipse 40% 30% at 60% 30%, rgba(245,200,66,0.03) 0%, transparent 50%);
+  }
+
+  .page { position: relative; z-index: 1; }
+
+  /* BANNER */
+  .banner {
+    height: 160px;
+    background: linear-gradient(160deg, #060608 0%, #08080f 50%, #0a0008 100%);
+    position: relative; overflow: hidden;
+  }
+  .banner::after {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 100% at 50% 120%, rgba(88,196,246,0.09) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 85% 20%, rgba(183,139,250,0.07) 0%, transparent 50%);
+  }
+  .banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+  /* HEADER */
+  .profile-header { padding: 0 18px; margin-top: -46px; position: relative; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+  .avatar-stack { display: flex; align-items: flex-end; gap: 12px; }
+
+  .avatar-wrap { position: relative; }
+  .avatar-shell {
+    width: 88px; height: 88px; border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1.5px solid rgba(255,255,255,0.14);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 38px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+  .avatar-shell img { width: 100%; height: 100%; object-fit: cover; }
+  .online-pip {
+    position: absolute; bottom: 3px; right: 3px;
+    width: 13px; height: 13px; border-radius: 50%;
+    background: var(--green); border: 2.5px solid #000;
+    box-shadow: 0 0 8px rgba(79,255,176,0.7);
+    animation: pip-pulse 2.4s ease infinite;
+  }
+  @keyframes pip-pulse { 0%,100%{box-shadow:0 0 8px rgba(79,255,176,0.7)} 50%{box-shadow:0 0 14px rgba(79,255,176,0.9)} }
+
+  .trainer-meta { padding-bottom: 4px; }
+  .trainer-name { font-family: 'Orbitron', monospace; font-weight: 900; font-size: 20px; color: #fff; letter-spacing: 0.5px; line-height: 1; }
+  .trainer-handle { color: var(--muted); font-size: 12px; margin-top: 3px; letter-spacing: 1px; }
+  .trainer-badge {
+    display: inline-flex; align-items: center; gap: 4px; margin-top: 6px;
+    background: rgba(245,200,66,0.07); border: 1px solid rgba(245,200,66,0.22);
+    border-radius: 6px; padding: 3px 8px;
+    font-family: 'Press Start 2P', monospace; font-size: 7px; color: var(--gold); letter-spacing: 0.5px;
+  }
+
+  /* BUTTONS */
+  .btn-row { display: flex; gap: 8px; align-items: flex-end; padding-bottom: 4px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    border-radius: 12px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px;
+    cursor: pointer; transition: all 0.16s ease; white-space: nowrap; letter-spacing: 0.5px; border: none;
+  }
+  .btn-primary { background: #fff; color: #000; padding: 10px 16px; box-shadow: 0 2px 16px rgba(255,255,255,0.1); }
+  .btn-primary:hover { background: #e8e8e8; transform: translateY(-1px); box-shadow: 0 4px 22px rgba(255,255,255,0.18); }
+  .btn-primary:active { transform: scale(0.97); }
+  .btn-ghost { background: rgba(255,255,255,0.05); color: var(--text); padding: 10px 12px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.09); transform: translateY(-1px); }
+  .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  /* CHIPS */
+  .chips-row { display: flex; gap: 8px; padding: 14px 18px 0; flex-wrap: wrap; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 50px; padding: 5px 12px; font-size: 12px; font-weight: 700; backdrop-filter: blur(12px); }
+  .chip-coins { color: var(--gold); }
+  .chip-gems  { color: var(--purple); }
+  .chip-rank  { color: var(--blue); font-family: 'Orbitron', monospace; font-size: 11px; }
+
+  /* SECTION */
+  .section { padding: 20px 18px 0; }
+  .section-label { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 11px; }
+
+  /* GLASS CARD */
+  .glass-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: var(--radius);
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    box-shadow: 0 4px 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  /* RANK */
+  .rank-card { padding: 16px 18px; display: flex; align-items: center; gap: 14px; position: relative; overflow: hidden; }
+  .rank-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 90% 50%, rgba(205,127,50,0.07) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .rank-emblem { width: 52px; height: 52px; border-radius: 50%; background: rgba(205,127,50,0.09); border: 1px solid rgba(205,127,50,0.28); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+  .rank-name { font-family: 'Orbitron', monospace; font-size: 17px; font-weight: 900; color: #CD7F32; }
+  .rank-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .rank-bar { height: 3px; border-radius: 2px; background: rgba(255,255,255,0.07); margin-top: 8px; overflow: hidden; }
+  .rank-fill { height: 100%; width: 35%; background: linear-gradient(90deg, #CD7F32, #FFD700); animation: grow 1.4s cubic-bezier(.4,0,.2,1) forwards; }
+  @keyframes grow { from { width: 0; } }
+  .rank-note { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+  /* STAT GRID */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .stat-card { padding: 14px; position: relative; overflow: hidden; }
+  .stat-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1.5px; background: var(--c, rgba(88,196,246,0.6)); border-radius: 18px 18px 0 0; }
+  .s-gold   { --c: rgba(245,200,66,0.65); }
+  .s-blue   { --c: rgba(88,196,246,0.65); }
+  .s-purple { --c: rgba(183,139,250,0.65); }
+  .s-red    { --c: rgba(255,77,109,0.65); }
+  .stat-lbl { font-size: 9px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 5px; }
+  .stat-val { font-family: 'Orbitron', monospace; font-size: 26px; font-weight: 700; color: #fff; line-height: 1; }
+  .val-gold   { color: var(--gold); }
+  .val-blue   { color: var(--blue); }
+  .val-purple { color: var(--purple); }
+  .val-red    { color: var(--red); }
+  .stat-hint { font-size: 10px; color: var(--muted); margin-top: 4px; }
+  .dex-card { padding: 14px 16px; margin-top: 9px; }
+  .dex-row { display: flex; align-items: flex-end; justify-content: space-between; }
+  .dex-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.07); margin-top: 10px; overflow: hidden; }
+  .dex-fill { height: 100%; width: 0.5%; background: linear-gradient(90deg, var(--blue), var(--purple)); animation: grow 1.6s cubic-bezier(.4,0,.2,1) forwards; }
+
+  /* ── SHOWCASE ── */
+  .showcase-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; }
+  .showcase-scroll::-webkit-scrollbar { display: none; }
+
+  .showcase-card {
+    flex-shrink: 0; width: 118px; min-height: 160px;
+    padding: 10px 10px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    position: relative; overflow: hidden; cursor: pointer;
+  }
+  .showcase-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 110%, var(--tc, rgba(88,196,246,0.1)) 0%, transparent 70%);
+  }
+  .showcase-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.2); }
+  .showcase-card:hover .sc-sprite { transform: scale(1.08); }
+
+  .sc-slot { font-size: 9px; color: var(--muted); font-family: 'Orbitron', monospace; align-self: flex-start; line-height: 1; }
+  .sc-ace { position: absolute; top: 9px; right: 9px; font-size: 10px; }
+
+  /* sprite image container */
+  .sc-sprite-wrap {
+    width: 88px; height: 80px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; position: relative;
+  }
+  .sc-sprite {
+    max-width: 88px; max-height: 80px;
+    width: auto; height: auto;
+    image-rendering: pixelated;
+    transition: transform 0.22s ease;
+    filter: drop-shadow(0 4px 12px var(--sprite-shadow, rgba(88,196,246,0.25)));
+  }
+  /* fallback emoji if image fails */
+  .sc-fallback { font-size: 42px; display: none; }
+  .sc-sprite.errored { display: none; }
+  .sc-sprite.errored + .sc-fallback { display: block; }
+
+  .sc-name { font-size: 11px; font-weight: 700; color: var(--text); text-align: center; margin-top: 2px; }
+  .sc-level { font-size: 9px; font-family: 'Orbitron', monospace; color: var(--muted); }
+  .type-pill {
+    font-size: 8px; font-weight: 700; padding: 2px 8px; border-radius: 50px;
+    background: var(--tp-bg, rgba(88,196,246,0.15)); color: var(--tp-color, var(--blue));
+    letter-spacing: 0.5px; text-transform: uppercase; margin-top: 3px;
+  }
+
+  .showcase-empty {
+    flex-shrink: 0; width: 118px; min-height: 160px; border-radius: var(--radius);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 6px; padding: 14px 10px;
+    border: 1px dashed rgba(255,255,255,0.1);
+    opacity: 0.35; cursor: pointer; transition: opacity 0.2s;
+  }
+  .showcase-empty:hover { opacity: 0.6; }
+
+  /* ACHIEVEMENTS */
+  .ach-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .ach-item {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 11px 6px 9px; cursor: pointer;
+    position: relative; overflow: hidden; transition: transform 0.16s;
+  }
+  .ach-item::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 110%, var(--ag, rgba(245,200,66,0.1)) 0%, transparent 70%);
+  }
+  .ach-item:hover { transform: translateY(-2px); }
+  .ach-icon-wrap {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  }
+  .ach-item.rare .ach-icon-wrap { background: rgba(245,200,66,0.08); border-color: rgba(245,200,66,0.26); box-shadow: 0 0 14px rgba(245,200,66,0.09); }
+  .ach-name { font-size: 8px; font-weight: 700; color: var(--muted); text-align: center; line-height: 1.3; letter-spacing: 0.3px; }
+  .ach-item.rare .ach-name { color: rgba(245,200,66,0.72); }
+  .ach-locked .ach-icon-wrap { opacity: 0.28; filter: grayscale(1); }
+  .ach-locked .ach-name { opacity: 0.18; }
+
+  /* ANIMS */
+  .fade-up { opacity: 0; transform: translateY(14px); animation: fade-up 0.45s ease forwards; }
+  @keyframes fade-up { to { opacity: 1; transform: none; } }
+  .d1{animation-delay:.04s} .d2{animation-delay:.10s} .d3{animation-delay:.16s} .d4{animation-delay:.22s}
+
+  .bottom-pad { height: 48px; }
+</style>
+</head>
+<body>
+<div class="ambient"></div>
+<div class="page">
+
+<!-- BANNER -->
+<div class="banner"></div>
+
+<!-- HEADER -->
+<div class="profile-header fade-up">
+  <div class="header-top">
+    <div class="avatar-stack">
+      <div class="avatar-wrap">
+        <div class="avatar-shell">🧢</div>
+        <div class="online-pip"></div>
+      </div>
+      <div class="trainer-meta">
+        <div class="trainer-name">Ywye6d</div>
+        <div class="trainer-handle">@ywye6d</div>
+        <div class="trainer-badge">⚡ RISING TRAINER</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" title="Trade">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 5h10M9 2l3 3-3 3M14 11H4M7 8l-3 3 3 3"/>
+        </svg>
+      </button>
+      <button class="btn btn-primary">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 1.5l1.8 4.8H15l-4.2 3 1.6 4.9L8 11.3l-4.4 2.9 1.6-4.9L1 6.3h5.2z"/>
+        </svg>
+        Challenge
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- CHIPS -->
+<div class="chips-row fade-up d1">
+  <div class="chip"><span style="color:var(--gold)">🪙</span><span class="chip-coins">₽45,700</span></div>
+  <div class="chip"><span style="color:var(--purple)">💎</span><span class="chip-gems">450</span></div>
+  <div class="chip" style="margin-left:auto;">
+    <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#58C4F6"/></svg>
+    <span class="chip-rank">RANK 1 / 10</span>
+  </div>
+</div>
+
+<!-- RANK -->
+<div class="section fade-up d2">
+  <div class="section-label">Rank</div>
+  <div class="glass-card rank-card">
+    <div class="rank-emblem">🥉</div>
+    <div style="flex:1;">
+      <div class="rank-name">BRONZE</div>
+      <div class="rank-sub">Division I · 35% to Silver</div>
+      <div class="rank-bar"><div class="rank-fill"></div></div>
+      <div class="rank-note">65 more wins to promote</div>
+    </div>
+    <div style="text-align:right; font-family:'Orbitron',monospace; font-size:11px; color:var(--muted);">5W&nbsp;5L</div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="section fade-up d2">
+  <div class="section-label">Stats</div>
+  <div class="stat-grid">
+    <div class="glass-card stat-card s-gold">
+      <div class="stat-lbl">Wins</div>
+      <div class="stat-val val-gold">5</div>
+      <div class="stat-hint">+3 this week</div>
+    </div>
+    <div class="glass-card stat-card s-blue">
+      <div class="stat-lbl">Win Rate</div>
+      <div class="stat-val val-blue">50%</div>
+      <div class="stat-hint">5W · 5L</div>
+    </div>
+    <div class="glass-card stat-card s-purple">
+      <div class="stat-lbl">Seen</div>
+      <div class="stat-val val-purple">31</div>
+      <div class="stat-hint">of 1025</div>
+    </div>
+    <div class="glass-card stat-card s-red">
+      <div class="stat-lbl">Caught</div>
+      <div class="stat-val val-red">5</div>
+      <div class="stat-hint">Rank F Collector</div>
+    </div>
+  </div>
+  <div class="glass-card dex-card">
+    <div class="dex-row">
+      <div>
+        <div class="stat-lbl">Pokédex</div>
+        <div style="font-family:'Orbitron',monospace;font-size:15px;font-weight:700;color:#fff;margin-top:2px;">0.5%</div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);">5 / 1025</div>
+    </div>
+    <div class="dex-bar"><div class="dex-fill"></div></div>
+  </div>
+</div>
+
+<!-- SHOWCASE -->
+<div class="section fade-up d3">
+  <div class="section-label">Showcase</div>
+  <div class="showcase-scroll">
+
+    <!-- Charmander #004 -->
+    <div class="glass-card showcase-card" style="--tc:rgba(255,100,50,0.14); --sprite-shadow:rgba(255,100,50,0.3);">
+      <div class="sc-slot">ACE</div>
+      <div class="sc-ace">⭐</div>
+      <div class="sc-sprite-wrap">
+        <img class="sc-sprite" 
+          src="https://www.pkparaiso.com/imagenes/xy/sprites/animados/charmander.gif"
+          onerror="this.classList.add('errored')"
+          alt="Charmander">
+        <span class="sc-fallback">🔥</span>
+      </div>
+      <div class="sc-name">Charmander</div>
+      <div class="sc-level">Lv 18</div>
+      <div class="type-pill" style="--tp-bg:rgba(255,100,50,0.2);--tp-color:#FF8C5A;">FIRE</div>
+    </div>
+
+    <!-- Squirtle #007 -->
+    <div class="glass-card showcase-card" style="--tc:rgba(50,150,255,0.14); --sprite-shadow:rgba(50,150,255,0.3);">
+      <div class="sc-slot">02</div>
+      <div class="sc-sprite-wrap">
+        <img class="sc-sprite"
+          src="https://www.pkparaiso.com/imagenes/xy/sprites/animados/squirtle.gif"
+          onerror="this.classList.add('errored')"
+          alt="Squirtle">
+        <span class="sc-fallback">💧</span>
+      </div>
+      <div class="sc-name">Squirtle</div>
+      <div class="sc-level">Lv 15</div>
+      <div class="type-pill" style="--tp-bg:rgba(50,150,255,0.2);--tp-color:#58C4F6;">WATER</div>
+    </div>
+
+    <!-- Bulbasaur #001 -->
+    <div class="glass-card showcase-card" style="--tc:rgba(80,200,80,0.14); --sprite-shadow:rgba(80,200,80,0.3);">
+      <div class="sc-slot">03</div>
+      <div class="sc-sprite-wrap">
+        <img class="sc-sprite"
+          src="https://www.pkparaiso.com/imagenes/xy/sprites/animados/bulbasaur.gif"
+          onerror="this.classList.add('errored')"
+          alt="Bulbasaur">
+        <span class="sc-fallback">🌿</span>
+      </div>
+      <div class="sc-name">Bulbasaur</div>
+      <div class="sc-level">Lv 12</div>
+      <div class="type-pill" style="--tp-bg:rgba(80,200,80,0.2);--tp-color:#4FFFB0;">GRASS</div>
+    </div>
+
+    <!-- Pikachu #025 -->
+    <div class="glass-card showcase-card" style="--tc:rgba(255,220,50,0.14); --sprite-shadow:rgba(255,220,50,0.3);">
+      <div class="sc-slot">04</div>
+      <div class="sc-sprite-wrap">
+        <img class="sc-sprite"
+          src="https://www.pkparaiso.com/imagenes/xy/sprites/animados/pikachu.gif"
+          onerror="this.classList.add('errored')"
+          alt="Pikachu">
+        <span class="sc-fallback">⚡</span>
+      </div>
+      <div class="sc-name">Pikachu</div>
+      <div class="sc-level">Lv 10</div>
+      <div class="type-pill" style="--tp-bg:rgba(255,220,50,0.2);--tp-color:#F5C842;">ELECTRIC</div>
+    </div>
+
+    <!-- Gastly #092 -->
+    <div class="glass-card showcase-card" style="--tc:rgba(160,100,255,0.14); --sprite-shadow:rgba(160,100,255,0.3);">
+      <div class="sc-slot">05</div>
+      <div class="sc-sprite-wrap">
+        <img class="sc-sprite"
+          src="https://www.pkparaiso.com/imagenes/xy/sprites/animados/gastly.gif"
+          onerror="this.classList.add('errored')"
+          alt="Gastly">
+        <span class="sc-fallback">👻</span>
+      </div>
+      <div class="sc-name">Gastly</div>
+      <div class="sc-level">Lv 9</div>
+      <div class="type-pill" style="--tp-bg:rgba(160,100,255,0.2);--tp-color:#B78BFA;">GHOST</div>
+    </div>
+
+    <!-- Empty slot -->
+    <div class="showcase-empty">
+      <div style="font-size:22px;opacity:0.5;">＋</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:1px;">EMPTY</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ACHIEVEMENTS -->
+<div class="section fade-up d4">
+  <div class="section-label">Achievements</div>
+  <div class="ach-grid">
+    <div class="glass-card ach-item rare" style="--ag:rgba(245,200,66,0.12);">
+      <div class="ach-icon-wrap">⚔️</div>
+      <div class="ach-name">First Blood</div>
+    </div>
+    <div class="glass-card ach-item rare" style="--ag:rgba(245,200,66,0.12);">
+      <div class="ach-icon-wrap">🏆</div>
+      <div class="ach-name">5-Win Club</div>
+    </div>
+    <div class="glass-card ach-item" style="--ag:rgba(88,196,246,0.09);">
+      <div class="ach-icon-wrap">👁️</div>
+      <div class="ach-name">30 Seen</div>
+    </div>
+    <div class="glass-card ach-item" style="--ag:rgba(79,255,176,0.09);">
+      <div class="ach-icon-wrap">🎯</div>
+      <div class="ach-name">Caught 5</div>
+    </div>
+    <div class="glass-card ach-item" style="--ag:rgba(183,139,250,0.09);">
+      <div class="ach-icon-wrap">📖</div>
+      <div class="ach-name">Dex Start</div>
+    </div>
+    <div class="glass-card ach-item ach-locked"><div class="ach-icon-wrap">🌟</div><div class="ach-name">???</div></div>
+    <div class="glass-card ach-item ach-locked"><div class="ach-icon-wrap">🐉</div><div class="ach-name">???</div></div>
+    <div class="glass-card ach-item ach-locked"><div class="ach-icon-wrap">🏅</div><div class="ach-name">???</div></div>
+    <div class="glass-card ach-item ach-locked"><div class="ach-icon-wrap">⚡</div><div class="ach-name">???</div></div>
+    <div class="glass-card ach-item ach-locked"><div class="ach-icon-wrap">💫</div><div class="ach-name">???</div></div>
+  </div>
+</div>
+
+<div class="bottom-pad"></div>
+</div>
+
+<script>
+  // If pkparaiso blocks hotlinking, fall back to Showdown sprites
+  // Showdown CDN: https://play.pokemonshowdown.com/sprites/xyani/charmander.gif
+  document.querySelectorAll('.sc-sprite').forEach(img => {
+    img.addEventListener('error', function() {
+      const name = this.alt.toLowerCase();
+      // Try Showdown animated sprites as fallback
+      const showdownUrl = `https://play.pokemonshowdown.com/sprites/xyani/${name}.gif`;
+      if (!this.dataset.tried) {
+        this.dataset.tried = '1';
+        this.src = showdownUrl;
+      }
+    });
+  });
+</script>
+</body>
+</html>

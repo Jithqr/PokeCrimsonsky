@@ -3159,138 +3159,324 @@ export default function App() {
   }
 
   if (screen === "profile") {
-    const dexPct = Math.round((caught.size / TOTAL_POKEMON) * 100);
+    const pRank = rankFromExp(player.exp);
+    const pProgress = rankProgress(player.exp);
+    const pTier = rankTier(pRank);
+    const pWins = player.wins ?? 0;
+    const pLosses = player.losses ?? 0;
+    const pTotal = pWins + pLosses;
+    const pWinRate = pTotal > 0 ? Math.round((pWins / pTotal) * 100) : 0;
+    const pDexPct = TOTAL_POKEMON > 0 ? (caught.size / TOTAL_POKEMON) * 100 : 0;
+    const pTierEmoji = pTier === "Master" ? "🏆" : pTier === "Diamond" ? "💎" : pTier === "Gold" ? "🥇" : pTier === "Silver" ? "🥈" : "🥉";
+    const pTierColor = pTier === "Master" ? "#B78BFA" : pTier === "Diamond" ? "#58C4F6" : pTier === "Gold" ? "#F5C842" : pTier === "Silver" ? "#c0c0c0" : "#CD7F32";
+    const pAchs = [
+      { icon: "⚔️", name: "First Win",   unlocked: pWins >= 1,         rare: pWins >= 1 },
+      { icon: "🏆", name: "5-Win Club",  unlocked: pWins >= 5,         rare: pWins >= 5 },
+      { icon: "👁️", name: "30 Seen",     unlocked: seen.size >= 30,    rare: false },
+      { icon: "🎯", name: "Caught 5",    unlocked: caught.size >= 5,   rare: false },
+      { icon: "📖", name: "Dex Start",   unlocked: caught.size >= 1,   rare: false },
+      { icon: "🌟", name: "Shiny Find",  unlocked: false,              rare: false },
+      { icon: "🐉", name: "Elite Four",  unlocked: false,              rare: false },
+      { icon: "🏅", name: "Rank 5+",     unlocked: pRank >= 5,         rare: pRank >= 5 },
+      { icon: "⚡", name: "50 Caught",   unlocked: caught.size >= 50,  rare: caught.size >= 50 },
+      { icon: "💫", name: "100 Wins",    unlocked: pWins >= 100,       rare: pWins >= 100 },
+    ];
+    const prfCss = `
+      .prf-ambient { position:fixed; inset:0; pointer-events:none; z-index:0; background: radial-gradient(ellipse 60% 40% at 20% 10%, rgba(88,196,246,0.06) 0%, transparent 60%), radial-gradient(ellipse 50% 35% at 80% 80%, rgba(183,139,250,0.05) 0%, transparent 55%); }
+      .prf-page { position:relative; z-index:1; background:#000; min-height:100vh; padding-bottom:80px; }
+      .prf-banner { height:140px; background:linear-gradient(160deg,#060608 0%,#08080f 50%,#0a0008 100%); position:relative; overflow:hidden; }
+      .prf-banner::before { content:''; position:absolute; inset:0; background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px); background-size:44px 44px; }
+      .prf-banner::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 80% 100% at 50% 120%,rgba(88,196,246,0.09) 0%,transparent 60%),radial-gradient(ellipse 40% 60% at 85% 20%,rgba(183,139,250,0.07) 0%,transparent 50%); }
+      .prf-header { padding:0 18px; margin-top:-44px; position:relative; }
+      .prf-htop { display:flex; justify-content:space-between; align-items:flex-end; gap:10px; }
+      .prf-avatar-shell { width:86px; height:86px; border-radius:50%; background:rgba(255,255,255,0.05); border:2px solid rgba(255,255,255,0.16); display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.8); }
+      .prf-avatar-shell img { width:100%; height:100%; object-fit:contain; image-rendering:pixelated; }
+      .prf-pip { position:absolute; bottom:3px; right:3px; width:13px; height:13px; border-radius:50%; background:#4FFFB0; border:2.5px solid #000; box-shadow:0 0 8px rgba(79,255,176,0.7); animation:prf-pip 2.4s ease infinite; }
+      @keyframes prf-pip { 0%,100%{box-shadow:0 0 8px rgba(79,255,176,0.7)} 50%{box-shadow:0 0 14px rgba(79,255,176,0.9)} }
+      .prf-name { font-size:19px; font-weight:800; color:#fff; letter-spacing:0.3px; line-height:1; margin-top:2px; }
+      .prf-handle { color:rgba(255,255,255,0.38); font-size:12px; margin-top:3px; }
+      .prf-badge { display:inline-flex; align-items:center; gap:4px; margin-top:7px; background:rgba(245,200,66,0.07); border:1px solid rgba(245,200,66,0.24); border-radius:6px; padding:3px 9px; font-size:10px; font-weight:700; color:#F5C842; letter-spacing:0.5px; }
+      .prf-btnrow { display:flex; gap:8px; align-items:flex-end; padding-bottom:4px; }
+      .prf-btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; border-radius:10px; font-weight:700; font-size:12px; cursor:pointer; border:none; padding:9px 14px; transition:all 0.15s; white-space:nowrap; }
+      .prf-btn-ghost { background:rgba(255,255,255,0.06); color:#F0F0F8; border:1px solid rgba(255,255,255,0.12); }
+      .prf-btn-ghost:hover { background:rgba(255,255,255,0.11); }
+      .prf-btn-primary { background:#fff; color:#000; }
+      .prf-btn-primary:hover { background:#e4e4e4; }
+      .prf-chips { display:flex; gap:8px; padding:14px 18px 0; flex-wrap:wrap; }
+      .prf-chip { display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:50px; padding:5px 12px; font-size:12px; font-weight:700; }
+      .prf-section { padding:20px 18px 0; }
+      .prf-section-lbl { font-size:10px; font-weight:700; color:rgba(255,255,255,0.35); letter-spacing:3px; text-transform:uppercase; margin-bottom:11px; }
+      .prf-glass { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:16px; box-shadow:0 4px 28px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05); }
+      .prf-rank-card { padding:16px 18px; display:flex; align-items:center; gap:14px; position:relative; overflow:hidden; }
+      .prf-rank-emblem { width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
+      .prf-rank-bar { height:3px; border-radius:2px; background:rgba(255,255,255,0.08); margin-top:8px; overflow:hidden; }
+      .prf-rank-fill { height:100%; transition:width 1.4s cubic-bezier(.4,0,.2,1); }
+      .prf-stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+      .prf-stat-card { padding:14px; position:relative; overflow:hidden; }
+      .prf-stat-card::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--c,rgba(88,196,246,0.6)); border-radius:16px 16px 0 0; }
+      .prf-stat-lbl { font-size:9px; color:rgba(255,255,255,0.35); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:5px; }
+      .prf-stat-val { font-size:26px; font-weight:800; line-height:1; }
+      .prf-stat-hint { font-size:10px; color:rgba(255,255,255,0.35); margin-top:4px; }
+      .prf-dex-card { padding:14px 16px; margin-top:9px; }
+      .prf-dex-bar { height:4px; border-radius:2px; background:rgba(255,255,255,0.08); margin-top:10px; overflow:hidden; }
+      .prf-dex-fill { height:100%; background:linear-gradient(90deg,#58C4F6,#B78BFA); transition:width 1.6s cubic-bezier(.4,0,.2,1); }
+      .prf-showcase-scroll { display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; scrollbar-width:none; }
+      .prf-showcase-scroll::-webkit-scrollbar { display:none; }
+      .prf-sc-card { flex-shrink:0; width:110px; padding:10px 10px 12px; display:flex; flex-direction:column; align-items:center; gap:3px; position:relative; overflow:hidden; transition:transform 0.2s; }
+      .prf-sc-card:hover { transform:translateY(-3px); }
+      .prf-sc-glow { position:absolute; inset:0; background:radial-gradient(ellipse 80% 60% at 50% 110%,var(--tc,rgba(88,196,246,0.1)) 0%,transparent 70%); pointer-events:none; }
+      .prf-sc-slot { font-size:9px; color:rgba(255,255,255,0.35); position:absolute; top:9px; left:10px; }
+      .prf-sc-name { font-size:11px; font-weight:700; text-align:center; color:#F0F0F8; }
+      .prf-sc-level { font-size:9px; color:rgba(255,255,255,0.38); }
+      .prf-type-pill { font-size:8px; font-weight:700; padding:2px 8px; border-radius:50px; letter-spacing:0.5px; text-transform:uppercase; margin-top:2px; }
+      .prf-sc-empty { flex-shrink:0; width:110px; min-height:158px; border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; border:1px dashed rgba(255,255,255,0.1); opacity:0.32; }
+      .prf-ach-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+      .prf-ach-item { display:flex; flex-direction:column; align-items:center; gap:5px; padding:11px 6px 9px; position:relative; overflow:hidden; transition:transform 0.16s; }
+      .prf-ach-item:hover { transform:translateY(-2px); }
+      .prf-ach-icon { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); }
+      .prf-ach-name { font-size:8px; font-weight:700; color:rgba(255,255,255,0.38); text-align:center; line-height:1.3; }
+      .prf-list { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; }
+      .prf-li { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.06); cursor:pointer; transition:background 0.15s; gap:10px; }
+      .prf-li:last-child { border-bottom:none; }
+      .prf-li:hover { background:rgba(255,255,255,0.04); }
+      .prf-li-label { font-size:14px; font-weight:600; color:#F0F0F8; }
+      .prf-li-right { font-size:12px; color:rgba(255,255,255,0.38); flex-shrink:0; }
+      .prf-fu { animation:prf-fu 0.45s ease both; }
+      @keyframes prf-fu { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+      .prf-d1{animation-delay:.06s} .prf-d2{animation-delay:.13s} .prf-d3{animation-delay:.20s} .prf-d4{animation-delay:.27s}
+    `;
     return (
-      <div style={S.root}><style>{css}</style>
-        <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
-          <div className="m-cover" />
-          <div className="m-prof">
-            <div className="m-avatar"><img src={TRAINER_SPRITE(player.sprite)} alt="me" /></div>
-            <h1 className="m-prof-name">{player.name}</h1>
-            <p className="m-prof-handle">@{player.name.toLowerCase().replace(/\s+/g, "")}</p>
-          </div>
-          <div className="m-wallet">
-            <div className="m-balance"><i className="fa-solid fa-coins" style={{ fontSize: 12 }} /> ₽{player.money.toLocaleString()}</div>
-            <div className="m-balance" style={{ background: "linear-gradient(180deg,#7e3aed,#4c1d95)" }}>
-              <i className="fa-solid fa-wand-sparkles" style={{ fontSize: 12 }} /> {(player.stardust ?? 0).toLocaleString()}
-            </div>
-            <span className="m-level-badge">Rank {rankFromExp(player.exp)} / {MAX_RANK}</span>
-          </div>
-          <h2 className="m-section-h">Redeem Centre</h2>
-          <div style={{ padding: "0 16px", marginBottom: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", background: "#15151b", border: "1px solid #26262d", borderRadius: 999, padding: "8px", gap: 12, height: 52, boxSizing: "border-box" }}>
-              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#26262d", display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", flexShrink: 0 }}>
-                <i className="fa-solid fa-gift" style={{ fontSize: 14 }} />
-              </div>
-              {redeemMsg ? (
-                <div style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 600, color: redeemMsg.ok ? "#4ade80" : "#f87171", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {redeemMsg.text}
+      <div style={S.root}><style>{css}</style><style>{prfCss}</style>
+        <div style={{ ...S.wrap, background: "#000", overflow: "visible" }}>
+          <div className="prf-ambient" />
+          <div className="prf-page">
+
+            {/* ── Banner ── */}
+            <div className="prf-banner" />
+
+            {/* ── Header ── */}
+            <div className="prf-header prf-fu">
+              <div className="prf-htop">
+                <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
+                  <div style={{ position: "relative" }}>
+                    <div className="prf-avatar-shell">
+                      <img src={TRAINER_SPRITE(player.sprite)} alt="trainer" />
+                    </div>
+                    <div className="prf-pip" />
+                  </div>
+                  <div style={{ paddingBottom: 4 }}>
+                    <div className="prf-name">{player.name}</div>
+                    <div className="prf-handle">@{player.name.toLowerCase().replace(/\s+/g, "")}</div>
+                    <div className="prf-badge">⚡ {pTier.toUpperCase()} TRAINER</div>
+                  </div>
                 </div>
-              ) : (
-                <input
-                  value={redeemInput}
-                  onChange={(e) => setRedeemInput(e.target.value)}
-                  placeholder="Enter redeem code"
-                  style={{ flex: 1, minWidth: 0, padding: 0, border: "none", background: "transparent", color: "#fff", fontSize: 15, outline: "none" }}
-                />
-              )}
-              <button
-                onClick={() => {
-                  sfx.click();
-                  const code = redeemInput.trim();
-                  let result: { text: string; ok: boolean };
-                  if (!code) {
-                    result = { text: "Enter a code first", ok: false };
-                  } else if (code === "Jptx02z") {
-                    if (redeemedCodes.includes(code)) {
-                      result = { text: "Code already claimed", ok: false };
-                    } else {
-                      setPlayer((p) => ({ ...p, money: p.money + 100000, stardust: (p.stardust ?? 0) + 10000 }));
-                      setRedeemedCodes((c) => [...c, code]);
-                      result = { text: "Successfully redeemed!", ok: true };
-                      addLog("Redeem code claimed! +₽100,000 +10,000 stardust", "#4ade80");
-                    }
-                  } else {
-                    result = { text: "Wrong code", ok: false };
-                  }
-                  setRedeemInput("");
-                  setRedeemMsg(result);
-                  setTimeout(() => setRedeemMsg(null), 5000);
-                }}
-                style={{ height: 36, padding: "0 22px", borderRadius: 999, border: "none", background: "#2f7bff", color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer", flexShrink: 0, lineHeight: 1 }}
-              >
-                Claim
-              </button>
-            </div>
-          </div>
-          <div className="m-stats">
-            <div className="m-statc">
-              <div className="m-stat-ic"><i className="fa-solid fa-gavel" /></div>
-              <div><div className="m-stat-lab">Banned</div><div className="m-stat-val">No</div></div>
-            </div>
-            <div className="m-statc">
-              <div className="m-stat-ic"><i className="fa-solid fa-shield" /></div>
-              <div><div className="m-stat-lab">Rank Tier</div><div className="m-stat-val">{rankTier(rankFromExp(player.exp))}</div></div>
-            </div>
-            <div className="m-statc">
-              <div className="m-stat-ic"><i className="fa-solid fa-book-open" /></div>
-              <div><div className="m-stat-lab">Pokémon Seen</div><div className="m-stat-val">{seen.size}</div></div>
-            </div>
-            <div className="m-statc">
-              <div className="m-stat-ic"><i className="fa-solid fa-circle-dot" /></div>
-              <div><div className="m-stat-lab">Pokémon Caught</div><div className="m-stat-val">{caught.size}</div></div>
-            </div>
-          </div>
-          <div className="m-hl">
-            <div className="m-hlc">
-              <div className="m-hl-iw"><i className="fa-solid fa-address-book" /></div>
-              <span className="m-hl-lab">Pokédex</span>
-              <span className="m-hl-val">{dexPct}%</span>
-            </div>
-            <div className="m-hl-c m-hlc">
-              <div className="m-hl-iw"><i className="fa-solid fa-certificate" /></div>
-              <span className="m-hl-lab">Wins</span>
-              <span className="m-hl-val"><i className="fa-solid fa-sun" />{player.wins}</span>
-            </div>
-            <div className="m-hlc">
-              <div className="m-hl-iw"><i className="fa-solid fa-wand-magic-sparkles" /></div>
-              <span className="m-hl-lab">Team</span>
-              <span className="m-hl-val"><i className="fa-regular fa-star" />{team.length}</span>
-            </div>
-          </div>
-          <h2 className="m-section-h">Dex Stats</h2>
-          <div className="m-list">
-            <div className="m-li" onClick={() => { sfx.click(); setScreen("dex"); }}>
-              <div className="m-li-l">
-                <div className="m-stat-ic"><i className="fa-solid fa-book-open" /></div>
-                <div className="m-li-t"><span className="m-li-tt">{seen.size} Pokémon Seen</span><span className="m-li-st">Browse</span></div>
+                <div className="prf-btnrow">
+                  <button className="prf-btn prf-btn-ghost" title={muted ? "Sound Off" : "Sound On"} onClick={() => { const m = !muted; setMuted(m); if (!m) sfx.click(); }}>
+                    {muted ? "🔇" : "🔊"}
+                  </button>
+                  <button className="prf-btn prf-btn-primary" onClick={() => { sfx.click(); setScreen("card"); }}>
+                    ✏️ Edit Card
+                  </button>
+                </div>
               </div>
-              <i className="fa-solid fa-caret-right m-arrow" />
             </div>
-            <div className="m-li" onClick={() => { sfx.click(); setScreen("caught"); }}>
-              <div className="m-li-l">
-                <div className="m-stat-ic"><i className="fa-solid fa-circle-check" /></div>
-                <div className="m-li-t"><span className="m-li-tt">{caught.size} Pokémon Caught</span><span className="m-li-st">By region</span></div>
+
+            {/* ── Chips ── */}
+            <div className="prf-chips prf-fu prf-d1">
+              <div className="prf-chip" style={{ color: "#F5C842" }}>🪙 ₽{player.money.toLocaleString()}</div>
+              <div className="prf-chip" style={{ color: "#B78BFA" }}>💎 {(player.stardust ?? 0).toLocaleString()}</div>
+              <div className="prf-chip" style={{ color: "#58C4F6", marginLeft: "auto" }}>● Rank {pRank} / {MAX_RANK}</div>
+            </div>
+
+            {/* ── Rank ── */}
+            <div className="prf-section prf-fu prf-d1">
+              <div className="prf-section-lbl">Rank</div>
+              <div className="prf-glass prf-rank-card">
+                <div className="prf-rank-emblem" style={{ background: `${pTierColor}18`, border: `1px solid ${pTierColor}44` }}>
+                  {pTierEmoji}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 17, fontWeight: 900, color: pTierColor }}>{pTier.toUpperCase()}</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
+                    Rank {pRank} · {pProgress.isMax ? "MAX RANK" : `${pProgress.pct}% to Rank ${pRank + 1}`}
+                  </div>
+                  <div className="prf-rank-bar">
+                    <div className="prf-rank-fill" style={{ width: `${pProgress.pct}%`, background: `linear-gradient(90deg,${pTierColor},#FFD700)` }} />
+                  </div>
+                  {!pProgress.isMax && (
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>
+                      {pProgress.toNext.toLocaleString()} EXP to next rank
+                    </div>
+                  )}
+                </div>
+                <div style={{ textAlign: "right", fontSize: 11, color: "rgba(255,255,255,0.4)", flexShrink: 0 }}>
+                  {pWins}W&nbsp;{pLosses}L
+                </div>
               </div>
-              <i className="fa-solid fa-caret-right m-arrow" />
             </div>
+
+            {/* ── Stats ── */}
+            <div className="prf-section prf-fu prf-d2">
+              <div className="prf-section-lbl">Stats</div>
+              <div className="prf-stat-grid">
+                <div className="prf-glass prf-stat-card" style={{ "--c": "rgba(245,200,66,0.7)" } as React.CSSProperties}>
+                  <div className="prf-stat-lbl">Wins</div>
+                  <div className="prf-stat-val" style={{ color: "#F5C842" }}>{pWins}</div>
+                  <div className="prf-stat-hint">{pLosses} losses</div>
+                </div>
+                <div className="prf-glass prf-stat-card" style={{ "--c": "rgba(88,196,246,0.7)" } as React.CSSProperties}>
+                  <div className="prf-stat-lbl">Win Rate</div>
+                  <div className="prf-stat-val" style={{ color: "#58C4F6" }}>{pWinRate}%</div>
+                  <div className="prf-stat-hint">{pWins}W · {pLosses}L</div>
+                </div>
+                <div className="prf-glass prf-stat-card" style={{ "--c": "rgba(183,139,250,0.7)" } as React.CSSProperties}>
+                  <div className="prf-stat-lbl">Seen</div>
+                  <div className="prf-stat-val" style={{ color: "#B78BFA" }}>{seen.size}</div>
+                  <div className="prf-stat-hint">of {TOTAL_POKEMON}</div>
+                </div>
+                <div className="prf-glass prf-stat-card" style={{ "--c": "rgba(255,77,109,0.7)" } as React.CSSProperties}>
+                  <div className="prf-stat-lbl">Caught</div>
+                  <div className="prf-stat-val" style={{ color: "#FF4D6D" }}>{caught.size}</div>
+                  <div className="prf-stat-hint">{caught.size >= 100 ? "Elite Collector" : caught.size >= 50 ? "Collector" : caught.size >= 5 ? "Beginner" : "None yet"}</div>
+                </div>
+              </div>
+              <div className="prf-glass prf-dex-card">
+                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+                  <div>
+                    <div className="prf-stat-lbl">Pokédex</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginTop: 2 }}>{pDexPct.toFixed(1)}%</div>
+                  </div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{caught.size} / {TOTAL_POKEMON}</div>
+                </div>
+                <div className="prf-dex-bar">
+                  <div className="prf-dex-fill" style={{ width: `${Math.max(0.3, pDexPct)}%` }} />
+                </div>
+              </div>
+            </div>
+
+            {/* ── Team Showcase ── */}
+            <div className="prf-section prf-fu prf-d3">
+              <div className="prf-section-lbl">Team Showcase</div>
+              <div className="prf-showcase-scroll">
+                {team.slice(0, 6).map((m, i) => {
+                  const tc = TYPE_COLORS[m.type1] || "#58C4F6";
+                  return (
+                    <div key={m.uid ?? i} className="prf-glass prf-sc-card" style={{ "--tc": `${tc}22` } as React.CSSProperties}>
+                      <div className="prf-sc-glow" />
+                      <div className="prf-sc-slot">{i === 0 ? "ACE" : `0${i + 1}`}</div>
+                      {i === 0 && <div style={{ position: "absolute", top: 9, right: 9, fontSize: 10 }}>⭐</div>}
+                      <div style={{ width: 80, height: 72, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 20 }}>
+                        <MonSprite sprite={m.sprite} size={68} className="" isShiny={m.isShiny} />
+                      </div>
+                      <div className="prf-sc-name">{m.name}</div>
+                      <div className="prf-sc-level">Lv {m.level}</div>
+                      <div className="prf-type-pill" style={{ background: `${tc}22`, color: tc }}>{m.type1}</div>
+                    </div>
+                  );
+                })}
+                {Array.from({ length: Math.max(0, 6 - team.length) }).map((_, i) => (
+                  <div key={`empty-${i}`} className="prf-sc-empty">
+                    <div style={{ fontSize: 22, opacity: 0.5 }}>＋</div>
+                    <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1 }}>EMPTY</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Achievements ── */}
+            <div className="prf-section prf-fu prf-d3">
+              <div className="prf-section-lbl">Achievements</div>
+              <div className="prf-ach-grid">
+                {pAchs.map((a, i) => (
+                  <div key={i} className="prf-glass prf-ach-item" style={{ opacity: a.unlocked ? 1 : 0.38 }}>
+                    <div className="prf-ach-icon" style={a.rare && a.unlocked ? { background: "rgba(245,200,66,0.09)", borderColor: "rgba(245,200,66,0.28)", boxShadow: "0 0 14px rgba(245,200,66,0.1)" } : {}}>
+                      {a.unlocked ? a.icon : "🔒"}
+                    </div>
+                    <div className="prf-ach-name" style={a.rare && a.unlocked ? { color: "rgba(245,200,66,0.75)" } : {}}>
+                      {a.unlocked ? a.name : "???"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Settings ── */}
+            <div className="prf-section prf-fu prf-d4">
+              <div className="prf-section-lbl">Settings</div>
+              <div className="prf-list">
+                {/* Redeem code row */}
+                <div className="prf-li" style={{ flexDirection: "column", alignItems: "stretch", gap: 8, cursor: "default" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: 1, textTransform: "uppercase" }}>Redeem Code</div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {redeemMsg ? (
+                      <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: redeemMsg.ok ? "#4ade80" : "#f87171", padding: "8px 0" }}>{redeemMsg.text}</div>
+                    ) : (
+                      <input
+                        value={redeemInput}
+                        onChange={(e) => setRedeemInput(e.target.value)}
+                        placeholder="Enter code…"
+                        style={{ flex: 1, padding: "8px 12px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", fontSize: 13, outline: "none" }}
+                      />
+                    )}
+                    <button
+                      onClick={() => {
+                        sfx.click();
+                        const code = redeemInput.trim();
+                        let result: { text: string; ok: boolean };
+                        if (!code) {
+                          result = { text: "Enter a code first", ok: false };
+                        } else if (code === "Jptx02z") {
+                          if (redeemedCodes.includes(code)) {
+                            result = { text: "Already claimed", ok: false };
+                          } else {
+                            setPlayer((p) => ({ ...p, money: p.money + 100000, stardust: (p.stardust ?? 0) + 10000 }));
+                            setRedeemedCodes((c) => [...c, code]);
+                            result = { text: "Claimed! +₽100,000 +10k stardust", ok: true };
+                            addLog("Redeem code claimed! +₽100,000 +10,000 stardust", "#4ade80");
+                          }
+                        } else {
+                          result = { text: "Invalid code", ok: false };
+                        }
+                        setRedeemInput("");
+                        setRedeemMsg(result);
+                        setTimeout(() => setRedeemMsg(null), 5000);
+                      }}
+                      style={{ padding: "8px 16px", background: "#2f7bff", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: "pointer", flexShrink: 0 }}
+                    >Claim</button>
+                  </div>
+                </div>
+                {/* Account status */}
+                <div className="prf-li" style={{ cursor: "default" }}>
+                  <span className="prf-li-label">Account Status</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#4ade80" }}>✓ Active</span>
+                </div>
+                {/* Sound toggle */}
+                <div className="prf-li" onClick={() => { const m = !muted; setMuted(m); if (!m) sfx.click(); }}>
+                  <span className="prf-li-label">Sound</span>
+                  <span className="prf-li-right">{muted ? "🔇 Off" : "🔊 On"}</span>
+                </div>
+                {/* Browse Pokédex */}
+                <div className="prf-li" onClick={() => { sfx.click(); setScreen("dex"); }}>
+                  <span className="prf-li-label">Browse Pokédex</span>
+                  <span className="prf-li-right">›</span>
+                </div>
+                {/* Caught Pokémon */}
+                <div className="prf-li" onClick={() => { sfx.click(); setScreen("caught"); }}>
+                  <span className="prf-li-label">Caught Pokémon</span>
+                  <span className="prf-li-right">›</span>
+                </div>
+                {/* Reset Save */}
+                <div className="prf-li" onClick={resetSave}>
+                  <span className="prf-li-label" style={{ color: "#f87171" }}>Reset Save</span>
+                  <span style={{ color: "#f87171" }}>🗑️</span>
+                </div>
+              </div>
+            </div>
+
+            <BottomNav active="profile" go={setScreen} />
           </div>
-          <h2 className="m-section-h">Preferences</h2>
-          <div className="m-list">
-            <div className="m-li" onClick={() => { const m = !muted; setMuted(m); if (!m) sfx.click(); }}>
-              <span className="m-li-tt">Sound</span>
-              <div className="m-pill-drop">{muted ? "off" : "on"} <i className="fa-solid fa-chevron-down" style={{ fontSize: 10 }} /></div>
-            </div>
-            <div className="m-li" onClick={() => { sfx.click(); setScreen("card"); }}>
-              <span className="m-li-tt">Edit Trainer Card</span>
-              <i className="fa-solid fa-caret-right m-arrow" />
-            </div>
-            <div className="m-li" onClick={resetSave} style={{ borderColor: "#7f1d1d" }}>
-              <span className="m-li-tt" style={{ color: "#f87171" }}>Reset Save</span>
-              <i className="fa-solid fa-trash m-arrow" style={{ color: "#f87171" }} />
-            </div>
-          </div>
-          <BottomNav active="profile" go={setScreen} />
+
+          {/* Buddy Picker Modal */}
           {showBuddyPicker && (
             <div onClick={() => setShowBuddyPicker(false)}
               style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
