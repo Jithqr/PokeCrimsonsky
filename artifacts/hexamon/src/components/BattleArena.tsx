@@ -581,7 +581,7 @@ const css = `
 }
 /* Player platform: lighter shadow, slightly blurred */
 .bx-me-platform {
-  position: absolute; bottom: 92px; left: 14px; width: 210px; height: 28px;
+  position: absolute; bottom: 148px; left: 14px; width: 210px; height: 28px;
   background: radial-gradient(ellipse at 50% 60%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.22) 50%, rgba(0,0,0,0) 75%);
   border-radius: 50%;
   filter: blur(2px);
@@ -596,7 +596,7 @@ const css = `
 }
 /* Player: bigger foreground sprite, also isolated to its own layer */
 .bx-me-sprite  {
-  position: absolute; bottom: 80px; left: 8px; width: 180px; height: 180px;
+  position: absolute; bottom: 162px; left: 8px; width: 180px; height: 180px;
   display:flex; align-items:flex-end; justify-content:center; z-index: 4;
   transform: translateZ(0); will-change: transform; backface-visibility: hidden;
 }
