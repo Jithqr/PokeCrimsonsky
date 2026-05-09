@@ -5,6 +5,8 @@ import { getMove } from "../lib/move-data";
 import { TYPE_COLORS } from "../lib/type-chart";
 
 import { buildSpriteFallbacks } from "../lib/sprites";
+import leagueBg from "@assets/IMG_20260509_103322_1778303016233.jpg";
+import pvpBg from "@assets/IMG_20260509_103250_1778303016308.jpg";
 
 // Build fallback URL list for a sprite key, checking local custom sprites first
 function spriteFallbacks(sprite: string, back = false): string[] {
@@ -313,8 +315,12 @@ export default function BattleArena(props: Props) {
         </div>
 
         {/* Battle stage */}
-        <div className={`bx-stage ${arenaHit ? "pq-arena-hit" : ""}`}>
-          {/* Sky/ground */}
+        <div className={`bx-stage ${arenaHit ? "pq-arena-hit" : ""}`} style={{
+          backgroundImage: `url(${mode === "pvp" ? pvpBg : leagueBg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}>
+          {/* Sky/ground — hidden when custom bg is used */}
           <div className="bx-sky" />
           <div className="bx-ground" />
           {/* CRT scanline overlay */}
@@ -549,10 +555,10 @@ const css = `
 
 .bx-stage {
   position: relative; height: 380px; width: 100%; overflow: hidden;
-  background: linear-gradient(180deg, #b6e7ff 0%, #b6e7ff 50%, #d6c08a 50%, #c2a866 100%);
+  background: #1a0a2e;
 }
-.bx-sky { position: absolute; inset: 0 0 50% 0; background: linear-gradient(180deg,#9adfff 0%,#cfeeff 100%); }
-.bx-ground { position: absolute; inset: 50% 0 0 0; background: linear-gradient(180deg,#d6c08a 0%,#a88e58 100%); }
+.bx-sky { position: absolute; inset: 0 0 50% 0; background: transparent; }
+.bx-ground { position: absolute; inset: 50% 0 0 0; background: transparent; }
 
 /* ── Scanlines ── */
 .bt-scanlines {
