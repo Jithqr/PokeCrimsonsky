@@ -906,9 +906,7 @@ export default function App() {
   const [seen, setSeen] = useState<Set<number>>(new Set(initial?.seen ?? initial?.caught ?? []));
   const [candies, setCandies] = useState<Record<number, number>>(initial?.candies ?? {});
   const [buddyIdx, setBuddyIdx] = useState<number>(initial?.buddyIdx ?? -1);
-  const [redeemedCodes, setRedeemedCodes] = useState<string[]>(initial?.redeemedCodes ?? []);
-  const [redeemInput, setRedeemInput] = useState<string>("");
-  const [redeemMsg, setRedeemMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
   const [lastSpinTs, setLastSpinTs] = useState<number>(initial?.lastSpinTs ?? 0);
   // Global daily Safari limit: ONE run per day across all regions. Older saves
   // may carry a per-region map (`lastSafariDayByRegion`); migrate by treating
@@ -1018,14 +1016,14 @@ export default function App() {
       const data: SaveData = {
         screen, player, teams, activeTeamIdx, box, inventory,
         caught: Array.from(caught), seen: Array.from(seen), muted,
-        candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay,
+        candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay,
         safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught,
         lastSafariDay, safariRegion, lastSpinDay, battleBoxHistory,
         badges, e4Cleared, e4Streak,
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch { /* ignore quota errors */ }
-  }, [screen, player, teams, activeTeamIdx, box, inventory, caught, seen, muted, candies, buddyIdx, redeemedCodes, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, safariRegion, lastSpinDay, battleBoxHistory, badges, e4Cleared, e4Streak]);
+  }, [screen, player, teams, activeTeamIdx, box, inventory, caught, seen, muted, candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, safariRegion, lastSpinDay, battleBoxHistory, badges, e4Cleared, e4Streak]);
 
   // Buddy walking — buddy earns 1 candy every 30s
   useEffect(() => {
@@ -3262,8 +3260,6 @@ export default function App() {
       .tc-s-icon { flex-shrink:0; display:flex; align-items:center; opacity:0.7; }
       .tc-s-label { flex:1; font-size:13px; color:#fff; font-weight:500; }
       .tc-s-value { font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; color:#fff; }
-      .tc-redeem-input { flex:1; padding:7px 10px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#fff; font-size:13px; font-family:'Rajdhani',sans-serif; font-weight:600; outline:none; }
-      .tc-redeem-btn { padding:7px 14px; background:rgba(47,123,255,0.85); color:#fff; border:none; border-radius:8px; font-weight:700; font-size:13px; cursor:pointer; font-family:'Rajdhani',sans-serif; flex-shrink:0; }
     `;
     return (
       <div style={S.root}><style>{css}</style><style>{prfCss}</style>
@@ -3451,36 +3447,6 @@ export default function App() {
                 <div className="tc-section-hdr">
                   <span className="tc-section-title">SETTINGS</span>
                   <div className="tc-section-line" />
-                </div>
-
-                {/* Redeem Code */}
-                <div style={{ margin: "6px 10px 5px", padding: "11px 14px", borderRadius: 10, background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.07)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05),0 2px 8px rgba(0,0,0,0.4)" }}>
-                  <div style={{ fontSize: 10, fontFamily: "'Orbitron',sans-serif", color: "rgba(255,255,255,0.4)", letterSpacing: 1.5, marginBottom: 8 }}>REDEEM CODE</div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {redeemMsg ? (
-                      <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: redeemMsg.ok ? "#5aaa7a" : "#f87171", padding: "7px 0", fontFamily: "'Rajdhani',sans-serif" }}>{redeemMsg.text}</div>
-                    ) : (
-                      <input className="tc-redeem-input" value={redeemInput} onChange={(e) => setRedeemInput(e.target.value)} placeholder="Enter code…" />
-                    )}
-                    <button className="tc-redeem-btn" onClick={() => {
-                      sfx.click();
-                      const code = redeemInput.trim();
-                      let result: { text: string; ok: boolean };
-                      if (!code) { result = { text: "Enter a code first", ok: false }; }
-                      else if (code === "Jptx02z") {
-                        if (redeemedCodes.includes(code)) { result = { text: "Already claimed", ok: false }; }
-                        else {
-                          setPlayer((p) => ({ ...p, money: p.money + 100000, stardust: (p.stardust ?? 0) + 10000 }));
-                          setRedeemedCodes((c) => [...c, code]);
-                          result = { text: "Claimed! +₽100,000 +10k ✦", ok: true };
-                          addLog("Redeem code claimed! +₽100,000 +10,000 stardust", "#4ade80");
-                        }
-                      } else { result = { text: "Invalid code", ok: false }; }
-                      setRedeemInput("");
-                      setRedeemMsg(result);
-                      setTimeout(() => setRedeemMsg(null), 5000);
-                    }}>CLAIM</button>
-                  </div>
                 </div>
 
                 {/* Account Status */}
