@@ -3267,7 +3267,7 @@ export default function App() {
     `;
     return (
       <div style={S.root}><style>{css}</style><style>{prfCss}</style>
-        <div style={{ ...S.wrap, background: "#03040a", overflow: "visible" }}>
+        <div style={{ ...S.wrap, background: "#03040a", overflowY: "auto", overflowX: "hidden", maxWidth: "100%" }}>
           <div className="tc-bg-circuit" />
           <div className="tc-bg-overlay" />
           <div className="tc-bg-grain" />
