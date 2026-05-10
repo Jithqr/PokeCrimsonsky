@@ -1006,7 +1006,38 @@ export default function App() {
     stars?: number;          // 1..3 stars for "throw" animation
   } | null>(null);
   const [emptyTeamWarning, setEmptyTeamWarning] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(() => {
+    try { return localStorage.getItem("hexamon:profile:avatar") ?? null; } catch { return null; }
+  });
+  const profileImageInputRef = useRef<HTMLInputElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
+
+  function handleProfileImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const src = ev.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        const size = 256;
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d")!;
+        const side = Math.min(img.width, img.height);
+        const ox = (img.width - side) / 2;
+        const oy = (img.height - side) / 2;
+        ctx.drawImage(img, ox, oy, side, side, 0, 0, size, size);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+        setProfileImage(dataUrl);
+        try { localStorage.setItem("hexamon:profile:avatar", dataUrl); } catch { /* quota */ }
+      };
+      img.src = src;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
 
   useEffect(() => { if (logRef.current) logRef.current.scrollTop = 99999; }, [log]);
 
@@ -3205,8 +3236,12 @@ export default function App() {
       .tc-tr { top:7px; right:7px; border-top:1px solid #3a4a5a; border-right:1px solid #3a4a5a; opacity:0.5; }
       .tc-bl { bottom:7px; left:7px; border-bottom:1px solid #3a4a5a; border-left:1px solid #3a4a5a; opacity:0.5; }
       .tc-br { bottom:7px; right:7px; border-bottom:1px solid #3a4a5a; border-right:1px solid #3a4a5a; opacity:0.5; }
-      .tc-avatar { width:88px; height:88px; border-radius:50%; border:1.5px solid rgba(80,110,140,0.35); box-shadow:0 0 28px rgba(60,90,120,0.22),0 0 0 4px rgba(30,40,55,0.5),0 8px 24px rgba(0,0,0,0.8); overflow:hidden; background:#060810; flex-shrink:0; }
-      .tc-avatar img { width:100%; height:100%; object-fit:cover; filter:brightness(0.9) saturate(0.7) contrast(1.05); }
+      .tc-avatar-wrap { position:relative; flex-shrink:0; cursor:pointer; }
+      .tc-avatar { width:88px; height:88px; border-radius:50%; border:1.5px solid rgba(80,110,140,0.35); box-shadow:0 0 28px rgba(60,90,120,0.22),0 0 0 4px rgba(30,40,55,0.5),0 8px 24px rgba(0,0,0,0.8); overflow:hidden; background:#060810; }
+      .tc-avatar img { width:100%; height:100%; object-fit:cover; }
+      .tc-avatar img.tc-avatar-sprite { filter:brightness(0.9) saturate(0.7) contrast(1.05); }
+      .tc-avatar-upload-btn { position:absolute; bottom:2px; right:2px; width:24px; height:24px; border-radius:50%; background:rgba(20,30,50,0.92); border:1.5px solid rgba(100,140,180,0.5); display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.7); pointer-events:none; }
+      .tc-avatar-upload-btn svg { display:block; }
       .tc-trainer-name { font-family:'Orbitron',sans-serif; font-size:22px; font-weight:800; color:#fff; letter-spacing:3px; text-shadow:0 2px 12px rgba(0,0,0,0.9); }
       .tc-card { background:rgba(10,10,12,0.92); border:1px solid rgba(255,255,255,0.07); border-radius:14px; overflow:hidden; backdrop-filter:blur(32px) saturate(1.1); -webkit-backdrop-filter:blur(32px) saturate(1.1); box-shadow:0 8px 48px rgba(0,0,0,0.85),inset 0 1px 0 rgba(255,255,255,0.06),inset 0 -1px 0 rgba(0,0,0,0.4); position:relative; margin:0 10px; }
       .tc-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(to right,transparent,rgba(255,255,255,0.08),transparent); pointer-events:none; }
@@ -3283,8 +3318,25 @@ export default function App() {
                   <span /><span /><span />
                 </div>
                 <div className="tc-tid">T-ID &nbsp;<strong>{player.id}</strong></div>
-                <div className="tc-avatar">
-                  <img src={TRAINER_SPRITE(player.sprite)} alt="Trainer" />
+                <div className="tc-avatar-wrap" onClick={() => profileImageInputRef.current?.click()}>
+                  <div className="tc-avatar">
+                    {profileImage
+                      ? <img src={profileImage} alt="Profile" />
+                      : <img src={TRAINER_SPRITE(player.sprite)} alt="Trainer" className="tc-avatar-sprite" />}
+                  </div>
+                  <div className="tc-avatar-upload-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a0c4e0" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                      <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                  </div>
+                  <input
+                    ref={profileImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={handleProfileImageUpload}
+                  />
                 </div>
                 <div className="tc-trainer-name">{player.name.toUpperCase()}</div>
               </div>
