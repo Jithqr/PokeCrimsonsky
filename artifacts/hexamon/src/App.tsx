@@ -3183,81 +3183,93 @@ export default function App() {
       { icon: "⚡", name: "50 Caught",   unlocked: caught.size >= 50,  rare: caught.size >= 50 },
       { icon: "💫", name: "100 Wins",    unlocked: pWins >= 100,       rare: pWins >= 100 },
     ];
+    const tcShowcaseCount = Math.max(team.length, 3);
+    const tcShowcaseRows = Math.ceil(tcShowcaseCount / 3);
+    const tcShowcaseTotal = tcShowcaseRows * 3;
     const prfCss = `
       @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;600;800&display=swap');
-      .tc-bg-grain { position:fixed; inset:0; z-index:0; pointer-events:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E"); background-size:180px 180px; opacity:0.5; }
-      .tc-scanlines { position:fixed; inset:0; z-index:1; pointer-events:none; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px); }
-      .tc-page { position:relative; z-index:10; max-width:480px; margin:0 auto; padding:14px 12px 32px; display:flex; flex-direction:column; gap:10px; font-family:'Rajdhani',sans-serif; animation:tc-in 0.7s ease both; padding-bottom:90px; }
+      .tc-bg-circuit { position:fixed; inset:0; z-index:0; pointer-events:none; background:url('https://i.ibb.co/chgGnhLB/IMG-20260509-210952.jpg') center/cover; opacity:0.055; filter:grayscale(0.85) brightness(0.5); }
+      .tc-bg-overlay { position:fixed; inset:0; z-index:1; pointer-events:none; background:radial-gradient(ellipse at 30% 20%,rgba(20,30,50,0.55) 0%,transparent 60%),radial-gradient(ellipse at 75% 80%,rgba(15,20,40,0.35) 0%,transparent 55%),linear-gradient(180deg,rgba(3,4,10,0.6) 0%,rgba(3,4,10,0.97) 100%); }
+      .tc-bg-grain { position:fixed; inset:0; z-index:2; pointer-events:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E"); background-size:180px 180px; opacity:0.55; }
+      .tc-scanlines { position:fixed; inset:0; z-index:50; pointer-events:none; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px); }
+      .tc-page { position:relative; z-index:10; max-width:480px; margin:0 auto; padding:16px 14px 32px; display:flex; flex-direction:column; gap:12px; font-family:'Rajdhani',sans-serif; animation:tc-in 0.7s ease both; padding-bottom:90px; }
       @keyframes tc-in { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:none} }
-      .tc-hero { position:relative; border-radius:18px; overflow:hidden; height:210px; border:1px solid rgba(40,50,65,0.5); box-shadow:0 24px 64px rgba(0,0,0,0.9),inset 0 1px 0 rgba(255,255,255,0.04); }
-      .tc-hero-bg { position:absolute; inset:0; background:url('https://i.ibb.co/sJjd2zpv/IMG-20260509-211652.jpg') center top/cover; filter:saturate(0.55) brightness(0.5) contrast(1.05); }
-      .tc-hero-bg::after { content:''; position:absolute; inset:0; background:linear-gradient(to bottom,rgba(3,4,10,0.05) 0%,rgba(3,4,10,0.7) 100%); }
+      .tc-hero { position:relative; border-radius:18px; overflow:hidden; height:220px; border:1px solid rgba(40,50,65,0.5); box-shadow:0 24px 64px rgba(0,0,0,0.9),inset 0 1px 0 rgba(255,255,255,0.04); }
+      .tc-hero-bg { position:absolute; inset:0; background:url('https://i.ibb.co/sJjd2zpv/IMG-20260509-211652.jpg') center top/cover; filter:saturate(0.6) brightness(0.55) contrast(1.05); }
+      .tc-hero-bg::after { content:''; position:absolute; inset:0; background:linear-gradient(to bottom,rgba(3,4,10,0.05) 0%,rgba(3,4,10,0.65) 100%); }
       .tc-hero-content { position:relative; z-index:3; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:16px; text-align:center; }
-      .tc-tid { position:absolute; top:14px; left:0; right:0; text-align:center; font-family:'Orbitron',sans-serif; font-size:9px; color:rgba(255,255,255,0.7); letter-spacing:2px; z-index:4; }
+      .tc-tid { position:absolute; top:16px; left:0; right:0; text-align:center; font-family:'Orbitron',sans-serif; font-size:9px; color:#fff; letter-spacing:1.5px; white-space:nowrap; z-index:4; }
       .tc-tid strong { color:#fff; font-size:10px; }
+      .tc-menu-btn { position:absolute; top:12px; left:12px; width:34px; height:34px; border-radius:50%; background:rgba(8,10,16,0.85); border:1px solid rgba(50,65,80,0.4); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; backdrop-filter:blur(8px); cursor:pointer; z-index:5; }
+      .tc-menu-btn span { display:block; width:13px; height:1.5px; background:#fff; border-radius:2px; }
       .tc-corner { position:absolute; width:10px; height:10px; z-index:4; }
       .tc-tl { top:7px; left:7px; border-top:1px solid #3a4a5a; border-left:1px solid #3a4a5a; opacity:0.5; }
       .tc-tr { top:7px; right:7px; border-top:1px solid #3a4a5a; border-right:1px solid #3a4a5a; opacity:0.5; }
       .tc-bl { bottom:7px; left:7px; border-bottom:1px solid #3a4a5a; border-left:1px solid #3a4a5a; opacity:0.5; }
       .tc-br { bottom:7px; right:7px; border-bottom:1px solid #3a4a5a; border-right:1px solid #3a4a5a; opacity:0.5; }
-      .tc-avatar { width:84px; height:84px; border-radius:50%; border:1.5px solid rgba(80,110,140,0.35); box-shadow:0 0 28px rgba(60,90,120,0.22),0 0 0 4px rgba(30,40,55,0.5),0 8px 24px rgba(0,0,0,0.8); overflow:hidden; background:#060810; flex-shrink:0; }
-      .tc-avatar img { width:100%; height:100%; object-fit:contain; image-rendering:pixelated; filter:brightness(0.9) saturate(0.8); }
-      .tc-trainer-name { font-family:'Orbitron',sans-serif; font-size:20px; font-weight:800; color:#fff; letter-spacing:3px; text-shadow:0 2px 12px rgba(0,0,0,0.9); }
-      .tc-card { background:rgba(10,10,12,0.92); border:1px solid rgba(255,255,255,0.07); border-radius:14px; overflow:hidden; backdrop-filter:blur(32px); box-shadow:0 8px 48px rgba(0,0,0,0.85),inset 0 1px 0 rgba(255,255,255,0.06); position:relative; }
+      .tc-avatar { width:88px; height:88px; border-radius:50%; border:1.5px solid rgba(80,110,140,0.35); box-shadow:0 0 28px rgba(60,90,120,0.22),0 0 0 4px rgba(30,40,55,0.5),0 8px 24px rgba(0,0,0,0.8); overflow:hidden; background:#060810; flex-shrink:0; }
+      .tc-avatar img { width:100%; height:100%; object-fit:cover; filter:brightness(0.9) saturate(0.7) contrast(1.05); }
+      .tc-trainer-name { font-family:'Orbitron',sans-serif; font-size:22px; font-weight:800; color:#fff; letter-spacing:3px; text-shadow:0 2px 12px rgba(0,0,0,0.9); }
+      .tc-card { background:rgba(10,10,12,0.92); border:1px solid rgba(255,255,255,0.07); border-radius:14px; overflow:hidden; backdrop-filter:blur(32px) saturate(1.1); -webkit-backdrop-filter:blur(32px) saturate(1.1); box-shadow:0 8px 48px rgba(0,0,0,0.85),inset 0 1px 0 rgba(255,255,255,0.06),inset 0 -1px 0 rgba(0,0,0,0.4); position:relative; }
       .tc-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(to right,transparent,rgba(255,255,255,0.08),transparent); pointer-events:none; }
+      .tc-card::after { content:''; position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); background-size:150px 150px; opacity:0.6; pointer-events:none; border-radius:14px; }
       .tc-card-inner { position:relative; z-index:1; }
-      .tc-rank-row { display:flex; align-items:center; gap:12px; padding:11px 14px; margin:10px 10px 4px; border-radius:10px; border:1px solid rgba(255,255,255,0.07); background:rgba(255,255,255,0.035); box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),0 2px 8px rgba(0,0,0,0.4); }
+      .tc-rank-row { display:flex; align-items:center; gap:12px; justify-content:flex-start; padding:11px 14px; margin:10px 10px 4px; border-radius:10px; border:1px solid rgba(255,255,255,0.07); background:rgba(255,255,255,0.035); box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),0 2px 8px rgba(0,0,0,0.4); }
       .tc-rank-icon { display:flex; align-items:center; opacity:0.75; flex-shrink:0; }
       .tc-rank-label { flex:1; font-size:13px; font-weight:600; color:#fff; letter-spacing:0.5px; }
       .tc-rank-value { font-family:'Orbitron',sans-serif; font-size:16px; font-weight:700; color:#fff; }
-      .tc-detail-row { display:flex; align-items:center; gap:12px; margin:5px 10px; padding:11px 14px; border-radius:10px; background:rgba(255,255,255,0.035); border:1px solid rgba(255,255,255,0.07); box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),0 2px 8px rgba(0,0,0,0.4); transition:background 0.2s,border-color 0.2s; cursor:pointer; }
+      .tc-detail-row { display:flex; align-items:center; gap:12px; margin:6px 10px; padding:11px 14px; border-radius:10px; background:rgba(255,255,255,0.035); border:1px solid rgba(255,255,255,0.07); box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),0 2px 8px rgba(0,0,0,0.4); backdrop-filter:blur(10px); transition:background 0.2s,border-color 0.2s,box-shadow 0.2s; }
       .tc-detail-row:last-child { margin-bottom:10px; }
-      .tc-detail-row:hover { background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); }
-      .tc-detail-row.no-tap { cursor:default; }
+      .tc-detail-row:hover { background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); box-shadow:inset 0 1px 0 rgba(255,255,255,0.08),0 4px 16px rgba(0,0,0,0.5); }
       .tc-detail-icon { flex-shrink:0; display:flex; align-items:center; opacity:0.7; }
       .tc-detail-label { flex:1; font-size:13px; color:#fff; font-weight:500; }
-      .tc-detail-value { font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; color:#fff; text-align:right; }
-      .tc-detail-value.ok { color:#5aaa7a; }
-      .tc-detail-value.warn { color:#f87171; }
+      .tc-detail-value { font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; color:#fff; }
       .tc-section-hdr { display:flex; align-items:center; gap:10px; padding:14px 18px 12px; border-bottom:1px solid rgba(255,255,255,0.05); }
-      .tc-section-title { font-family:'Orbitron',sans-serif; font-size:10px; font-weight:700; color:#fff; letter-spacing:2px; white-space:nowrap; }
+      .tc-section-title { font-family:'Orbitron',sans-serif; font-size:10px; font-weight:700; color:#fff; letter-spacing:2px; }
       .tc-section-line { flex:1; height:1px; background:linear-gradient(to right,rgba(80,110,140,0.2),transparent); }
-      .tc-poke-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 10px 22px; }
-      .tc-poke-card { background:rgba(6,8,13,0.95); background-image:url('https://i.ibb.co/J6xK8XK/20260510-172311.png'); background-size:100% 100%; border:1px solid rgba(35,45,58,0.8); border-radius:12px; padding:8px 6px 6px; display:flex; flex-direction:column; align-items:center; gap:3px; position:relative; overflow:hidden; min-height:140px; justify-content:center; box-shadow:inset 0 1px 0 rgba(255,255,255,0.02); transition:transform 0.2s,border-color 0.2s; cursor:pointer; }
-      .tc-poke-card:active { transform:scale(0.96); }
-      .tc-poke-overlay { position:absolute; inset:0; background:rgba(3,4,10,0.52); border-radius:12px; pointer-events:none; z-index:0; }
+      .tc-poke-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 10px 28px; }
+      .tc-poke-card { background:rgba(6,8,13,0.95); background-image:url('https://i.ibb.co/J6xK8XK/20260510-172311.png'); background-size:100% 100%; border:1px solid rgba(35,45,58,0.8); border-radius:12px; padding:8px 6px 6px; display:flex; flex-direction:column; align-items:center; gap:3px; position:relative; overflow:hidden; cursor:pointer; min-height:150px; justify-content:center; box-shadow:inset 0 1px 0 rgba(255,255,255,0.02); transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s; }
+      .tc-poke-card::after { content:''; position:absolute; inset:0; background:rgba(3,4,10,0.55); border-radius:12px; pointer-events:none; z-index:0; }
       .tc-poke-card > * { position:relative; z-index:1; }
-      .tc-type-badge { position:absolute; top:6px; left:6px; width:20px; height:20px; border-radius:50%; background:rgba(0,0,0,0.7); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; padding:3px; z-index:3; filter:grayscale(0.4) brightness(0.85); }
+      .tc-poke-card::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,0.015) 0%,transparent 60%); pointer-events:none; border-radius:12px; z-index:2; }
+      .tc-poke-card:active { transform:scale(0.96); border-color:rgba(80,110,140,0.3); box-shadow:0 4px 16px rgba(0,0,0,0.7); }
+      .tc-poke-card.featured { border-color:rgba(100,130,160,0.35); box-shadow:0 0 20px rgba(70,100,130,0.1),inset 0 1px 0 rgba(255,255,255,0.04); }
+      .tc-poke-card.featured::after { background:rgba(3,4,10,0.48); }
+      .tc-type-badge { position:absolute; top:6px; left:6px; width:20px; height:20px; border-radius:50%; background:rgba(0,0,0,0.7); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; padding:3px; backdrop-filter:blur(4px); z-index:3; filter:grayscale(0.55) brightness(0.8); }
       .tc-type-badge img { width:100%; height:100%; object-fit:contain; }
-      .tc-ace-star { position:absolute; top:6px; right:6px; font-size:10px; z-index:3; }
-      .tc-poke-sprite { width:60px; height:60px; object-fit:contain; filter:drop-shadow(0 3px 8px rgba(0,0,0,0.85)) grayscale(0.2) brightness(0.88); margin-top:8px; image-rendering:auto; }
       .tc-poke-level { font-family:'Orbitron',sans-serif; font-size:7px; font-weight:600; color:#fff; letter-spacing:0.4px; padding:2px 7px; background:rgba(0,0,0,0.75); border-radius:4px; border:1px solid rgba(255,255,255,0.05); white-space:nowrap; position:absolute; bottom:6px; left:50%; transform:translateX(-50%); z-index:3; }
-      .tc-poke-empty { border:1px dashed rgba(255,255,255,0.08); background:rgba(6,8,13,0.5); border-radius:12px; min-height:140px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; opacity:0.3; }
-      .tc-stats-row { display:flex; align-items:stretch; padding:6px 10px; }
-      .tc-stat-block { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:14px 8px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); margin:3px; transition:background 0.2s; }
-      .tc-stat-block:hover { background:rgba(255,255,255,0.06); }
+      .tc-poke-empty { border:1px dashed rgba(255,255,255,0.08); background:rgba(6,8,13,0.5); border-radius:12px; min-height:150px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; opacity:0.25; }
+      .tc-stats-row { display:flex; align-items:stretch; padding:6px 10px; gap:0; }
+      .tc-stat-block { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:14px 8px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); margin:3px; transition:background 0.2s,border-color 0.2s; animation:tc-stat-in 0.5s ease both; }
+      @keyframes tc-stat-in { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+      .tc-stat-block:nth-child(1){animation-delay:0s} .tc-stat-block:nth-child(3){animation-delay:0.1s} .tc-stat-block:nth-child(5){animation-delay:0.2s}
+      .tc-stat-block:hover { background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); }
       .tc-stat-icon { display:flex; align-items:center; justify-content:center; opacity:0.85; }
       .tc-stat-num { font-family:'Orbitron',sans-serif; font-size:20px; font-weight:800; color:#fff; line-height:1; letter-spacing:1px; }
+      .tc-stat-suffix { font-size:13px; font-weight:600; opacity:0.8; }
       .tc-stat-label { font-size:10px; font-weight:600; color:rgba(255,255,255,0.45); letter-spacing:1px; text-transform:uppercase; }
       .tc-stat-divider { width:1px; background:rgba(255,255,255,0.05); margin:10px 0; align-self:stretch; }
       .tc-stats-sep { height:1px; background:rgba(255,255,255,0.05); margin:2px 14px; }
-      .tc-dex-wrap { display:flex; flex-direction:column; gap:5px; padding:8px 14px 16px; }
+      .tc-dex-wrap { display:flex; flex-direction:column; gap:5px; padding:8px 14px 16px; animation:tc-stat-in 0.6s 0.3s ease both; }
       .tc-dex-track { height:4px; background:rgba(255,255,255,0.08); border-radius:4px; overflow:hidden; }
       .tc-dex-fill { height:100%; background:linear-gradient(to right,#5a8ac8,#c85a8a); border-radius:4px; transition:width 1.4s cubic-bezier(0.25,1,0.5,1); }
       .tc-dex-lbl { font-family:'Orbitron',sans-serif; font-size:8px; color:rgba(255,255,255,0.35); letter-spacing:1.2px; text-align:center; }
-      .tc-settings-row { display:flex; align-items:center; gap:12px; margin:5px 10px; padding:11px 14px; border-radius:10px; background:rgba(255,255,255,0.035); border:1px solid rgba(255,255,255,0.07); box-shadow:inset 0 1px 0 rgba(255,255,255,0.05); transition:background 0.2s; cursor:pointer; }
+      .tc-settings-row { display:flex; align-items:center; gap:12px; margin:6px 10px; padding:11px 14px; border-radius:10px; background:rgba(255,255,255,0.035); border:1px solid rgba(255,255,255,0.07); box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),0 2px 8px rgba(0,0,0,0.4); transition:background 0.2s,border-color 0.2s; cursor:pointer; }
       .tc-settings-row:last-child { margin-bottom:10px; }
-      .tc-settings-row:hover { background:rgba(255,255,255,0.055); }
-      .tc-settings-row.danger { border-color:rgba(248,113,113,0.2); }
+      .tc-settings-row:hover { background:rgba(255,255,255,0.055); border-color:rgba(255,255,255,0.12); }
+      .tc-settings-row.danger { border-color:rgba(248,113,113,0.15); }
       .tc-settings-row.danger:hover { background:rgba(248,113,113,0.06); }
-      .tc-s-label { flex:1; font-size:13px; color:#fff; font-weight:600; }
-      .tc-s-value { font-family:'Orbitron',sans-serif; font-size:11px; color:rgba(255,255,255,0.5); }
+      .tc-s-icon { flex-shrink:0; display:flex; align-items:center; opacity:0.7; }
+      .tc-s-label { flex:1; font-size:13px; color:#fff; font-weight:500; }
+      .tc-s-value { font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; color:#fff; }
       .tc-redeem-input { flex:1; padding:7px 10px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#fff; font-size:13px; font-family:'Rajdhani',sans-serif; font-weight:600; outline:none; }
       .tc-redeem-btn { padding:7px 14px; background:rgba(47,123,255,0.85); color:#fff; border:none; border-radius:8px; font-weight:700; font-size:13px; cursor:pointer; font-family:'Rajdhani',sans-serif; flex-shrink:0; }
     `;
     return (
       <div style={S.root}><style>{css}</style><style>{prfCss}</style>
         <div style={{ ...S.wrap, background: "#03040a", overflow: "visible" }}>
+          <div className="tc-bg-circuit" />
+          <div className="tc-bg-overlay" />
           <div className="tc-bg-grain" />
           <div className="tc-scanlines" />
 
@@ -3271,6 +3283,9 @@ export default function App() {
               <div className="tc-corner tc-br" />
               <div className="tc-hero-bg" />
               <div className="tc-hero-content">
+                <div className="tc-menu-btn" onClick={() => { sfx.click(); setScreen("home"); }}>
+                  <span /><span /><span />
+                </div>
                 <div className="tc-tid">T-ID &nbsp;<strong>{player.id}</strong></div>
                 <div className="tc-avatar">
                   <img src={TRAINER_SPRITE(player.sprite)} alt="Trainer" />
@@ -3282,66 +3297,59 @@ export default function App() {
             {/* ── Info Card ── */}
             <div className="tc-card">
               <div className="tc-card-inner">
-                {/* Trainer Level / Rank */}
+                {/* Trainer Level */}
                 <div className="tc-rank-row">
                   <span className="tc-rank-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7ca8c8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                     </svg>
                   </span>
-                  <span className="tc-rank-label">Trainer Rank · {pTierEmoji} {pTier}</span>
-                  <span className="tc-rank-value">{pRank} / {MAX_RANK}</span>
-                </div>
-                {/* Progress bar */}
-                <div style={{ margin: "0 10px 6px", padding: "0 4px" }}>
-                  <div style={{ height: 3, borderRadius: 2, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${pProgress.pct}%`, background: `linear-gradient(90deg,${pTierColor},#FFD700)`, transition: "width 1.4s cubic-bezier(.4,0,.2,1)" }} />
-                  </div>
-                  {!pProgress.isMax && <div style={{ fontSize: 10, fontFamily: "'Orbitron',sans-serif", color: "rgba(255,255,255,0.28)", marginTop: 4, letterSpacing: 1 }}>{pProgress.toNext.toLocaleString()} EXP TO RANK {pRank + 1}</div>}
+                  <span className="tc-rank-label">Trainer Level</span>
+                  <span className="tc-rank-value">{pRank}</span>
                 </div>
 
-                {/* Achievements count */}
-                <div className="tc-detail-row no-tap">
+                {/* Total Achievements */}
+                <div className="tc-detail-row">
                   <span className="tc-detail-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5a7a8a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
                       <circle cx="12" cy="8" r="5"/><path d="M7.5 13.5 5 22l7-3 7 3-2.5-8.5"/>
                     </svg>
                   </span>
-                  <span className="tc-detail-label">Achievements Unlocked</span>
-                  <span className="tc-detail-value">{pAchsUnlocked} / 8</span>
+                  <span className="tc-detail-label">Total Achievements</span>
+                  <span className="tc-detail-value">{pAchsUnlocked}</span>
                 </div>
 
-                {/* PvP Record */}
-                <div className="tc-detail-row no-tap">
+                {/* Elite 4 Trophies */}
+                <div className="tc-detail-row">
                   <span className="tc-detail-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#6a5a8a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#4a607a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
                       <path d="M6 3h12v8a6 6 0 0 1-12 0V3z"/><path d="M6 5H3a2 2 0 0 0 0 4h3"/><path d="M18 5h3a2 2 0 0 1 0 4h-3"/><path d="M12 17v4"/><path d="M8 21h8"/>
                     </svg>
                   </span>
-                  <span className="tc-detail-label">PvP Record</span>
-                  <span className="tc-detail-value">{pWins}W&nbsp;·&nbsp;{pLosses}L&nbsp;({pWinRate}%)</span>
+                  <span className="tc-detail-label">Elite 4 Trophies</span>
+                  <span className="tc-detail-value">—</span>
                 </div>
 
-                {/* Pokédex */}
-                <div className="tc-detail-row no-tap">
+                {/* Crimson Rift */}
+                <div className="tc-detail-row">
+                  <span className="tc-detail-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5a4545" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                      <path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="m13 19 2 2 4-4-2-2"/><path d="m3 21 9-9"/><path d="M9.5 6.5 11 8l4-4-1.5-1.5L9.5 6.5z"/><path d="M16 6l2-2 2 2-4 4"/>
+                    </svg>
+                  </span>
+                  <span className="tc-detail-label">Crimson Rift</span>
+                  <span className="tc-detail-value">—</span>
+                </div>
+
+                {/* Global Ranking */}
+                <div className="tc-detail-row">
                   <span className="tc-detail-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#3a5a4a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                      <circle cx="12" cy="12" r="9"/><path d="M12 3c-2 4-2 14 0 18"/><path d="M12 3c2 4 2 14 0 18"/><path d="M3 12h18"/>
+                      <circle cx="12" cy="12" r="9"/><path d="M12 3c-2 4-2 14 0 18"/><path d="M12 3c2 4 2 14 0 18"/><path d="M3 12h18"/><path d="M4.5 7.5h15"/><path d="M4.5 16.5h15"/>
                     </svg>
                   </span>
-                  <span className="tc-detail-label">Pokédex</span>
-                  <span className="tc-detail-value">{caught.size} / {TOTAL_POKEMON} &nbsp;({pDexPct.toFixed(1)}%)</span>
-                </div>
-
-                {/* Wallet */}
-                <div className="tc-detail-row no-tap">
-                  <span className="tc-detail-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#8a7a3a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                      <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
-                    </svg>
-                  </span>
-                  <span className="tc-detail-label">Wallet</span>
-                  <span className="tc-detail-value">₽{player.money.toLocaleString()}&nbsp;·&nbsp;💎{(player.stardust??0).toLocaleString()}</span>
+                  <span className="tc-detail-label">Global Ranking</span>
+                  <span className="tc-detail-value">—</span>
                 </div>
               </div>
             </div>
@@ -3354,21 +3362,17 @@ export default function App() {
                   <div className="tc-section-line" />
                 </div>
                 <div className="tc-poke-grid">
-                  {team.slice(0, 9).map((m, i) => (
-                    <div key={m.uid ?? i} className="tc-poke-card">
-                      <div className="tc-poke-overlay" />
+                  {team.slice(0, tcShowcaseTotal).map((m, i) => (
+                    <div key={m.uid ?? i} className={`tc-poke-card${i === 0 ? " featured" : ""}`}>
                       <div className="tc-type-badge">
                         <img src={pTypeIcon(m.type1)} alt={m.type1} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                       </div>
-                      {i === 0 && <div className="tc-ace-star">⭐</div>}
-                      <MonSprite sprite={m.sprite} size={60} className="tc-poke-sprite" isShiny={m.isShiny} style={{}} />
+                      <MonSprite sprite={m.sprite} size={64} className="" isShiny={m.isShiny} style={{ width: 64, height: 64, objectFit: "contain", filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.85)) grayscale(0.3) brightness(0.85)", marginTop: 8, imageRendering: "auto" }} />
                       <div className="tc-poke-level">Lv. {m.level}</div>
                     </div>
                   ))}
-                  {Array.from({ length: Math.max(0, Math.min(9, 3 * Math.ceil(team.length / 3) + (team.length === 0 ? 3 : 0)) - team.length) }).map((_, i) => (
-                    <div key={`ep-${i}`} className="tc-poke-empty">
-                      <div style={{ fontSize: 18, opacity: 0.4 }}>＋</div>
-                    </div>
+                  {Array.from({ length: Math.max(0, tcShowcaseTotal - team.length) }).map((_, i) => (
+                    <div key={`ep-${i}`} className="tc-poke-empty" />
                   ))}
                 </div>
               </div>
@@ -3402,7 +3406,7 @@ export default function App() {
                     <div className="tc-stat-icon">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7ca8c8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
                     </div>
-                    <div className="tc-stat-num">{pWinRate}%</div>
+                    <div className="tc-stat-num">{pWinRate}<span className="tc-stat-suffix">%</span></div>
                     <div className="tc-stat-label">Win Rate</div>
                   </div>
                 </div>
@@ -3428,7 +3432,7 @@ export default function App() {
                     <div className="tc-stat-icon">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#c85a8a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
                     </div>
-                    <div className="tc-stat-num">{pDexPct.toFixed(1)}%</div>
+                    <div className="tc-stat-num">{Math.round(pDexPct)}<span className="tc-stat-suffix">%</span></div>
                     <div className="tc-stat-label">Pokédex</div>
                   </div>
                 </div>
@@ -3436,7 +3440,7 @@ export default function App() {
                   <div className="tc-dex-track">
                     <div className="tc-dex-fill" style={{ width: `${Math.max(0.3, pDexPct)}%` }} />
                   </div>
-                  <span className="tc-dex-lbl">{pDexPct.toFixed(1)}% POKÉDEX COMPLETE · {caught.size} / {TOTAL_POKEMON}</span>
+                  <span className="tc-dex-lbl">{pDexPct.toFixed(1)}% Pokédex Complete</span>
                 </div>
               </div>
             </div>
@@ -3450,7 +3454,7 @@ export default function App() {
                 </div>
 
                 {/* Redeem Code */}
-                <div style={{ margin: "8px 10px 5px", padding: "11px 14px", borderRadius: 10, background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <div style={{ margin: "6px 10px 5px", padding: "11px 14px", borderRadius: 10, background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.07)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05),0 2px 8px rgba(0,0,0,0.4)" }}>
                   <div style={{ fontSize: 10, fontFamily: "'Orbitron',sans-serif", color: "rgba(255,255,255,0.4)", letterSpacing: 1.5, marginBottom: 8 }}>REDEEM CODE</div>
                   <div style={{ display: "flex", gap: 8 }}>
                     {redeemMsg ? (
@@ -3480,55 +3484,55 @@ export default function App() {
                 </div>
 
                 {/* Account Status */}
-                <div className="tc-settings-row no-tap" style={{ cursor: "default" }}>
-                  <div className="tc-detail-icon" style={{ opacity: 0.7 }}>
+                <div className="tc-settings-row" style={{ cursor: "default" }}>
+                  <span className="tc-s-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5aaa7a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                  </div>
+                  </span>
                   <span className="tc-s-label">Account Status</span>
-                  <span className="tc-s-value ok" style={{ color: "#5aaa7a" }}>ACTIVE</span>
+                  <span className="tc-s-value" style={{ color: "#5aaa7a" }}>ACTIVE</span>
                 </div>
 
                 {/* Sound */}
                 <div className="tc-settings-row" onClick={() => { const m = !muted; setMuted(m); if (!m) sfx.click(); }}>
-                  <div className="tc-detail-icon" style={{ opacity: 0.7 }}>
+                  <span className="tc-s-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7ca8c8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-                  </div>
+                  </span>
                   <span className="tc-s-label">Sound</span>
                   <span className="tc-s-value">{muted ? "OFF" : "ON"}</span>
                 </div>
 
                 {/* Edit Trainer Card */}
                 <div className="tc-settings-row" onClick={() => { sfx.click(); setScreen("card"); }}>
-                  <div className="tc-detail-icon" style={{ opacity: 0.7 }}>
+                  <span className="tc-s-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#8a7ac8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </div>
+                  </span>
                   <span className="tc-s-label">Edit Trainer Card</span>
                   <span className="tc-s-value">›</span>
                 </div>
 
                 {/* Browse Pokédex */}
                 <div className="tc-settings-row" onClick={() => { sfx.click(); setScreen("dex"); }}>
-                  <div className="tc-detail-icon" style={{ opacity: 0.7 }}>
+                  <span className="tc-s-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5a8ac8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                  </div>
+                  </span>
                   <span className="tc-s-label">Browse Pokédex</span>
                   <span className="tc-s-value">›</span>
                 </div>
 
                 {/* Caught Pokémon */}
                 <div className="tc-settings-row" onClick={() => { sfx.click(); setScreen("caught"); }}>
-                  <div className="tc-detail-icon" style={{ opacity: 0.7 }}>
+                  <span className="tc-s-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#c8a85a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                  </div>
+                  </span>
                   <span className="tc-s-label">Caught Pokémon</span>
                   <span className="tc-s-value">›</span>
                 </div>
 
                 {/* Reset Save */}
                 <div className="tc-settings-row danger" onClick={resetSave}>
-                  <div className="tc-detail-icon" style={{ opacity: 0.7 }}>
+                  <span className="tc-s-icon" style={{ opacity: 0.7 }}>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                  </div>
+                  </span>
                   <span className="tc-s-label" style={{ color: "#f87171" }}>Reset Save</span>
                   <span className="tc-s-value" style={{ color: "#f87171" }}>⚠</span>
                 </div>

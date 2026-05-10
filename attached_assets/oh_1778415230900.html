@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Trainer Card – Lumine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent:       #7ca8c8;
+    --accent2:      #5a728a;
+    --accent-glow:  rgba(90, 140, 180, 0.18);
+    --text-primary: #ffffff;
+    --text-muted:   #ffffff;
+
+    --card-bg:      rgba(10, 10, 12, 0.92);
+    --card-bg2:     rgba(14, 14, 16, 0.97);
+    --glass-border: rgba(255, 255, 255, 0.07);
+    --glass-shine:  rgba(255,255,255,0.04);
+    --row-bg:       rgba(255, 255, 255, 0.03);
+    --row-border:   rgba(255, 255, 255, 0.05);
+    --row-hover:    rgba(255, 255, 255, 0.055);
+
+    --page-bg:      #03040a;
+    --divider:      rgba(255,255,255,0.05);
+    --rank-bar:     linear-gradient(180deg, #7ca8c8, #3d5a72);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    min-height: 100%;
+    font-family: 'Rajdhani', sans-serif;
+    background: var(--page-bg);
+    color: var(--text-primary);
+    overflow-x: hidden;
+  }
+
+  .bg-fixed {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .bg-circuit {
+    background: url('https://i.ibb.co/chgGnhLB/IMG-20260509-210952.jpg') center/cover;
+    opacity: 0.055;
+    filter: grayscale(0.85) brightness(0.5);
+  }
+
+  .bg-overlay {
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(20,30,50,0.55) 0%, transparent 60%),
+      radial-gradient(ellipse at 75% 80%, rgba(15,20,40,0.35) 0%, transparent 55%),
+      linear-gradient(180deg, rgba(3,4,10,0.6) 0%, rgba(3,4,10,0.97) 100%);
+  }
+
+  .bg-grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+    opacity: 0.55;
+  }
+
+  .scanlines {
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+    z-index: 50;
+  }
+
+  .page {
+    position: relative;
+    z-index: 10;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px 14px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: fadeIn 0.7s ease both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .hero {
+    position: relative;
+    border-radius: 18px;
+    overflow: hidden;
+    height: 220px;
+    border: 1px solid rgba(40,50,65,0.5);
+    box-shadow:
+      0 24px 64px rgba(0,0,0,0.9),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: url('https://i.ibb.co/sJjd2zpv/IMG-20260509-211652.jpg') center top / cover;
+    filter: saturate(0.6) brightness(0.55) contrast(1.05);
+  }
+
+  .hero-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(3,4,10,0.05) 0%, rgba(3,4,10,0.65) 100%);
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 3;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .t-id {
+    position: absolute;
+    top: 16px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    margin-left: -16px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    color: #ffffff;
+    letter-spacing: 1.5px;
+    white-space: nowrap;
+    z-index: 4;
+  }
+  .t-id strong { color: #ffffff; font-size: 10px; }
+
+  .menu-btn {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(8,10,16,0.85);
+    border: 1px solid rgba(50,65,80,0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    backdrop-filter: blur(8px);
+  }
+  .menu-btn span { display: block; width: 13px; height: 1.5px; background: #ffffff; border-radius: 2px; }
+
+  .avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(80,110,140,0.35);
+    box-shadow:
+      0 0 28px rgba(60,90,120,0.22),
+      0 0 0 4px rgba(30,40,55,0.5),
+      0 8px 24px rgba(0,0,0,0.8);
+    overflow: hidden;
+    background: #060810;
+    flex-shrink: 0;
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.9) saturate(0.7) contrast(1.05); }
+
+  .trainer-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 3px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.9);
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    overflow: hidden;
+    backdrop-filter: blur(32px) saturate(1.1);
+    -webkit-backdrop-filter: blur(32px) saturate(1.1);
+    box-shadow:
+      0 8px 48px rgba(0,0,0,0.85),
+      0 1px 0 rgba(255,255,255,0.06) inset,
+      0 -1px 0 rgba(0,0,0,0.4) inset;
+    position: relative;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent);
+    pointer-events: none;
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 150px 150px;
+    opacity: 0.6;
+    pointer-events: none;
+    border-radius: 14px;
+  }
+
+  .card-inner { position: relative; z-index: 1; }
+
+  .rank-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: flex-start;
+    padding: 11px 14px;
+    margin: 10px 10px 4px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(255,255,255,0.035);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.05),
+      0 2px 8px rgba(0,0,0,0.4);
+  }
+
+  .rank-icon {
+    display: flex;
+    align-items: center;
+    opacity: 0.75;
+    flex-shrink: 0;
+  }
+
+  .rank-label { flex: 1; font-size: 13px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px; }
+
+  .rank-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  .detail-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 6px 10px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.05),
+      0 2px 8px rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .detail-row:last-child { margin-bottom: 10px; }
+
+  .detail-row:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.08),
+      0 4px 16px rgba(0,0,0,0.5);
+  }
+
+  .detail-icon { flex-shrink: 0; display: flex; align-items: center; opacity: 0.7; }
+  .detail-label { flex: 1; font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+  .detail-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .section-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 2px;
+  }
+
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, rgba(80,110,140,0.2), transparent);
+  }
+
+  .pokemon-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 10px 10px 28px;
+  }
+
+  .poke-card {
+    background: rgba(6, 8, 13, 0.95);
+    /* ── UPDATED: new pokemon card background image ── */
+    background-image: url('https://i.ibb.co/J6xK8XK/20260510-172311.png');
+    background-size: 100% 100%;
+    border: 1px solid rgba(35,45,58,0.8);
+    border-radius: 12px;
+    padding: 8px 6px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    min-height: 150px;
+    justify-content: center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+  }
+
+  .poke-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(3, 4, 10, 0.55);
+    border-radius: 12px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .poke-card > * { position: relative; z-index: 1; }
+
+  .poke-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.015) 0%, transparent 60%);
+    pointer-events: none;
+    border-radius: 12px;
+    z-index: 2;
+  }
+
+  .poke-card:active {
+    transform: scale(0.96);
+    border-color: rgba(80,110,140,0.3);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.7);
+  }
+
+  .poke-card.featured {
+    border-color: rgba(100,130,160,0.35);
+    box-shadow:
+      0 0 20px rgba(70,100,130,0.1),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  .poke-card.featured::after {
+    background: rgba(3, 4, 10, 0.48);
+  }
+
+  .type-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.7);
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px;
+    backdrop-filter: blur(4px);
+    z-index: 3;
+    filter: grayscale(0.55) brightness(0.8);
+  }
+  .type-badge img { width: 100%; height: 100%; object-fit: contain; }
+
+  .fire, .ghost, .fighting, .dark,
+  .water, .dragon, .psychic, .ice,
+  .fairy, .steel {
+    border-color: rgba(80,95,110,0.4);
+  }
+
+  .poke-sprite {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    filter: drop-shadow(0 3px 8px rgba(0,0,0,0.85)) grayscale(0.3) brightness(0.85);
+    margin-top: 8px;
+    image-rendering: auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .poke-level {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 7px;
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: 0.4px;
+    padding: 2px 7px;
+    background: rgba(0,0,0,0.75);
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.05);
+    white-space: nowrap;
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+  }
+
+  .stats-card {
+    animation: fadeIn 0.7s 0.3s ease both;
+  }
+
+  .stats-row {
+    display: flex;
+    align-items: stretch;
+    padding: 6px 10px;
+    gap: 0;
+  }
+
+  .stat-block {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 14px 8px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    margin: 3px;
+    transition: background 0.2s, border-color 0.2s;
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  .stat-block.visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.5s ease, transform 0.5s ease, background 0.2s, border-color 0.2s;
+  }
+
+  .stat-block:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.12);
+  }
+
+  .stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.85;
+  }
+
+  .stat-num {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1;
+    letter-spacing: 1px;
+  }
+
+  .stat-suffix {
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0.8;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .stat-divider {
+    width: 1px;
+    background: rgba(255,255,255,0.05);
+    margin: 10px 0;
+    align-self: stretch;
+  }
+
+  .stats-separator {
+    height: 1px;
+    background: rgba(255,255,255,0.05);
+    margin: 2px 14px;
+  }
+
+  .dex-bar-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 8px 14px 16px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .dex-bar-wrap.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .dex-bar-track {
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .dex-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(to right, #5a8ac8, #c85a8a);
+    border-radius: 4px;
+    transition: width 1.4s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .dex-bar-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 8px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 1.2px;
+    text-align: center;
+  }
+
+  .corner { position: absolute; width: 10px; height: 10px; z-index: 4; }
+  .corner-tl { top: 7px; left: 7px; border-top: 1px solid #3a4a5a; border-left: 1px solid #3a4a5a; opacity: 0.5; }
+  .corner-tr { top: 7px; right: 7px; border-top: 1px solid #3a4a5a; border-right: 1px solid #3a4a5a; opacity: 0.5; }
+  .corner-bl { bottom: 7px; left: 7px; border-bottom: 1px solid #3a4a5a; border-left: 1px solid #3a4a5a; opacity: 0.5; }
+  .corner-br { bottom: 7px; right: 7px; border-bottom: 1px solid #3a4a5a; border-right: 1px solid #3a4a5a; opacity: 0.5; }
+
+  .particle {
+    position: fixed;
+    width: 1.5px; height: 1.5px;
+    background: #4a6070;
+    border-radius: 50%;
+    opacity: 0;
+    animation: floatUp var(--dur) var(--delay) ease-in-out infinite;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  @keyframes floatUp {
+    0%   { opacity: 0; transform: translateY(100vh) scale(0); }
+    10%  { opacity: 0.2; }
+    90%  { opacity: 0.06; }
+    100% { opacity: 0; transform: translateY(-20vh) scale(1.2); }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-fixed bg-circuit"></div>
+<div class="bg-fixed bg-overlay"></div>
+<div class="bg-fixed bg-grain"></div>
+<div class="bg-fixed scanlines"></div>
+
+<script>
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `left:${Math.random()*100}%;--dur:${11+Math.random()*13}s;--delay:${Math.random()*12}s;`;
+    document.body.appendChild(p);
+  }
+</script>
+
+<div class="page">
+
+  <div class="hero">
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <div class="menu-btn"><span></span><span></span><span></span></div>
+      <div class="t-id">T-ID &nbsp;<strong>839296512</strong></div>
+      <div class="avatar">
+        <img src="https://i.ibb.co/gMBBG5Wm/26296.jpg" alt="Trainer">
+      </div>
+      <div class="trainer-name">Lumine</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-inner">
+      <div class="rank-row">
+        <span class="rank-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7ca8c8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </span>
+        <span class="rank-label">Trainer Level</span>
+        <span class="rank-value">60</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5a7a8a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+            <circle cx="12" cy="8" r="5"/>
+            <path d="M7.5 13.5 5 22l7-3 7 3-2.5-8.5"/>
+          </svg>
+        </span>
+        <span class="detail-label">Total Achievements</span>
+        <span class="detail-value">38</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#4a607a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+            <path d="M6 3h12v8a6 6 0 0 1-12 0V3z"/>
+            <path d="M6 5H3a2 2 0 0 0 0 4h3"/>
+            <path d="M18 5h3a2 2 0 0 1 0 4h-3"/>
+            <path d="M12 17v4"/>
+            <path d="M8 21h8"/>
+          </svg>
+        </span>
+        <span class="detail-label">Elite 4 Trophies</span>
+        <span class="detail-value">12</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5a4545" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+            <path d="M14.5 17.5 3 6V3h3l11.5 11.5"/>
+            <path d="m13 19 2 2 4-4-2-2"/>
+            <path d="m3 21 9-9"/>
+            <path d="M9.5 6.5 11 8l4-4-1.5-1.5L9.5 6.5z"/>
+            <path d="M16 6l2-2 2 2-4 4"/>
+          </svg>
+        </span>
+        <span class="detail-label">Crimson Rift</span>
+        <span class="detail-value">Act 10 (12★)</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#3a5a4a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 3c-2 4-2 14 0 18"/>
+            <path d="M12 3c2 4 2 14 0 18"/>
+            <path d="M3 12h18"/>
+            <path d="M4.5 7.5h15"/>
+            <path d="M4.5 16.5h15"/>
+          </svg>
+        </span>
+        <span class="detail-label">Global Ranking</span>
+        <span class="detail-value">#15</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-inner">
+      <div class="section-header">
+        <span class="section-title">POKÉMON SHOWCASE</span>
+        <div class="section-line"></div>
+      </div>
+
+      <div class="pokemon-grid">
+
+        <div class="poke-card featured">
+          <div class="type-badge fire"><img src="https://raw.githubusercontent.com/partywhale/pokemon-type-icons/main/icons/fire.svg" alt="fire"></div>
+          <img class="poke-sprite" src="https://play.pokemonshowdown.com/sprites/ani/charizard.gif" alt="Charizard">
+          <div class="poke-level">Lv. 100</div>
+        </div>
+
+        <div class="poke-card">
+          <div class="type-badge ghost"><img src="https://raw.githubusercontent.com/partywhale/pokemon-type-icons/main/icons/ghost.svg" alt="ghost"></div>
+          <img class="poke-sprite" src="https://play.pokemonshowdown.com/sprites/ani/gengar.gif" alt="Gengar">
+          <div class="poke-level">Lv. 90</div>
+        </div>
+
+        <div class="poke-card">
+          <div class="type-badge fighting"><img src="https://raw.githubusercontent.com/partywhale/pokemon-type-icons/main/icons/fighting.svg" alt="fighting"></div>
+          <img class="poke-sprite" src="https://play.pokemonshowdown.com/sprites/ani/lucario.gif" alt="Lucario">
+          <div class="poke-level">Lv. 90</div>
+        </div>
+
+        <div class="poke-card">
+          <div class="type-badge dark"><img src="https://raw.githubusercontent.com/partywhale/pokemon-type-icons/main/icons/dark.svg" alt="dark"></div>
+          <img class="poke-sprite" src="https://play.pokemonshowdown.com/sprites/ani/zweilous.gif" alt="Zweilous">
+          <div class="poke-level">Lv. 100</div>
+        </div>
+
+        <div class="poke-card">
+          <div class="type-badge water"><img src="https://raw.githubusercontent.com/partywhale/pokemon-type-icons/main/icons/water.svg" alt="water"></div>
+          <img class="poke-sprite" src="https://play.pokemonshowdown.com/sprites/ani/milotic.gif" alt="Milotic">
+          <div class="poke-level">Lv. 90</div>
+        </div>
+
+        <div class="poke-card">
+          <div class="type-badge dragon"><img src="https://raw.githubusercontent.com/partywhale/pokemon-type-icons/main/icons/dragon.svg" alt="dragon"></div>
+          <img class="poke-sprite" src="https://play.pokemonshowdown.com/sprites/ani/dragonite.gif" alt="Dragonite">
+          <div class="poke-level">Lv. 90</div>
+        </div>
+
+        <div class="poke-card">
+          <div class="type-badge psychic"><img src="https://raw.githubusercontent.com/partywhale/pokemon-type-icons/main/icons/psychic.svg" alt="psychic"></div>
+          <img class="poke-sprite" src="https://play.pokemonshowdown.com/sprites/ani/gardevoir.gif" alt="Gardevoir">
+          <div class="poke-level">Lv. 95</div>
+        </div>
+
+        <div class="poke-card">
+          <div class="type-badge steel"><img src="https://raw.githubusercontent.com/partywhale/pokemon-type-icons/main/icons/steel.svg" alt="steel"></div>
+          <img class="poke-sprite" src="https://play.pokemonshowdown.com/sprites/ani/metagross.gif" alt="Metagross">
+          <div class="poke-level">Lv. 95</div>
+        </div>
+
+        <div class="poke-card">
+          <div class="type-badge fairy"><img src="https://raw.githubusercontent.com/partywhale/pokemon-type-icons/main/icons/fairy.svg" alt="fairy"></div>
+          <img class="poke-sprite" src="https://play.pokemonshowdown.com/sprites/ani/clefable.gif" alt="Clefable">
+          <div class="poke-level">Lv. 90</div>
+        </div>
+
+        <div class="poke-card">
+          <div class="type-badge dark"><img src="https://raw.githubusercontent.com/partywhale/pokemon-type-icons/main/icons/dark.svg" alt="dark"></div>
+          <img class="poke-sprite" src="https://play.pokemonshowdown.com/sprites/ani/weavile.gif" alt="Weavile">
+          <div class="poke-level">Lv. 90</div>
+        </div>
+
+        <div class="poke-card">
+          <div class="type-badge ice"><img src="https://raw.githubusercontent.com/partywhale/pokemon-type-icons/main/icons/ice.svg" alt="ice"></div>
+          <img class="poke-sprite" src="https://play.pokemonshowdown.com/sprites/ani/glaceon.gif" alt="Glaceon">
+          <div class="poke-level">Lv. 90</div>
+        </div>
+
+        <div class="poke-card">
+          <div class="type-badge psychic"><img src="https://raw.githubusercontent.com/partywhale/pokemon-type-icons/main/icons/psychic.svg" alt="psychic"></div>
+          <img class="poke-sprite" src="https://play.pokemonshowdown.com/sprites/ani/kirlia.gif" alt="Kirlia">
+          <div class="poke-level">Lv. 90</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="card stats-card">
+    <div class="card-inner">
+      <div class="section-header">
+        <span class="section-title">PLAYER STATS</span>
+        <div class="section-line"></div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-block" data-target="1248" data-suffix="">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5aaa7a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div class="stat-num" id="wins">0</div>
+          <div class="stat-label">Wins</div>
+        </div>
+
+        <div class="stat-divider"></div>
+
+        <div class="stat-block" data-target="203" data-suffix="">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#aa5a5a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </div>
+          <div class="stat-num" id="losses">0</div>
+          <div class="stat-label">Losses</div>
+        </div>
+
+        <div class="stat-divider"></div>
+
+        <div class="stat-block" data-target="86" data-suffix="%">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7ca8c8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+              <line x1="19" y1="5" x2="5" y2="19"/>
+              <circle cx="6.5" cy="6.5" r="2.5"/>
+              <circle cx="17.5" cy="17.5" r="2.5"/>
+            </svg>
+          </div>
+          <div class="stat-num" id="winrate">0<span class="stat-suffix">%</span></div>
+          <div class="stat-label">Win Rate</div>
+        </div>
+      </div>
+
+      <div class="stats-separator"></div>
+
+      <div class="stats-row">
+        <div class="stat-block" data-target="847" data-suffix="">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#c8a85a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="16"/>
+              <line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+          </div>
+          <div class="stat-num" id="caught">0</div>
+          <div class="stat-label">Caught</div>
+        </div>
+
+        <div class="stat-divider"></div>
+
+        <div class="stat-block" data-target="1008" data-suffix="">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#8a7ac8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </div>
+          <div class="stat-num" id="seen">0</div>
+          <div class="stat-label">Seen</div>
+        </div>
+
+        <div class="stat-divider"></div>
+
+        <div class="stat-block" data-target="84" data-suffix="%">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#c85a8a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <path d="M8 21h8M12 17v4"/>
+            </svg>
+          </div>
+          <div class="stat-num" id="dexpct">0<span class="stat-suffix">%</span></div>
+          <div class="stat-label">Pokédex</div>
+        </div>
+      </div>
+
+      <div class="dex-bar-wrap">
+        <div class="dex-bar-track">
+          <div class="dex-bar-fill" id="dexbar"></div>
+        </div>
+        <span class="dex-bar-label">84% Pokédex Complete</span>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  document.querySelectorAll('.poke-card').forEach(card => {
+    card.addEventListener('touchstart', () => {
+      card.style.borderColor = 'rgba(80,110,140,0.3)';
+    }, { passive: true });
+    card.addEventListener('touchend', () => {
+      setTimeout(() => { card.style.borderColor = ''; }, 300);
+    }, { passive: true });
+  });
+
+  function animateCount(el, target, suffix, duration) {
+    const hasSuffix = el.querySelector('.stat-suffix');
+    let start = null;
+    function step(ts) {
+      if (!start) start = ts;
+      const progress = Math.min((ts - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const val = Math.floor(ease * target);
+      if (hasSuffix) {
+        el.childNodes[0].nodeValue = val;
+      } else {
+        el.textContent = val;
+      }
+      if (progress < 1) requestAnimationFrame(step);
+      else {
+        if (hasSuffix) el.childNodes[0].nodeValue = target;
+        else el.textContent = target;
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  const statsCard = document.querySelector('.stats-card');
+  const statBlocks = document.querySelectorAll('.stat-block');
+  const dexWrap = document.querySelector('.dex-bar-wrap');
+  const dexBar = document.getElementById('dexbar');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        statBlocks.forEach((block, i) => {
+          setTimeout(() => {
+            block.classList.add('visible');
+            const numEl = block.querySelector('.stat-num');
+            const target = parseInt(block.dataset.target);
+            animateCount(numEl, target, block.dataset.suffix, 1200);
+          }, i * 100);
+        });
+
+        setTimeout(() => {
+          dexWrap.classList.add('visible');
+          dexBar.style.width = '84%';
+        }, 700);
+
+        observer.disconnect();
+      }
+    });
+  }, { threshold: 0.2 });
+
+  observer.observe(statsCard);
+</script>
+</body>
+</html>
