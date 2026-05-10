@@ -2572,7 +2572,7 @@ export default function App() {
         <i className={`fa-solid fa-house ${active === "home" ? "active" : ""}`} onClick={() => { sfx.click(); go("world"); }} />
         <i className={`fa-solid fa-cart-shopping ${active === "market" ? "active" : ""}`} onClick={() => { sfx.click(); go("store"); }} />
         <div className={`av ${active === "profile" ? "active" : ""}`} onClick={() => { sfx.click(); go("profile"); }}>
-          <img src={TRAINER_SPRITE(player.sprite)} alt="me" />
+          <img src={profileImage ?? TRAINER_SPRITE(player.sprite)} alt="me" style={profileImage ? { imageRendering: "auto" } : {}} />
         </div>
       </div>
     );
@@ -3557,8 +3557,9 @@ export default function App() {
               </div>
             </div>
 
-            <BottomNav active="profile" go={setScreen} />
           </div>
+
+          <BottomNav active="profile" go={setScreen} />
 
           {/* Buddy Picker Modal */}
           {showBuddyPicker && (
