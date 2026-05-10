@@ -1006,6 +1006,7 @@ export default function App() {
     stars?: number;          // 1..3 stars for "throw" animation
   } | null>(null);
   const [emptyTeamWarning, setEmptyTeamWarning] = useState<string | null>(null);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(() => {
     try { return localStorage.getItem("hexamon:profile:avatar") ?? null; } catch { return null; }
   });
@@ -3236,6 +3237,28 @@ export default function App() {
       .tc-tr { top:7px; right:7px; border-top:1px solid #3a4a5a; border-right:1px solid #3a4a5a; opacity:0.5; }
       .tc-bl { bottom:7px; left:7px; border-bottom:1px solid #3a4a5a; border-left:1px solid #3a4a5a; opacity:0.5; }
       .tc-br { bottom:7px; right:7px; border-bottom:1px solid #3a4a5a; border-right:1px solid #3a4a5a; opacity:0.5; }
+      @keyframes tc-drawer-in { from{transform:translateX(-100%)} to{transform:translateX(0)} }
+      @keyframes tc-drawer-out { from{transform:translateX(0)} to{transform:translateX(-100%)} }
+      .tc-drawer-overlay { position:fixed; inset:0; z-index:300; background:rgba(0,0,0,0.65); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); animation:tc-fade-in 0.22s ease both; }
+      @keyframes tc-fade-in { from{opacity:0} to{opacity:1} }
+      .tc-drawer { position:fixed; top:0; left:0; bottom:0; width:78%; max-width:320px; z-index:301; background:linear-gradient(160deg,#07090f 0%,#0c0e17 100%); border-right:1px solid rgba(60,80,110,0.3); box-shadow:8px 0 48px rgba(0,0,0,0.9); animation:tc-drawer-in 0.26s cubic-bezier(0.25,1,0.5,1) both; display:flex; flex-direction:column; overflow:hidden; }
+      .tc-drawer-head { display:flex; align-items:center; gap:13px; padding:52px 20px 20px; border-bottom:1px solid rgba(255,255,255,0.06); background:linear-gradient(180deg,rgba(20,28,50,0.6) 0%,transparent 100%); }
+      .tc-drawer-av { width:52px; height:52px; border-radius:50%; overflow:hidden; border:2px solid rgba(80,120,170,0.4); box-shadow:0 0 18px rgba(60,100,150,0.3); flex-shrink:0; background:#060810; }
+      .tc-drawer-av img { width:100%; height:100%; object-fit:cover; }
+      .tc-drawer-info { flex:1; min-width:0; }
+      .tc-drawer-name { font-family:'Orbitron',sans-serif; font-size:13px; font-weight:800; color:#fff; letter-spacing:1.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .tc-drawer-id { font-family:'Orbitron',sans-serif; font-size:9px; color:rgba(140,170,210,0.7); letter-spacing:1px; margin-top:3px; }
+      .tc-drawer-close { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; font-size:16px; flex-shrink:0; line-height:1; }
+      .tc-drawer-body { flex:1; overflow-y:auto; padding:10px 0; }
+      .tc-drawer-item { display:flex; align-items:center; gap:15px; padding:14px 22px; cursor:pointer; transition:background 0.15s; border-bottom:1px solid rgba(255,255,255,0.03); position:relative; }
+      .tc-drawer-item:active { background:rgba(255,255,255,0.07); }
+      .tc-drawer-item-icon { width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+      .tc-drawer-item-label { flex:1; font-size:14px; font-weight:600; color:#e8edf5; font-family:'Rajdhani',sans-serif; letter-spacing:0.3px; }
+      .tc-drawer-item-arrow { color:rgba(255,255,255,0.2); font-size:13px; }
+      .tc-drawer-item.danger .tc-drawer-item-label { color:#f87171; }
+      .tc-drawer-item.danger .tc-drawer-item-icon { background:rgba(248,113,113,0.12); }
+      .tc-drawer-divider { height:1px; background:rgba(255,255,255,0.05); margin:6px 20px; }
+      .tc-drawer-version { padding:14px 22px; font-size:10px; color:rgba(255,255,255,0.2); font-family:'Orbitron',sans-serif; letter-spacing:1px; }
       .tc-avatar-wrap { position:relative; flex-shrink:0; cursor:pointer; }
       .tc-avatar { width:88px; height:88px; border-radius:50%; border:1.5px solid rgba(80,110,140,0.35); box-shadow:0 0 28px rgba(60,90,120,0.22),0 0 0 4px rgba(30,40,55,0.5),0 8px 24px rgba(0,0,0,0.8); overflow:hidden; background:#060810; }
       .tc-avatar img { width:100%; height:100%; object-fit:cover; }
@@ -3314,7 +3337,7 @@ export default function App() {
               <div className="tc-corner tc-br" />
               <div className="tc-hero-bg" />
               <div className="tc-hero-content">
-                <div className="tc-menu-btn" onClick={() => { sfx.click(); setScreen("world"); }}>
+                <div className="tc-menu-btn" onClick={() => { sfx.click(); setShowProfileMenu(true); }}>
                   <span /><span /><span />
                 </div>
                 <div className="tc-tid">T-ID &nbsp;<strong>{player.id}</strong></div>
@@ -3595,6 +3618,101 @@ export default function App() {
             </div>
           )}
         </div>
+
+      {/* ── Profile Menu Drawer ── */}
+      {showProfileMenu && (
+        <div className="tc-drawer-overlay" onClick={() => setShowProfileMenu(false)}>
+          <div className="tc-drawer" onClick={(e) => e.stopPropagation()}>
+
+            {/* Header */}
+            <div className="tc-drawer-head">
+              <div className="tc-drawer-av">
+                <img src={profileImage ?? TRAINER_SPRITE(player.sprite)} alt="avatar" />
+              </div>
+              <div className="tc-drawer-info">
+                <div className="tc-drawer-name">{player.name.toUpperCase()}</div>
+                <div className="tc-drawer-id">T-ID · {player.id}</div>
+              </div>
+              <div className="tc-drawer-close" onClick={() => setShowProfileMenu(false)}>×</div>
+            </div>
+
+            {/* Items */}
+            <div className="tc-drawer-body">
+
+              {/* Home */}
+              <div className="tc-drawer-item" onClick={() => { sfx.click(); setShowProfileMenu(false); setScreen("world"); }}>
+                <div className="tc-drawer-item-icon" style={{ background: "rgba(99,179,237,0.12)" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#63b3ed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
+                <span className="tc-drawer-item-label">Home</span>
+                <span className="tc-drawer-item-arrow">›</span>
+              </div>
+
+              {/* Events */}
+              <div className="tc-drawer-item" onClick={() => { sfx.click(); setShowProfileMenu(false); setScreen("world"); addLog("Events coming soon!", "#facc15"); }}>
+                <div className="tc-drawer-item-icon" style={{ background: "rgba(250,204,21,0.12)" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#facc15" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
+                <span className="tc-drawer-item-label">Events</span>
+                <span className="tc-drawer-item-arrow">›</span>
+              </div>
+
+              {/* Updates */}
+              <div className="tc-drawer-item" onClick={() => { sfx.click(); setShowProfileMenu(false); addLog("You are on the latest version!", "#4ade80"); }}>
+                <div className="tc-drawer-item-icon" style={{ background: "rgba(74,222,128,0.12)" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                </div>
+                <span className="tc-drawer-item-label">Updates</span>
+                <span className="tc-drawer-item-arrow">›</span>
+              </div>
+
+              <div className="tc-drawer-divider" />
+
+              {/* Report Bug */}
+              <div className="tc-drawer-item" onClick={() => { sfx.click(); setShowProfileMenu(false); window.open("mailto:support@crimsonskymon.com?subject=Bug Report", "_blank"); }}>
+                <div className="tc-drawer-item-icon" style={{ background: "rgba(251,146,60,0.12)" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fb923c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+                </div>
+                <span className="tc-drawer-item-label">Report Bug</span>
+                <span className="tc-drawer-item-arrow">›</span>
+              </div>
+
+              {/* Community */}
+              <div className="tc-drawer-item" onClick={() => { sfx.click(); setShowProfileMenu(false); window.open("https://discord.gg/crimsonskymon", "_blank"); }}>
+                <div className="tc-drawer-item-icon" style={{ background: "rgba(139,92,246,0.12)" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <span className="tc-drawer-item-label">Community</span>
+                <span className="tc-drawer-item-arrow">›</span>
+              </div>
+
+              {/* Leaderboard */}
+              <div className="tc-drawer-item" onClick={() => { sfx.click(); setShowProfileMenu(false); addLog("Leaderboard coming soon!", "#facc15"); }}>
+                <div className="tc-drawer-item-icon" style={{ background: "rgba(234,179,8,0.12)" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </div>
+                <span className="tc-drawer-item-label">Leaderboard</span>
+                <span className="tc-drawer-item-arrow">›</span>
+              </div>
+
+              <div className="tc-drawer-divider" />
+
+              {/* Reset Account */}
+              <div className="tc-drawer-item danger" onClick={() => { sfx.click(); setShowProfileMenu(false); resetSave(); }}>
+                <div className="tc-drawer-item-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                </div>
+                <span className="tc-drawer-item-label">Reset Account</span>
+                <span className="tc-drawer-item-arrow" style={{ color: "#f87171" }}>›</span>
+              </div>
+
+            </div>
+
+            <div className="tc-drawer-version">CRIMSON SKY · v1.0</div>
+          </div>
+        </div>
+      )}
+
       </div>
     );
   }
