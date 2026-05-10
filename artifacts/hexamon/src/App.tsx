@@ -3279,7 +3279,7 @@ export default function App() {
               <div className="tc-corner tc-br" />
               <div className="tc-hero-bg" />
               <div className="tc-hero-content">
-                <div className="tc-menu-btn" onClick={() => { sfx.click(); setScreen("home"); }}>
+                <div className="tc-menu-btn" onClick={() => { sfx.click(); setScreen("world"); }}>
                   <span /><span /><span />
                 </div>
                 <div className="tc-tid">T-ID &nbsp;<strong>{player.id}</strong></div>
