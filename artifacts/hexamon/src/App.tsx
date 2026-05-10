@@ -620,7 +620,7 @@ function migratePlayerExp(p: Player): Player {
 export default function App() {
   const initial = typeof window !== "undefined" ? loadSave() : null;
   const [splashDone, setSplashDone] = useState(false);
-  const [screen, setScreen] = useState<string>(initial ? (initial.screen === "battle" || initial.screen === "hunt" || initial.screen === "title" || initial.screen === "leagueBattle" || initial.screen === "pvpBattle" ? "world" : (initial.screen === "nameInput" || initial.screen === "starter") ? "story" : initial.screen) : "story");
+  const [screen, setScreen] = useState<string>(initial ? (initial.screen === "battle" || initial.screen === "hunt" || initial.screen === "title" || initial.screen === "leagueBattle" || initial.screen === "pvpBattle" || initial.screen === "home" ? "world" : (initial.screen === "nameInput" || initial.screen === "starter") ? "story" : initial.screen) : "story");
   const [player, setPlayer] = useState<Player>(
     initial?.player ? migratePlayerExp(initial.player) : {
       name: "Trainer",
@@ -7983,5 +7983,7 @@ export default function App() {
     );
   }
 
+  // Unknown screen — redirect to world to avoid black screen
+  setScreen("world");
   return null;
 }
