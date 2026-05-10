@@ -3169,6 +3169,8 @@ export default function App() {
     const pDexPct = TOTAL_POKEMON > 0 ? (caught.size / TOTAL_POKEMON) * 100 : 0;
     const pTierEmoji = pTier === "Master" ? "🏆" : pTier === "Diamond" ? "💎" : pTier === "Gold" ? "🥇" : pTier === "Silver" ? "🥈" : "🥉";
     const pTierColor = pTier === "Master" ? "#B78BFA" : pTier === "Diamond" ? "#58C4F6" : pTier === "Gold" ? "#F5C842" : pTier === "Silver" ? "#c0c0c0" : "#CD7F32";
+    const pAchsUnlocked = [pWins>=1, pWins>=5, seen.size>=30, caught.size>=5, caught.size>=1, pRank>=5, caught.size>=50, pWins>=100].filter(Boolean).length;
+    const pTypeIcon = (t: string) => `https://raw.githubusercontent.com/partywhale/pokemon-type-icons/main/icons/${t.toLowerCase()}.svg`;
     const pAchs = [
       { icon: "⚔️", name: "First Win",   unlocked: pWins >= 1,         rare: pWins >= 1 },
       { icon: "🏆", name: "5-Win Club",  unlocked: pWins >= 5,         rare: pWins >= 5 },
@@ -3182,293 +3184,353 @@ export default function App() {
       { icon: "💫", name: "100 Wins",    unlocked: pWins >= 100,       rare: pWins >= 100 },
     ];
     const prfCss = `
-      .prf-ambient { position:fixed; inset:0; pointer-events:none; z-index:0; background: radial-gradient(ellipse 60% 40% at 20% 10%, rgba(88,196,246,0.06) 0%, transparent 60%), radial-gradient(ellipse 50% 35% at 80% 80%, rgba(183,139,250,0.05) 0%, transparent 55%); }
-      .prf-page { position:relative; z-index:1; background:#000; min-height:100vh; padding-bottom:80px; }
-      .prf-banner { height:140px; background:linear-gradient(160deg,#060608 0%,#08080f 50%,#0a0008 100%); position:relative; overflow:hidden; }
-      .prf-banner::before { content:''; position:absolute; inset:0; background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px); background-size:44px 44px; }
-      .prf-banner::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 80% 100% at 50% 120%,rgba(88,196,246,0.09) 0%,transparent 60%),radial-gradient(ellipse 40% 60% at 85% 20%,rgba(183,139,250,0.07) 0%,transparent 50%); }
-      .prf-header { padding:0 18px; margin-top:-44px; position:relative; }
-      .prf-htop { display:flex; justify-content:space-between; align-items:flex-end; gap:10px; }
-      .prf-avatar-shell { width:86px; height:86px; border-radius:50%; background:rgba(255,255,255,0.05); border:2px solid rgba(255,255,255,0.16); display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.8); }
-      .prf-avatar-shell img { width:100%; height:100%; object-fit:contain; image-rendering:pixelated; }
-      .prf-pip { position:absolute; bottom:3px; right:3px; width:13px; height:13px; border-radius:50%; background:#4FFFB0; border:2.5px solid #000; box-shadow:0 0 8px rgba(79,255,176,0.7); animation:prf-pip 2.4s ease infinite; }
-      @keyframes prf-pip { 0%,100%{box-shadow:0 0 8px rgba(79,255,176,0.7)} 50%{box-shadow:0 0 14px rgba(79,255,176,0.9)} }
-      .prf-name { font-size:19px; font-weight:800; color:#fff; letter-spacing:0.3px; line-height:1; margin-top:2px; }
-      .prf-handle { color:rgba(255,255,255,0.38); font-size:12px; margin-top:3px; }
-      .prf-badge { display:inline-flex; align-items:center; gap:4px; margin-top:7px; background:rgba(245,200,66,0.07); border:1px solid rgba(245,200,66,0.24); border-radius:6px; padding:3px 9px; font-size:10px; font-weight:700; color:#F5C842; letter-spacing:0.5px; }
-      .prf-btnrow { display:flex; gap:8px; align-items:flex-end; padding-bottom:4px; }
-      .prf-btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; border-radius:10px; font-weight:700; font-size:12px; cursor:pointer; border:none; padding:9px 14px; transition:all 0.15s; white-space:nowrap; }
-      .prf-btn-ghost { background:rgba(255,255,255,0.06); color:#F0F0F8; border:1px solid rgba(255,255,255,0.12); }
-      .prf-btn-ghost:hover { background:rgba(255,255,255,0.11); }
-      .prf-btn-primary { background:#fff; color:#000; }
-      .prf-btn-primary:hover { background:#e4e4e4; }
-      .prf-chips { display:flex; gap:8px; padding:14px 18px 0; flex-wrap:wrap; }
-      .prf-chip { display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:50px; padding:5px 12px; font-size:12px; font-weight:700; }
-      .prf-section { padding:20px 18px 0; }
-      .prf-section-lbl { font-size:10px; font-weight:700; color:rgba(255,255,255,0.35); letter-spacing:3px; text-transform:uppercase; margin-bottom:11px; }
-      .prf-glass { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:16px; box-shadow:0 4px 28px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05); }
-      .prf-rank-card { padding:16px 18px; display:flex; align-items:center; gap:14px; position:relative; overflow:hidden; }
-      .prf-rank-emblem { width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
-      .prf-rank-bar { height:3px; border-radius:2px; background:rgba(255,255,255,0.08); margin-top:8px; overflow:hidden; }
-      .prf-rank-fill { height:100%; transition:width 1.4s cubic-bezier(.4,0,.2,1); }
-      .prf-stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
-      .prf-stat-card { padding:14px; position:relative; overflow:hidden; }
-      .prf-stat-card::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--c,rgba(88,196,246,0.6)); border-radius:16px 16px 0 0; }
-      .prf-stat-lbl { font-size:9px; color:rgba(255,255,255,0.35); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:5px; }
-      .prf-stat-val { font-size:26px; font-weight:800; line-height:1; }
-      .prf-stat-hint { font-size:10px; color:rgba(255,255,255,0.35); margin-top:4px; }
-      .prf-dex-card { padding:14px 16px; margin-top:9px; }
-      .prf-dex-bar { height:4px; border-radius:2px; background:rgba(255,255,255,0.08); margin-top:10px; overflow:hidden; }
-      .prf-dex-fill { height:100%; background:linear-gradient(90deg,#58C4F6,#B78BFA); transition:width 1.6s cubic-bezier(.4,0,.2,1); }
-      .prf-showcase-scroll { display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; scrollbar-width:none; }
-      .prf-showcase-scroll::-webkit-scrollbar { display:none; }
-      .prf-sc-card { flex-shrink:0; width:110px; padding:10px 10px 12px; display:flex; flex-direction:column; align-items:center; gap:3px; position:relative; overflow:hidden; transition:transform 0.2s; }
-      .prf-sc-card:hover { transform:translateY(-3px); }
-      .prf-sc-glow { position:absolute; inset:0; background:radial-gradient(ellipse 80% 60% at 50% 110%,var(--tc,rgba(88,196,246,0.1)) 0%,transparent 70%); pointer-events:none; }
-      .prf-sc-slot { font-size:9px; color:rgba(255,255,255,0.35); position:absolute; top:9px; left:10px; }
-      .prf-sc-name { font-size:11px; font-weight:700; text-align:center; color:#F0F0F8; }
-      .prf-sc-level { font-size:9px; color:rgba(255,255,255,0.38); }
-      .prf-type-pill { font-size:8px; font-weight:700; padding:2px 8px; border-radius:50px; letter-spacing:0.5px; text-transform:uppercase; margin-top:2px; }
-      .prf-sc-empty { flex-shrink:0; width:110px; min-height:158px; border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; border:1px dashed rgba(255,255,255,0.1); opacity:0.32; }
-      .prf-ach-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
-      .prf-ach-item { display:flex; flex-direction:column; align-items:center; gap:5px; padding:11px 6px 9px; position:relative; overflow:hidden; transition:transform 0.16s; }
-      .prf-ach-item:hover { transform:translateY(-2px); }
-      .prf-ach-icon { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); }
-      .prf-ach-name { font-size:8px; font-weight:700; color:rgba(255,255,255,0.38); text-align:center; line-height:1.3; }
-      .prf-list { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; }
-      .prf-li { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.06); cursor:pointer; transition:background 0.15s; gap:10px; }
-      .prf-li:last-child { border-bottom:none; }
-      .prf-li:hover { background:rgba(255,255,255,0.04); }
-      .prf-li-label { font-size:14px; font-weight:600; color:#F0F0F8; }
-      .prf-li-right { font-size:12px; color:rgba(255,255,255,0.38); flex-shrink:0; }
-      .prf-fu { animation:prf-fu 0.45s ease both; }
-      @keyframes prf-fu { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
-      .prf-d1{animation-delay:.06s} .prf-d2{animation-delay:.13s} .prf-d3{animation-delay:.20s} .prf-d4{animation-delay:.27s}
+      @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;600;800&display=swap');
+      .tc-bg-grain { position:fixed; inset:0; z-index:0; pointer-events:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E"); background-size:180px 180px; opacity:0.5; }
+      .tc-scanlines { position:fixed; inset:0; z-index:1; pointer-events:none; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px); }
+      .tc-page { position:relative; z-index:10; max-width:480px; margin:0 auto; padding:14px 12px 32px; display:flex; flex-direction:column; gap:10px; font-family:'Rajdhani',sans-serif; animation:tc-in 0.7s ease both; padding-bottom:90px; }
+      @keyframes tc-in { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:none} }
+      .tc-hero { position:relative; border-radius:18px; overflow:hidden; height:210px; border:1px solid rgba(40,50,65,0.5); box-shadow:0 24px 64px rgba(0,0,0,0.9),inset 0 1px 0 rgba(255,255,255,0.04); }
+      .tc-hero-bg { position:absolute; inset:0; background:url('https://i.ibb.co/sJjd2zpv/IMG-20260509-211652.jpg') center top/cover; filter:saturate(0.55) brightness(0.5) contrast(1.05); }
+      .tc-hero-bg::after { content:''; position:absolute; inset:0; background:linear-gradient(to bottom,rgba(3,4,10,0.05) 0%,rgba(3,4,10,0.7) 100%); }
+      .tc-hero-content { position:relative; z-index:3; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:16px; text-align:center; }
+      .tc-tid { position:absolute; top:14px; left:0; right:0; text-align:center; font-family:'Orbitron',sans-serif; font-size:9px; color:rgba(255,255,255,0.7); letter-spacing:2px; z-index:4; }
+      .tc-tid strong { color:#fff; font-size:10px; }
+      .tc-corner { position:absolute; width:10px; height:10px; z-index:4; }
+      .tc-tl { top:7px; left:7px; border-top:1px solid #3a4a5a; border-left:1px solid #3a4a5a; opacity:0.5; }
+      .tc-tr { top:7px; right:7px; border-top:1px solid #3a4a5a; border-right:1px solid #3a4a5a; opacity:0.5; }
+      .tc-bl { bottom:7px; left:7px; border-bottom:1px solid #3a4a5a; border-left:1px solid #3a4a5a; opacity:0.5; }
+      .tc-br { bottom:7px; right:7px; border-bottom:1px solid #3a4a5a; border-right:1px solid #3a4a5a; opacity:0.5; }
+      .tc-avatar { width:84px; height:84px; border-radius:50%; border:1.5px solid rgba(80,110,140,0.35); box-shadow:0 0 28px rgba(60,90,120,0.22),0 0 0 4px rgba(30,40,55,0.5),0 8px 24px rgba(0,0,0,0.8); overflow:hidden; background:#060810; flex-shrink:0; }
+      .tc-avatar img { width:100%; height:100%; object-fit:contain; image-rendering:pixelated; filter:brightness(0.9) saturate(0.8); }
+      .tc-trainer-name { font-family:'Orbitron',sans-serif; font-size:20px; font-weight:800; color:#fff; letter-spacing:3px; text-shadow:0 2px 12px rgba(0,0,0,0.9); }
+      .tc-card { background:rgba(10,10,12,0.92); border:1px solid rgba(255,255,255,0.07); border-radius:14px; overflow:hidden; backdrop-filter:blur(32px); box-shadow:0 8px 48px rgba(0,0,0,0.85),inset 0 1px 0 rgba(255,255,255,0.06); position:relative; }
+      .tc-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(to right,transparent,rgba(255,255,255,0.08),transparent); pointer-events:none; }
+      .tc-card-inner { position:relative; z-index:1; }
+      .tc-rank-row { display:flex; align-items:center; gap:12px; padding:11px 14px; margin:10px 10px 4px; border-radius:10px; border:1px solid rgba(255,255,255,0.07); background:rgba(255,255,255,0.035); box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),0 2px 8px rgba(0,0,0,0.4); }
+      .tc-rank-icon { display:flex; align-items:center; opacity:0.75; flex-shrink:0; }
+      .tc-rank-label { flex:1; font-size:13px; font-weight:600; color:#fff; letter-spacing:0.5px; }
+      .tc-rank-value { font-family:'Orbitron',sans-serif; font-size:16px; font-weight:700; color:#fff; }
+      .tc-detail-row { display:flex; align-items:center; gap:12px; margin:5px 10px; padding:11px 14px; border-radius:10px; background:rgba(255,255,255,0.035); border:1px solid rgba(255,255,255,0.07); box-shadow:inset 0 1px 0 rgba(255,255,255,0.05),0 2px 8px rgba(0,0,0,0.4); transition:background 0.2s,border-color 0.2s; cursor:pointer; }
+      .tc-detail-row:last-child { margin-bottom:10px; }
+      .tc-detail-row:hover { background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); }
+      .tc-detail-row.no-tap { cursor:default; }
+      .tc-detail-icon { flex-shrink:0; display:flex; align-items:center; opacity:0.7; }
+      .tc-detail-label { flex:1; font-size:13px; color:#fff; font-weight:500; }
+      .tc-detail-value { font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; color:#fff; text-align:right; }
+      .tc-detail-value.ok { color:#5aaa7a; }
+      .tc-detail-value.warn { color:#f87171; }
+      .tc-section-hdr { display:flex; align-items:center; gap:10px; padding:14px 18px 12px; border-bottom:1px solid rgba(255,255,255,0.05); }
+      .tc-section-title { font-family:'Orbitron',sans-serif; font-size:10px; font-weight:700; color:#fff; letter-spacing:2px; white-space:nowrap; }
+      .tc-section-line { flex:1; height:1px; background:linear-gradient(to right,rgba(80,110,140,0.2),transparent); }
+      .tc-poke-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 10px 22px; }
+      .tc-poke-card { background:rgba(6,8,13,0.95); background-image:url('https://i.ibb.co/J6xK8XK/20260510-172311.png'); background-size:100% 100%; border:1px solid rgba(35,45,58,0.8); border-radius:12px; padding:8px 6px 6px; display:flex; flex-direction:column; align-items:center; gap:3px; position:relative; overflow:hidden; min-height:140px; justify-content:center; box-shadow:inset 0 1px 0 rgba(255,255,255,0.02); transition:transform 0.2s,border-color 0.2s; cursor:pointer; }
+      .tc-poke-card:active { transform:scale(0.96); }
+      .tc-poke-overlay { position:absolute; inset:0; background:rgba(3,4,10,0.52); border-radius:12px; pointer-events:none; z-index:0; }
+      .tc-poke-card > * { position:relative; z-index:1; }
+      .tc-type-badge { position:absolute; top:6px; left:6px; width:20px; height:20px; border-radius:50%; background:rgba(0,0,0,0.7); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; padding:3px; z-index:3; filter:grayscale(0.4) brightness(0.85); }
+      .tc-type-badge img { width:100%; height:100%; object-fit:contain; }
+      .tc-ace-star { position:absolute; top:6px; right:6px; font-size:10px; z-index:3; }
+      .tc-poke-sprite { width:60px; height:60px; object-fit:contain; filter:drop-shadow(0 3px 8px rgba(0,0,0,0.85)) grayscale(0.2) brightness(0.88); margin-top:8px; image-rendering:auto; }
+      .tc-poke-level { font-family:'Orbitron',sans-serif; font-size:7px; font-weight:600; color:#fff; letter-spacing:0.4px; padding:2px 7px; background:rgba(0,0,0,0.75); border-radius:4px; border:1px solid rgba(255,255,255,0.05); white-space:nowrap; position:absolute; bottom:6px; left:50%; transform:translateX(-50%); z-index:3; }
+      .tc-poke-empty { border:1px dashed rgba(255,255,255,0.08); background:rgba(6,8,13,0.5); border-radius:12px; min-height:140px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; opacity:0.3; }
+      .tc-stats-row { display:flex; align-items:stretch; padding:6px 10px; }
+      .tc-stat-block { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:14px 8px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); margin:3px; transition:background 0.2s; }
+      .tc-stat-block:hover { background:rgba(255,255,255,0.06); }
+      .tc-stat-icon { display:flex; align-items:center; justify-content:center; opacity:0.85; }
+      .tc-stat-num { font-family:'Orbitron',sans-serif; font-size:20px; font-weight:800; color:#fff; line-height:1; letter-spacing:1px; }
+      .tc-stat-label { font-size:10px; font-weight:600; color:rgba(255,255,255,0.45); letter-spacing:1px; text-transform:uppercase; }
+      .tc-stat-divider { width:1px; background:rgba(255,255,255,0.05); margin:10px 0; align-self:stretch; }
+      .tc-stats-sep { height:1px; background:rgba(255,255,255,0.05); margin:2px 14px; }
+      .tc-dex-wrap { display:flex; flex-direction:column; gap:5px; padding:8px 14px 16px; }
+      .tc-dex-track { height:4px; background:rgba(255,255,255,0.08); border-radius:4px; overflow:hidden; }
+      .tc-dex-fill { height:100%; background:linear-gradient(to right,#5a8ac8,#c85a8a); border-radius:4px; transition:width 1.4s cubic-bezier(0.25,1,0.5,1); }
+      .tc-dex-lbl { font-family:'Orbitron',sans-serif; font-size:8px; color:rgba(255,255,255,0.35); letter-spacing:1.2px; text-align:center; }
+      .tc-settings-row { display:flex; align-items:center; gap:12px; margin:5px 10px; padding:11px 14px; border-radius:10px; background:rgba(255,255,255,0.035); border:1px solid rgba(255,255,255,0.07); box-shadow:inset 0 1px 0 rgba(255,255,255,0.05); transition:background 0.2s; cursor:pointer; }
+      .tc-settings-row:last-child { margin-bottom:10px; }
+      .tc-settings-row:hover { background:rgba(255,255,255,0.055); }
+      .tc-settings-row.danger { border-color:rgba(248,113,113,0.2); }
+      .tc-settings-row.danger:hover { background:rgba(248,113,113,0.06); }
+      .tc-s-label { flex:1; font-size:13px; color:#fff; font-weight:600; }
+      .tc-s-value { font-family:'Orbitron',sans-serif; font-size:11px; color:rgba(255,255,255,0.5); }
+      .tc-redeem-input { flex:1; padding:7px 10px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#fff; font-size:13px; font-family:'Rajdhani',sans-serif; font-weight:600; outline:none; }
+      .tc-redeem-btn { padding:7px 14px; background:rgba(47,123,255,0.85); color:#fff; border:none; border-radius:8px; font-weight:700; font-size:13px; cursor:pointer; font-family:'Rajdhani',sans-serif; flex-shrink:0; }
     `;
     return (
       <div style={S.root}><style>{css}</style><style>{prfCss}</style>
-        <div style={{ ...S.wrap, background: "#000", overflow: "visible" }}>
-          <div className="prf-ambient" />
-          <div className="prf-page">
+        <div style={{ ...S.wrap, background: "#03040a", overflow: "visible" }}>
+          <div className="tc-bg-grain" />
+          <div className="tc-scanlines" />
 
-            {/* ── Banner ── */}
-            <div className="prf-banner" />
+          <div className="tc-page">
 
-            {/* ── Header ── */}
-            <div className="prf-header prf-fu">
-              <div className="prf-htop">
-                <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
-                  <div style={{ position: "relative" }}>
-                    <div className="prf-avatar-shell">
-                      <img src={TRAINER_SPRITE(player.sprite)} alt="trainer" />
-                    </div>
-                    <div className="prf-pip" />
-                  </div>
-                  <div style={{ paddingBottom: 4 }}>
-                    <div className="prf-name">{player.name}</div>
-                    <div className="prf-handle">@{player.name.toLowerCase().replace(/\s+/g, "")}</div>
-                    <div className="prf-badge">⚡ {pTier.toUpperCase()} TRAINER</div>
-                  </div>
+            {/* ── Hero ── */}
+            <div className="tc-hero">
+              <div className="tc-corner tc-tl" />
+              <div className="tc-corner tc-tr" />
+              <div className="tc-corner tc-bl" />
+              <div className="tc-corner tc-br" />
+              <div className="tc-hero-bg" />
+              <div className="tc-hero-content">
+                <div className="tc-tid">T-ID &nbsp;<strong>{player.id}</strong></div>
+                <div className="tc-avatar">
+                  <img src={TRAINER_SPRITE(player.sprite)} alt="Trainer" />
                 </div>
-                <div className="prf-btnrow">
-                  <button className="prf-btn prf-btn-ghost" title={muted ? "Sound Off" : "Sound On"} onClick={() => { const m = !muted; setMuted(m); if (!m) sfx.click(); }}>
-                    {muted ? "🔇" : "🔊"}
-                  </button>
-                  <button className="prf-btn prf-btn-primary" onClick={() => { sfx.click(); setScreen("card"); }}>
-                    ✏️ Edit Card
-                  </button>
+                <div className="tc-trainer-name">{player.name.toUpperCase()}</div>
+              </div>
+            </div>
+
+            {/* ── Info Card ── */}
+            <div className="tc-card">
+              <div className="tc-card-inner">
+                {/* Trainer Level / Rank */}
+                <div className="tc-rank-row">
+                  <span className="tc-rank-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7ca8c8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                  </span>
+                  <span className="tc-rank-label">Trainer Rank · {pTierEmoji} {pTier}</span>
+                  <span className="tc-rank-value">{pRank} / {MAX_RANK}</span>
+                </div>
+                {/* Progress bar */}
+                <div style={{ margin: "0 10px 6px", padding: "0 4px" }}>
+                  <div style={{ height: 3, borderRadius: 2, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pProgress.pct}%`, background: `linear-gradient(90deg,${pTierColor},#FFD700)`, transition: "width 1.4s cubic-bezier(.4,0,.2,1)" }} />
+                  </div>
+                  {!pProgress.isMax && <div style={{ fontSize: 10, fontFamily: "'Orbitron',sans-serif", color: "rgba(255,255,255,0.28)", marginTop: 4, letterSpacing: 1 }}>{pProgress.toNext.toLocaleString()} EXP TO RANK {pRank + 1}</div>}
+                </div>
+
+                {/* Achievements count */}
+                <div className="tc-detail-row no-tap">
+                  <span className="tc-detail-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5a7a8a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                      <circle cx="12" cy="8" r="5"/><path d="M7.5 13.5 5 22l7-3 7 3-2.5-8.5"/>
+                    </svg>
+                  </span>
+                  <span className="tc-detail-label">Achievements Unlocked</span>
+                  <span className="tc-detail-value">{pAchsUnlocked} / 8</span>
+                </div>
+
+                {/* PvP Record */}
+                <div className="tc-detail-row no-tap">
+                  <span className="tc-detail-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#6a5a8a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                      <path d="M6 3h12v8a6 6 0 0 1-12 0V3z"/><path d="M6 5H3a2 2 0 0 0 0 4h3"/><path d="M18 5h3a2 2 0 0 1 0 4h-3"/><path d="M12 17v4"/><path d="M8 21h8"/>
+                    </svg>
+                  </span>
+                  <span className="tc-detail-label">PvP Record</span>
+                  <span className="tc-detail-value">{pWins}W&nbsp;·&nbsp;{pLosses}L&nbsp;({pWinRate}%)</span>
+                </div>
+
+                {/* Pokédex */}
+                <div className="tc-detail-row no-tap">
+                  <span className="tc-detail-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#3a5a4a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                      <circle cx="12" cy="12" r="9"/><path d="M12 3c-2 4-2 14 0 18"/><path d="M12 3c2 4 2 14 0 18"/><path d="M3 12h18"/>
+                    </svg>
+                  </span>
+                  <span className="tc-detail-label">Pokédex</span>
+                  <span className="tc-detail-value">{caught.size} / {TOTAL_POKEMON} &nbsp;({pDexPct.toFixed(1)}%)</span>
+                </div>
+
+                {/* Wallet */}
+                <div className="tc-detail-row no-tap">
+                  <span className="tc-detail-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#8a7a3a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                      <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+                    </svg>
+                  </span>
+                  <span className="tc-detail-label">Wallet</span>
+                  <span className="tc-detail-value">₽{player.money.toLocaleString()}&nbsp;·&nbsp;💎{(player.stardust??0).toLocaleString()}</span>
                 </div>
               </div>
             </div>
 
-            {/* ── Chips ── */}
-            <div className="prf-chips prf-fu prf-d1">
-              <div className="prf-chip" style={{ color: "#F5C842" }}>🪙 ₽{player.money.toLocaleString()}</div>
-              <div className="prf-chip" style={{ color: "#B78BFA" }}>💎 {(player.stardust ?? 0).toLocaleString()}</div>
-              <div className="prf-chip" style={{ color: "#58C4F6", marginLeft: "auto" }}>● Rank {pRank} / {MAX_RANK}</div>
-            </div>
-
-            {/* ── Rank ── */}
-            <div className="prf-section prf-fu prf-d1">
-              <div className="prf-section-lbl">Rank</div>
-              <div className="prf-glass prf-rank-card">
-                <div className="prf-rank-emblem" style={{ background: `${pTierColor}18`, border: `1px solid ${pTierColor}44` }}>
-                  {pTierEmoji}
+            {/* ── Pokémon Showcase ── */}
+            <div className="tc-card">
+              <div className="tc-card-inner">
+                <div className="tc-section-hdr">
+                  <span className="tc-section-title">POKÉMON SHOWCASE</span>
+                  <div className="tc-section-line" />
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 17, fontWeight: 900, color: pTierColor }}>{pTier.toUpperCase()}</div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
-                    Rank {pRank} · {pProgress.isMax ? "MAX RANK" : `${pProgress.pct}% to Rank ${pRank + 1}`}
-                  </div>
-                  <div className="prf-rank-bar">
-                    <div className="prf-rank-fill" style={{ width: `${pProgress.pct}%`, background: `linear-gradient(90deg,${pTierColor},#FFD700)` }} />
-                  </div>
-                  {!pProgress.isMax && (
-                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>
-                      {pProgress.toNext.toLocaleString()} EXP to next rank
-                    </div>
-                  )}
-                </div>
-                <div style={{ textAlign: "right", fontSize: 11, color: "rgba(255,255,255,0.4)", flexShrink: 0 }}>
-                  {pWins}W&nbsp;{pLosses}L
-                </div>
-              </div>
-            </div>
-
-            {/* ── Stats ── */}
-            <div className="prf-section prf-fu prf-d2">
-              <div className="prf-section-lbl">Stats</div>
-              <div className="prf-stat-grid">
-                <div className="prf-glass prf-stat-card" style={{ "--c": "rgba(245,200,66,0.7)" } as React.CSSProperties}>
-                  <div className="prf-stat-lbl">Wins</div>
-                  <div className="prf-stat-val" style={{ color: "#F5C842" }}>{pWins}</div>
-                  <div className="prf-stat-hint">{pLosses} losses</div>
-                </div>
-                <div className="prf-glass prf-stat-card" style={{ "--c": "rgba(88,196,246,0.7)" } as React.CSSProperties}>
-                  <div className="prf-stat-lbl">Win Rate</div>
-                  <div className="prf-stat-val" style={{ color: "#58C4F6" }}>{pWinRate}%</div>
-                  <div className="prf-stat-hint">{pWins}W · {pLosses}L</div>
-                </div>
-                <div className="prf-glass prf-stat-card" style={{ "--c": "rgba(183,139,250,0.7)" } as React.CSSProperties}>
-                  <div className="prf-stat-lbl">Seen</div>
-                  <div className="prf-stat-val" style={{ color: "#B78BFA" }}>{seen.size}</div>
-                  <div className="prf-stat-hint">of {TOTAL_POKEMON}</div>
-                </div>
-                <div className="prf-glass prf-stat-card" style={{ "--c": "rgba(255,77,109,0.7)" } as React.CSSProperties}>
-                  <div className="prf-stat-lbl">Caught</div>
-                  <div className="prf-stat-val" style={{ color: "#FF4D6D" }}>{caught.size}</div>
-                  <div className="prf-stat-hint">{caught.size >= 100 ? "Elite Collector" : caught.size >= 50 ? "Collector" : caught.size >= 5 ? "Beginner" : "None yet"}</div>
-                </div>
-              </div>
-              <div className="prf-glass prf-dex-card">
-                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
-                  <div>
-                    <div className="prf-stat-lbl">Pokédex</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginTop: 2 }}>{pDexPct.toFixed(1)}%</div>
-                  </div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{caught.size} / {TOTAL_POKEMON}</div>
-                </div>
-                <div className="prf-dex-bar">
-                  <div className="prf-dex-fill" style={{ width: `${Math.max(0.3, pDexPct)}%` }} />
-                </div>
-              </div>
-            </div>
-
-            {/* ── Team Showcase ── */}
-            <div className="prf-section prf-fu prf-d3">
-              <div className="prf-section-lbl">Team Showcase</div>
-              <div className="prf-showcase-scroll">
-                {team.slice(0, 6).map((m, i) => {
-                  const tc = TYPE_COLORS[m.type1] || "#58C4F6";
-                  return (
-                    <div key={m.uid ?? i} className="prf-glass prf-sc-card" style={{ "--tc": `${tc}22` } as React.CSSProperties}>
-                      <div className="prf-sc-glow" />
-                      <div className="prf-sc-slot">{i === 0 ? "ACE" : `0${i + 1}`}</div>
-                      {i === 0 && <div style={{ position: "absolute", top: 9, right: 9, fontSize: 10 }}>⭐</div>}
-                      <div style={{ width: 80, height: 72, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 20 }}>
-                        <MonSprite sprite={m.sprite} size={68} className="" isShiny={m.isShiny} />
+                <div className="tc-poke-grid">
+                  {team.slice(0, 9).map((m, i) => (
+                    <div key={m.uid ?? i} className="tc-poke-card">
+                      <div className="tc-poke-overlay" />
+                      <div className="tc-type-badge">
+                        <img src={pTypeIcon(m.type1)} alt={m.type1} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                       </div>
-                      <div className="prf-sc-name">{m.name}</div>
-                      <div className="prf-sc-level">Lv {m.level}</div>
-                      <div className="prf-type-pill" style={{ background: `${tc}22`, color: tc }}>{m.type1}</div>
+                      {i === 0 && <div className="tc-ace-star">⭐</div>}
+                      <MonSprite sprite={m.sprite} size={60} className="tc-poke-sprite" isShiny={m.isShiny} style={{}} />
+                      <div className="tc-poke-level">Lv. {m.level}</div>
                     </div>
-                  );
-                })}
-                {Array.from({ length: Math.max(0, 6 - team.length) }).map((_, i) => (
-                  <div key={`empty-${i}`} className="prf-sc-empty">
-                    <div style={{ fontSize: 22, opacity: 0.5 }}>＋</div>
-                    <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1 }}>EMPTY</div>
-                  </div>
-                ))}
+                  ))}
+                  {Array.from({ length: Math.max(0, Math.min(9, 3 * Math.ceil(team.length / 3) + (team.length === 0 ? 3 : 0)) - team.length) }).map((_, i) => (
+                    <div key={`ep-${i}`} className="tc-poke-empty">
+                      <div style={{ fontSize: 18, opacity: 0.4 }}>＋</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* ── Achievements ── */}
-            <div className="prf-section prf-fu prf-d3">
-              <div className="prf-section-lbl">Achievements</div>
-              <div className="prf-ach-grid">
-                {pAchs.map((a, i) => (
-                  <div key={i} className="prf-glass prf-ach-item" style={{ opacity: a.unlocked ? 1 : 0.38 }}>
-                    <div className="prf-ach-icon" style={a.rare && a.unlocked ? { background: "rgba(245,200,66,0.09)", borderColor: "rgba(245,200,66,0.28)", boxShadow: "0 0 14px rgba(245,200,66,0.1)" } : {}}>
-                      {a.unlocked ? a.icon : "🔒"}
+            {/* ── Player Stats ── */}
+            <div className="tc-card">
+              <div className="tc-card-inner">
+                <div className="tc-section-hdr">
+                  <span className="tc-section-title">PLAYER STATS</span>
+                  <div className="tc-section-line" />
+                </div>
+                <div className="tc-stats-row">
+                  <div className="tc-stat-block">
+                    <div className="tc-stat-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5aaa7a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>
                     </div>
-                    <div className="prf-ach-name" style={a.rare && a.unlocked ? { color: "rgba(245,200,66,0.75)" } : {}}>
-                      {a.unlocked ? a.name : "???"}
-                    </div>
+                    <div className="tc-stat-num">{pWins}</div>
+                    <div className="tc-stat-label">Wins</div>
                   </div>
-                ))}
+                  <div className="tc-stat-divider" />
+                  <div className="tc-stat-block">
+                    <div className="tc-stat-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#aa5a5a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </div>
+                    <div className="tc-stat-num">{pLosses}</div>
+                    <div className="tc-stat-label">Losses</div>
+                  </div>
+                  <div className="tc-stat-divider" />
+                  <div className="tc-stat-block">
+                    <div className="tc-stat-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7ca8c8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+                    </div>
+                    <div className="tc-stat-num">{pWinRate}%</div>
+                    <div className="tc-stat-label">Win Rate</div>
+                  </div>
+                </div>
+                <div className="tc-stats-sep" />
+                <div className="tc-stats-row">
+                  <div className="tc-stat-block">
+                    <div className="tc-stat-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#c8a85a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                    </div>
+                    <div className="tc-stat-num">{caught.size}</div>
+                    <div className="tc-stat-label">Caught</div>
+                  </div>
+                  <div className="tc-stat-divider" />
+                  <div className="tc-stat-block">
+                    <div className="tc-stat-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#8a7ac8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </div>
+                    <div className="tc-stat-num">{seen.size}</div>
+                    <div className="tc-stat-label">Seen</div>
+                  </div>
+                  <div className="tc-stat-divider" />
+                  <div className="tc-stat-block">
+                    <div className="tc-stat-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#c85a8a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                    </div>
+                    <div className="tc-stat-num">{pDexPct.toFixed(1)}%</div>
+                    <div className="tc-stat-label">Pokédex</div>
+                  </div>
+                </div>
+                <div className="tc-dex-wrap">
+                  <div className="tc-dex-track">
+                    <div className="tc-dex-fill" style={{ width: `${Math.max(0.3, pDexPct)}%` }} />
+                  </div>
+                  <span className="tc-dex-lbl">{pDexPct.toFixed(1)}% POKÉDEX COMPLETE · {caught.size} / {TOTAL_POKEMON}</span>
+                </div>
               </div>
             </div>
 
             {/* ── Settings ── */}
-            <div className="prf-section prf-fu prf-d4">
-              <div className="prf-section-lbl">Settings</div>
-              <div className="prf-list">
-                {/* Redeem code row */}
-                <div className="prf-li" style={{ flexDirection: "column", alignItems: "stretch", gap: 8, cursor: "default" }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: 1, textTransform: "uppercase" }}>Redeem Code</div>
+            <div className="tc-card">
+              <div className="tc-card-inner">
+                <div className="tc-section-hdr">
+                  <span className="tc-section-title">SETTINGS</span>
+                  <div className="tc-section-line" />
+                </div>
+
+                {/* Redeem Code */}
+                <div style={{ margin: "8px 10px 5px", padding: "11px 14px", borderRadius: 10, background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                  <div style={{ fontSize: 10, fontFamily: "'Orbitron',sans-serif", color: "rgba(255,255,255,0.4)", letterSpacing: 1.5, marginBottom: 8 }}>REDEEM CODE</div>
                   <div style={{ display: "flex", gap: 8 }}>
                     {redeemMsg ? (
-                      <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: redeemMsg.ok ? "#4ade80" : "#f87171", padding: "8px 0" }}>{redeemMsg.text}</div>
+                      <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: redeemMsg.ok ? "#5aaa7a" : "#f87171", padding: "7px 0", fontFamily: "'Rajdhani',sans-serif" }}>{redeemMsg.text}</div>
                     ) : (
-                      <input
-                        value={redeemInput}
-                        onChange={(e) => setRedeemInput(e.target.value)}
-                        placeholder="Enter code…"
-                        style={{ flex: 1, padding: "8px 12px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", fontSize: 13, outline: "none" }}
-                      />
+                      <input className="tc-redeem-input" value={redeemInput} onChange={(e) => setRedeemInput(e.target.value)} placeholder="Enter code…" />
                     )}
-                    <button
-                      onClick={() => {
-                        sfx.click();
-                        const code = redeemInput.trim();
-                        let result: { text: string; ok: boolean };
-                        if (!code) {
-                          result = { text: "Enter a code first", ok: false };
-                        } else if (code === "Jptx02z") {
-                          if (redeemedCodes.includes(code)) {
-                            result = { text: "Already claimed", ok: false };
-                          } else {
-                            setPlayer((p) => ({ ...p, money: p.money + 100000, stardust: (p.stardust ?? 0) + 10000 }));
-                            setRedeemedCodes((c) => [...c, code]);
-                            result = { text: "Claimed! +₽100,000 +10k stardust", ok: true };
-                            addLog("Redeem code claimed! +₽100,000 +10,000 stardust", "#4ade80");
-                          }
-                        } else {
-                          result = { text: "Invalid code", ok: false };
+                    <button className="tc-redeem-btn" onClick={() => {
+                      sfx.click();
+                      const code = redeemInput.trim();
+                      let result: { text: string; ok: boolean };
+                      if (!code) { result = { text: "Enter a code first", ok: false }; }
+                      else if (code === "Jptx02z") {
+                        if (redeemedCodes.includes(code)) { result = { text: "Already claimed", ok: false }; }
+                        else {
+                          setPlayer((p) => ({ ...p, money: p.money + 100000, stardust: (p.stardust ?? 0) + 10000 }));
+                          setRedeemedCodes((c) => [...c, code]);
+                          result = { text: "Claimed! +₽100,000 +10k ✦", ok: true };
+                          addLog("Redeem code claimed! +₽100,000 +10,000 stardust", "#4ade80");
                         }
-                        setRedeemInput("");
-                        setRedeemMsg(result);
-                        setTimeout(() => setRedeemMsg(null), 5000);
-                      }}
-                      style={{ padding: "8px 16px", background: "#2f7bff", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: "pointer", flexShrink: 0 }}
-                    >Claim</button>
+                      } else { result = { text: "Invalid code", ok: false }; }
+                      setRedeemInput("");
+                      setRedeemMsg(result);
+                      setTimeout(() => setRedeemMsg(null), 5000);
+                    }}>CLAIM</button>
                   </div>
                 </div>
-                {/* Account status */}
-                <div className="prf-li" style={{ cursor: "default" }}>
-                  <span className="prf-li-label">Account Status</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#4ade80" }}>✓ Active</span>
+
+                {/* Account Status */}
+                <div className="tc-settings-row no-tap" style={{ cursor: "default" }}>
+                  <div className="tc-detail-icon" style={{ opacity: 0.7 }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5aaa7a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  </div>
+                  <span className="tc-s-label">Account Status</span>
+                  <span className="tc-s-value ok" style={{ color: "#5aaa7a" }}>ACTIVE</span>
                 </div>
-                {/* Sound toggle */}
-                <div className="prf-li" onClick={() => { const m = !muted; setMuted(m); if (!m) sfx.click(); }}>
-                  <span className="prf-li-label">Sound</span>
-                  <span className="prf-li-right">{muted ? "🔇 Off" : "🔊 On"}</span>
+
+                {/* Sound */}
+                <div className="tc-settings-row" onClick={() => { const m = !muted; setMuted(m); if (!m) sfx.click(); }}>
+                  <div className="tc-detail-icon" style={{ opacity: 0.7 }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#7ca8c8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                  </div>
+                  <span className="tc-s-label">Sound</span>
+                  <span className="tc-s-value">{muted ? "OFF" : "ON"}</span>
                 </div>
+
+                {/* Edit Trainer Card */}
+                <div className="tc-settings-row" onClick={() => { sfx.click(); setScreen("card"); }}>
+                  <div className="tc-detail-icon" style={{ opacity: 0.7 }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#8a7ac8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </div>
+                  <span className="tc-s-label">Edit Trainer Card</span>
+                  <span className="tc-s-value">›</span>
+                </div>
+
                 {/* Browse Pokédex */}
-                <div className="prf-li" onClick={() => { sfx.click(); setScreen("dex"); }}>
-                  <span className="prf-li-label">Browse Pokédex</span>
-                  <span className="prf-li-right">›</span>
+                <div className="tc-settings-row" onClick={() => { sfx.click(); setScreen("dex"); }}>
+                  <div className="tc-detail-icon" style={{ opacity: 0.7 }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#5a8ac8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                  </div>
+                  <span className="tc-s-label">Browse Pokédex</span>
+                  <span className="tc-s-value">›</span>
                 </div>
+
                 {/* Caught Pokémon */}
-                <div className="prf-li" onClick={() => { sfx.click(); setScreen("caught"); }}>
-                  <span className="prf-li-label">Caught Pokémon</span>
-                  <span className="prf-li-right">›</span>
+                <div className="tc-settings-row" onClick={() => { sfx.click(); setScreen("caught"); }}>
+                  <div className="tc-detail-icon" style={{ opacity: 0.7 }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#c8a85a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  </div>
+                  <span className="tc-s-label">Caught Pokémon</span>
+                  <span className="tc-s-value">›</span>
                 </div>
+
                 {/* Reset Save */}
-                <div className="prf-li" onClick={resetSave}>
-                  <span className="prf-li-label" style={{ color: "#f87171" }}>Reset Save</span>
-                  <span style={{ color: "#f87171" }}>🗑️</span>
+                <div className="tc-settings-row danger" onClick={resetSave}>
+                  <div className="tc-detail-icon" style={{ opacity: 0.7 }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  </div>
+                  <span className="tc-s-label" style={{ color: "#f87171" }}>Reset Save</span>
+                  <span className="tc-s-value" style={{ color: "#f87171" }}>⚠</span>
                 </div>
               </div>
             </div>
@@ -3479,7 +3541,7 @@ export default function App() {
           {/* Buddy Picker Modal */}
           {showBuddyPicker && (
             <div onClick={() => setShowBuddyPicker(false)}
-              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
               <div onClick={(e) => e.stopPropagation()}
                 style={{ background: "#0d0d1a", border: "2px solid #5e2c73", borderRadius: 14, padding: 16, width: "100%", maxWidth: 360, maxHeight: "70vh", overflowY: "auto" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
