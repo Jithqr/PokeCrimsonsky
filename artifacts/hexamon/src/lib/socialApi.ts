@@ -60,8 +60,18 @@ export type PlayerSearchResult = {
   isOnline: boolean;
 };
 
+export type LeaderboardEntry = {
+  playerId: string;
+  name: string;
+  sprite: string;
+  wins: number;
+  losses: number;
+  caughtCount: number;
+  pvpRank: number;
+};
+
 // ── Player Registry ───────────────────────────────────────────────────────────
-export async function registerPlayer(p: { playerId: string; name: string; sprite: string; hometown: string }) {
+export async function registerPlayer(p: { playerId: string; name: string; sprite: string; hometown: string; wins?: number; losses?: number; caughtCount?: number; pvpRank?: number; saveData?: any }) {
   try { await apiFetch(`${BASE}/register`, { method: "POST", body: JSON.stringify(p) }); } catch { /* silent */ }
 }
 
@@ -69,8 +79,12 @@ export async function lookupPlayer(playerId: string): Promise<{ name: string; sp
   try { return (await apiFetch(`${BASE}/player/${playerId}`)).player ?? null; } catch { return null; }
 }
 
-export async function checkBanned(playerId: string): Promise<{ banned: boolean; reason?: string }> {
+export async function checkBanned(playerId: string): Promise<{ banned: boolean; reason?: string; resetPending?: boolean }> {
   try { return await apiFetch(`${BASE}/check-ban/${playerId}`); } catch { return { banned: false }; }
+}
+
+export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
+  try { return (await apiFetch(`${BASE}/leaderboard`)).players ?? []; } catch { return []; }
 }
 
 export async function searchPlayers(q: string): Promise<PlayerSearchResult[]> {

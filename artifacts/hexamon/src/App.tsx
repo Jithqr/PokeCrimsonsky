@@ -19,12 +19,12 @@ import {
 import {
   fetchMails, markMailRead, markAllMailRead, sendTransfer, fetchPendingTransfers, claimTransfers,
   proposeTrade, fetchPendingTrades, acceptTrade, acceptSellTrade, declineTrade, cancelTrade,
-  registerPlayer, checkBanned, redeemDbCode,
+  registerPlayer, checkBanned, redeemDbCode, fetchLeaderboard,
   verifyAdmin, adminGetPlayer, adminBanPlayer, adminUnban, adminAnnounce, adminDrop, adminCreateCode, adminListCodes, adminDeleteCode,
   adminResetAccount, adminGetTransferHistory, adminGetTradeHistory,
   searchPlayers, sendFriendRequest, acceptFriendRequest, declineFriendRequest,
   fetchServerFriends, removeServerFriend,
-  type SocialMail, type PendingTransfer, type TradeProp, type ServerFriend, type PlayerSearchResult,
+  type SocialMail, type PendingTransfer, type TradeProp, type ServerFriend, type PlayerSearchResult, type LeaderboardEntry,
 } from "./lib/socialApi";
 import { CrimsonSkyDex } from "./components/CrimsonSkyDex";
 import { SplashLoader } from "./components/SplashLoader";
@@ -310,7 +310,7 @@ function makeMon(template: PokemonTemplate, level: number, origin: Mon["origin"]
     nature,
     caughtAt: Date.now(),
     origin,
-    isShiny: Math.random() < 1 / 4096,
+    isShiny: Math.random() < 1 / 100,
   };
 }
 
@@ -347,7 +347,7 @@ function makeMonFromForm(form: FormEntry, level: number, origin: Mon["origin"] =
     nature,
     caughtAt: Date.now(),
     origin,
-    isShiny: Math.random() < 1 / 4096,
+    isShiny: Math.random() < 1 / 100,
   };
 }
 
@@ -579,6 +579,7 @@ type SaveData = {
   badges?: string[];
   e4Cleared?: boolean;
   e4Streak?: number;
+  showcaseSlots?: (string | null)[];
 };
 function loadSave(): SaveData | null {
   try {
@@ -624,7 +625,7 @@ export default function App() {
   const [player, setPlayer] = useState<Player>(
     initial?.player ? migratePlayerExp(initial.player) : {
       name: "Trainer",
-      hometown: "Nuvema Town",
+      hometown: "Kanto",
       money: 3000,
       stardust: 0,
       macroRegion: 0,
@@ -767,6 +768,13 @@ export default function App() {
   const [banReason, setBanReason] = useState("");
   const [isBanned, setIsBanned] = useState(false);
   const [banReasonText, setBanReasonText] = useState("");
+  const [showcaseSlots, setShowcaseSlots] = useState<(string | null)[]>(() => initial?.showcaseSlots ?? [null, null, null, null, null, null]);
+  const [showShowcasePicker, setShowShowcasePicker] = useState(false);
+  const [showcasePickSlot, setShowcasePickSlot] = useState(0);
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [leaderboardTab, setLeaderboardTab] = useState<"wins" | "dex" | "pvp">("wins");
+  const [spectateData, setSpectateData] = useState<any>(null);
 
   const addItemToInventory = useCallback((name: string, qty: number) => {
     setInventory(prev => {
@@ -846,8 +854,15 @@ export default function App() {
 
   // Register player with social system and check ban status on mount
   useEffect(() => {
-    registerPlayer({ playerId: String(player.id), name: player.name, sprite: player.sprite, hometown: player.hometown });
-    checkBanned(String(player.id)).then(r => { if (r.banned) { setIsBanned(true); setBanReasonText(r.reason || ""); } });
+    registerPlayer({ playerId: String(player.id), name: player.name, sprite: player.sprite, hometown: player.hometown, wins: player.wins ?? 0, losses: player.losses ?? 0, caughtCount: initial?.caught?.length ?? 0, pvpRank: initial?.battleBoxRank ?? 1000 });
+    checkBanned(String(player.id)).then(r => {
+      if (r.resetPending) {
+        try { localStorage.removeItem(SAVE_KEY); } catch { /* ignore */ }
+        window.location.reload();
+        return;
+      }
+      if (r.banned) { setIsBanned(true); setBanReasonText(r.reason || ""); }
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [player.id]);
   const [friendInput, setFriendInput] = useState<string>("");
@@ -1051,11 +1066,11 @@ export default function App() {
         candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay,
         safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught,
         lastSafariDay, safariRegion, lastSpinDay, battleBoxHistory,
-        badges, e4Cleared, e4Streak,
+        badges, e4Cleared, e4Streak, showcaseSlots,
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch { /* ignore quota errors */ }
-  }, [screen, player, teams, activeTeamIdx, box, inventory, caught, seen, muted, candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, safariRegion, lastSpinDay, battleBoxHistory, badges, e4Cleared, e4Streak]);
+  }, [screen, player, teams, activeTeamIdx, box, inventory, caught, seen, muted, candies, buddyIdx, lastSpinTs, catchStreak, lastStreakDay, safariBalls, safariEnc, safariCounter, safariNextLegend, safariCaught, lastSafariDay, safariRegion, lastSpinDay, battleBoxHistory, badges, e4Cleared, e4Streak, showcaseSlots]);
 
   // Buddy walking — buddy earns 1 candy every 30s
   useEffect(() => {
@@ -2681,6 +2696,30 @@ export default function App() {
     return <SplashLoader onDone={() => setSplashDone(true)} />;
   }
 
+  // ── Ban overlay — shown immediately after splash, blocks all content ──────
+  if (isBanned) {
+    return (
+      <div style={{ fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", background: "#09090b", minHeight: "100vh", display: "flex", justifyContent: "center" }}>
+        <div style={{ width: "100%", maxWidth: 460, minHeight: "100vh", background: "#09090b", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(220,38,38,0.15)", border: "2px solid #dc2626", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
+            <i className="fa-solid fa-ban" style={{ fontSize: 32, color: "#ef4444" }} />
+          </div>
+          <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: 2, marginBottom: 12, textAlign: "center" }}>ACCOUNT BANNED</div>
+          <div style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", lineHeight: 1.6, marginBottom: 24 }}>
+            Your account has been suspended and you cannot access HexaMon Crimson Sky.
+          </div>
+          {banReasonText && (
+            <div style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)", borderRadius: 10, padding: "12px 16px", width: "100%", marginBottom: 16 }}>
+              <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 4 }}>REASON</div>
+              <div style={{ fontSize: 13, color: "#fca5a5" }}>{banReasonText}</div>
+            </div>
+          )}
+          <div style={{ fontSize: 11, color: "#4b5563", textAlign: "center" }}>If you believe this is a mistake, contact support.</div>
+        </div>
+      </div>
+    );
+  }
+
   if (screen === "story") {
     return (
       <StoryIntro
@@ -3426,28 +3465,67 @@ export default function App() {
             </div>
 
             {/* ── Pokémon Showcase ── */}
-            <div className="tc-card">
-              <div className="tc-card-inner">
-                <div className="tc-section-hdr">
-                  <span className="tc-section-title">POKÉMON SHOWCASE</span>
-                  <div className="tc-section-line" />
-                </div>
-                <div className="tc-poke-grid">
-                  {team.slice(0, tcShowcaseTotal).map((m, i) => (
-                    <div key={m.uid ?? i} className={`tc-poke-card${i === 0 ? " featured" : ""}`}>
-                      <div className="tc-type-badge">
-                        <img src={pTypeIcon(m.type1)} alt={m.type1} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                      </div>
-                      <MonSprite sprite={m.sprite} size={64} className="" isShiny={m.isShiny} style={{ width: 64, height: 64, objectFit: "contain", filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.85)) grayscale(0.3) brightness(0.85)", marginTop: 8, imageRendering: "auto" }} />
-                      <div className="tc-poke-level">Lv. {m.level}</div>
+            {(() => {
+              const allMons = [...team, ...box];
+              const monByUid = new Map(allMons.map(m => [m.uid, m]));
+              const slotMons = showcaseSlots.slice(0, 6).map(uid => (uid ? monByUid.get(uid) ?? null : null));
+              return (
+                <div className="tc-card" style={{ position: "relative" }}>
+                  <div className="tc-card-inner">
+                    <div className="tc-section-hdr">
+                      <span className="tc-section-title">POKÉMON SHOWCASE</span>
+                      <div className="tc-section-line" />
+                      <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginLeft: 6 }}>TAP TO EDIT</span>
                     </div>
-                  ))}
-                  {Array.from({ length: Math.max(0, tcShowcaseTotal - team.length) }).map((_, i) => (
-                    <div key={`ep-${i}`} className="tc-poke-empty" />
-                  ))}
+                    <div className="tc-poke-grid">
+                      {slotMons.map((m, i) => m ? (
+                        <div key={`slot-${i}`} className={`tc-poke-card${i === 0 ? " featured" : ""}`} onClick={() => { setShowcasePickSlot(i); setShowShowcasePicker(true); }}>
+                          <div className="tc-type-badge">
+                            <img src={pTypeIcon(m.type1)} alt={m.type1} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                          </div>
+                          <MonSprite sprite={m.sprite} size={64} className="" isShiny={m.isShiny} style={{ width: 64, height: 64, objectFit: "contain", filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.85)) grayscale(0.3) brightness(0.85)", marginTop: 8, imageRendering: "auto" }} />
+                          <div className="tc-poke-level">Lv. {m.level}</div>
+                          <div style={{ position: "absolute", top: 6, right: 6, width: 16, height: 16, borderRadius: "50%", background: "rgba(0,0,0,0.7)", border: "1px solid rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 4 }}>
+                            <i className="fa-solid fa-pen" style={{ fontSize: 7, color: "#9ca3af" }} />
+                          </div>
+                        </div>
+                      ) : (
+                        <div key={`empty-${i}`} className="tc-poke-empty" style={{ cursor: "pointer" }} onClick={() => { setShowcasePickSlot(i); setShowShowcasePicker(true); }}>
+                          <i className="fa-solid fa-plus" style={{ fontSize: 18, color: "rgba(255,255,255,0.2)" }} />
+                          <span style={{ fontSize: 9, color: "rgba(255,255,255,0.15)" }}>ADD</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Picker modal */}
+                  {showShowcasePicker && (
+                    <div style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end" }} onClick={(e) => { if (e.target === e.currentTarget) setShowShowcasePicker(false); }}>
+                      <div style={{ width: "100%", maxWidth: 460, background: "#0d0d1a", borderRadius: "16px 16px 0 0", border: "1px solid #1f2937", maxHeight: "70vh", display: "flex", flexDirection: "column" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", borderBottom: "1px solid #1f2937" }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Choose for Slot {showcasePickSlot + 1}</span>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            {showcaseSlots[showcasePickSlot] && <button onClick={() => { setShowcaseSlots(s => s.map((v, i) => i === showcasePickSlot ? null : v)); setShowShowcasePicker(false); }} style={{ background: "#7f1d1d", color: "#fca5a5", border: "1px solid #991b1b", borderRadius: 6, padding: "5px 10px", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>Remove</button>}
+                            <button onClick={() => setShowShowcasePicker(false)} style={{ background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", borderRadius: 6, padding: "5px 10px", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
+                          </div>
+                        </div>
+                        <div style={{ overflowY: "auto", padding: 10 }}>
+                          {allMons.length === 0 && <div style={{ textAlign: "center", padding: 24, color: "#4b5563", fontSize: 12 }}>No Pokémon in team or box.</div>}
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                            {allMons.map((m) => (
+                              <div key={m.uid} onClick={() => { setShowcaseSlots(s => s.map((v, i) => i === showcasePickSlot ? (m.uid ?? null) : v)); setShowShowcasePicker(false); }} style={{ background: "#111827", border: `2px solid ${showcaseSlots[showcasePickSlot] === m.uid ? "#7c3aed" : "#1f2937"}`, borderRadius: 10, padding: "8px 6px", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, cursor: "pointer", minHeight: 90, justifyContent: "center" }}>
+                                <MonSprite sprite={m.sprite} size={52} className="" isShiny={m.isShiny} style={{ width: 52, height: 52, objectFit: "contain" }} />
+                                <div style={{ fontSize: 9, color: "#9ca3af", textAlign: "center", lineHeight: 1.2 }}>{m.name}</div>
+                                <div style={{ fontSize: 8, color: "#4b5563" }}>Lv.{m.level}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* ── Player Stats ── */}
             <div className="tc-card">
@@ -3687,7 +3765,7 @@ export default function App() {
               </div>
 
               {/* Leaderboard */}
-              <div className="tc-drawer-item" onClick={() => { sfx.click(); setShowProfileMenu(false); addLog("Leaderboard coming soon!", "#facc15"); }}>
+              <div className="tc-drawer-item" onClick={() => { sfx.click(); setShowProfileMenu(false); setLeaderboardLoading(true); fetchLeaderboard().then(r => { setLeaderboardData(r); setLeaderboardLoading(false); }).catch(() => setLeaderboardLoading(false)); setScreen("leaderboard"); }}>
                 <div className="tc-drawer-item-icon" style={{ background: "rgba(234,179,8,0.12)" }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                 </div>
@@ -4419,7 +4497,12 @@ export default function App() {
       } else { setAdminMsg({ text: "Invalid key.", ok: false }); }
     };
     const doSpectate = async () => {
-      try { const r = await adminGetPlayer(adminKeyInput, adminTargetId.trim()); setAdminTargetInfo(r.player); setAdminMsg({ text: `Found: ${r.player?.name}`, ok: true }); }
+      try {
+        const r = await adminGetPlayer(adminKeyInput, adminTargetId.trim());
+        setAdminTargetInfo(r.player);
+        setSpectateData(r.saveData ?? null);
+        setAdminMsg({ text: `Found: ${r.player?.name}`, ok: true });
+      }
       catch (e: any) { setAdminMsg({ text: e.message, ok: false }); }
     };
     const doBan = async (ban: boolean) => {
@@ -4507,14 +4590,69 @@ export default function App() {
                 </div>
                 <div style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 12, padding: 14 }}>
                   {adminTab === "spectate" && <>
-                    <input value={adminTargetId} onChange={e => setAdminTargetId(e.target.value)} placeholder="Player ID" style={inp} />
-                    <button onClick={doSpectate} style={{ width: "100%", background: "linear-gradient(135deg,#2563eb,#1d4ed8)", color: "#fff", border: "none", borderRadius: 8, padding: "11px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", marginBottom: 10 }}>Fetch Player</button>
-                    {adminTargetInfo && <div style={{ background: "#0d0d1a", border: "1px solid #374151", borderRadius: 8, padding: 10, fontSize: 12, color: "#d1d5db" }}>
-                      <div style={{ marginBottom: 4 }}><b style={{ color: "#9ca3af" }}>Name:</b> {adminTargetInfo.name}</div>
-                      <div style={{ marginBottom: 4 }}><b style={{ color: "#9ca3af" }}>Town:</b> {adminTargetInfo.hometown}</div>
-                      <div style={{ marginBottom: 4 }}><b style={{ color: "#9ca3af" }}>Sprite:</b> {adminTargetInfo.sprite}</div>
-                      <div><b style={{ color: "#9ca3af" }}>Banned:</b> <span style={{ color: adminTargetInfo.isBanned ? "#ef4444" : "#4ade80" }}>{adminTargetInfo.isBanned ? `Yes — ${adminTargetInfo.banReason}` : "No"}</span></div>
-                    </div>}
+                    <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+                      <input value={adminTargetId} onChange={e => setAdminTargetId(e.target.value)} placeholder="Player ID" style={{ ...inp, marginBottom: 0, flex: 1 }} onKeyDown={e => e.key === "Enter" && doSpectate()} />
+                      <button onClick={doSpectate} style={{ flexShrink: 0, background: "linear-gradient(135deg,#2563eb,#1d4ed8)", color: "#fff", border: "none", borderRadius: 8, padding: "10px 14px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Fetch</button>
+                    </div>
+                    {adminTargetInfo && <>
+                      <div style={{ background: "#0d0d1a", border: "1px solid #374151", borderRadius: 8, padding: 10, fontSize: 12, color: "#d1d5db", marginBottom: 8 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                          <img src={`https://play.pokemonshowdown.com/sprites/trainers/${adminTargetInfo.sprite || "hilbert"}.png`} style={{ width: 40, height: 40, imageRendering: "pixelated" }} alt="" />
+                          <div>
+                            <div style={{ fontWeight: 700, color: "#fff", fontSize: 13 }}>{adminTargetInfo.name}</div>
+                            <div style={{ fontSize: 10, color: "#6b7280" }}>ID: {adminTargetId.trim()}</div>
+                          </div>
+                          <span style={{ marginLeft: "auto", background: adminTargetInfo.isBanned ? "#7f1d1d" : "#14532d", color: adminTargetInfo.isBanned ? "#fca5a5" : "#86efac", padding: "2px 8px", borderRadius: 4, fontSize: 10 }}>{adminTargetInfo.isBanned ? "BANNED" : "Active"}</span>
+                        </div>
+                        {adminTargetInfo.isBanned && <div style={{ fontSize: 11, color: "#fca5a5", marginBottom: 6 }}>Reason: {adminTargetInfo.banReason}</div>}
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                          {[
+                            { label: "Wins", val: adminTargetInfo.wins ?? "—" },
+                            { label: "Losses", val: adminTargetInfo.losses ?? "—" },
+                            { label: "Caught", val: adminTargetInfo.caughtCount ?? "—" },
+                            { label: "PvP Rank", val: adminTargetInfo.pvpRank ?? "—" },
+                          ].map(({ label, val }) => (
+                            <div key={label} style={{ background: "#111827", borderRadius: 6, padding: "6px 8px" }}>
+                              <div style={{ fontSize: 9, color: "#6b7280", marginBottom: 2 }}>{label}</div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{val}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {spectateData && (
+                        <div style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 8, padding: 10, marginBottom: 8 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", marginBottom: 8 }}>SAVE DATA SNAPSHOT</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 8 }}>
+                            {[
+                              { label: "Money", val: spectateData.player?.money != null ? `₽${Number(spectateData.player.money).toLocaleString()}` : "—" },
+                              { label: "Stardust", val: spectateData.player?.stardust ?? "—" },
+                              { label: "Team Size", val: spectateData.teams ? spectateData.teams.reduce((s: number, t: any) => s + (t.mons?.length ?? 0), 0) : (spectateData.team?.length ?? "—") },
+                              { label: "Box Size", val: spectateData.box?.length ?? "—" },
+                              { label: "Dex Caught", val: spectateData.caught?.length ?? "—" },
+                              { label: "Badges", val: spectateData.badges?.length ?? 0 },
+                            ].map(({ label, val }) => (
+                              <div key={label} style={{ background: "#0d0d1a", borderRadius: 6, padding: "5px 8px" }}>
+                                <div style={{ fontSize: 9, color: "#6b7280", marginBottom: 2 }}>{label}</div>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: "#e5e7eb" }}>{val}</div>
+                              </div>
+                            ))}
+                          </div>
+                          {spectateData.teams?.[0]?.mons?.length > 0 && (
+                            <div>
+                              <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 5 }}>ACTIVE TEAM</div>
+                              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                                {spectateData.teams[0].mons.slice(0, 6).map((m: any, i: number) => (
+                                  <div key={i} style={{ background: "#0d0d1a", borderRadius: 6, padding: "4px 6px", fontSize: 10, color: "#d1d5db" }}>
+                                    <span style={{ color: "#a78bfa" }}>{m.name}</span> <span style={{ color: "#6b7280" }}>Lv.{m.level}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {!spectateData && <div style={{ fontSize: 11, color: "#4b5563", textAlign: "center", padding: "8px 0" }}>No save data synced yet (player must log in at least once).</div>}
+                    </>}
                   </>}
                   {adminTab === "ban" && <>
                     <input value={adminTargetId} onChange={e => setAdminTargetId(e.target.value)} placeholder="Player ID to ban/unban" style={inp} />
@@ -4691,8 +4829,7 @@ export default function App() {
           </div>
           <div>
             <div style={{ fontSize: 11, color: "#E91E63", marginBottom: 8 }}>HOMETOWN</div>
-            <input value={player.hometown} onChange={(e) => setPlayer({ ...player, hometown: e.target.value })} maxLength={20}
-              style={{ background: "#111", border: "1px solid #333", color: "#fff", fontSize: 14, padding: "8px", borderRadius: 4, width: "100%" }} />
+            <div style={{ background: "#111", border: "1px solid #333", color: "#888", fontSize: 14, padding: "8px", borderRadius: 4, width: "100%" }}>Kanto</div>
           </div>
           <div>
             <div style={{ fontSize: 11, color: "#E91E63", marginBottom: 8 }}>CHOOSE AVATAR (GEN V)</div>
@@ -8129,6 +8266,103 @@ export default function App() {
             setScreen("battleBox");
           }}
         />
+      </div>
+    );
+  }
+
+  if (screen === "leaderboard") {
+    const lbTabs: { id: "wins" | "dex" | "pvp"; label: string; icon: string; col: keyof LeaderboardEntry; title: string }[] = [
+      { id: "wins",  label: "Wins",     icon: "fa-trophy",      col: "wins",       title: "Battle Wins" },
+      { id: "dex",   label: "Dex",      icon: "fa-book-open",   col: "caughtCount", title: "Pokémon Caught" },
+      { id: "pvp",   label: "PvP Rank", icon: "fa-ranking-star", col: "pvpRank",   title: "PvP Rank Points" },
+    ];
+    const sorted = [...leaderboardData].sort((a, b) => {
+      const col = lbTabs.find(t => t.id === leaderboardTab)!.col;
+      const va = Number(a[col] ?? 0), vb = Number(b[col] ?? 0);
+      return leaderboardTab === "pvp" ? vb - va : vb - va;
+    });
+    const rankColors = ["#FFD700", "#C0C0C0", "#CD7F32"];
+    const rankIcons = ["🥇", "🥈", "🥉"];
+    return (
+      <div style={S.root}><style>{css}</style>
+        <div style={S.wrap}>
+          <div style={S.header}>
+            <BackBtn onClick={() => setScreen("world")} />
+            <span className="page-header-title"><i className="fa-solid fa-ranking-star" style={{ marginRight: 6 }} />Leaderboard</span>
+            <button onClick={() => { setLeaderboardLoading(true); fetchLeaderboard().then(r => { setLeaderboardData(r); setLeaderboardLoading(false); }).catch(() => setLeaderboardLoading(false)); }} style={{ background: "none", border: "none", color: "#9ca3af", cursor: "pointer", fontSize: 14, padding: "4px 8px" }}>
+              <i className="fa-solid fa-rotate" />
+            </button>
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: "12px 12px 24px" }}>
+            {/* Tabs */}
+            <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+              {lbTabs.map(t => (
+                <button key={t.id} onClick={() => setLeaderboardTab(t.id)} style={{ flex: 1, background: leaderboardTab === t.id ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "#111827", color: leaderboardTab === t.id ? "#fff" : "#6b7280", border: `1px solid ${leaderboardTab === t.id ? "#7c3aed" : "#1f2937"}`, borderRadius: 8, padding: "8px 0", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                  <i className={`fa-solid ${t.icon}`} style={{ marginRight: 4 }} />{t.label}
+                </button>
+              ))}
+            </div>
+            {leaderboardLoading ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 60, gap: 12 }}>
+                <div style={{ width: 36, height: 36, border: "3px solid #1f2937", borderTop: "3px solid #7c3aed", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                <div style={{ fontSize: 12, color: "#4b5563" }}>Loading rankings…</div>
+              </div>
+            ) : sorted.length === 0 ? (
+              <div style={{ textAlign: "center", padding: 60, color: "#4b5563", fontSize: 13 }}>No data yet. Be the first!</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {/* Top 3 podium */}
+                {sorted.length >= 1 && (
+                  <div style={{ display: "grid", gridTemplateColumns: sorted.length >= 3 ? "1fr 1fr 1fr" : sorted.length === 2 ? "1fr 1fr" : "1fr", gap: 6, marginBottom: 10 }}>
+                    {sorted.slice(0, Math.min(3, sorted.length)).map((entry, i) => {
+                      const col = lbTabs.find(t => t.id === leaderboardTab)!.col;
+                      return (
+                        <div key={entry.playerId} style={{ background: `linear-gradient(135deg,${rankColors[i]}14,#111827)`, border: `1px solid ${rankColors[i]}40`, borderRadius: 12, padding: "12px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                          <div style={{ fontSize: 22 }}>{rankIcons[i]}</div>
+                          <img src={`https://play.pokemonshowdown.com/sprites/trainers/${entry.sprite || "hilbert"}.png`} style={{ width: 36, height: 36, imageRendering: "pixelated" }} alt="" />
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "#fff", textAlign: "center", lineHeight: 1.2 }}>{entry.name}</div>
+                          <div style={{ fontSize: 13, fontWeight: 800, color: rankColors[i] }}>{Number(entry[col] ?? 0).toLocaleString()}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {/* Rest of rankings */}
+                {sorted.slice(3).map((entry, idx) => {
+                  const col = lbTabs.find(t => t.id === leaderboardTab)!.col;
+                  const rank = idx + 4;
+                  const isMe = entry.playerId === String(player.id);
+                  return (
+                    <div key={entry.playerId} style={{ background: isMe ? "rgba(124,58,237,0.1)" : "#111827", border: `1px solid ${isMe ? "#7c3aed" : "#1f2937"}`, borderRadius: 10, padding: "10px 12px", display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 24, textAlign: "center", fontSize: 12, fontWeight: 700, color: "#4b5563", flexShrink: 0 }}>#{rank}</div>
+                      <img src={`https://play.pokemonshowdown.com/sprites/trainers/${entry.sprite || "hilbert"}.png`} style={{ width: 32, height: 32, imageRendering: "pixelated", flexShrink: 0 }} alt="" />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: isMe ? "#a78bfa" : "#e5e7eb", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{entry.name}{isMe && <span style={{ fontSize: 9, color: "#a78bfa", marginLeft: 5 }}>YOU</span>}</div>
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: "#9ca3af", flexShrink: 0 }}>{Number(entry[col] ?? 0).toLocaleString()}</div>
+                    </div>
+                  );
+                })}
+                {/* Show current player if not in top results */}
+                {(() => {
+                  const col = lbTabs.find(t => t.id === leaderboardTab)!.col;
+                  const myIdx = sorted.findIndex(e => e.playerId === String(player.id));
+                  if (myIdx === -1) return (
+                    <div style={{ background: "rgba(124,58,237,0.08)", border: "1px solid #7c3aed", borderRadius: 10, padding: "10px 12px", display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
+                      <div style={{ width: 24, textAlign: "center", fontSize: 12, fontWeight: 700, color: "#6b7280" }}>—</div>
+                      <img src={`https://play.pokemonshowdown.com/sprites/trainers/${player.sprite || "hilbert"}.png`} style={{ width: 32, height: 32, imageRendering: "pixelated" }} alt="" />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#a78bfa" }}>{player.name} <span style={{ fontSize: 9 }}>YOU</span></div>
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: "#a78bfa" }}>{leaderboardTab === "wins" ? (player.wins ?? 0) : leaderboardTab === "dex" ? caught.size : (initial?.battleBoxRank ?? 1000)}</div>
+                    </div>
+                  );
+                  return null;
+                })()}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     );
   }

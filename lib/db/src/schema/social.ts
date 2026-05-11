@@ -11,6 +11,12 @@ export const playerRegistry = pgTable("player_registry", {
   lastSeen: timestamp("last_seen").notNull().defaultNow(),
   isBanned: boolean("is_banned").notNull().default(false),
   banReason: text("ban_reason"),
+  wins: integer("wins").notNull().default(0),
+  losses: integer("losses").notNull().default(0),
+  caughtCount: integer("caught_count").notNull().default(0),
+  pvpRank: integer("pvp_rank").notNull().default(1000),
+  saveData: jsonb("save_data"),
+  resetPending: boolean("reset_pending").notNull().default(false),
 }, (t) => ({
   playerIdIdx: index("pr_player_id_idx").on(t.playerId),
 }));

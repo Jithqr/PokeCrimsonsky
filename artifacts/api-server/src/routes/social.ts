@@ -27,17 +27,32 @@ function normPair(a: string, b: string): [string, string] {
 // ── Register / heartbeat ──────────────────────────────────────────────────────
 router.post("/register", async (req: Request, res: Response) => {
   try {
-    const { playerId, name, sprite, hometown } = req.body ?? {};
+    const { playerId, name, sprite, hometown, wins, losses, caughtCount, pvpRank, saveData } = req.body ?? {};
     if (!playerId || !name) { res.status(400).json({ error: "Missing fields." }); return; }
     await db.insert(playerRegistry).values({
       playerId: String(playerId),
       name: String(name).slice(0, 64),
       sprite: String(sprite || "hilbert").slice(0, 64),
       hometown: String(hometown || "").slice(0, 128),
+      wins: Math.max(0, Number(wins) || 0),
+      losses: Math.max(0, Number(losses) || 0),
+      caughtCount: Math.max(0, Number(caughtCount) || 0),
+      pvpRank: Math.max(0, Number(pvpRank) || 1000),
+      saveData: saveData ?? null,
       lastSeen: new Date(),
     }).onConflictDoUpdate({
       target: playerRegistry.playerId,
-      set: { name: String(name).slice(0, 64), sprite: String(sprite || "hilbert").slice(0, 64), hometown: String(hometown || "").slice(0, 128), lastSeen: new Date() },
+      set: {
+        name: String(name).slice(0, 64),
+        sprite: String(sprite || "hilbert").slice(0, 64),
+        hometown: String(hometown || "").slice(0, 128),
+        wins: Math.max(0, Number(wins) || 0),
+        losses: Math.max(0, Number(losses) || 0),
+        caughtCount: Math.max(0, Number(caughtCount) || 0),
+        pvpRank: Math.max(0, Number(pvpRank) || 1000),
+        saveData: saveData ?? null,
+        lastSeen: new Date(),
+      },
     });
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
@@ -58,7 +73,6 @@ router.get("/search", async (req: Request, res: Response) => {
   try {
     const q = String(req.query.q ?? "").trim().slice(0, 64);
     if (!q) { res.json({ results: [] }); return; }
-    // Try exact player ID first
     const byId = await db.select({
       playerId: playerRegistry.playerId,
       name: playerRegistry.name,
@@ -71,7 +85,6 @@ router.get("/search", async (req: Request, res: Response) => {
       res.json({ results: byId.map(r => ({ ...r, isOnline: isOnline(r.playerId) })) });
       return;
     }
-    // Otherwise search by name (case-insensitive partial match)
     const byName = await db.select({
       playerId: playerRegistry.playerId,
       name: playerRegistry.name,
@@ -87,10 +100,37 @@ router.get("/search", async (req: Request, res: Response) => {
 // ── Ban check ──────────────────────────────────────────────────────────────────
 router.get("/check-ban/:playerId", async (req: Request, res: Response) => {
   try {
-    const rows = await db.select({ isBanned: playerRegistry.isBanned, banReason: playerRegistry.banReason })
-      .from(playerRegistry).where(eq(playerRegistry.playerId, req.params.playerId)).limit(1);
-    if (!rows[0]) { res.json({ banned: false }); return; }
-    res.json({ banned: rows[0].isBanned, reason: rows[0].banReason });
+    const rows = await db.select({
+      isBanned: playerRegistry.isBanned,
+      banReason: playerRegistry.banReason,
+      resetPending: playerRegistry.resetPending,
+    }).from(playerRegistry).where(eq(playerRegistry.playerId, req.params.playerId)).limit(1);
+    if (!rows[0]) { res.json({ banned: false, resetPending: false }); return; }
+    const { isBanned, banReason, resetPending } = rows[0];
+    // Clear resetPending flag after returning it so it only triggers once
+    if (resetPending) {
+      await db.update(playerRegistry).set({ resetPending: false })
+        .where(eq(playerRegistry.playerId, req.params.playerId));
+    }
+    res.json({ banned: isBanned, reason: banReason, resetPending });
+  } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
+});
+
+// ── Leaderboard ───────────────────────────────────────────────────────────────
+router.get("/leaderboard", async (_req: Request, res: Response) => {
+  try {
+    const rows = await db.select({
+      playerId: playerRegistry.playerId,
+      name: playerRegistry.name,
+      sprite: playerRegistry.sprite,
+      wins: playerRegistry.wins,
+      losses: playerRegistry.losses,
+      caughtCount: playerRegistry.caughtCount,
+      pvpRank: playerRegistry.pvpRank,
+    }).from(playerRegistry)
+      .where(eq(playerRegistry.isBanned, false))
+      .limit(200);
+    res.json({ players: rows });
   } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
 });
 
@@ -136,25 +176,21 @@ router.delete("/mail/:mailId", async (req: Request, res: Response) => {
 
 // ── Friends ───────────────────────────────────────────────────────────────────
 
-// Send a friend request — creates a mail in the target's inbox
 router.post("/friend/request", async (req: Request, res: Response) => {
   try {
     const { senderId, senderName, senderSprite, targetId } = req.body ?? {};
     if (!senderId || !targetId) { res.status(400).json({ error: "Missing fields." }); return; }
     if (String(senderId) === String(targetId)) { res.status(400).json({ error: "Cannot add yourself." }); return; }
 
-    // Check target exists
     const target = await db.select({ playerId: playerRegistry.playerId, name: playerRegistry.name })
       .from(playerRegistry).where(eq(playerRegistry.playerId, String(targetId))).limit(1);
     if (!target[0]) { res.status(404).json({ error: "Player not found." }); return; }
 
-    // Check not already friends
     const [p1, p2] = normPair(String(senderId), String(targetId));
     const existing = await db.select({ id: friendships.id }).from(friendships)
       .where(and(eq(friendships.player1Id, p1), eq(friendships.player2Id, p2))).limit(1);
     if (existing.length > 0) { res.status(400).json({ error: "Already friends." }); return; }
 
-    // Check no pending request already sent by this sender to this target
     const pendingCheck = await db.select({ id: mailItems.id }).from(mailItems)
       .where(and(
         eq(mailItems.playerId, String(targetId)),
@@ -178,7 +214,6 @@ router.post("/friend/request", async (req: Request, res: Response) => {
   } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
 });
 
-// Accept a friend request — creates the friendship + deletes the mail
 router.post("/friend/accept", async (req: Request, res: Response) => {
   try {
     const { playerId, senderId, mailId } = req.body ?? {};
@@ -186,15 +221,12 @@ router.post("/friend/accept", async (req: Request, res: Response) => {
 
     const [p1, p2] = normPair(String(playerId), String(senderId));
 
-    // Upsert friendship (idempotent)
     await db.insert(friendships).values({ player1Id: p1, player2Id: p2 })
       .onConflictDoNothing();
 
-    // Delete the request mail
     await db.delete(mailItems)
       .where(and(eq(mailItems.id, Number(mailId)), eq(mailItems.playerId, String(playerId))));
 
-    // Notify the sender
     const meRow = await db.select({ name: playerRegistry.name }).from(playerRegistry)
       .where(eq(playerRegistry.playerId, String(playerId))).limit(1);
     const myName = meRow[0]?.name ?? "A trainer";
@@ -210,7 +242,6 @@ router.post("/friend/accept", async (req: Request, res: Response) => {
   } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
 });
 
-// Decline a friend request — just deletes the mail
 router.post("/friend/decline", async (req: Request, res: Response) => {
   try {
     const { playerId, mailId } = req.body ?? {};
@@ -221,7 +252,6 @@ router.post("/friend/decline", async (req: Request, res: Response) => {
   } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
 });
 
-// Get friends list with online status
 router.get("/friends/:playerId", async (req: Request, res: Response) => {
   try {
     const me = req.params.playerId;
@@ -240,7 +270,6 @@ router.get("/friends/:playerId", async (req: Request, res: Response) => {
 
     if (friendIds.length === 0) { res.json({ friends: [] }); return; }
 
-    // Look up friend profiles
     const profiles = await db.select({
       playerId: playerRegistry.playerId,
       name: playerRegistry.name,
@@ -258,7 +287,6 @@ router.get("/friends/:playerId", async (req: Request, res: Response) => {
       isOnline: isOnline(p.playerId),
     }));
 
-    // Sort: online first, then alphabetically
     friends.sort((a, b) => {
       if (a.isOnline !== b.isOnline) return a.isOnline ? -1 : 1;
       return a.name.localeCompare(b.name);
@@ -268,7 +296,6 @@ router.get("/friends/:playerId", async (req: Request, res: Response) => {
   } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
 });
 
-// Remove a friendship
 router.post("/friend/remove", async (req: Request, res: Response) => {
   try {
     const { playerId, friendId } = req.body ?? {};
@@ -461,22 +488,18 @@ router.post("/redeem", async (req: Request, res: Response) => {
     const row = rows[0];
     const usedBy: string[] = Array.isArray(row.usedByJson) ? row.usedByJson as string[] : [];
     if (usedBy.includes(String(playerId))) { res.status(400).json({ error: "You already redeemed this code." }); return; }
-    if (row.useCount >= row.maxUses) { res.status(400).json({ error: "This code has expired." }); return; }
+    if (row.useCount >= row.maxUses) { res.status(400).json({ error: "This code has reached its maximum uses." }); return; }
     const newUsedBy = [...usedBy, String(playerId)];
     await db.update(dbRedeemCodes).set({ useCount: row.useCount + 1, usedByJson: newUsedBy })
       .where(eq(dbRedeemCodes.id, row.id));
-    if (row.money > 0 || row.item) {
-      let body = `You redeemed code ${code}!`;
-      if (row.money > 0) body += ` You received ₽${row.money.toLocaleString()}.`;
-      if (row.item && row.itemQty > 0) body += ` You received ×${row.itemQty} ${row.item}.`;
-      await db.insert(mailItems).values({
-        playerId: String(playerId), fromName: "System",
-        subject: `Code Redeemed: ${code}`,
-        body,
-        data: { type: "redeem_reward", money: row.money, item: row.item, qty: row.itemQty },
-      });
-    }
-    res.json({ ok: true, reward: { money: row.money, item: row.item, qty: row.itemQty } });
+    await db.insert(mailItems).values({
+      playerId: String(playerId),
+      fromName: "System",
+      subject: `Code Redeemed: ${row.code}`,
+      body: `You successfully redeemed the code ${row.code}!${row.money > 0 ? ` +₽${row.money.toLocaleString()}` : ""}${row.item && row.itemQty > 0 ? ` +×${row.itemQty} ${row.item}` : ""} Open this mail to claim your reward.`,
+      data: { type: "redeem_reward", money: row.money, item: row.item, qty: row.itemQty },
+    });
+    res.json({ ok: true, money: row.money, item: row.item, qty: row.itemQty });
   } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
 });
 

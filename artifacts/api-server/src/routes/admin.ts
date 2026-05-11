@@ -45,7 +45,8 @@ router.get("/player/:id", async (req: Request, res: Response) => {
       .where(eq(moneyTransfers.fromId, req.params.id)).limit(20);
     const trades = await db.select().from(tradeProposals)
       .where(eq(tradeProposals.proposerId, req.params.id)).limit(20);
-    res.json({ player: rows[0], mails, transfers, trades });
+    const { saveData, ...playerPublic } = rows[0];
+    res.json({ player: playerPublic, saveData: saveData ?? null, mails, transfers, trades });
   } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
 });
 
@@ -88,12 +89,9 @@ router.post("/reset-account", async (req: Request, res: Response) => {
     const rows = await db.select({ playerId: playerRegistry.playerId, name: playerRegistry.name })
       .from(playerRegistry).where(eq(playerRegistry.playerId, String(playerId))).limit(1);
     if (!rows[0]) { res.status(404).json({ error: "Player not found." }); return; }
-    await db.insert(mailItems).values({
-      playerId: String(playerId), fromName: "System",
-      subject: "Account Reset",
-      body: "An admin has reset your account. Your progress has been cleared and you will start fresh on next login.",
-      data: { type: "admin_reset" },
-    });
+    // Set resetPending flag — client will wipe save on next ban-check (no claim required)
+    await db.update(playerRegistry).set({ resetPending: true, saveData: null })
+      .where(eq(playerRegistry.playerId, String(playerId)));
     res.json({ ok: true, name: rows[0].name });
   } catch (err) { res.status(500).json({ error: "Server error." }); throw err; }
 });
