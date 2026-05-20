@@ -2595,7 +2595,7 @@ export default function App() {
     .m-bnav-ball.active { border-color: var(--m-blue); box-shadow: 0 -4px 18px rgba(59,130,246,0.35); }
   `;
 
-  function BottomNav({ active, go }: { active: "home" | "market" | "hunt" | "gacha" | "profile"; go: (s: string) => void }) {
+  function BottomNav({ active, go }: { active: "home" | "market" | "hunt" | "gacha" | "profile" | "serena"; go: (s: string) => void }) {
     return (
       <div className="m-bnav">
         <i className={`fa-solid fa-house ${active === "home" ? "active" : ""}`} onClick={() => { sfx.click(); go("world"); }} />
@@ -8399,10 +8399,11 @@ export default function App() {
         <div style={{ ...S.wrap, paddingBottom: 0 }}>
           <iframe
             src="/screens/serena.html"
-            style={{ width: "100%", height: "100vh", border: "none", display: "block" }}
+            style={{ width: "100%", height: "calc(100vh - 62px)", border: "none", display: "block" }}
             allow="autoplay"
             title="Serena"
           />
+          <BottomNav active="serena" go={setScreen} />
         </div>
       </div>
     );
