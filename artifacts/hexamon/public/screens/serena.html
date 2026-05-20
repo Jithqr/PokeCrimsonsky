@@ -120,7 +120,7 @@
   .party-layout {
     display:flex; align-items:center; justify-content:center;
     width:100%; height:100%;
-    padding:20px 8px 150px; gap:0; margin-top:-80px;
+    padding:20px 8px 120px; gap:0; margin-top:30px;
   }
 
   .slots-col { display:flex; flex-direction:column; gap:10px; align-items:center; justify-content:center; flex-shrink:0; z-index:15; }
@@ -298,11 +298,11 @@
 
 <canvas id="sky"></canvas>
 <div id="sky-overlay"></div>
-<div class="grid-floor"></div>
-<div class="floor-glow"></div>
+<div class="grid-floor" style="display:none"></div>
+<div class="floor-glow" style="display:none"></div>
 <div class="particles" id="dom-particles"></div>
 
-<div class="pokeball-watermark">
+<div class="pokeball-watermark" style="display:none">
   <img src="https://i.ibb.co/99Q0SB1W/Pokeball-PNG-Free-Download.png" alt="Pokeball">
 </div>
 
@@ -319,7 +319,6 @@
     <div class="rank-stars">
       <span class="star">★</span><span class="star">★</span>
       <span class="star">★</span><span class="star">★</span>
-      <span class="star">★</span>
     </div>
   </div>
   <div class="dex-id">
@@ -390,7 +389,7 @@
     </button>
     <button class="nav-btn" onclick="setActive(this);window.parent.postMessage({nav:'abyss'},'*')">
       <div class="nav-icon">
-        <span class="material-symbols-outlined">blur_on</span>
+        <span class="material-symbols-outlined">apps</span>
       </div>
       <div class="nav-label">Rift</div>
     </button>
@@ -402,7 +401,7 @@
     </button>
     <button class="nav-btn" id="navCharacters" onclick="setActive(this);window.parent.postMessage({nav:'characters'},'*')">
       <div class="nav-icon">
-        <span class="material-symbols-outlined">group</span>
+        <span class="material-symbols-outlined">person</span>
         <span class="sleep-zz" style="font-style:normal;font-size:11px;top:-8px;right:-10px;letter-spacing:0;">✦</span>
       </div>
       <div class="nav-label">Characters</div>
