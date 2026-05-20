@@ -8440,6 +8440,22 @@ export default function App() {
     );
   }
 
+  if (screen === "characters") {
+    return (
+      <div style={{ ...S.root }}>
+        <style>{css}</style>
+        <div style={{ ...S.wrap, paddingBottom: 0 }}>
+          <iframe
+            src="/screens/characters.html"
+            style={{ width: "100%", height: "100vh", border: "none", display: "block" }}
+            allow="autoplay"
+            title="Characters"
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (screen === "new-page") {
     return (
       <div style={S.root}><style>{css}</style>
