@@ -1088,6 +1088,16 @@ export default function App() {
     return () => clearInterval(id);
   }, []);
 
+  // postMessage listener for iframe-based screens (Serena, Gacha, Abyss)
+  useEffect(() => {
+    function onMsg(e: MessageEvent) {
+      const nav = e.data?.nav as string | undefined;
+      if (!nav) return;
+      setScreen(nav);
+    }
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, []);
 
   // Catch ring shrinking animation
   useEffect(() => {
@@ -2590,7 +2600,7 @@ export default function App() {
       <div className="m-bnav">
         <i className={`fa-solid fa-house ${active === "home" ? "active" : ""}`} onClick={() => { sfx.click(); go("world"); }} />
         <i className={`fa-solid fa-cart-shopping ${active === "market" ? "active" : ""}`} onClick={() => { sfx.click(); go("store"); }} />
-        <div className={`m-bnav-ball ${active === "hunt" ? "active" : ""}`} onClick={() => { sfx.click(); go("hunt"); }}>
+        <div className={`m-bnav-ball ${active === "serena" ? "active" : ""}`} onClick={() => { sfx.click(); go("serena"); }}>
           <svg viewBox="0 0 40 40" width="34" height="34" xmlns="http://www.w3.org/2000/svg">
             <path d="M20 1 A19 19 0 0 1 39 20 H1 A19 19 0 0 1 20 1Z" fill="#e53935"/>
             <path d="M1 20 A19 19 0 0 0 20 39 A19 19 0 0 0 39 20 Z" fill="#f5f5f5"/>
@@ -2601,7 +2611,7 @@ export default function App() {
             <circle cx="20" cy="20" r="2" fill="#444"/>
           </svg>
         </div>
-        <i className={`fa-solid fa-wand-magic-sparkles ${active === "gacha" ? "active" : ""}`} onClick={() => { sfx.click(); go("world"); setShowSafariRegionPicker(true); }} />
+        <i className={`fa-solid fa-wand-magic-sparkles ${active === "gacha" ? "active" : ""}`} onClick={() => { sfx.click(); go("gacha-wish"); }} />
         <div className={`av ${active === "profile" ? "active" : ""}`} onClick={() => { sfx.click(); go("profile"); }}>
           <img src={profileImage ?? TRAINER_SPRITE(player.sprite)} alt="me" style={profileImage ? { imageRendering: "auto" } : {}} />
         </div>
@@ -8377,6 +8387,54 @@ export default function App() {
               </div>
             )}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (screen === "serena") {
+    return (
+      <div style={{ ...S.root }}>
+        <style>{css}</style>
+        <div style={{ ...S.wrap, paddingBottom: 0 }}>
+          <iframe
+            src="/screens/serena.html"
+            style={{ width: "100%", height: "100vh", border: "none", display: "block" }}
+            allow="autoplay"
+            title="Serena"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (screen === "gacha-wish") {
+    return (
+      <div style={{ ...S.root }}>
+        <style>{css}</style>
+        <div style={{ ...S.wrap, paddingBottom: 0 }}>
+          <iframe
+            src="/screens/gacha.html"
+            style={{ width: "100%", height: "100vh", border: "none", display: "block" }}
+            allow="autoplay"
+            title="Gacha"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (screen === "abyss") {
+    return (
+      <div style={{ ...S.root }}>
+        <style>{css}</style>
+        <div style={{ ...S.wrap, paddingBottom: 0 }}>
+          <iframe
+            src="/screens/abyss.html"
+            style={{ width: "100%", height: "100vh", border: "none", display: "block" }}
+            allow="autoplay"
+            title="Abyss"
+          />
         </div>
       </div>
     );

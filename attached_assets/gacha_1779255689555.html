@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ignite Wish — Distortion Wish</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Nunito:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #e8c76a;
+  --gold2: #f0d890;
+  --gold3: #c8a040;
+  --void: #08060f;
+  --void2: #0e0a1e;
+  --distort: #1a0d35;
+  --rift-blue: #3060c8;
+  --rift-purple: #6030b8;
+  --rift-cyan: #20c8d8;
+  --ghost: #8060d8;
+  --r5col: #e8c76a;
+  --r4col: #a070e8;
+  --r3col: #50a0d8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body { width:100%; height:100%; overflow:hidden; background:var(--void); }
+body { font-family:'Nunito',sans-serif; color:#fff; touch-action:manipulation; }
+
+#bgCanvas { position:fixed; inset:0; z-index:0; width:100%; height:100%; }
+
+.screen { position:fixed; inset:0; z-index:10; display:none; flex-direction:column; overflow:hidden; }
+.screen.active { display:flex; }
+
+/* ======= LOBBY ======= */
+.lobby-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 18px 10px;
+  background:linear-gradient(180deg,rgba(8,6,15,.95) 0%,transparent 100%);
+  flex-shrink:0; position:relative; z-index:20;
+}
+.game-logo {
+  font-family:'Cinzel Decorative',cursive; font-size:1.15rem; font-weight:900; letter-spacing:1px;
+  background:linear-gradient(135deg,#e8c76a,#fff6c0,#c8a040);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  filter:drop-shadow(0 0 12px rgba(232,199,106,.5));
+}
+.lobby-currencies { display:flex; gap:8px; align-items:center; }
+.curr-chip {
+  display:flex; align-items:center; gap:5px;
+  background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
+  border-radius:20px; padding:5px 12px; font-size:.75rem; font-weight:700;
+}
+.curr-chip .ci { font-size:.9rem; }
+.curr-chip .cv { color:var(--gold); }
+
+.banner-tabs {
+  display:flex; gap:0; padding:0 18px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  flex-shrink:0; background:rgba(8,6,15,.6);
+  overflow-x:auto; scrollbar-width:none;
+}
+.banner-tabs::-webkit-scrollbar { display:none; }
+.btab {
+  padding:10px 18px; font-size:.75rem; font-weight:700; letter-spacing:1px;
+  text-transform:uppercase; font-family:'Cinzel',serif;
+  color:rgba(255,255,255,.4); border-bottom:2px solid transparent;
+  cursor:pointer; white-space:nowrap; transition:all .25s; flex-shrink:0;
+}
+.btab.active { color:var(--gold); border-bottom-color:var(--gold); }
+
+.banner-carousel { flex:1; position:relative; overflow:hidden; display:flex; align-items:stretch; }
+.banner-slides { display:flex; transition:transform .4s cubic-bezier(.4,0,.2,1); width:100%; height:100%; }
+.banner-slide { min-width:100%; position:relative; cursor:pointer; overflow:hidden; display:flex; flex-direction:column; }
+
+.bslide-0 .banner-art-bg {
+  background: radial-gradient(ellipse at 60% 40%, rgba(96,30,180,.6) 0%, transparent 55%),
+    radial-gradient(ellipse at 30% 70%, rgba(20,10,60,.8) 0%, transparent 50%),
+    linear-gradient(160deg,#080615 0%,#1a0d35 40%,#0a0520 100%);
+}
+.bslide-1 .banner-art-bg {
+  background: radial-gradient(ellipse at 70% 30%, rgba(30,80,180,.6) 0%, transparent 55%),
+    linear-gradient(160deg,#060812 0%,#0d1a35 40%,#050a20 100%);
+}
+.bslide-2 .banner-art-bg {
+  background: radial-gradient(ellipse at 55% 35%, rgba(180,30,80,.5) 0%, transparent 55%),
+    linear-gradient(160deg,#180508 0%,#350d1a 40%,#200510 100%);
+}
+.bslide-3 .banner-art-bg {
+  background: radial-gradient(ellipse at 50% 40%, rgba(180,100,20,.5) 0%, transparent 55%),
+    linear-gradient(160deg,#100805 0%,#281208 40%,#150a05 100%);
+}
+
+.banner-art-bg { position:absolute; inset:0; }
+.distort-lines { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+.distort-lines::before,.distort-lines::after {
+  content:''; position:absolute; width:200%; height:2px;
+  background:linear-gradient(90deg,transparent,rgba(96,48,184,.4),transparent);
+  animation:lineSweep 4s ease-in-out infinite; top:30%;
+}
+.distort-lines::after { animation-delay:2s; top:65%; opacity:.6; }
+@keyframes lineSweep {
+  0%{transform:translateX(-100%) skewY(-3deg);opacity:0}
+  30%{opacity:1} 70%{opacity:.5}
+  100%{transform:translateX(50%) skewY(-3deg);opacity:0}
+}
+
+/* ======= SERENA FULL-FILL IMAGE — shifted left ======= */
+.banner-char-fullbg {
+  position:absolute;
+  inset:0;
+  z-index:4;
+  pointer-events:none;
+  user-select:none;
+  overflow:hidden;
+}
+.banner-char-fullbg img {
+  position:absolute;
+  bottom:0;
+  /* Shifted left: was right:-5%, now right:30% to move her into the purple zone */
+  right:30%;
+  left:-10%;
+  height:108%;
+  width:auto;
+  max-width:none;
+  object-fit:contain;
+  object-position:bottom center;
+  filter:
+    drop-shadow(0 0 60px rgba(200,120,255,.75))
+    drop-shadow(0 0 20px rgba(255,200,255,.4));
+  transform-origin:bottom center;
+}
+/* Left-side blend — adjusted so the gradient starts further right to match new position */
+.banner-char-fullbg::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  z-index:2;
+  background:
+    linear-gradient(90deg,
+      rgba(8,6,15,1) 0%,
+      rgba(20,10,50,.55) 10%,
+      rgba(26,13,53,.15) 22%,
+      transparent 40%
+    ),
+    linear-gradient(0deg,
+      rgba(8,6,15,.9) 0%,
+      transparent 30%
+    );
+  pointer-events:none;
+}
+/* Top fade */
+.banner-char-fullbg::after {
+  content:'';
+  position:absolute;
+  top:0; left:0; right:0; height:40%;
+  z-index:2;
+  background:linear-gradient(180deg, rgba(8,6,15,.85) 0%, transparent 100%);
+  pointer-events:none;
+}
+
+.banner-art-display {
+  position:absolute; right:8%; bottom:20%;
+  font-size:clamp(5rem,18vw,9rem);
+  filter:drop-shadow(0 0 40px rgba(140,80,255,.6));
+  animation:bannerFloat 3.5s ease-in-out infinite;
+  pointer-events:none; user-select:none; z-index:5;
+  display:flex; align-items:center; justify-content:center;
+  width:clamp(5rem,18vw,9rem); height:clamp(5rem,18vw,9rem);
+}
+.banner-art-display svg { width:100%; height:100%; }
+@keyframes bannerFloat { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-12px) scale(1.03)} }
+.rift-overlay {
+  position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: linear-gradient(175deg,transparent 40%,rgba(96,48,184,.08) 60%,transparent 70%),
+    linear-gradient(185deg,transparent 35%,rgba(32,200,216,.05) 55%,transparent 65%);
+  mix-blend-mode:screen;
+}
+.banner-gradient-bottom { position:absolute; bottom:0; left:0; right:0; height:60%; z-index:6; background:linear-gradient(0deg,rgba(8,6,15,.97) 0%,rgba(8,6,15,.6) 40%,transparent 100%); }
+.banner-info-overlay { position:absolute; bottom:0; left:0; right:0; z-index:7; padding:18px 20px 0; }
+.banner-event-label {
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(232,199,106,.12); border:1px solid rgba(232,199,106,.3);
+  border-radius:20px; padding:4px 12px;
+  font-size:.65rem; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+  color:var(--gold); margin-bottom:8px; font-family:'Cinzel',serif;
+}
+.banner-main-name {
+  font-family:'Cinzel Decorative',cursive; font-size:clamp(1.2rem,5vw,1.7rem); font-weight:900; line-height:1.1;
+  background:linear-gradient(135deg,#fff 0%,#e8d4a0 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:10px;
+}
+.banner-featured-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+.feat-chip {
+  display:flex; align-items:center; gap:5px;
+  background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.15);
+  border-radius:20px; padding:4px 10px; font-size:.7rem; font-weight:700;
+}
+.feat-chip.r5 { border-color:rgba(232,199,106,.4); color:var(--gold); }
+.feat-chip.r4 { border-color:rgba(160,112,232,.4); color:var(--r4col); }
+.banner-bottom-bar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 20px 16px; background:rgba(8,6,15,.92); flex-shrink:0;
+  border-top:1px solid rgba(255,255,255,.06);
+}
+.pity-display { display:flex; flex-direction:column; gap:3px; }
+.pity-label { font-size:.6rem; color:rgba(255,255,255,.4); letter-spacing:1px; text-transform:uppercase; }
+.pity-track { display:flex; align-items:center; gap:8px; }
+.pity-bar-bg { width:100px; height:4px; background:rgba(255,255,255,.1); border-radius:2px; overflow:hidden; }
+.pity-bar-fill { height:100%; border-radius:2px; background:linear-gradient(90deg,var(--rift-purple),var(--gold)); transition:width .5s ease; }
+.pity-num { font-size:.8rem; font-weight:700; color:var(--gold); font-family:'Cinzel',serif; }
+.ignite-btns { display:flex; gap:8px; }
+.ibtn {
+  display:flex; flex-direction:column; align-items:center;
+  padding:9px 16px; border-radius:10px; border:none; cursor:pointer;
+  font-family:'Cinzel',serif; font-weight:700; letter-spacing:.5px; font-size:.75rem;
+  transition:all .2s; position:relative; overflow:hidden;
+}
+.ibtn::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.15),transparent); opacity:0; transition:opacity .2s; }
+.ibtn:hover::after,.ibtn:active::after { opacity:1; }
+.ibtn:active { transform:scale(.95); }
+.ibtn-x1 { background:linear-gradient(135deg,#252338,#1a1828); border:1px solid rgba(255,255,255,.12); color:#ccc; }
+.ibtn-x10 {
+  background:linear-gradient(135deg,#8a6020,#c8900a,#e8c060,#c8900a,#8a6020);
+  color:#1a0c00; font-weight:900; box-shadow:0 4px 20px rgba(200,144,10,.35);
+}
+.ibtn-cost { font-size:.6rem; font-weight:600; opacity:.8; margin-top:2px; font-family:'Nunito',sans-serif; }
+.ibtn-x1 .ibtn-cost { color:rgba(255,255,255,.5); }
+.slide-dots { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:10; }
+.slide-dot { width:6px; height:6px; border-radius:3px; background:rgba(255,255,255,.25); transition:all .3s; cursor:pointer; }
+.slide-dot.active { background:var(--gold); width:18px; }
+.details-btn {
+  position:absolute; right:18px; top:16px; z-index:10;
+  background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.15);
+  border-radius:20px; padding:6px 14px;
+  font-size:.7rem; font-family:'Cinzel',serif; font-weight:600; color:rgba(255,255,255,.7);
+  cursor:pointer; backdrop-filter:blur(8px); transition:all .2s;
+}
+
+/* ======= DETAIL ======= */
+#detailScreen { background:var(--void2); overflow-y:auto; }
+.detail-header {
+  display:flex; align-items:center; gap:14px; padding:14px 18px;
+  background:rgba(8,6,15,.9); border-bottom:1px solid rgba(255,255,255,.06);
+  flex-shrink:0; position:sticky; top:0; z-index:30; backdrop-filter:blur(12px);
+}
+.back-btn {
+  width:36px; height:36px; border-radius:50%;
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:1rem; transition:all .2s; flex-shrink:0;
+}
+.detail-title-block { flex:1; min-width:0; }
+.detail-subtitle { font-size:.6rem; letter-spacing:2px; text-transform:uppercase; color:var(--gold); font-family:'Cinzel',serif; }
+.detail-title { font-family:'Cinzel Decorative',cursive; font-size:1rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.detail-hero { position:relative; height:280px; overflow:hidden; flex-shrink:0; }
+.detail-hero-bg { position:absolute; inset:0; }
+.detail-hero-art {
+  position:absolute; right:0; bottom:0; font-size:9rem; line-height:1;
+  animation:heroFloat 3s ease-in-out infinite; z-index:5;
+  display:flex; align-items:flex-end; justify-content:flex-end;
+  width:auto; height:100%; max-height:100%;
+}
+.detail-hero-art svg { width:9rem; height:9rem; filter:drop-shadow(0 0 50px rgba(140,80,255,.7)); }
+.detail-hero-art img { height:100%; width:auto; object-fit:contain; object-position:bottom right; }
+@keyframes heroFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+.detail-hero-text { position:absolute; left:18px; bottom:20px; z-index:6; }
+.detail-hero-name {
+  font-family:'Cinzel Decorative',cursive; font-size:clamp(1.4rem,6vw,2rem); font-weight:900;
+  background:linear-gradient(135deg,#fff,var(--gold2));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1.1;
+}
+.detail-hero-sub { font-size:.75rem; color:rgba(255,255,255,.5); margin-top:4px; }
+.detail-hero-fade { position:absolute; bottom:0; left:0; right:0; height:50%; background:linear-gradient(0deg,var(--void2),transparent); z-index:4; }
+.detail-body { padding:18px; }
+.guarantee-cards { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:20px; }
+.gcard { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:12px 10px; text-align:center; }
+.gcard .gnum { font-family:'Cinzel',serif; font-size:1.4rem; font-weight:700; color:var(--gold); }
+.gcard .gtxt { font-size:.6rem; color:rgba(255,255,255,.5); margin-top:3px; line-height:1.3; }
+.section-label {
+  font-family:'Cinzel',serif; font-size:.7rem; font-weight:700; letter-spacing:2px;
+  text-transform:uppercase; color:rgba(255,255,255,.5); margin-bottom:12px;
+  display:flex; align-items:center; gap:10px;
+}
+.section-label::after { content:''; flex:1; height:1px; background:rgba(255,255,255,.08); }
+.featured-cards { display:flex; gap:10px; overflow-x:auto; padding-bottom:8px; scrollbar-width:none; margin-bottom:20px; }
+.featured-cards::-webkit-scrollbar { display:none; }
+.fcard {
+  min-width:90px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
+  border-radius:12px; padding:12px 8px; display:flex; flex-direction:column; align-items:center; gap:6px; flex-shrink:0;
+}
+.fcard.r5 { border-color:rgba(232,199,106,.3); background:rgba(232,199,106,.05); }
+.fcard.r4 { border-color:rgba(160,112,232,.3); background:rgba(160,112,232,.05); }
+.fcard .fe { font-size:2.2rem; display:flex; align-items:center; justify-content:center; width:2.2rem; height:2.2rem; }
+.fcard .fe svg { width:100%; height:100%; }
+.fcard .fn { font-size:.65rem; font-weight:700; text-align:center; }
+.fcard .fr { font-size:.6rem; }
+.fcard.r5 .fr { color:var(--gold); }
+.fcard.r4 .fr { color:var(--r4col); }
+.rates-table { margin-bottom:24px; }
+.rrow { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-radius:10px; margin-bottom:6px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.05); }
+.rrow-left { display:flex; align-items:center; gap:10px; }
+.rstar { width:10px; height:10px; border-radius:50%; }
+.rstar.r5 { background:var(--r5col); box-shadow:0 0 8px var(--r5col); }
+.rstar.r4 { background:var(--r4col); box-shadow:0 0 8px var(--r4col); }
+.rstar.r3 { background:var(--r3col); box-shadow:0 0 8px var(--r3col); }
+.rrow-name { font-size:.8rem; font-weight:700; }
+.rrow-pct { font-size:.85rem; font-weight:900; font-family:'Cinzel',serif; }
+.rrow.r5 .rrow-pct { color:var(--gold); }
+.rrow.r4 .rrow-pct { color:var(--r4col); }
+.rrow.r3 .rrow-pct { color:var(--r3col); }
+.detail-ignite-footer {
+  position:sticky; bottom:0; background:rgba(8,6,15,.96); border-top:1px solid rgba(255,255,255,.06);
+  padding:12px 18px 20px; backdrop-filter:blur(12px);
+  display:flex; gap:10px; align-items:center; flex-shrink:0;
+}
+.detail-pity { flex:1; min-width:0; }
+.detail-pity-label { font-size:.6rem; color:rgba(255,255,255,.4); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+.detail-pity-row { display:flex; align-items:center; gap:8px; }
+.detail-pity-bar { flex:1; height:5px; background:rgba(255,255,255,.1); border-radius:3px; overflow:hidden; }
+.detail-pity-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--rift-purple),var(--gold)); transition:width .5s; }
+.detail-pity-num { font-size:.8rem; font-weight:700; color:var(--gold); font-family:'Cinzel',serif; white-space:nowrap; }
+.detail-ignite-btns { display:flex; gap:8px; }
+
+/* ======= PULL SCREEN ======= */
+#pullScreen { background:#000; z-index:50; cursor:pointer; }
+#wishCanvas { position:absolute; inset:0; width:100%; height:100%; }
+
+/* Single result overlay */
+#singleResult {
+  position:absolute; inset:0; z-index:10;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  pointer-events:none;
+}
+.sr-glow {
+  position:absolute; width:340px; height:340px; border-radius:50%;
+  animation:srGlowPulse 2s ease-in-out infinite; pointer-events:none;
+}
+@keyframes srGlowPulse { 0%,100%{transform:scale(1);opacity:.7} 50%{transform:scale(1.25);opacity:1} }
+.sr-art {
+  font-size:clamp(7rem,25vw,10rem); line-height:1; position:relative; z-index:2;
+  opacity:0; transform:scale(0.2) translateY(30px);
+  transition:opacity .7s cubic-bezier(.175,.885,.32,1.275), transform .7s cubic-bezier(.175,.885,.32,1.275);
+  display:flex; align-items:center; justify-content:center;
+  width:clamp(7rem,25vw,10rem); height:clamp(7rem,25vw,10rem);
+}
+.sr-art svg { width:100%; height:100%; }
+.sr-art.show { opacity:1; transform:scale(1) translateY(0); }
+.sr-art.r5 { filter:drop-shadow(0 0 50px rgba(232,199,106,.9)) drop-shadow(0 0 20px #fff); }
+.sr-art.r4 { filter:drop-shadow(0 0 40px rgba(160,112,232,.8)); }
+.sr-art.r3 { filter:drop-shadow(0 0 25px rgba(80,160,216,.6)); }
+.sr-stars { display:flex; gap:6px; margin-top:12px; opacity:0; transform:translateY(10px); transition:opacity .4s ease .5s, transform .4s ease .5s; }
+.sr-stars.show { opacity:1; transform:translateY(0); }
+.sr-star { font-size:1.3rem; }
+.sr-name {
+  font-family:'Cinzel Decorative',cursive; font-size:clamp(1.3rem,5vw,2rem); font-weight:900;
+  margin-top:10px; text-align:center;
+  opacity:0; transform:translateY(15px); transition:opacity .4s ease .7s, transform .4s ease .7s;
+}
+.sr-name.show { opacity:1; transform:translateY(0); }
+.sr-name.r5 { background:linear-gradient(135deg,#fff,var(--gold2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.sr-name.r4 { background:linear-gradient(135deg,#fff,#c0a0ff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.sr-name.r3 { color:#b0d8f0; }
+.sr-rarity {
+  font-size:.75rem; font-weight:700; letter-spacing:3px; text-transform:uppercase;
+  padding:5px 18px; border-radius:20px; margin-top:8px; font-family:'Cinzel',serif;
+  opacity:0; transform:translateY(10px); transition:opacity .4s ease .85s, transform .4s ease .85s;
+}
+.sr-rarity.show { opacity:1; transform:translateY(0); }
+.sr-rarity.r5 { background:rgba(232,199,106,.15); border:1px solid rgba(232,199,106,.4); color:var(--gold); }
+.sr-rarity.r4 { background:rgba(160,112,232,.15); border:1px solid rgba(160,112,232,.4); color:var(--r4col); }
+.sr-rarity.r3 { background:rgba(80,160,216,.15); border:1px solid rgba(80,160,216,.4); color:var(--r3col); }
+.tap-continue {
+  position:absolute; bottom:80px; left:50%; transform:translateX(-50%);
+  font-size:.75rem; color:rgba(255,255,255,.5); letter-spacing:2px; text-transform:uppercase;
+  font-family:'Cinzel',serif; opacity:0; animation:tapBlink 1.5s ease-in-out infinite;
+  transition:opacity .5s 1.5s; white-space:nowrap;
+}
+.tap-continue.show { opacity:1; }
+@keyframes tapBlink { 0%,100%{opacity:.3} 50%{opacity:.9} }
+
+/* Multi result */
+#multiResult {
+  position:absolute; inset:0; z-index:10;
+  display:flex; flex-direction:column; padding:16px 12px 0;
+}
+.mr-title {
+  font-family:'Cinzel',serif; font-size:.75rem; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.5);
+  text-align:center; margin-bottom:14px; flex-shrink:0;
+  opacity:0; animation:fadeUp .4s ease forwards;
+}
+.mr-grid {
+  display:grid; grid-template-columns:repeat(5,1fr); gap:8px;
+  flex:1; overflow-y:auto; scrollbar-width:none; padding-bottom:8px; align-content:start;
+}
+.mr-grid::-webkit-scrollbar { display:none; }
+.mr-card {
+  display:flex; flex-direction:column; align-items:center;
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08);
+  border-radius:12px; padding:10px 6px;
+  opacity:0; animation:cardPop .4s ease forwards; cursor:default;
+}
+.mr-card.r5 { border-color:rgba(232,199,106,.4); background:linear-gradient(180deg,rgba(232,199,106,.12),rgba(232,199,106,.03)); box-shadow:0 0 16px rgba(232,199,106,.15); }
+.mr-card.r4 { border-color:rgba(160,112,232,.4); background:linear-gradient(180deg,rgba(160,112,232,.12),rgba(160,112,232,.03)); }
+@keyframes cardPop { from{opacity:0;transform:translateY(20px) scale(.85)} to{opacity:1;transform:translateY(0) scale(1)} }
+.mr-art { font-size:clamp(1.8rem,5vw,2.5rem); margin-bottom:5px; display:flex; align-items:center; justify-content:center; width:clamp(1.8rem,5vw,2.5rem); height:clamp(1.8rem,5vw,2.5rem); }
+.mr-art svg { width:100%; height:100%; }
+.mr-name { font-size:.55rem; font-weight:700; text-align:center; line-height:1.2; }
+.mr-stars { font-size:.65rem; margin-top:3px; }
+.mr-close-area { flex-shrink:0; padding:10px 0 16px; display:flex; justify-content:center; gap:12px; }
+.mr-close-btn {
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15);
+  border-radius:25px; padding:10px 28px; font-family:'Cinzel',serif; font-size:.8rem; font-weight:700; color:#fff; cursor:pointer;
+}
+.mr-again-btn {
+  background:linear-gradient(135deg,#8a6020,#c8900a,#e8c060);
+  border:none; border-radius:25px; padding:10px 28px;
+  font-family:'Cinzel',serif; font-size:.8rem; font-weight:700; color:#1a0c00; cursor:pointer;
+  box-shadow:0 4px 16px rgba(200,144,10,.3);
+}
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+.skip-btn {
+  position:absolute; top:16px; right:16px; z-index:20;
+  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
+  border-radius:20px; padding:6px 14px; font-family:'Cinzel',serif; font-size:.7rem; color:rgba(255,255,255,.6);
+  cursor:pointer; transition:all .2s; pointer-events:all;
+}
+
+/* ======= HISTORY ======= */
+#historyScreen { background:var(--void2); overflow-y:auto; }
+.history-header {
+  display:flex; align-items:center; gap:14px; padding:14px 18px;
+  background:rgba(8,6,15,.9); border-bottom:1px solid rgba(255,255,255,.06);
+  position:sticky; top:0; z-index:20; backdrop-filter:blur(10px); flex-shrink:0;
+}
+.history-body { padding:16px; }
+.hist-group-label { font-size:.65rem; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4); font-family:'Cinzel',serif; margin-bottom:10px; }
+.hist-row { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:10px; margin-bottom:6px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.05); }
+.hist-row.r5 { border-color:rgba(232,199,106,.25); background:rgba(232,199,106,.04); }
+.hist-row.r4 { border-color:rgba(160,112,232,.2); background:rgba(160,112,232,.03); }
+.hist-art { font-size:1.6rem; display:flex; align-items:center; justify-content:center; width:1.6rem; height:1.6rem; flex-shrink:0; }
+.hist-art svg { width:100%; height:100%; }
+.hist-info { flex:1; }
+.hist-name { font-size:.85rem; font-weight:700; }
+.hist-sub { font-size:.65rem; color:rgba(255,255,255,.4); margin-top:2px; }
+.hist-stars { font-size:.75rem; }
+
+/* ======= BOTTOM NAV ======= */
+.bottom-nav {
+  position:fixed; bottom:0; left:0; right:0; z-index:100;
+  display:flex; background:rgba(8,6,15,.96); border-top:1px solid rgba(255,255,255,.06);
+  backdrop-filter:blur(12px); padding-bottom:env(safe-area-inset-bottom,0);
+}
+.nav-btn {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  padding:8px 0; cursor:pointer; transition:all .2s;
+  color:rgba(255,255,255,.35); font-size:.6rem; font-weight:700; gap:3px;
+}
+.nav-btn.active { color:var(--gold); }
+.nav-btn .ni { font-size:1.1rem; }
+.nav-btn.active .ni { filter:drop-shadow(0 0 8px var(--gold)); }
+
+#toast {
+  position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+  background:rgba(232,199,106,.12); border:1px solid rgba(232,199,106,.3);
+  border-radius:25px; padding:9px 22px; font-size:.8rem; font-weight:700; color:var(--gold);
+  z-index:999; opacity:0; transition:opacity .25s; pointer-events:none; white-space:nowrap;
+}
+#toast.show { opacity:1; }
+
+/* spacing */
+#lobbyScreen .banner-carousel { margin-bottom:56px; }
+#lobbyScreen .banner-bottom-bar { margin-bottom:56px; }
+.detail-ignite-footer { padding-bottom:calc(16px + env(safe-area-inset-bottom,0)); margin-bottom:56px; }
+#historyScreen { display:none; flex-direction:column; }
+#historyScreen.active { display:flex; }
+.history-body { flex:1; overflow-y:auto; }
+#historyScreen { padding-bottom:56px; }
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<!-- SVG Icon Definitions (hidden) -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <symbol id="icon-shadow" viewBox="0 0 100 100">
+      <defs>
+        <radialGradient id="sg0" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#c090ff"/>
+          <stop offset="60%" stop-color="#6030b8"/>
+          <stop offset="100%" stop-color="#200a50" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="sg1" cx="50%" cy="40%" r="40%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#9060e0" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <ellipse cx="50" cy="50" rx="42" ry="42" fill="url(#sg0)"/>
+      <path d="M50 10 Q70 30 65 50 Q80 55 70 70 Q55 85 50 90 Q30 75 35 60 Q20 50 30 35 Z" fill="#4020a0" opacity="0.7"/>
+      <path d="M50 20 Q62 35 58 50 Q68 54 62 65 Q52 76 50 80 Q36 68 40 55 Q28 48 36 38 Z" fill="#8050d8" opacity="0.5"/>
+      <ellipse cx="50" cy="46" rx="14" ry="18" fill="url(#sg1)"/>
+      <circle cx="50" cy="44" r="6" fill="#ffffff" opacity="0.9"/>
+      <path d="M44 30 L46 42 L50 38 L54 42 L56 30" stroke="#e0c0ff" stroke-width="1.5" fill="none" opacity="0.6"/>
+      <path d="M38 55 L46 58 L42 62" stroke="#c090ff" stroke-width="1.2" fill="none" opacity="0.5"/>
+      <path d="M62 55 L54 58 L58 62" stroke="#c090ff" stroke-width="1.2" fill="none" opacity="0.5"/>
+    </symbol>
+    <symbol id="icon-time" viewBox="0 0 100 100">
+      <defs>
+        <radialGradient id="tg0" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#80c0ff"/>
+          <stop offset="60%" stop-color="#2050c0"/>
+          <stop offset="100%" stop-color="#050820" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <circle cx="50" cy="50" r="42" fill="url(#tg0)" opacity="0.7"/>
+      <circle cx="50" cy="50" r="36" fill="none" stroke="#60a0ff" stroke-width="1.5" opacity="0.4"/>
+      <circle cx="50" cy="50" r="26" fill="none" stroke="#80c0ff" stroke-width="1" opacity="0.3"/>
+      <circle cx="50" cy="50" r="15" fill="none" stroke="#a0d8ff" stroke-width="1" opacity="0.3"/>
+      <line x1="50" y1="50" x2="50" y2="18" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="50" y1="50" x2="70" y2="56" stroke="#80c0ff" stroke-width="2" stroke-linecap="round"/>
+      <line x1="50" y1="14" x2="50" y2="20" stroke="#c0e0ff" stroke-width="2" opacity="0.7"/>
+      <line x1="50" y1="80" x2="50" y2="86" stroke="#c0e0ff" stroke-width="2" opacity="0.7"/>
+      <line x1="14" y1="50" x2="20" y2="50" stroke="#c0e0ff" stroke-width="2" opacity="0.7"/>
+      <line x1="80" y1="50" x2="86" y2="50" stroke="#c0e0ff" stroke-width="2" opacity="0.7"/>
+      <path d="M50 50 Q55 42 62 46 Q68 52 62 60 Q54 68 44 62 Q34 54 38 42 Q44 28 58 28" fill="none" stroke="#40a0ff" stroke-width="1.8" opacity="0.6"/>
+      <circle cx="50" cy="50" r="4" fill="#ffffff"/>
+    </symbol>
+    <symbol id="icon-collab" viewBox="0 0 100 100">
+      <defs>
+        <radialGradient id="cg0" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ff80c0"/>
+          <stop offset="50%" stop-color="#c030a0"/>
+          <stop offset="100%" stop-color="#300820" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="cg1" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#ff80c0" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <circle cx="50" cy="50" r="42" fill="url(#cg0)"/>
+      <polygon points="50,8 54,38 66,16 58,42 82,34 62,50 82,66 58,58 66,84 54,62 50,92 46,62 34,84 42,58 18,66 38,50 18,34 42,42 34,16 46,38" fill="#ff60b0" opacity="0.5"/>
+      <polygon points="50,20 53,42 68,28 56,46 76,42 60,50 76,58 56,54 68,72 53,58 50,80 47,58 32,72 44,54 24,58 40,50 24,42 44,46 32,28 47,42" fill="#ffb0e0" opacity="0.4"/>
+      <circle cx="50" cy="50" r="16" fill="url(#cg1)"/>
+      <text x="50" y="56" text-anchor="middle" font-size="16" fill="#800040" font-family="sans-serif" font-weight="bold">✕</text>
+    </symbol>
+    <symbol id="icon-standard" viewBox="0 0 100 100">
+      <defs>
+        <radialGradient id="stg0" cx="40%" cy="35%" r="55%">
+          <stop offset="0%" stop-color="#ffe0a0"/>
+          <stop offset="40%" stop-color="#e09030"/>
+          <stop offset="100%" stop-color="#301005" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="stg1" cx="35%" cy="30%" r="40%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="#ff8020" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <circle cx="50" cy="50" r="40" fill="url(#stg0)"/>
+      <circle cx="50" cy="50" r="40" fill="none" stroke="#ffc060" stroke-width="1.5" opacity="0.5"/>
+      <ellipse cx="50" cy="50" rx="40" ry="12" fill="none" stroke="#ffb040" stroke-width="1.2" opacity="0.35" transform="rotate(-20 50 50)"/>
+      <ellipse cx="50" cy="50" rx="40" ry="12" fill="none" stroke="#ffd080" stroke-width="1" opacity="0.25" transform="rotate(40 50 50)"/>
+      <circle cx="50" cy="50" r="22" fill="url(#stg1)" opacity="0.6"/>
+      <circle cx="50" cy="50" r="10" fill="#ffffff" opacity="0.85"/>
+      <circle cx="22" cy="28" r="2.5" fill="#ffd080" opacity="0.7"/>
+      <circle cx="78" cy="32" r="2" fill="#ffd080" opacity="0.6"/>
+      <circle cx="76" cy="70" r="2.5" fill="#ffd080" opacity="0.7"/>
+      <circle cx="24" cy="72" r="2" fill="#ffd080" opacity="0.5"/>
+    </symbol>
+    <symbol id="item-void-shade" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="#1a0840" opacity="0.8"/>
+      <ellipse cx="50" cy="50" rx="30" ry="38" fill="#4020a0" opacity="0.7"/>
+      <ellipse cx="50" cy="46" rx="12" ry="16" fill="#c090ff" opacity="0.9"/>
+      <circle cx="50" cy="42" r="5" fill="#ffffff"/>
+      <path d="M38 62 Q50 72 62 62" stroke="#a060f0" stroke-width="2" fill="none"/>
+    </symbol>
+    <symbol id="item-dusk-omen" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="#200820" opacity="0.8"/>
+      <path d="M50 12 L60 40 L88 40 L66 58 L74 86 L50 70 L26 86 L34 58 L12 40 L40 40 Z" fill="#8030c0" opacity="0.8"/>
+      <circle cx="50" cy="50" r="12" fill="#e080ff"/>
+    </symbol>
+    <symbol id="item-revenant" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="#080818" opacity="0.9"/>
+      <ellipse cx="50" cy="45" rx="22" ry="28" fill="#202080" opacity="0.7"/>
+      <ellipse cx="50" cy="43" rx="14" ry="18" fill="#4060e0" opacity="0.8"/>
+      <circle cx="43" cy="40" r="5" fill="#ffffff" opacity="0.9"/>
+      <circle cx="57" cy="40" r="5" fill="#ffffff" opacity="0.9"/>
+      <circle cx="43" cy="40" r="2.5" fill="#2020a0"/>
+      <circle cx="57" cy="40" r="2.5" fill="#2020a0"/>
+      <path d="M36 62 L42 68 L50 65 L58 68 L64 62" stroke="#8090ff" stroke-width="2" fill="none"/>
+    </symbol>
+    <symbol id="item-chronolith" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="#040818" opacity="0.9"/>
+      <rect x="32" y="20" width="36" height="60" rx="4" fill="#1040b0" opacity="0.7"/>
+      <rect x="36" y="24" width="28" height="52" rx="3" fill="#2060e0" opacity="0.5"/>
+      <line x1="50" y1="30" x2="50" y2="50" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+      <line x1="50" y1="50" x2="62" y2="58" stroke="#80c0ff" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="50" cy="50" r="4" fill="#ffffff"/>
+    </symbol>
+    <symbol id="item-epochlord" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="#060a20" opacity="0.9"/>
+      <path d="M50 15 L56 40 L82 38 L62 55 L72 80 L50 65 L28 80 L38 55 L18 38 L44 40 Z" fill="#2050d0" opacity="0.8"/>
+      <circle cx="50" cy="50" r="14" fill="#80c0ff"/>
+      <circle cx="50" cy="50" r="7" fill="#ffffff"/>
+    </symbol>
+    <symbol id="item-aeonrift" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="#030816" opacity="0.9"/>
+      <circle cx="50" cy="50" r="35" fill="none" stroke="#4080ff" stroke-width="2" opacity="0.5"/>
+      <circle cx="50" cy="50" r="25" fill="none" stroke="#80b0ff" stroke-width="1.5" opacity="0.4"/>
+      <circle cx="50" cy="50" r="14" fill="#1840c0" opacity="0.8"/>
+      <circle cx="50" cy="50" r="7" fill="#c0d8ff"/>
+      <line x1="50" y1="15" x2="50" y2="85" stroke="#6090ff" stroke-width="1" opacity="0.3"/>
+      <line x1="15" y1="50" x2="85" y2="50" stroke="#6090ff" stroke-width="1" opacity="0.3"/>
+    </symbol>
+    <symbol id="item-starweave" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="#200830" opacity="0.9"/>
+      <polygon points="50,15 54,40 70,25 58,45 80,42 62,55 80,68 58,65 70,85 54,62 50,88 46,62 30,85 42,65 20,68 38,55 20,42 42,45 30,25 46,40" fill="#e060c0" opacity="0.7"/>
+      <circle cx="50" cy="50" r="14" fill="#ff90e0"/>
+      <circle cx="50" cy="50" r="7" fill="#ffffff"/>
+    </symbol>
+    <symbol id="item-dualflame" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="#200810" opacity="0.9"/>
+      <path d="M36 80 Q30 60 40 48 Q35 55 42 52 Q38 40 50 20 Q62 40 58 52 Q65 55 60 48 Q70 60 64 80 Z" fill="#ff4080" opacity="0.8"/>
+      <path d="M40 80 Q36 65 44 55 Q40 60 46 58 Q43 50 50 35 Q57 50 54 58 Q60 60 56 55 Q64 65 60 80 Z" fill="#ff80c0" opacity="0.6"/>
+      <ellipse cx="50" cy="62" rx="8" ry="4" fill="#ffffff" opacity="0.4"/>
+    </symbol>
+    <symbol id="item-mirrorshade" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="#101020" opacity="0.9"/>
+      <rect x="25" y="30" width="50" height="40" rx="6" fill="#c030a0" opacity="0.6"/>
+      <rect x="28" y="33" width="44" height="34" rx="4" fill="#ff80d0" opacity="0.3"/>
+      <line x1="50" y1="30" x2="50" y2="70" stroke="#ffffff" stroke-width="1.5" opacity="0.5"/>
+      <line x1="25" y1="50" x2="75" y2="50" stroke="#ffffff" stroke-width="1.5" opacity="0.5"/>
+      <circle cx="50" cy="50" r="8" fill="#ffffff" opacity="0.9"/>
+    </symbol>
+    <symbol id="item-solaris" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="#201005" opacity="0.9"/>
+      <circle cx="50" cy="50" r="30" fill="#e08020" opacity="0.7"/>
+      <line x1="50" y1="10" x2="50" y2="22" stroke="#ffc060" stroke-width="3" stroke-linecap="round"/>
+      <line x1="50" y1="78" x2="50" y2="90" stroke="#ffc060" stroke-width="3" stroke-linecap="round"/>
+      <line x1="10" y1="50" x2="22" y2="50" stroke="#ffc060" stroke-width="3" stroke-linecap="round"/>
+      <line x1="78" y1="50" x2="90" y2="50" stroke="#ffc060" stroke-width="3" stroke-linecap="round"/>
+      <line x1="22" y1="22" x2="30" y2="30" stroke="#ffc060" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="70" y1="70" x2="78" y2="78" stroke="#ffc060" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="78" y1="22" x2="70" y2="30" stroke="#ffc060" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="22" y1="78" x2="30" y2="70" stroke="#ffc060" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="50" cy="50" r="18" fill="#ffd080"/>
+      <circle cx="50" cy="50" r="10" fill="#ffffff"/>
+    </symbol>
+    <symbol id="item-terraveil" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="#081505" opacity="0.9"/>
+      <ellipse cx="50" cy="50" rx="35" ry="35" fill="#20a040" opacity="0.6"/>
+      <ellipse cx="42" cy="44" rx="18" ry="14" fill="#40c060" opacity="0.5"/>
+      <ellipse cx="58" cy="58" rx="16" ry="12" fill="#30b050" opacity="0.4"/>
+      <circle cx="50" cy="50" r="10" fill="#a0ffa0" opacity="0.7"/>
+      <circle cx="50" cy="50" r="5" fill="#ffffff"/>
+    </symbol>
+    <symbol id="item-stormveil" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="#080818" opacity="0.9"/>
+      <path d="M65 20 L45 50 L55 50 L35 80 L60 48 L50 48 Z" fill="#60c0ff" opacity="0.9"/>
+      <circle cx="50" cy="50" r="28" fill="none" stroke="#40a0ff" stroke-width="1.5" opacity="0.4"/>
+      <circle cx="50" cy="50" r="10" fill="#a0e0ff" opacity="0.6"/>
+    </symbol>
+    <symbol id="item-r4a" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="42" fill="#1a0840" opacity="0.7"/>
+      <polygon points="50,20 58,44 84,44 64,60 72,84 50,68 28,84 36,60 16,44 42,44" fill="#8050d0" opacity="0.8"/>
+      <circle cx="50" cy="52" r="12" fill="#c090ff" opacity="0.7"/>
+    </symbol>
+    <symbol id="item-r4b" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="42" fill="#180a40" opacity="0.7"/>
+      <rect x="28" y="28" width="44" height="44" rx="8" fill="#5030b0" opacity="0.7" transform="rotate(15 50 50)"/>
+      <circle cx="50" cy="50" r="12" fill="#b080ff" opacity="0.8"/>
+    </symbol>
+    <symbol id="item-r4c" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="42" fill="#0a0828" opacity="0.8"/>
+      <path d="M50 18 Q70 36 68 54 Q80 58 72 72 Q58 82 50 82 Q38 80 30 72 Q22 58 32 54 Q30 36 50 18Z" fill="#4040c0" opacity="0.7"/>
+      <ellipse cx="50" cy="50" rx="14" ry="16" fill="#9090ff" opacity="0.7"/>
+    </symbol>
+    <symbol id="item-r4d" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="42" fill="#120830" opacity="0.8"/>
+      <path d="M50 20 L55 45 L80 45 L60 60 L68 85 L50 70 L32 85 L40 60 L20 45 L45 45 Z" fill="#7040d0" opacity="0.75"/>
+      <circle cx="50" cy="50" r="10" fill="#d0a0ff"/>
+    </symbol>
+    <symbol id="item-r4e" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="42" fill="#0a1030" opacity="0.8"/>
+      <circle cx="50" cy="50" r="30" fill="#2840d0" opacity="0.6"/>
+      <circle cx="50" cy="50" r="18" fill="#6080ff" opacity="0.6"/>
+      <circle cx="50" cy="50" r="8" fill="#c0d0ff"/>
+    </symbol>
+    <symbol id="item-r4f" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="42" fill="#1a0820" opacity="0.8"/>
+      <ellipse cx="50" cy="50" rx="28" ry="20" fill="#a030c0" opacity="0.6" transform="rotate(-20 50 50)"/>
+      <ellipse cx="50" cy="50" rx="28" ry="20" fill="#c050e0" opacity="0.4" transform="rotate(20 50 50)"/>
+      <circle cx="50" cy="50" r="10" fill="#f080ff"/>
+    </symbol>
+    <symbol id="item-r3a" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="40" fill="#0a1830" opacity="0.8"/>
+      <polygon points="50,25 55,43 74,43 60,55 65,73 50,61 35,73 40,55 26,43 45,43" fill="#3070b0" opacity="0.8"/>
+      <circle cx="50" cy="50" r="8" fill="#80c0f0"/>
+    </symbol>
+    <symbol id="item-r3b" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="40" fill="#0a1820" opacity="0.8"/>
+      <rect x="30" y="30" width="40" height="40" rx="6" fill="#204080" opacity="0.7"/>
+      <circle cx="50" cy="50" r="10" fill="#60a0d0"/>
+    </symbol>
+    <symbol id="item-r3c" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="40" fill="#081820" opacity="0.8"/>
+      <path d="M30 70 Q36 40 50 28 Q64 40 70 70 Q60 60 50 62 Q40 60 30 70Z" fill="#206090" opacity="0.7"/>
+      <circle cx="50" cy="48" r="8" fill="#70b0d0"/>
+    </symbol>
+    <symbol id="item-r3d" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="40" fill="#0c1028" opacity="0.8"/>
+      <ellipse cx="50" cy="50" rx="26" ry="18" fill="#183870" opacity="0.7"/>
+      <circle cx="50" cy="50" r="10" fill="#5090c0"/>
+    </symbol>
+    <symbol id="item-r3e" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="40" fill="#0a1828" opacity="0.8"/>
+      <path d="M50 20 Q65 35 65 50 Q65 68 50 80 Q35 68 35 50 Q35 35 50 20Z" fill="#204878" opacity="0.7"/>
+      <circle cx="50" cy="50" r="9" fill="#60a8d8"/>
+    </symbol>
+    <symbol id="item-r3f" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="40" fill="#0a1030" opacity="0.8"/>
+      <path d="M50 15 L55 42 L82 40 L62 58 L70 84 L50 67 L30 84 L38 58 L18 40 L45 42 Z" fill="#1c3878" opacity="0.7"/>
+      <circle cx="50" cy="50" r="8" fill="#5888c8"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- LOBBY -->
+<div id="lobbyScreen" class="screen active">
+  <div class="lobby-header">
+    <div class="game-logo">🔥 Ignite Wish</div>
+    <div class="lobby-currencies">
+      <div class="curr-chip"><span class="ci">🔮</span><span class="cv" id="gemCount">14400</span></div>
+      <div class="curr-chip"><span class="ci">🎫</span><span class="cv" id="ticketCount">48</span></div>
+    </div>
+  </div>
+  <div class="banner-tabs">
+    <div class="btab active" onclick="switchTab(0)">Character</div>
+    <div class="btab" onclick="switchTab(1)">Collab</div>
+    <div class="btab" onclick="switchTab(2)">Standard</div>
+  </div>
+  <div class="banner-carousel">
+    <div class="banner-slides" id="bannerSlides">
+
+      <!-- SLIDE 0: Serena shifted left to fill purple area -->
+      <div class="banner-slide bslide-0">
+        <div class="banner-art-bg"></div>
+        <div class="distort-lines"></div>
+        <div class="rift-overlay"></div>
+        <!-- Full-fill character image — shifted left -->
+        <div class="banner-char-fullbg">
+          <img src="https://i.ibb.co/QvfzYjLR/IMG-20260517-123657.jpg" alt="Character Art" draggable="false"/>
+        </div>
+        <div class="banner-gradient-bottom"></div>
+        <div class="banner-info-overlay">
+          <div class="banner-event-label">✦ Character Event Ignite</div>
+          <div class="banner-main-name">Shadow of Torn World</div>
+          <div class="banner-featured-row">
+            <div class="feat-chip r5">✦ Void Shade</div>
+            <div class="feat-chip r4">◈ Dusk Omen</div>
+            <div class="feat-chip r4">◈ Revenant</div>
+          </div>
+        </div>
+        <div class="details-btn" onclick="openDetail(0)">Details ›</div>
+      </div>
+
+      <div class="banner-slide bslide-1">
+        <div class="banner-art-bg"></div><div class="distort-lines"></div><div class="rift-overlay"></div>
+        <div class="banner-art-display" style="filter:drop-shadow(0 0 40px rgba(60,120,255,.7))"><svg><use href="#icon-time"/></svg></div>
+        <div class="banner-gradient-bottom"></div>
+        <div class="banner-info-overlay">
+          <div class="banner-event-label" style="color:#70b0ff;border-color:rgba(112,176,255,.3);background:rgba(112,176,255,.1)">✦ Character Event Ignite</div>
+          <div class="banner-main-name">Master of All Time</div>
+          <div class="banner-featured-row">
+            <div class="feat-chip r5" style="border-color:rgba(112,176,255,.4);color:#70b0ff">✦ Chronolith</div>
+            <div class="feat-chip r4">◈ Epochlord</div>
+            <div class="feat-chip r4">◈ Aeon Rift</div>
+          </div>
+        </div>
+        <div class="details-btn" onclick="openDetail(1)">Details ›</div>
+      </div>
+      <div class="banner-slide bslide-2">
+        <div class="banner-art-bg"></div><div class="distort-lines"></div><div class="rift-overlay"></div>
+        <div class="banner-art-display" style="filter:drop-shadow(0 0 40px rgba(255,100,200,.7))"><svg><use href="#icon-collab"/></svg></div>
+        <div class="banner-gradient-bottom"></div>
+        <div class="banner-info-overlay">
+          <div class="banner-event-label" style="color:#ff90d0;border-color:rgba(255,144,208,.3);background:rgba(255,144,208,.1)">✦ Collab Event Ignite</div>
+          <div class="banner-main-name">Crossfire Convergence</div>
+          <div class="banner-featured-row">
+            <div class="feat-chip r5" style="border-color:rgba(255,144,208,.4);color:#ff90d0">✦ Starweave</div>
+            <div class="feat-chip r4">◈ Dual Flame</div>
+            <div class="feat-chip r4">◈ Mirrorshade</div>
+          </div>
+        </div>
+        <div class="details-btn" onclick="openDetail(2)">Details ›</div>
+      </div>
+      <div class="banner-slide bslide-3">
+        <div class="banner-art-bg"></div>
+        <div class="banner-art-display" style="filter:drop-shadow(0 0 40px rgba(255,180,60,.7))"><svg><use href="#icon-standard"/></svg></div>
+        <div class="banner-gradient-bottom"></div>
+        <div class="banner-info-overlay">
+          <div class="banner-event-label" style="color:#f0b870;border-color:rgba(240,184,112,.3);background:rgba(240,184,112,.1)">✦ Standard Ignite</div>
+          <div class="banner-main-name">Wandering Verdant</div>
+          <div class="banner-featured-row">
+            <div class="feat-chip r5" style="border-color:rgba(240,184,112,.4);color:#f0b870">✦ Solaris</div>
+          </div>
+        </div>
+        <div class="details-btn" onclick="openDetail(3)">Details ›</div>
+      </div>
+    </div>
+    <div class="slide-dots" id="slideDots"></div>
+  </div>
+  <div class="banner-bottom-bar">
+    <div class="pity-display">
+      <div class="pity-label">Pity Progress</div>
+      <div class="pity-track">
+        <div class="pity-bar-bg"><div class="pity-bar-fill" id="lobbyPityFill" style="width:70%"></div></div>
+        <div class="pity-num" id="lobbyPityNum">63/90</div>
+      </div>
+    </div>
+    <div class="ignite-btns">
+      <button class="ibtn ibtn-x1" onclick="doIgnite(1)">Ignite ×1<div class="ibtn-cost">🎫 ×1</div></button>
+      <button class="ibtn ibtn-x10" onclick="doIgnite(10)">Ignite ×10<div class="ibtn-cost">🎫 ×10</div></button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL -->
+<div id="detailScreen" class="screen">
+  <div class="detail-header">
+    <div class="back-btn" onclick="closeDetail()">‹</div>
+    <div class="detail-title-block">
+      <div class="detail-subtitle" id="dSubtitle">Character Event Ignite</div>
+      <div class="detail-title" id="dTitle">Shadow of Torn World</div>
+    </div>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+    <div class="detail-hero">
+      <div class="detail-hero-bg" id="dHeroBg"></div>
+      <div class="distort-lines"></div>
+      <div class="detail-hero-art" id="dHeroArt"><svg><use href="#icon-shadow"/></svg></div>
+      <div class="detail-hero-fade"></div>
+      <div class="detail-hero-text">
+        <div class="detail-hero-name" id="dHeroName">Void Shade</div>
+        <div class="detail-hero-sub" id="dHeroSub">Renegade Entity · Shadow/Void</div>
+      </div>
+    </div>
+    <div class="detail-body">
+      <div class="guarantee-cards">
+        <div class="gcard"><div class="gnum">10</div><div class="gtxt">Guaranteed 4★+</div></div>
+        <div class="gcard"><div class="gnum">90</div><div class="gtxt">Guaranteed 5★</div></div>
+        <div class="gcard"><div class="gnum">50%</div><div class="gtxt">Featured Rate</div></div>
+      </div>
+      <div class="section-label">Featured</div>
+      <div class="featured-cards" id="dFeatured"></div>
+      <div class="section-label">Drop Rates</div>
+      <div class="rates-table">
+        <div class="rrow r5"><div class="rrow-left"><div class="rstar r5"></div><div class="rrow-name">5★ Legendary</div></div><div class="rrow-pct">0.600%</div></div>
+        <div class="rrow r4"><div class="rrow-left"><div class="rstar r4"></div><div class="rrow-name">4★ Rare</div></div><div class="rrow-pct">5.100%</div></div>
+        <div class="rrow r3"><div class="rrow-left"><div class="rstar r3"></div><div class="rrow-name">3★ Common</div></div><div class="rrow-pct">94.300%</div></div>
+      </div>
+      <div class="section-label">About This Banner</div>
+      <div id="dDesc" style="font-size:.8rem;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:24px;"></div>
+    </div>
+  </div>
+  <div class="detail-ignite-footer">
+    <div class="detail-pity">
+      <div class="detail-pity-label">Pity Progress</div>
+      <div class="detail-pity-row">
+        <div class="detail-pity-bar"><div class="detail-pity-fill" id="dPityFill"></div></div>
+        <div class="detail-pity-num" id="dPityNum">0/90</div>
+      </div>
+    </div>
+    <div class="detail-ignite-btns">
+      <button class="ibtn ibtn-x1" onclick="doIgnite(1)">Ignite ×1<div class="ibtn-cost">🎫 ×1</div></button>
+      <button class="ibtn ibtn-x10" onclick="doIgnite(10)">Ignite ×10<div class="ibtn-cost">🎫 ×10</div></button>
+    </div>
+  </div>
+</div>
+
+<!-- PULL SCREEN -->
+<div id="pullScreen" class="screen">
+  <canvas id="wishCanvas" style="display:none"></canvas>
+  <video id="wishVideo" src="https://github.com/Jithqr/Files/raw/refs/heads/main/ignite.mp4"
+    playsinline webkit-playsinline preload="auto"
+    style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;display:none">
+  </video>
+  <div id="singleResult" style="display:none">
+    <div class="sr-glow" id="srGlow"></div>
+    <div class="sr-art" id="srArt"></div>
+    <div class="sr-stars" id="srStars"></div>
+    <div class="sr-name" id="srName"></div>
+    <div class="sr-rarity" id="srRarity"></div>
+    <div class="tap-continue" id="tapContinue">TAP TO CONTINUE</div>
+  </div>
+  <div id="multiResult" style="display:none">
+    <div class="mr-title">Ignite Wish Results</div>
+    <div class="mr-grid" id="mrGrid"></div>
+    <div class="mr-close-area">
+      <button class="mr-close-btn" onclick="closePull()">Close</button>
+      <button class="mr-again-btn" onclick="repeatIgnite()">Ignite ×10 Again</button>
+    </div>
+  </div>
+  <div class="skip-btn" id="skipBtn" onclick="skipAnimation()">Skip</div>
+</div>
+
+<!-- HISTORY -->
+<div id="historyScreen" class="screen">
+  <div class="history-header">
+    <div class="back-btn" onclick="showScreen('lobbyScreen')">‹</div>
+    <div style="font-family:'Cinzel Decorative',cursive;font-size:1rem;font-weight:700;">Ignite History</div>
+  </div>
+  <div class="history-body" id="historyBody"></div>
+</div>
+
+<div class="bottom-nav" id="bottomNav">
+  <div class="nav-btn active" id="navWish" onclick="navTo('lobbyScreen','navWish')"><div class="ni">🔥</div><div>Ignite</div></div>
+  <div class="nav-btn" id="navHistory" onclick="navTo('historyScreen','navHistory')"><div class="ni">📜</div><div>History</div></div>
+  <div class="nav-btn" onclick="showToast('Shop coming soon!')"><div class="ni">💎</div><div>Shop</div></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const BANNERS = [
+  {
+    name:'Shadow of Torn World', subtitle:'Character Event Ignite',
+    iconHref:'#icon-shadow', heroImgSrc:'https://i.ibb.co/QvfzYjLR/IMG-20260517-123657.jpg', accentColor:'#9060e0',
+    bg:'radial-gradient(ellipse at 65% 35%, rgba(120,40,220,.6) 0%, transparent 55%), radial-gradient(ellipse at 30% 70%, rgba(30,10,80,.8) 0%, transparent 50%), linear-gradient(160deg,#080615 0%,#1a0d35 40%,#0a0520 100%)',
+    heroName:'Void Shade', heroSub:'Renegade Entity · Shadow/Void',
+    desc:'The Void Shade emerged from the deepest rift between dimensions. It now dwells in a place where the laws of time and space no longer apply. Its shadow powers tear through the fabric of reality itself.',
+    featured:[
+      {name:'Void Shade',iconHref:'#item-void-shade',rarity:5,type:'Shadow/Void'},
+      {name:'Dusk Omen',iconHref:'#item-dusk-omen',rarity:4,type:'Dark/Aether'},
+      {name:'Revenant',iconHref:'#item-revenant',rarity:4,type:'Ghost/Soul'},
+      {name:'Wane Shard',iconHref:'#item-r4a',rarity:4,type:'Dark'}
+    ],
+    pool5:[{name:'Void Shade',iconHref:'#item-void-shade'},{name:'Dusk Omen (5★)',iconHref:'#item-dusk-omen'},{name:'Revenant (5★)',iconHref:'#item-revenant'}],
+    pool4:[{name:'Dusk Omen',iconHref:'#item-r4a'},{name:'Revenant',iconHref:'#item-r4b'},{name:'Wane Shard',iconHref:'#item-r4c'},{name:'Nightveil',iconHref:'#item-r4d'},{name:'Pale Wraith',iconHref:'#item-r4e'},{name:'Umbra Core',iconHref:'#item-r4f'}],
+  },
+  {
+    name:'Master of All Time', subtitle:'Character Event Ignite',
+    iconHref:'#icon-time', accentColor:'#4080ff',
+    bg:'radial-gradient(ellipse at 70% 30%, rgba(30,80,200,.6) 0%, transparent 55%), linear-gradient(160deg,#060812 0%,#0d1a38 40%,#050a22 100%)',
+    heroName:'Chronolith', heroSub:'Temporal Entity · Steel/Time',
+    desc:'The Chronolith possesses the power to control time itself. It is said that time began moving when the Chronolith was forged. Its resonance echoes across eons.',
+    featured:[
+      {name:'Chronolith',iconHref:'#item-chronolith',rarity:5,type:'Steel/Time'},
+      {name:'Epochlord',iconHref:'#item-epochlord',rarity:4,type:'Electric/Time'},
+      {name:'Aeon Rift',iconHref:'#item-aeonrift',rarity:4,type:'Time/Space'},
+      {name:'Flux Keeper',iconHref:'#item-r4a',rarity:4,type:'Electric'}
+    ],
+    pool5:[{name:'Chronolith',iconHref:'#item-chronolith'},{name:'Epochlord (5★)',iconHref:'#item-epochlord'},{name:'Aeon Rift (5★)',iconHref:'#item-aeonrift'}],
+    pool4:[{name:'Epochlord',iconHref:'#item-r4a'},{name:'Aeon Rift',iconHref:'#item-r4b'},{name:'Flux Keeper',iconHref:'#item-r4c'},{name:'Timestrike',iconHref:'#item-r4d'},{name:'Raicore',iconHref:'#item-r4e'},{name:'Lux Ray',iconHref:'#item-r4f'}],
+  },
+  {
+    name:'Crossfire Convergence', subtitle:'Collab Event Ignite',
+    iconHref:'#icon-collab', accentColor:'#ff60c0',
+    bg:'radial-gradient(ellipse at 60% 35%, rgba(200,40,120,.55) 0%, transparent 55%), radial-gradient(ellipse at 75% 65%, rgba(100,10,60,.6) 0%, transparent 50%), linear-gradient(160deg,#180510 0%,#38102a 40%,#200818 100%)',
+    heroName:'Starweave', heroSub:'Collab Legend · Radiant/Star',
+    desc:'A legendary convergence between two worlds. Starweave was born from the collision of parallel realities — a being that exists simultaneously across dimensions, wielding the combined power of two universes.',
+    featured:[
+      {name:'Starweave',iconHref:'#item-starweave',rarity:5,type:'Radiant/Star'},
+      {name:'Dual Flame',iconHref:'#item-dualflame',rarity:4,type:'Fire/Collab'},
+      {name:'Mirrorshade',iconHref:'#item-mirrorshade',rarity:4,type:'Mirror/Void'},
+      {name:'Rift Echo',iconHref:'#item-r4a',rarity:4,type:'Echo'}
+    ],
+    pool5:[{name:'Starweave',iconHref:'#item-starweave'},{name:'Dual Flame (5★)',iconHref:'#item-dualflame'},{name:'Mirrorshade (5★)',iconHref:'#item-mirrorshade'}],
+    pool4:[{name:'Dual Flame',iconHref:'#item-r4a'},{name:'Mirrorshade',iconHref:'#item-r4b'},{name:'Rift Echo',iconHref:'#item-r4c'},{name:'Cross Shard',iconHref:'#item-r4d'},{name:'Phase Twin',iconHref:'#item-r4e'},{name:'Convergence',iconHref:'#item-r4f'}],
+  },
+  {
+    name:'Wandering Verdant', subtitle:'Standard Ignite',
+    iconHref:'#icon-standard', accentColor:'#e0a030',
+    bg:'radial-gradient(ellipse at 55% 38%, rgba(200,140,20,.5) 0%, transparent 55%), linear-gradient(160deg,#120a02 0%,#2a1808 40%,#160c04 100%)',
+    heroName:'Solaris', heroSub:'Eternal Entity · Solar/Cosmos',
+    desc:'Solaris drifts through the cosmos drawing energy from distant stars. It descends only when the balance between light and dark is threatened, radiating warmth that can mend rifts in space-time.',
+    featured:[
+      {name:'Solaris',iconHref:'#item-solaris',rarity:5,type:'Solar/Cosmos'},
+      {name:'Terraveil',iconHref:'#item-terraveil',rarity:4,type:'Earth/Nature'},
+      {name:'Stormveil',iconHref:'#item-stormveil',rarity:4,type:'Storm/Sky'},
+      {name:'Verdant Core',iconHref:'#item-r4a',rarity:4,type:'Nature'}
+    ],
+    pool5:[{name:'Solaris',iconHref:'#item-solaris'},{name:'Terraveil (5★)',iconHref:'#item-terraveil'},{name:'Stormveil (5★)',iconHref:'#item-stormveil'}],
+    pool4:[{name:'Terraveil',iconHref:'#item-r4a'},{name:'Stormveil',iconHref:'#item-r4b'},{name:'Verdant Core',iconHref:'#item-r4c'},{name:'Dracon',iconHref:'#item-r4d'},{name:'Cloudwing',iconHref:'#item-r4e'},{name:'Tidecrest',iconHref:'#item-r4f'}],
+  },
+];
+
+const POOL_3 = [
+  {name:'Spark Shard',iconHref:'#item-r3a'},{name:'Ember Relic',iconHref:'#item-r3b'},{name:'Leaf Core',iconHref:'#item-r3c'},
+  {name:'Tide Stone',iconHref:'#item-r3d'},{name:'Dust Gem',iconHref:'#item-r3e'},{name:'Gloom Chip',iconHref:'#item-r3f'},
+  {name:'Iron Bit',iconHref:'#item-r3a'},{name:'Mist Shard',iconHref:'#item-r3b'},{name:'Rock Sliver',iconHref:'#item-r3c'},
+  {name:'Dark Flint',iconHref:'#item-r3d'},{name:'Ether Pebble',iconHref:'#item-r3e'},{name:'Sky Fragment',iconHref:'#item-r3f'},
+];
+
+let activeBannerIdx = 0, currentSlide = 0;
+let pities = [63, 20, 5, 8], guarantees = [false,false,false,false];
+let tickets = 48, lastIgniteCount = 10;
+let pullHistory = [];
+
+const bgCvs = document.getElementById('bgCanvas');
+const bgCtx = bgCvs.getContext('2d');
+let bgStars = [], bgRifts = [], bgT = 0;
+
+function initBg() {
+  bgCvs.width = window.innerWidth; bgCvs.height = window.innerHeight;
+  bgStars = [];
+  for(let i=0;i<120;i++) bgStars.push({
+    x:Math.random()*bgCvs.width, y:Math.random()*bgCvs.height,
+    r:Math.random()*1.5+.3, a:Math.random(), speed:Math.random()*.02+.005,
+    color:Math.random()<.15?'#9060e0':Math.random()<.3?'#4080c0':'#ffffff'
+  });
+  bgRifts=[];
+  for(let i=0;i<6;i++) bgRifts.push({
+    x:Math.random()*bgCvs.width,y:Math.random()*bgCvs.height,
+    len:Math.random()*80+40,angle:Math.random()*Math.PI,
+    a:Math.random()*.3+.05,speed:Math.random()*.01+.003,t:Math.random()*Math.PI*2
+  });
+}
+
+function drawBg() {
+  const W=bgCvs.width, H=bgCvs.height;
+  bgCtx.clearRect(0,0,W,H);
+  bgCtx.fillStyle='#08060f'; bgCtx.fillRect(0,0,W,H);
+  const grd=bgCtx.createRadialGradient(W*.4,H*.35,0,W*.4,H*.35,W*.7);
+  grd.addColorStop(0,'rgba(40,15,90,.6)'); grd.addColorStop(.5,'rgba(15,5,40,.3)'); grd.addColorStop(1,'transparent');
+  bgCtx.fillStyle=grd; bgCtx.fillRect(0,0,W,H);
+  bgT+=.012;
+  bgRifts.forEach(r=>{
+    r.t+=r.speed; const a=Math.sin(r.t)*r.a; if(a<=0)return;
+    bgCtx.save(); bgCtx.globalAlpha=a; bgCtx.strokeStyle='#6030b8'; bgCtx.lineWidth=1;
+    bgCtx.shadowColor='#8050e0'; bgCtx.shadowBlur=8;
+    bgCtx.beginPath(); bgCtx.moveTo(r.x,r.y); bgCtx.lineTo(r.x+Math.cos(r.angle)*r.len,r.y+Math.sin(r.angle)*r.len);
+    bgCtx.stroke(); bgCtx.restore();
+  });
+  bgStars.forEach(s=>{
+    s.a+=s.speed; const alpha=(Math.sin(s.a)*.5+.5);
+    bgCtx.beginPath(); bgCtx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    bgCtx.fillStyle=s.color; bgCtx.globalAlpha=alpha*.8; bgCtx.fill(); bgCtx.globalAlpha=1;
+  });
+}
+function bgLoop(){ drawBg(); requestAnimationFrame(bgLoop); }
+
+let animResults, animIsMulti;
+let animRunning = false;
+let animOnDone = null;
+
+function startWishAnimation(results, isMulti, onDone) {
+  animResults = results; animIsMulti = isMulti; animOnDone = onDone;
+  document.getElementById('singleResult').style.display = 'none';
+  document.getElementById('multiResult').style.display = 'none';
+  const video = document.getElementById('wishVideo');
+  video.muted = false; video.volume = 1.0; video.style.display = 'block'; video.currentTime = 0;
+  video.onended = () => finishAnim();
+  const playPromise = video.play();
+  if (playPromise !== undefined) {
+    playPromise.catch(() => { video.muted = true; video.play().catch(() => finishAnim()); });
+  }
+}
+
+function finishAnim() {
+  const video = document.getElementById('wishVideo');
+  video.style.display = 'none'; video.onended = null; animRunning = false;
+  if (animOnDone) { animOnDone(); animOnDone = null; }
+}
+
+function skipAnimation() {
+  const video = document.getElementById('wishVideo');
+  video.pause(); document.getElementById('skipBtn').style.display='none'; finishAnim();
+}
+
+function initSlides() {
+  const dotsEl = document.getElementById('slideDots');
+  dotsEl.innerHTML='';
+  BANNERS.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='slide-dot'+(i===0?' active':'');
+    d.onclick=()=>goSlide(i); dotsEl.appendChild(d);
+  });
+  updatePityBar();
+}
+
+function goSlide(idx) {
+  currentSlide=idx; activeBannerIdx=idx;
+  document.getElementById('bannerSlides').style.transform=`translateX(-${idx*100}%)`;
+  document.querySelectorAll('.slide-dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
+  updatePityBar();
+}
+
+let touchStartX=0;
+document.getElementById('bannerSlides').addEventListener('touchstart',e=>{ touchStartX=e.touches[0].clientX; },{passive:true});
+document.getElementById('bannerSlides').addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-touchStartX;
+  if(Math.abs(dx)>40) goSlide(dx<0?Math.min(currentSlide+1,BANNERS.length-1):Math.max(currentSlide-1,0));
+});
+
+function updatePityBar() {
+  const p=pities[activeBannerIdx];
+  document.getElementById('lobbyPityFill').style.width=(p/90*100)+'%';
+  document.getElementById('lobbyPityNum').textContent=p+'/90';
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.btab').forEach((t,i)=>t.classList.toggle('active',i===tab));
+  const map=[0,2,3]; goSlide(map[tab]||0);
+}
+
+function makeSvg(href) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><use href="${href}"/></svg>`;
+}
+
+function openDetail(idx) {
+  activeBannerIdx=idx;
+  const b=BANNERS[idx];
+  document.getElementById('dSubtitle').textContent=b.subtitle;
+  document.getElementById('dTitle').textContent=b.name;
+  const heroArtEl=document.getElementById('dHeroArt');
+  if(b.heroImgSrc){ heroArtEl.innerHTML=`<img src="${b.heroImgSrc}" style="width:100%;height:100%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 0 40px rgba(180,100,255,.8));" alt="Hero Art"/>`; }
+  else { heroArtEl.innerHTML=makeSvg(b.iconHref); }
+  document.getElementById('dHeroBg').style.cssText='position:absolute;inset:0;background:'+b.bg;
+  document.getElementById('dHeroName').textContent=b.heroName;
+  document.getElementById('dHeroSub').textContent=b.heroSub;
+  document.getElementById('dDesc').textContent=b.desc;
+  const fc=document.getElementById('dFeatured'); fc.innerHTML='';
+  b.featured.forEach(f=>{
+    fc.innerHTML+=`<div class="fcard r${f.rarity}"><div class="fe">${makeSvg(f.iconHref)}</div><div class="fn">${f.name}</div><div class="fr">${f.rarity}★ · ${f.type}</div></div>`;
+  });
+  const p=pities[idx];
+  document.getElementById('dPityFill').style.width=(p/90*100)+'%';
+  document.getElementById('dPityNum').textContent=p+'/90';
+  showScreen('detailScreen');
+}
+function closeDetail() { showScreen('lobbyScreen'); }
+
+function pullOne(bIdx) {
+  pities[bIdx]++; const p=pities[bIdx]; const b=BANNERS[bIdx];
+  let rate5=0.6;
+  if(p>=74) rate5=0.6+(p-73)*6.6;
+  if(p>=90){ pities[bIdx]=0; return get5(bIdx); }
+  const roll=Math.random()*100;
+  if(roll<rate5){ pities[bIdx]=0; return get5(bIdx); }
+  if(p%10===0||roll<rate5+5.1) return get4(bIdx);
+  return get3();
+}
+function get5(idx){
+  const b=BANNERS[idx];
+  if(guarantees[idx]||Math.random()<.5){ guarantees[idx]=false; const f=b.pool5[Math.floor(Math.random()*b.pool5.length)]; return{...f,rarity:5,banner:b.name}; }
+  guarantees[idx]=true;
+  const pool=BANNERS.flatMap(x=>x.pool5); const f=pool[Math.floor(Math.random()*pool.length)]; return{...f,rarity:5,banner:b.name};
+}
+function get4(idx){ const b=BANNERS[idx]; if(Math.random()<.5){ const f=b.pool4[Math.floor(Math.random()*b.pool4.length)]; return{...f,rarity:4,banner:b.name}; } const all=BANNERS.flatMap(x=>x.pool4); const f=all[Math.floor(Math.random()*all.length)]; return{...f,rarity:4,banner:b.name}; }
+function get3(){ const f=POOL_3[Math.floor(Math.random()*POOL_3.length)]; return{...f,rarity:3,banner:'Standard'}; }
+
+function doIgnite(count) {
+  if(tickets<count){ showToast('Not enough tickets! 🎫'); return; }
+  tickets-=count; lastIgniteCount=count;
+  document.getElementById('ticketCount').textContent=tickets;
+  const results=[];
+  for(let i=0;i<count;i++) results.push(pullOne(activeBannerIdx));
+  pullHistory=[...results,...pullHistory].slice(0,100);
+  updatePityBar();
+  if(document.getElementById('detailScreen').classList.contains('active')){
+    const p=pities[activeBannerIdx];
+    document.getElementById('dPityFill').style.width=(p/90*100)+'%';
+    document.getElementById('dPityNum').textContent=p+'/90';
+  }
+  showScreen('pullScreen');
+  document.getElementById('bottomNav').style.display='none';
+  if(count===1) startSingleIgnite(results[0]);
+  else startMultiIgnite(results);
+}
+function repeatIgnite(){ doIgnite(10); }
+
+function startSingleIgnite(result) {
+  document.getElementById('singleResult').style.display='none';
+  document.getElementById('multiResult').style.display='none';
+  document.getElementById('skipBtn').style.display='block';
+  document.getElementById('pullScreen').onclick=null;
+  startWishAnimation([result], false, ()=>{ revealSingle(result); });
+}
+
+function revealSingle(r) {
+  document.getElementById('skipBtn').style.display='none';
+  document.getElementById('singleResult').style.display='flex';
+  const glow=document.getElementById('srGlow');
+  glow.style.background=r.rarity===5
+    ?'radial-gradient(circle,rgba(232,199,106,.5) 0%,transparent 70%)'
+    :r.rarity===4
+    ?'radial-gradient(circle,rgba(160,112,232,.4) 0%,transparent 70%)'
+    :'radial-gradient(circle,rgba(80,160,216,.3) 0%,transparent 70%)';
+  const artEl=document.getElementById('srArt');
+  artEl.innerHTML=makeSvg(r.iconHref);
+  artEl.className='sr-art r'+r.rarity;
+  setTimeout(()=>artEl.classList.add('show'),50);
+  const starsEl=document.getElementById('srStars'); starsEl.innerHTML='';
+  const sc=r.rarity===5?'⭐':r.rarity===4?'🟣':'🔵';
+  for(let i=0;i<r.rarity;i++){ const s=document.createElement('span'); s.className='sr-star'; s.textContent=sc; starsEl.appendChild(s); }
+  starsEl.className='sr-stars'; setTimeout(()=>starsEl.classList.add('show'),200);
+  const nameEl=document.getElementById('srName'); nameEl.textContent=r.name; nameEl.className='sr-name r'+r.rarity;
+  setTimeout(()=>nameEl.classList.add('show'),100);
+  const rarEl=document.getElementById('srRarity');
+  rarEl.textContent=r.rarity+'★ '+(r.rarity===5?'Legendary':r.rarity===4?'Rare':'Common');
+  rarEl.className='sr-rarity r'+r.rarity; setTimeout(()=>rarEl.classList.add('show'),200);
+  setTimeout(()=>document.getElementById('tapContinue').classList.add('show'),1500);
+  document.getElementById('pullScreen').onclick=()=>closePull();
+}
+
+function startMultiIgnite(results) {
+  document.getElementById('singleResult').style.display='none';
+  document.getElementById('multiResult').style.display='none';
+  document.getElementById('skipBtn').style.display='block';
+  document.getElementById('pullScreen').onclick=null;
+  const best=results.reduce((a,b)=>b.rarity>a.rarity?b:a,results[0]);
+  startWishAnimation([best,...results.filter(r=>r!==best)], true, ()=>{ revealMulti(results); });
+}
+
+function revealMulti(results) {
+  document.getElementById('skipBtn').style.display='none';
+  document.getElementById('multiResult').style.display='flex';
+  document.getElementById('pullScreen').onclick=null;
+  const grid=document.getElementById('mrGrid'); grid.innerHTML='';
+  results.forEach((r,i)=>{
+    const card=document.createElement('div');
+    card.className='mr-card r'+r.rarity;
+    card.style.animationDelay=(i*70)+'ms';
+    const stars=r.rarity===5?'⭐⭐⭐⭐⭐':r.rarity===4?'🟣🟣🟣🟣':'🔵🔵🔵';
+    card.innerHTML=`<div class="mr-art">${makeSvg(r.iconHref)}</div><div class="mr-name">${r.name}</div><div class="mr-stars">${stars}</div>`;
+    grid.appendChild(card);
+  });
+}
+
+function closePull() {
+  const video = document.getElementById('wishVideo');
+  video.pause(); video.style.display='none'; video.onended=null;
+  animRunning=false; animOnDone=null;
+  document.getElementById('pullScreen').onclick=null;
+  document.getElementById('bottomNav').style.display='flex';
+  showScreen('lobbyScreen'); renderHistory();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('bottomNav').style.display=id==='pullScreen'?'none':'flex';
+}
+function navTo(screenId,navId) {
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(navId).classList.add('active');
+  if(screenId==='historyScreen') renderHistory();
+  showScreen(screenId);
+}
+function renderHistory() {
+  const body=document.getElementById('historyBody');
+  if(!pullHistory.length){ body.innerHTML='<div style="text-align:center;padding:60px 20px;color:rgba(255,255,255,.3)">No ignites yet.<br>Make your first summon!</div>'; return; }
+  let html='<div class="hist-group-label">All Ignites ('+pullHistory.length+')</div>';
+  pullHistory.forEach((r,i)=>{
+    const stars=r.rarity===5?'⭐⭐⭐⭐⭐':r.rarity===4?'🟣🟣🟣🟣':'🔵🔵🔵';
+    html+=`<div class="hist-row r${r.rarity}"><div class="hist-art">${makeSvg(r.iconHref)}</div><div class="hist-info"><div class="hist-name">${r.name}</div><div class="hist-sub">${r.banner} · Pull #${pullHistory.length-i}</div></div><div class="hist-stars">${stars}</div></div>`;
+  });
+  body.innerHTML=html;
+}
+function showToast(msg) {
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._tid); t._tid=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+window.addEventListener('resize',()=>{ initBg(); });
+initBg(); bgLoop();
+initSlides(); renderHistory();
+
+pullHistory=[
+  {name:'Dusk Omen',iconHref:'#item-r4a',rarity:4,banner:'Shadow of Torn World'},
+  {name:'Spark Shard',iconHref:'#item-r3a',rarity:3,banner:'Wandering Verdant'},
+  {name:'Ember Relic',iconHref:'#item-r3b',rarity:3,banner:'Master of All Time'},
+];
+renderHistory();
+</script>
+</body>
+</html>
