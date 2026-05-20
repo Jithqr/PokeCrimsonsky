@@ -2574,19 +2574,34 @@ export default function App() {
     .m-pill-drop { background: rgba(255,255,255,0.05); border:1px solid var(--m-border); padding:6px 12px; border-radius:16px; display:flex; align-items:center; gap:8px; font-size:13px; color: var(--m-muted); }
 
     /* Bottom Nav */
-    .m-bnav { position:fixed; bottom:0; left:50%; transform: translateX(-50%); width:100%; max-width:460px; background: var(--m-bg); border-top:1px solid var(--m-border); display:flex; justify-content:space-around; align-items:center; padding: 14px 0; padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 100; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+    .m-bnav { position:fixed; bottom:0; left:50%; transform: translateX(-50%); width:100%; max-width:460px; background: var(--m-bg); border-top:1px solid var(--m-border); display:flex; justify-content:space-around; align-items:center; padding: 10px 0 14px; padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 100; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
     .m-bnav i { color: var(--m-muted); font-size: 20px; cursor:pointer; transition: color .2s; }
     .m-bnav i.active { color: var(--m-blue); }
     .m-bnav .av { width:26px; height:26px; border-radius:50%; background: var(--m-card); border:2px solid transparent; cursor:pointer; overflow:hidden; display:flex; align-items:center; justify-content:center; }
     .m-bnav .av.active { border-color: var(--m-blue); }
     .m-bnav .av img { width:100%; height:100%; image-rendering: pixelated; object-fit: cover; }
+    .m-bnav-ball { width:56px; height:56px; border-radius:50%; background: #101013; border:2px solid #2a2a2e; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-top:-20px; box-shadow: 0 -4px 18px rgba(0,0,0,0.65); transition: transform .15s, box-shadow .15s; flex-shrink:0; }
+    .m-bnav-ball:active { transform: scale(0.92); }
+    .m-bnav-ball.active { border-color: var(--m-blue); box-shadow: 0 -4px 18px rgba(59,130,246,0.35); }
   `;
 
-  function BottomNav({ active, go }: { active: "home" | "market" | "profile"; go: (s: string) => void }) {
+  function BottomNav({ active, go }: { active: "home" | "market" | "hunt" | "gacha" | "profile"; go: (s: string) => void }) {
     return (
       <div className="m-bnav">
         <i className={`fa-solid fa-house ${active === "home" ? "active" : ""}`} onClick={() => { sfx.click(); go("world"); }} />
         <i className={`fa-solid fa-cart-shopping ${active === "market" ? "active" : ""}`} onClick={() => { sfx.click(); go("store"); }} />
+        <div className={`m-bnav-ball ${active === "hunt" ? "active" : ""}`} onClick={() => { sfx.click(); go("hunt"); }}>
+          <svg viewBox="0 0 40 40" width="34" height="34" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 1 A19 19 0 0 1 39 20 H1 A19 19 0 0 1 20 1Z" fill="#e53935"/>
+            <path d="M1 20 A19 19 0 0 0 20 39 A19 19 0 0 0 39 20 Z" fill="#f5f5f5"/>
+            <circle cx="20" cy="20" r="19" fill="none" stroke="#1a1a1a" strokeWidth="1.5"/>
+            <rect x="1" y="18.25" width="38" height="3.5" fill="#1a1a1a"/>
+            <circle cx="20" cy="20" r="7" fill="#f5f5f5" stroke="#1a1a1a" strokeWidth="1.5"/>
+            <circle cx="20" cy="20" r="4" fill="#1a1a1a"/>
+            <circle cx="20" cy="20" r="2" fill="#444"/>
+          </svg>
+        </div>
+        <i className={`fa-solid fa-wand-magic-sparkles ${active === "gacha" ? "active" : ""}`} onClick={() => { sfx.click(); go("world"); setShowSafariRegionPicker(true); }} />
         <div className={`av ${active === "profile" ? "active" : ""}`} onClick={() => { sfx.click(); go("profile"); }}>
           <img src={profileImage ?? TRAINER_SPRITE(player.sprite)} alt="me" style={profileImage ? { imageRendering: "auto" } : {}} />
         </div>
