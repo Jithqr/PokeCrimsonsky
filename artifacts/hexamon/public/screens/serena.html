@@ -316,9 +316,10 @@
     <div class="player-label">Trainer</div>
     <div class="player-name" id="trainerName">TRAINER</div>
     <div class="player-title">Pokémon Champion</div>
-    <div class="rank-stars">
+    <div class="rank-stars" id="rankStars">
       <span class="star">★</span><span class="star">★</span>
       <span class="star">★</span><span class="star">★</span>
+      <span class="star">★</span>
     </div>
   </div>
   <div class="dex-id">
@@ -419,6 +420,15 @@ function setActive(btn) {
     const save = JSON.parse(localStorage.getItem('hexamon:save:v2') || '{}');
     const name = (save.player && save.player.name) || save.name || '';
     if (name) document.getElementById('trainerName').textContent = name.toUpperCase();
+
+    const CHAR_STARS = {
+      'Cynthia':5,'Lance':5,'Steven':5,'Leon':5,'N':5,
+      'Misty':4,'Iris':4,'Elesa':4,'Brock':4
+    };
+    const activeChar = localStorage.getItem('crimsonsky:activeChar') || 'Cynthia';
+    const stars = CHAR_STARS[activeChar] || 5;
+    const starsEl = document.getElementById('rankStars');
+    starsEl.innerHTML = Array(stars).fill('<span class="star">★</span>').join('');
   } catch(e) {}
 })();
 
