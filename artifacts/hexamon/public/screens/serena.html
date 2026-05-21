@@ -16,7 +16,7 @@
     --glass-border: rgba(255,255,255,0.14);
   }
   html, body { width:100%; height:100%; overflow:hidden; background:transparent; font-family:'Rajdhani',sans-serif; }
-  #sky { position:fixed; inset:0 0 64px 0; z-index:0; }
+  #sky { position:fixed; inset:0; z-index:0; }
 
   #sky-overlay {
     position:fixed; inset:0 0 115px 0; z-index:1; pointer-events:none;
@@ -421,7 +421,7 @@ let W, H;
 
 function resize() {
   W = canvas.width  = window.innerWidth;
-  H = canvas.height = window.innerHeight - 64;
+  H = canvas.height = window.innerHeight;
   initStars();
 }
 window.addEventListener('resize', resize);
