@@ -2939,7 +2939,7 @@ export default function App() {
           </div>
 
           <div style={{
-            margin: "14px 16px 12px", background: "#0d0d1a", border: "2px solid #7c3aed", borderRadius: 8,
+            margin: "114px 16px 12px", background: "#0d0d1a", border: "2px solid #7c3aed", borderRadius: 8,
             padding: 14, boxShadow: "0 4px 10px rgba(0,0,0,0.5)", position: "relative",
             fontFamily: "'Press Start 2P', monospace",
           }}>
