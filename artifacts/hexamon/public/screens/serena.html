@@ -314,7 +314,7 @@
 <div class="top-ui">
   <div>
     <div class="player-label">Trainer</div>
-    <div class="player-name">SERENA</div>
+    <div class="player-name" id="trainerName">TRAINER</div>
     <div class="player-title">Pokémon Champion</div>
     <div class="rank-stars">
       <span class="star">★</span><span class="star">★</span>
@@ -377,7 +377,6 @@
     <button class="nav-btn" onclick="setActive(this)">
       <div class="nav-icon">
         <span class="material-symbols-outlined">assignment</span>
-        <span class="notif-badge">1</span>
       </div>
       <div class="nav-label">Missions</div>
     </button>
@@ -414,6 +413,14 @@ function setActive(btn) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
+
+(function() {
+  try {
+    const save = JSON.parse(localStorage.getItem('hexamon:save:v2') || '{}');
+    const name = save.name || save.playerName || '';
+    if (name) document.getElementById('trainerName').textContent = name.toUpperCase();
+  } catch(e) {}
+})();
 
 const canvas = document.getElementById('sky');
 const ctx = canvas.getContext('2d');
