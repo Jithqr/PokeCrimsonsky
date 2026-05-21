@@ -3489,65 +3489,32 @@ export default function App() {
               </div>
             </div>
 
-            {/* ── Pokémon Showcase ── */}
+            {/* ── Pokémon Showcase (active team) ── */}
             {(() => {
-              const allMons = [...team, ...box];
-              const monByUid = new Map(allMons.map(m => [m.uid, m]));
-              const slotMons = showcaseSlots.slice(0, 6).map(uid => (uid ? monByUid.get(uid) ?? null : null));
+              const slotMons: (typeof team[0] | null)[] = Array.from({ length: 6 }, (_, i) => team[i] ?? null);
               return (
-                <div className="tc-card" style={{ position: "relative" }}>
+                <div className="tc-card">
                   <div className="tc-card-inner">
                     <div className="tc-section-hdr">
-                      <span className="tc-section-title">POKÉMON SHOWCASE</span>
+                      <span className="tc-section-title">ACTIVE TEAM</span>
                       <div className="tc-section-line" />
-                      <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginLeft: 6 }}>TAP TO EDIT</span>
                     </div>
                     <div className="tc-poke-grid">
                       {slotMons.map((m, i) => m ? (
-                        <div key={`slot-${i}`} className={`tc-poke-card${i === 0 ? " featured" : ""}`} onClick={() => { setShowcasePickSlot(i); setShowShowcasePicker(true); }}>
+                        <div key={`slot-${i}`} className={`tc-poke-card${i === 0 ? " featured" : ""}`}>
                           <div className="tc-type-badge">
                             <img src={pTypeIcon(m.type1)} alt={m.type1} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                           </div>
                           <MonSprite sprite={m.sprite} size={64} className="" isShiny={m.isShiny} style={{ width: 64, height: 64, objectFit: "contain", filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.85)) grayscale(0.3) brightness(0.85)", marginTop: 8, imageRendering: "auto" }} />
                           <div className="tc-poke-level">Lv. {m.level}</div>
-                          <div style={{ position: "absolute", top: 6, right: 6, width: 16, height: 16, borderRadius: "50%", background: "rgba(0,0,0,0.7)", border: "1px solid rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 4 }}>
-                            <i className="fa-solid fa-pen" style={{ fontSize: 7, color: "#9ca3af" }} />
-                          </div>
                         </div>
                       ) : (
-                        <div key={`empty-${i}`} className="tc-poke-empty" style={{ cursor: "pointer" }} onClick={() => { setShowcasePickSlot(i); setShowShowcasePicker(true); }}>
+                        <div key={`empty-${i}`} className="tc-poke-empty">
                           <i className="fa-solid fa-plus" style={{ fontSize: 18, color: "rgba(255,255,255,0.2)" }} />
-                          <span style={{ fontSize: 9, color: "rgba(255,255,255,0.15)" }}>ADD</span>
                         </div>
                       ))}
                     </div>
                   </div>
-                  {/* Picker modal */}
-                  {showShowcasePicker && (
-                    <div style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end" }} onClick={(e) => { if (e.target === e.currentTarget) setShowShowcasePicker(false); }}>
-                      <div style={{ width: "100%", maxWidth: 460, background: "#0d0d1a", borderRadius: "16px 16px 0 0", border: "1px solid #1f2937", maxHeight: "70vh", display: "flex", flexDirection: "column" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", borderBottom: "1px solid #1f2937" }}>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Choose for Slot {showcasePickSlot + 1}</span>
-                          <div style={{ display: "flex", gap: 8 }}>
-                            {showcaseSlots[showcasePickSlot] && <button onClick={() => { setShowcaseSlots(s => s.map((v, i) => i === showcasePickSlot ? null : v)); setShowShowcasePicker(false); }} style={{ background: "#7f1d1d", color: "#fca5a5", border: "1px solid #991b1b", borderRadius: 6, padding: "5px 10px", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>Remove</button>}
-                            <button onClick={() => setShowShowcasePicker(false)} style={{ background: "#1f2937", color: "#9ca3af", border: "1px solid #374151", borderRadius: 6, padding: "5px 10px", fontSize: 10, cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
-                          </div>
-                        </div>
-                        <div style={{ overflowY: "auto", padding: 10 }}>
-                          {allMons.length === 0 && <div style={{ textAlign: "center", padding: 24, color: "#4b5563", fontSize: 12 }}>No Pokémon in team or box.</div>}
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-                            {allMons.map((m) => (
-                              <div key={m.uid} onClick={() => { setShowcaseSlots(s => s.map((v, i) => i === showcasePickSlot ? (m.uid ?? null) : v)); setShowShowcasePicker(false); }} style={{ background: "#111827", border: `2px solid ${showcaseSlots[showcasePickSlot] === m.uid ? "#7c3aed" : "#1f2937"}`, borderRadius: 10, padding: "8px 6px", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, cursor: "pointer", minHeight: 90, justifyContent: "center" }}>
-                                <MonSprite sprite={m.sprite} size={52} className="" isShiny={m.isShiny} style={{ width: 52, height: 52, objectFit: "contain" }} />
-                                <div style={{ fontSize: 9, color: "#9ca3af", textAlign: "center", lineHeight: 1.2 }}>{m.name}</div>
-                                <div style={{ fontSize: 8, color: "#4b5563" }}>Lv.{m.level}</div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
               );
             })()}
