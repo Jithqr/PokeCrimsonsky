@@ -163,12 +163,36 @@
   .poke-card img { height:64px; width:auto; image-rendering:pixelated; filter:drop-shadow(0 2px 8px rgba(0,0,0,0.65)); margin-bottom:3px; }
   .poke-name { font-size:8px; font-weight:700; letter-spacing:1.5px; color:rgba(255,255,255,0.5); text-transform:uppercase; pointer-events:none; }
 
-  .poke-card.type-dragon { --card-glow:rgba(100,80,255,0.22); }
-  .poke-card.type-fire   { --card-glow:rgba(255,170,40,0.20); }
-  .poke-card.type-water  { --card-glow:rgba(60,180,255,0.20); }
-  .poke-card.type-psychic{ --card-glow:rgba(200,80,220,0.20); }
-  .poke-card.type-ghost  { --card-glow:rgba(120,80,180,0.22); }
-  .poke-card.type-steel  { --card-glow:rgba(160,180,200,0.20); }
+  .poke-card.type-dragon  { --card-glow:rgba(100,80,255,0.22); }
+  .poke-card.type-fire    { --card-glow:rgba(255,170,40,0.20); }
+  .poke-card.type-water   { --card-glow:rgba(60,180,255,0.20); }
+  .poke-card.type-psychic { --card-glow:rgba(200,80,220,0.20); }
+  .poke-card.type-ghost   { --card-glow:rgba(120,80,180,0.22); }
+  .poke-card.type-steel   { --card-glow:rgba(160,180,200,0.20); }
+  .poke-card.type-grass   { --card-glow:rgba(60,200,80,0.20); }
+  .poke-card.type-electric{ --card-glow:rgba(255,220,0,0.22); }
+  .poke-card.type-ice     { --card-glow:rgba(100,220,255,0.20); }
+  .poke-card.type-fighting{ --card-glow:rgba(200,60,40,0.20); }
+  .poke-card.type-poison  { --card-glow:rgba(160,60,200,0.20); }
+  .poke-card.type-ground  { --card-glow:rgba(200,160,60,0.20); }
+  .poke-card.type-flying  { --card-glow:rgba(120,160,255,0.20); }
+  .poke-card.type-bug     { --card-glow:rgba(140,200,60,0.20); }
+  .poke-card.type-rock    { --card-glow:rgba(160,140,80,0.20); }
+  .poke-card.type-dark    { --card-glow:rgba(60,40,80,0.22); }
+  .poke-card.type-fairy   { --card-glow:rgba(255,140,200,0.22); }
+  .poke-card.type-normal  { --card-glow:rgba(180,180,160,0.18); }
+
+  .poke-card.empty {
+    border:1.5px dashed rgba(255,255,255,0.15);
+    background:rgba(255,255,255,0.03);
+    cursor:default;
+    animation:cardEntry 0.6s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  .poke-card.empty:hover { transform:none; box-shadow:none; border-color:rgba(255,255,255,0.15); }
+  .poke-empty-icon {
+    font-size:26px; color:rgba(255,255,255,0.18); line-height:1;
+    font-family:sans-serif;
+  }
   @keyframes typeGlow {
     0%,100%{box-shadow:0 4px 20px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.18)}
     50%{box-shadow:0 4px 28px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.18),0 0 14px var(--card-glow,rgba(79,195,247,0.15))}
@@ -330,44 +354,17 @@
 
 <div class="screen">
   <div class="party-layout">
-    <div class="slots-col left">
-      <div class="poke-card type-dragon">
-        <img src="https://projectpokemon.org/images/normal-sprite/palkia.gif" alt="Palkia">
-        <span class="poke-name">Palkia</span>
-      </div>
-      <div class="poke-card type-dragon">
-        <img src="https://projectpokemon.org/images/normal-sprite/dialga.gif" alt="Dialga">
-        <span class="poke-name">Dialga</span>
-      </div>
-      <div class="poke-card type-dragon">
-        <img src="https://projectpokemon.org/images/normal-sprite/garchomp.gif" alt="Garchomp">
-        <span class="poke-name">Garchomp</span>
-      </div>
-    </div>
+    <div class="slots-col left" id="slotsLeft"></div>
 
     <div class="trainer-wrap">
       <div class="ring"></div><div class="ring"></div><div class="ring"></div>
       <div class="trainer-glow"></div>
-      <video class="trainer-img"
-        src="https://www.image2url.com/r2/default/videos/1778749524747-a0548b64-5e5d-4c36-8fb7-b8c077423ca3.webm"
-        autoplay loop muted playsinline draggable="false">
-      </video>
+      <img class="trainer-img"
+        src="https://i.ibb.co/1f2xXJkk/IMG-20260521-162735.png"
+        alt="Cynthia" draggable="false">
     </div>
 
-    <div class="slots-col right">
-      <div class="poke-card type-psychic">
-        <img src="https://projectpokemon.org/images/normal-sprite/mewtwo.gif" alt="Mewtwo">
-        <span class="poke-name">Mewtwo</span>
-      </div>
-      <div class="poke-card type-fire">
-        <img src="https://projectpokemon.org/images/normal-sprite/charizard.gif" alt="Charizard">
-        <span class="poke-name">Charizard</span>
-      </div>
-      <div class="poke-card type-water">
-        <img src="https://projectpokemon.org/images/normal-sprite/greninja.gif" alt="Greninja">
-        <span class="poke-name">Greninja</span>
-      </div>
-    </div>
+    <div class="slots-col right" id="slotsRight"></div>
   </div>
 </div>
 
@@ -415,6 +412,34 @@ function setActive(btn) {
   btn.classList.add('active');
 }
 
+function spriteUrl(mon) {
+  if (!mon) return '';
+  const id = mon.sprite || mon.speciesId || mon.id;
+  const name = (mon.name || '').toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
+  if (id && !isNaN(id)) {
+    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+  }
+  return `https://play.pokemonshowdown.com/sprites/ani/${name}.gif`;
+}
+
+function typeClass(mon) {
+  const t = (mon.type1 || mon.type || '').toLowerCase();
+  return t ? `type-${t}` : '';
+}
+
+function makeCard(mon) {
+  if (!mon) {
+    return `<div class="poke-card empty"><span class="poke-empty-icon">+</span></div>`;
+  }
+  const url = spriteUrl(mon);
+  const tc = typeClass(mon);
+  const name = mon.name || mon.nickname || '???';
+  return `<div class="poke-card ${tc}">
+    <img src="${url}" alt="${name}" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/0.png'">
+    <span class="poke-name">${name}</span>
+  </div>`;
+}
+
 (function() {
   try {
     const save = JSON.parse(localStorage.getItem('hexamon:save:v2') || '{}');
@@ -429,7 +454,21 @@ function setActive(btn) {
     const stars = CHAR_STARS[activeChar] || 5;
     const starsEl = document.getElementById('rankStars');
     starsEl.innerHTML = Array(stars).fill('<span class="star">★</span>').join('');
-  } catch(e) {}
+
+    const teams = save.teams || [];
+    const activeTeamIdx = save.activeTeamIdx ?? 0;
+    const team = (teams[activeTeamIdx] || []).slice(0, 6);
+    const slots = Array.from({ length: 6 }, (_, i) => team[i] || null);
+
+    const leftSlots  = slots.slice(0, 3);
+    const rightSlots = slots.slice(3, 6);
+
+    document.getElementById('slotsLeft').innerHTML  = leftSlots.map(makeCard).join('');
+    document.getElementById('slotsRight').innerHTML = rightSlots.map(makeCard).join('');
+  } catch(e) {
+    document.getElementById('slotsLeft').innerHTML  = Array(3).fill('<div class="poke-card empty"><span class="poke-empty-icon">+</span></div>').join('');
+    document.getElementById('slotsRight').innerHTML = Array(3).fill('<div class="poke-card empty"><span class="poke-empty-icon">+</span></div>').join('');
+  }
 })();
 
 const canvas = document.getElementById('sky');
