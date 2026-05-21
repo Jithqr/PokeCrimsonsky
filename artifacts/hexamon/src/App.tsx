@@ -8399,7 +8399,7 @@ export default function App() {
         <div style={{ ...S.wrap, paddingBottom: 0 }}>
           <iframe
             src="/screens/serena.html"
-            style={{ width: "100%", height: "calc(100vh - 126px)", border: "none", display: "block" }}
+            style={{ width: "100%", height: "calc(100vh - 62px)", border: "none", display: "block" }}
             allow="autoplay"
             title="Serena"
           />
