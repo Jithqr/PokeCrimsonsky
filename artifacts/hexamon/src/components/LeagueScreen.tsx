@@ -22,6 +22,14 @@ export default function LeagueScreen({ badges, e4Cleared, e4Streak, onPickGym, o
       </div>
 
       <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* Champion banner */}
+        {e4Cleared && (
+          <div style={{ ...card, background: "linear-gradient(135deg, #FFD54F, #FF9800)", color: "#000" }}>
+            <div style={{ fontWeight: 900, fontSize: 18 }}>👑 Champion!</div>
+            <div style={{ fontSize: 12 }}>You have cleared the Elite 4 — bask in the glory.</div>
+          </div>
+        )}
+
         {/* Badges row */}
         <div style={card}>
           <div style={cardTitle}>Badges Earned: {badges.length} / {GYM_LEADERS.length}</div>
@@ -106,7 +114,7 @@ export default function LeagueScreen({ badges, e4Cleared, e4Streak, onPickGym, o
           <div style={cardTitle}>Elite 4 Gauntlet</div>
           <div style={{ fontSize: 12, opacity: 0.85, marginBottom: 8 }}>
             4 sequential battles. <strong>No healing or items between matches.</strong> Lose your last Pokémon and the run resets.
-            Best streak: <strong>{e4Streak}</strong>
+            Best streak: <strong>{e4Streak}</strong>{e4Cleared && " · Champion"}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginBottom: 8 }}>
             {ELITE_FOUR.map((e) => (
