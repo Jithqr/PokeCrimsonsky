@@ -417,7 +417,7 @@ function setActive(btn) {
 (function() {
   try {
     const save = JSON.parse(localStorage.getItem('hexamon:save:v2') || '{}');
-    const name = save.name || save.playerName || '';
+    const name = (save.player && save.player.name) || save.name || '';
     if (name) document.getElementById('trainerName').textContent = name.toUpperCase();
   } catch(e) {}
 })();
