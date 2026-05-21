@@ -421,7 +421,7 @@ let W, H;
 
 function resize() {
   W = canvas.width  = window.innerWidth;
-  H = canvas.height = window.innerHeight;
+  H = canvas.height = window.innerHeight - 100;
   initStars();
 }
 window.addEventListener('resize', resize);
