@@ -1697,6 +1697,7 @@ function autoFillTeam() {
 // ═══════════════════════════════════════════════════════════════════
 //  BATTLE ENGINE
 // ═══════════════════════════════════════════════════════════════════
+let battleSession = 0;
 let battle = {
   floorIdx: 0,
   chamberIdx: 0,
@@ -1727,6 +1728,7 @@ function startChallenge() {
   const allPokes = [...party.first, ...party.second].filter(Boolean);
   if(allPokes.length === 0) return;
 
+  battleSession++;
   battle.floorIdx = currentFloorIdx;
   battle.chamberIdx = 0;
   const f = FLOOR_DATA[battle.floorIdx];
@@ -1759,7 +1761,11 @@ function initBattleScreen() {
   renderPlayer();
   renderPartyQueue();
   renderMoveGrid();
+  // Reset all battle UI panels to a clean state
   document.getElementById('battle-result-overlay').style.display='none';
+  document.getElementById('battle-action-menu').style.display='none';
+  document.getElementById('battle-swap-menu').style.display='none';
+  document.getElementById('battle-next-wrap').style.display='none';
   const bm = document.getElementById('modal-battle');
   bm.style.display = '';
   bm.classList.add('open');
@@ -1877,7 +1883,10 @@ function setDialogue(msg, showNext=true, cb=null) {
     document.getElementById('battle-swap-menu').style.display='none';
   } else {
     document.getElementById('battle-next-wrap').style.display='none';
-    if(cb) setTimeout(cb, 1200);
+    if(cb) {
+      const snap = battleSession;
+      setTimeout(()=>{ if(battleSession === snap && battle.phase !== 'result') cb(); }, 1200);
+    }
   }
 }
 function showActions() {
@@ -1993,10 +2002,12 @@ function playerMove(moveIdx) {
     else if(typeBonus === 0) effectiveness = " It had no effect!";
 
     setDialogue(`${pl.poke.name} used <strong>${move.name}</strong>!${effectiveness}`, false);
+    const _s1 = battleSession;
     setTimeout(()=>{
+      if(battleSession !== _s1 || battle.phase === 'result') return;
       if(typeBonus === 0 || !rollHit(moveAcc, battle.playerAccMult, battle.enemyAccMult)) {
         showMiss(true);
-        setTimeout(()=>enemyTurn(), 800);
+        setTimeout(()=>{ if(battleSession === _s1 && battle.phase !== 'result') enemyTurn(); }, 800);
         return;
       }
       const dmg = calcDamage(move.power, pl.poke.level, enemy.level, typeBonus, battle.playerAtkMult);
@@ -2007,8 +2018,9 @@ function playerMove(moveIdx) {
       enemy.hp = Math.max(0, enemy.hp - dmg);
       updateEnemyHp(enemy.hp, enemy.maxHp);
       setTimeout(()=>{
+        if(battleSession !== _s1 || battle.phase === 'result') return;
         if(enemy.hp <= 0) enemyFainted();
-        else setTimeout(()=>enemyTurn(), 600);
+        else setTimeout(()=>{ if(battleSession === _s1 && battle.phase !== 'result') enemyTurn(); }, 600);
       }, 700);
     }, 900);
 
@@ -2036,6 +2048,7 @@ function playerMove(moveIdx) {
 
 // ── Enemy turn ──
 function enemyTurn() {
+  if(battle.phase === 'result') return;
   const enemy = battle.enemies[battle.enemyIdx];
   const pl = battle.playerParty[battle.playerIdx];
 
@@ -2064,11 +2077,13 @@ function enemyTurn() {
   const moveAcc = move.acc !== undefined ? move.acc : 100;
   setDialogue(`${enemy.name} used <strong>${move.name}</strong>!`, false);
 
+  const _s2 = battleSession;
   setTimeout(()=>{
+    if(battleSession !== _s2 || battle.phase === 'result') return;
     if(move.power > 0) {
       if(!rollHit(moveAcc, battle.enemyAccMult, battle.playerAccMult)) {
         showMiss(false);
-        setTimeout(()=>afterEnemyMove(), 800);
+        setTimeout(()=>{ if(battleSession === _s2 && battle.phase !== 'result') afterEnemyMove(); }, 800);
         return;
       }
       const typeBonus = getTypeEffectiveness(move.type, pl.poke.type);
@@ -2081,6 +2096,7 @@ function enemyTurn() {
       updatePlayerHp(pl.hp, pl.maxHp);
       renderPartyQueue();
       setTimeout(()=>{
+        if(battleSession !== _s2 || battle.phase === 'result') return;
         if(pl.hp <= 0) playerFainted();
         else applyPlayerLeechDrain(()=>afterEnemyMove());
       }, 700);
@@ -2126,6 +2142,7 @@ function applyPlayerLeechDrain(next) {
 }
 
 function afterEnemyMove() {
+  if(battle.phase === 'result') return;
   battle.turn++; battle.phase='player';
   const pl = battle.playerParty[battle.playerIdx];
   setDialogue(`What will ${pl.poke.name} do?`);
@@ -2134,13 +2151,16 @@ function afterEnemyMove() {
 
 // ── Enemy fainted ──
 function enemyFainted() {
+  if(battle.phase === 'result') return;
   const enemy = battle.enemies[battle.enemyIdx];
   document.getElementById('enemy-sprite-wrap').classList.add('enemy-faint');
   setDialogue(`The Corrupted ${enemy.name} was defeated!`, true, ()=>{
+    if(battle.phase === 'result') return;
     document.getElementById('enemy-sprite-wrap').classList.remove('enemy-faint');
     battle.enemyIdx++;
     if(battle.enemyIdx >= battle.enemies.length) {
-      setTimeout(()=>chamberCleared(), 400);
+      const _s3 = battleSession;
+      setTimeout(()=>{ if(battleSession === _s3 && battle.phase !== 'result') chamberCleared(); }, 400);
     } else {
       const nextEnemy = battle.enemies[battle.enemyIdx];
       setDialogue(`A Corrupted ${nextEnemy.name} appeared!`, false, ()=>{
@@ -2206,9 +2226,11 @@ function chamberCleared() {
 
 // ── Player fainted ──
 function playerFainted() {
+  if(battle.phase === 'result') return;
   const pl = battle.playerParty[battle.playerIdx];
   document.getElementById('player-sprite').classList.add('player-faint');
   setDialogue(`${pl.poke.name} fainted!`, true, ()=>{
+    if(battle.phase === 'result') return;
     document.getElementById('player-sprite').classList.remove('player-faint');
     pl.fainted = true;
     renderPartyQueue();
@@ -2262,7 +2284,9 @@ function openBag() {
 }
 
 function fleeBattle() {
+  battleSession++; // invalidate all pending callbacks
   battle.phase='result';
+  dialogueCallback = null;
   document.getElementById('result-icon').textContent='🏃';
   document.getElementById('result-title').textContent='Fled!';
   document.getElementById('result-sub').textContent='You escaped the Rift.';
@@ -2295,6 +2319,8 @@ function showDefeat() {
 }
 
 function closeBattle() {
+  battleSession++; // invalidate any remaining callbacks
+  dialogueCallback = null;
   const bm = document.getElementById('modal-battle');
   bm.classList.remove('open'); bm.style.display='none';
   document.body.style.overflow = '';
@@ -2302,6 +2328,8 @@ function closeBattle() {
   document.getElementById('battle-result-overlay').style.display='none';
   // Re-render floors with updated stars
   renderFloors();
+  // Re-open the detail modal so the player can immediately retry
+  openDetailModal(battle.floorIdx);
 }
 
 // ── Particles ──
