@@ -22,12 +22,21 @@
     --corrupt-dark: #3d0080;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
+  html { height: 100%; }
   body {
     background: var(--deep);
     color: var(--text-main);
     font-family: 'Crimson Pro', serif;
-    min-height: 100vh;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  #content-scroll {
+    flex: 1;
+    overflow-y: auto;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
   }
   body::before {
     content:'';
@@ -52,7 +61,7 @@
     z-index:1;
     max-width:480px;
     margin:0 auto;
-    padding:0 12px 80px;
+    padding:0 12px 20px;
   }
   .header { text-align:center; padding:28px 0 20px; position:relative; }
   .header-emblem {
@@ -121,7 +130,7 @@
   }
   .chamber-label { font-family:'Cinzel',serif; font-size:9px; letter-spacing:3px; color:var(--gold-dim); white-space:nowrap; }
   .bottom-nav {
-    position:fixed; bottom:0; left:0; right:0;
+    flex-shrink: 0;
     background:rgba(10,8,18,0.95); border-top:1px solid rgba(201,149,42,0.15);
     backdrop-filter:blur(12px); display:flex; justify-content:space-around;
     padding:10px 0 env(safe-area-inset-bottom,10px); z-index:100;
@@ -231,8 +240,7 @@
   .tab-screen {
     position:relative; z-index:1;
     max-width:480px; margin:0 auto;
-    padding:0 12px 80px;
-    min-height:100vh;
+    padding:0 12px 20px;
   }
 
   /* Ranks screen */
@@ -567,6 +575,7 @@
 </style>
 </head>
 <body>
+<div id="content-scroll">
 
 <!-- ═══ TOWER SCREEN ═══ -->
 <div class="container" id="screen-tower">
@@ -639,6 +648,8 @@
   </div>
   <div id="rewards-list"></div>
 </div>
+
+</div><!-- /#content-scroll -->
 
 <!-- ═══ FLOOR DETAIL ═══ -->
 <div class="modal-overlay" id="modal-detail">
