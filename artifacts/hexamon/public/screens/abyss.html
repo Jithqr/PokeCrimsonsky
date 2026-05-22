@@ -602,7 +602,10 @@
       <div class="season-label" id="season-label">SEASON I</div>
       <div class="season-time" id="season-time">Loading...</div>
     </div>
-    <div class="reset-badge" id="reset-badge">RESETS 16TH</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="reset-badge" id="reset-badge">RESETS 16TH</div>
+      <button onclick="confirmResetProgress()" style="background:rgba(180,30,30,0.15);border:1px solid rgba(180,30,30,0.35);border-radius:4px;padding:3px 8px;font-size:10px;color:#ff7777;font-family:'Cinzel',serif;letter-spacing:0.5px;cursor:pointer;" title="Reset all floor progress">↺ RESET</button>
+    </div>
   </div>
 
   <div class="chamber-divider"><div class="chamber-label">⬦ OUTER HALLS ⬦</div></div>
@@ -1380,10 +1383,43 @@ function loadProgress() {
   } catch(e){}
 }
 
+function confirmResetProgress() {
+  if (!confirm('Reset ALL floor progress? This cannot be undone.')) return;
+  resetAllFloors();
+}
+
+function resetAllFloors() {
+  try { localStorage.removeItem(SAVE_KEY); } catch(e){}
+  FLOOR_DATA.forEach((f, i) => {
+    f.status = i === 0 ? 'active' : 'locked';
+    f.stars = 0;
+    f.chambers.forEach(c => { c.stars = 0; });
+  });
+  saveProgress();
+  renderFloors();
+  renderRewards();
+  renderRanks();
+}
+
 function loadPlayerRoster() {
   try {
     const save = JSON.parse(localStorage.getItem('hexamon:save:v2') || '{}');
-    const mons = save.mons || [];
+    let mons = [];
+    // New format: save.teams is an array of team groups, each with a mons array
+    if (save.teams && Array.isArray(save.teams)) {
+      save.teams.forEach(tg => { if (tg.mons && Array.isArray(tg.mons)) mons = mons.concat(tg.mons); });
+    }
+    // Also include box Pokémon
+    if (save.box && Array.isArray(save.box)) {
+      mons = mons.concat(save.box);
+    }
+    // Legacy fallback: save.team flat array
+    if (mons.length === 0 && save.team && Array.isArray(save.team)) {
+      mons = save.team;
+    }
+    // Deduplicate by uid
+    const seen = new Set();
+    mons = mons.filter(m => { const k = m.uid || m.speciesId; if (seen.has(k)) return false; seen.add(k); return true; });
     POKEMON_ROSTER = mons.map((mon, idx) => {
       const spriteId = mon.sprite || mon.speciesId || 0;
       const type1 = mon.type1 || 'Normal';
