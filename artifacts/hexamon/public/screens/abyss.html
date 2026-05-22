@@ -378,7 +378,7 @@
 
   .enemy-shadow { position:absolute; bottom:4px; left:50%; transform:translateX(-50%); width:70px; height:12px; background:rgba(139,0,255,0.3); border-radius:50%; filter:blur(6px); }
   .enemy-canvas {
-    width:75px; height:75px; object-fit:contain; image-rendering:pixelated;
+    width:110px; height:110px; object-fit:contain; image-rendering:pixelated;
     position:relative; z-index:2;
     filter: sepia(1) saturate(5) hue-rotate(220deg) brightness(0.75) contrast(1.2);
     animation: corruptPulse 2s ease-in-out infinite alternate;
@@ -429,12 +429,12 @@
   .battle-player-zone { position:relative; z-index:5; display:flex; align-items:flex-end; padding:4px 14px 0; gap:10px; flex:0 0 auto; margin-top:6px; }
   .player-sprite-wrap {
     position:absolute; left:calc(50% - 80px); transform:translateX(-50%);
-    bottom:calc(28% + 10px); width:80px; height:80px; z-index:6;
+    bottom:calc(28% + 10px); width:130px; height:130px; z-index:6;
     display:flex; align-items:flex-end; justify-content:center;
     animation:slideInRight 0.5s ease both 0.2s;
   }
-  .player-shadow { position:absolute; bottom:2px; left:50%; transform:translateX(-50%); width:55px; height:10px; background:rgba(0,0,0,0.5); border-radius:50%; filter:blur(4px); }
-  .player-sprite { width:75px; height:75px; image-rendering:pixelated; position:relative; z-index:2; filter:brightness(1.1); }
+  .player-shadow { position:absolute; bottom:2px; left:50%; transform:translateX(-50%); width:80px; height:12px; background:rgba(0,0,0,0.5); border-radius:50%; filter:blur(4px); }
+  .player-sprite { width:120px; height:120px; object-fit:contain; image-rendering:pixelated; position:relative; z-index:2; filter:brightness(1.1); }
 
   .player-info-card {
     flex:1; background:rgba(5,2,15,0.75); border:1px solid rgba(201,149,42,0.3);
@@ -1426,7 +1426,18 @@ let POKEMON_ROSTER = [];
 // ═══════════════════════════════════════════════════════════════════
 //  UTILITIES
 // ═══════════════════════════════════════════════════════════════════
-function spriteUrl(id) { return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`; }
+function spriteUrl(id) {
+  const clean = String(id).toLowerCase().replace(/[^a-z0-9-]/g,'');
+  return `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`;
+}
+function spriteUrlFallback(id) {
+  const clean = String(id).toLowerCase().replace(/[^a-z0-9-]/g,'');
+  return `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`;
+}
+function spriteUrlFallback2(id) {
+  const clean = String(id).toLowerCase().replace(/[^a-z0-9-]/g,'');
+  return `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`;
+}
 function buildStarSVG(filled, color) {
   const c = filled ? color : 'rgba(255,255,255,0.12)';
   return `<svg class="star" viewBox="0 0 10 10"><polygon points="5,1 6.2,3.8 9,4 7,6 7.6,9 5,7.5 2.4,9 3,6 1,4 3.8,3.8" fill="${c}"/></svg>`;
@@ -1645,7 +1656,7 @@ function renderRoster() {
     const tc=TYPE_COLORS[p.type]||'#888';
     return `<div class="poke-card${curHalf.includes(p.uid)?' selected':''}${otherHalf.includes(p.uid)?' in-other-half':''}" onclick="assignPokemon('${p.uid}')">
       <div class="poke-assigned-badge">✓</div>
-      <img class="poke-sprite" src="${spriteUrl(p.spriteId)}" alt="${p.name}" onerror="this.style.opacity=0.3">
+      <img class="poke-sprite" src="${spriteUrl(p.spriteId)}" alt="${p.name}" onerror="this.src=this.dataset.fb1||'';this.dataset.fb1='';this.onerror=function(){this.style.opacity=0.3}" data-fb1="${spriteUrlFallback(p.spriteId)}">
       <div class="poke-name" style="color:${tc}">${p.name}</div>
       <div class="poke-level">Lv.${p.level}</div>
     </div>`;
@@ -1659,7 +1670,7 @@ function renderPartySlots() {
     row.innerHTML = party[half].map((p,si)=>{
       const isActive=half===activeHalf&&si===activeSlotIdx;
       return `<div class="party-slot${p?' filled':''}${isActive?' active-slot':''}" onclick="selectSlot('${half}',${si})">
-        ${p?`<img class="slot-sprite" src="${spriteUrl(p.spriteId)}" alt="${p.name}"><div class="slot-remove" onclick="event.stopPropagation();removeSlot('${half}',${si})">✕</div>`:'<span class="slot-empty-icon">+</span>'}
+        ${p?`<img class="slot-sprite" src="${spriteUrl(p.spriteId)}" alt="${p.name}" onerror="this.src='${spriteUrlFallback(p.spriteId)}';this.onerror=null"><div class="slot-remove" onclick="event.stopPropagation();removeSlot('${half}',${si})">✕</div>`:'<span class="slot-empty-icon">+</span>'}
       </div>`;
     }).join('');
     const filled=party[half].filter(Boolean).length;
@@ -1833,9 +1844,22 @@ function renderPlayer() {
   document.getElementById('player-name').textContent = pl.poke.name;
   document.getElementById('player-name-inline').textContent = pl.poke.name;
   document.getElementById('player-level').textContent = `Lv.${pl.poke.level}`;
-  const backUrl = `https://play.pokemonshowdown.com/sprites/ani-back/${pl.poke.name.toLowerCase()}.gif`;
-  document.getElementById('player-sprite').src = backUrl;
-  document.getElementById('player-sprite').onerror = function(){ this.src = spriteUrl(pl.poke.spriteId); this.onerror=null; };
+  const sid = pl.poke.spriteId;
+  const clean = String(sid).toLowerCase().replace(/[^a-z0-9-]/g,'');
+  const fallbacks = [
+    `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`,
+    `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
+    `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
+  ];
+  let fi = 0;
+  const img = document.getElementById('player-sprite');
+  img.style.transform = 'scaleX(-1)';
+  img.src = fallbacks[fi];
+  img.onerror = function() {
+    fi++;
+    if (fi < fallbacks.length) { this.src = fallbacks[fi]; }
+    else { this.onerror = null; }
+  };
   updatePlayerHp(pl.hp, pl.maxHp, false);
   updatePlayerStatus(pl);
 }
@@ -1862,7 +1886,7 @@ function renderPartyQueue() {
   const pq = document.getElementById('party-queue');
   pq.innerHTML = battle.playerParty.map((pl,i)=>`
     <div class="pq-icon ${pl.fainted?'fainted':''}${i===battle.playerIdx?' active':''}">
-      <img src="${spriteUrl(pl.poke.spriteId)}" alt="${pl.poke.name}">
+      <img src="${spriteUrl(pl.poke.spriteId)}" alt="${pl.poke.name}" onerror="this.src='${spriteUrlFallback(pl.poke.spriteId)}';this.onerror=null">
     </div>`).join('');
 }
 
@@ -2261,7 +2285,7 @@ function openSwapMenu(forced=false) {
     const pct=p.maxHp>0?p.hp/p.maxHp*100:0;
     return `<button class="swap-poke-btn${i===battle.playerIdx?' active':''}${p.fainted?' fainted':''}"
       onclick="swapTo(${i})" ${p.fainted||i===battle.playerIdx?'disabled':''}>
-      <img src="${spriteUrl(p.poke.spriteId)}" alt="${p.poke.name}">
+      <img src="${spriteUrl(p.poke.spriteId)}" alt="${p.poke.name}" onerror="this.src='${spriteUrlFallback(p.poke.spriteId)}';this.onerror=null">
       <div class="swap-poke-info">
         <span class="swap-poke-name">${p.poke.name}</span>
         <div class="swap-poke-hp-mini"><div class="swap-poke-hp-fill" style="width:${pct}%"></div></div>
