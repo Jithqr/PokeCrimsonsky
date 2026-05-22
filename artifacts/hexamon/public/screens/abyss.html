@@ -22,21 +22,13 @@
     --corrupt-dark: #3d0080;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
-  html { height: 100%; }
+  html, body { height: 100%; }
   body {
     background: var(--deep);
     color: var(--text-main);
     font-family: 'Crimson Pro', serif;
-    height: 100%;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-  #content-scroll {
-    flex: 1;
-    overflow-y: auto;
+    min-height: 100%;
     overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
   }
   body::before {
     content:'';
@@ -61,7 +53,7 @@
     z-index:1;
     max-width:480px;
     margin:0 auto;
-    padding:0 12px 20px;
+    padding:0 12px 90px;
   }
   .header { text-align:center; padding:28px 0 20px; position:relative; }
   .header-emblem {
@@ -130,10 +122,14 @@
   }
   .chamber-label { font-family:'Cinzel',serif; font-size:9px; letter-spacing:3px; color:var(--gold-dim); white-space:nowrap; }
   .bottom-nav {
-    flex-shrink: 0;
+    position: fixed; bottom: 0; left: 0; right: 0;
     background:rgba(10,8,18,0.95); border-top:1px solid rgba(201,149,42,0.15);
     backdrop-filter:blur(12px); display:flex; justify-content:space-around;
     padding:10px 0 env(safe-area-inset-bottom,10px); z-index:100;
+    /* Force GPU layer so fixed positioning works correctly inside iframes on mobile */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    will-change: transform;
   }
   .nav-btn { display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; color:var(--text-muted); font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.5px; cursor:pointer; padding:4px 12px; transition:color 0.2s; }
   .nav-btn.active-nav { color:var(--gold-light); }
@@ -240,7 +236,7 @@
   .tab-screen {
     position:relative; z-index:1;
     max-width:480px; margin:0 auto;
-    padding:0 12px 20px;
+    padding:0 12px 90px;
   }
 
   /* Ranks screen */
@@ -575,7 +571,6 @@
 </style>
 </head>
 <body>
-<div id="content-scroll">
 
 <!-- ═══ TOWER SCREEN ═══ -->
 <div class="container" id="screen-tower">
@@ -648,8 +643,6 @@
   </div>
   <div id="rewards-list"></div>
 </div>
-
-</div><!-- /#content-scroll -->
 
 <!-- ═══ FLOOR DETAIL ═══ -->
 <div class="modal-overlay" id="modal-detail">
