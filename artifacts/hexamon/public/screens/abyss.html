@@ -520,15 +520,6 @@
   .result-reward-chip { background:rgba(201,149,42,0.1); border:1px solid rgba(201,149,42,0.25); border-radius:7px; padding:6px 10px; font-size:12px; display:flex; align-items:center; gap:5px; }
 
   .battle-field { position:absolute; bottom:0; left:0; right:0; height:55%; z-index:1; pointer-events:none; perspective:200px; }
-  .vortex-enemy { position:absolute; left:50%; transform:translateX(-50%) rotateX(70deg); bottom:12%; width:150px; height:60px; border-radius:50%; background:radial-gradient(ellipse at center, rgba(139,0,255,0.6) 0%, rgba(80,0,180,0.3) 50%, transparent 75%); box-shadow:0 0 28px rgba(139,0,255,0.7), 0 0 56px rgba(100,0,200,0.35); animation:vortex-pulse 2s ease-in-out infinite alternate; }
-  .vortex-enemy::before { content:''; position:absolute; inset:-5px; border-radius:50%; border:2px solid rgba(191,95,255,0.6); border-top-color:rgba(220,150,255,1); animation:vortex-ring-spin 1.6s linear infinite; }
-  .vortex-enemy::after { content:''; position:absolute; inset:8px; border-radius:50%; border:1.5px dashed rgba(160,50,255,0.5); animation:vortex-ring-rev 2.4s linear infinite; }
-  .vortex-player { position:absolute; right:6%; top:8%; width:80px; height:32px; border-radius:50%; background:radial-gradient(ellipse at center, rgba(201,149,42,0.55) 0%, rgba(140,90,15,0.3) 50%, transparent 75%); box-shadow:0 0 18px rgba(201,149,42,0.6), 0 0 36px rgba(150,100,10,0.3); transform:rotateX(70deg); animation:vortex-pulse 2.5s ease-in-out infinite alternate; }
-  .vortex-player::before { content:''; position:absolute; inset:-5px; border-radius:50%; border:2px solid rgba(240,192,96,0.6); border-top-color:rgba(255,220,120,1); animation:vortex-ring-spin 1.9s linear infinite; }
-  .vortex-player::after { content:''; position:absolute; inset:8px; border-radius:50%; border:1.5px dashed rgba(201,149,42,0.5); animation:vortex-ring-rev 2.8s linear infinite; }
-  @keyframes vortex-ring-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-  @keyframes vortex-ring-rev  { from{transform:rotate(0deg)} to{transform:rotate(-360deg)} }
-  @keyframes vortex-pulse { from { opacity:0.75; } to { opacity:1; } }
 
   @keyframes enemy-hit {
     0%,100% { transform:translateX(0); filter:saturate(0) brightness(0.3) sepia(1) hue-rotate(250deg); }
@@ -728,8 +719,6 @@
       <div class="corruption-particles" id="corruption-particles"></div>
     </div>
     <div class="battle-field">
-      <div class="vortex-enemy"></div>
-      <div class="vortex-player"></div>
     </div>
 
     <div class="battle-hud-top">
