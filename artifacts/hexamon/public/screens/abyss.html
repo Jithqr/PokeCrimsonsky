@@ -1614,9 +1614,15 @@ function openDetailModal(idx) {
     enterBtn.textContent = f.status==='cleared'?'↩ RETRY':'⚔ SELECT TEAM';
     enterBtn.disabled = false;
   }
-  document.getElementById('modal-detail').classList.add('open');
+  const md = document.getElementById('modal-detail');
+  md.style.display = 'flex';
+  md.classList.add('open');
 }
-function closeDetailModal() { document.getElementById('modal-detail').classList.remove('open'); }
+function closeDetailModal() {
+  const md = document.getElementById('modal-detail');
+  md.classList.remove('open');
+  md.style.display = '';
+}
 
 // ═══════════════════════════════════════════════════════════════════
 //  TEAM SELECT
@@ -2377,6 +2383,7 @@ function showDefeat() {
 function closeBattle() {
   battleSession++; // invalidate any remaining callbacks
   dialogueCallback = null;
+  const savedFloorIdx = battle.floorIdx ?? currentFloorIdx; // capture before any async cleanup
   const bm = document.getElementById('modal-battle');
   bm.classList.remove('open'); bm.style.display='none';
   document.body.style.overflow = '';
@@ -2385,7 +2392,7 @@ function closeBattle() {
   // Re-render floors with updated stars
   renderFloors();
   // Re-open the detail modal so the player can immediately retry
-  openDetailModal(battle.floorIdx);
+  openDetailModal(savedFloorIdx);
 }
 
 // ── Particles ──
