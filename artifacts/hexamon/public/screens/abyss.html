@@ -2391,8 +2391,10 @@ function closeBattle() {
   document.getElementById('battle-result-overlay').style.display='none';
   // Re-render floors with updated stars
   renderFloors();
-  // Re-open the detail modal so the player can immediately retry
-  openDetailModal(savedFloorIdx);
+  // Delay re-opening the detail modal to avoid mobile ghost-click tap-through
+  // (mobile browsers fire a synthetic click ~300ms after touchend at the same
+  //  coordinates; without the delay it would immediately hit BACK and close the modal)
+  setTimeout(() => openDetailModal(savedFloorIdx), 420);
 }
 
 // ── Particles ──
