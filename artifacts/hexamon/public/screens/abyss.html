@@ -1205,27 +1205,27 @@ let FLOOR_DATA = [
    disorder:"<span class='first'>First Half</span> Grass-types gain +20% Sp.Atk.<br><span class='second'>Second Half</span> Bug-type moves deal +25% DMG.",
    chambers:[{name:'Chamber 1',stars:0},{name:'Chamber 2',stars:0},{name:'Chamber 3',stars:0}],
    rewards:[{icon:'💎',name:'Stardust',qty:'×800'},{icon:'🎫',name:'Exp Candy',qty:'×3'}]},
-  {id:2,name:'Ember Cavern',status:'active',stars:0,
+  {id:2,name:'Ember Cavern',status:'locked',stars:0,
    disorder:"<span class='first'>First Half</span> Fire-types gain +15% Atk.<br><span class='second'>Second Half</span> Ice-types lose 20% Speed.",
    chambers:[{name:'Chamber 1',stars:0},{name:'Chamber 2',stars:0},{name:'Chamber 3',stars:0}],
    rewards:[{icon:'💎',name:'Stardust',qty:'×800'},{icon:'🔮',name:'Rare Candy',qty:'×2'}]},
-  {id:3,name:'Tide Shore',status:'active',stars:0,
+  {id:3,name:'Tide Shore',status:'locked',stars:0,
    disorder:"<span class='first'>First Half</span> Water-types gain +20% Sp.Def.<br><span class='second'>Second Half</span> Rock-types lose 15% accuracy.",
    chambers:[{name:'Chamber 1',stars:0},{name:'Chamber 2',stars:0},{name:'Chamber 3',stars:0}],
    rewards:[{icon:'💎',name:'Stardust',qty:'×1000'},{icon:'🎫',name:'Exp Candy',qty:'×4'}]},
-  {id:4,name:'Storm Peak',status:'active',stars:0,
+  {id:4,name:'Storm Peak',status:'locked',stars:0,
    disorder:"<span class='first'>First Half</span> Electric-types +25% Speed.<br><span class='second'>Second Half</span> Ground-types lose 30% Sp.Atk.",
    chambers:[{name:'Chamber 1',stars:0},{name:'Chamber 2',stars:0},{name:'Chamber 3',stars:0}],
    rewards:[{icon:'🔮',name:'Rare Candy',qty:'×3'},{icon:'✨',name:'Shiny Charm',qty:'×1'}]},
-  {id:5,name:'Frostbite Glen',status:'active',stars:0,
+  {id:5,name:'Frostbite Glen',status:'locked',stars:0,
    disorder:"<span class='first'>First Half</span> Ice-types +20% Sp.Atk.<br><span class='second'>Second Half</span> Dragon-types lose 20% Defense.",
    chambers:[{name:'Chamber 1',stars:0},{name:'Chamber 2',stars:0},{name:'Chamber 3',stars:0}],
    rewards:[{icon:'🔮',name:'Rare Candy',qty:'×4'},{icon:'💠',name:'PP Max',qty:'×2'}]},
-  {id:6,name:'Phantom Marsh',status:'active',stars:0,
+  {id:6,name:'Phantom Marsh',status:'locked',stars:0,
    disorder:"<span class='first'>First Half</span> Ghost-types +25% Sp.Atk.<br><span class='second'>Second Half</span> Normal-types can't use status moves.",
    chambers:[{name:'Chamber 1',stars:0},{name:'Chamber 2',stars:0},{name:'Chamber 3',stars:0}],
    rewards:[{icon:'🔮',name:'Rare Candy',qty:'×5'},{icon:'🌟',name:'Star Piece',qty:'×3'}]},
-  {id:7,name:'Iron Fortress',status:'active',stars:0,
+  {id:7,name:'Iron Fortress',status:'locked',stars:0,
    disorder:"<span class='first'>First Half</span> Steel-types +30% Defense.<br><span class='second'>Second Half</span> Fairy-types lose 25% Sp.Atk.",
    chambers:[{name:'Chamber 1',stars:0},{name:'Chamber 2',stars:0},{name:'Chamber 3',stars:0}],
    rewards:[{icon:'🏅',name:'Gold Badge',qty:'×1'},{icon:'🔮',name:'Rare Candy',qty:'×5'}]},
@@ -1354,7 +1354,7 @@ function getMovesForPokemon(poke) {
 // ═══════════════════════════════════════════════════════════════════
 //  SAVE / LOAD
 // ═══════════════════════════════════════════════════════════════════
-const SAVE_KEY = 'crimsonrift:save:v2';
+const SAVE_KEY = 'crimsonrift:save:v3';
 
 function saveProgress() {
   const data = { floors: {} };
