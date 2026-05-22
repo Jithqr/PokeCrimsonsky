@@ -281,7 +281,7 @@
   /* ═══════════════════════════════════════════
      BATTLE SCREEN
   ═══════════════════════════════════════════ */
-  #modal-battle { padding:0; align-items:stretch; z-index:300; }
+  #modal-battle { padding:0; align-items:stretch; z-index:300; overflow:hidden; touch-action:none; }
 
   .battle-screen {
     width:100%;
@@ -1774,6 +1774,8 @@ function initBattleScreen() {
   const bm = document.getElementById('modal-battle');
   bm.style.display = '';
   bm.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.body.style.touchAction = 'none';
 
   const enemy = battle.enemies[battle.enemyIdx];
   const player = battle.playerParty[battle.playerIdx];
@@ -2306,6 +2308,8 @@ function showDefeat() {
 function closeBattle() {
   const bm = document.getElementById('modal-battle');
   bm.classList.remove('open'); bm.style.display='none';
+  document.body.style.overflow = '';
+  document.body.style.touchAction = '';
   document.getElementById('battle-result-overlay').style.display='none';
   // Re-render floors with updated stars
   renderFloors();
