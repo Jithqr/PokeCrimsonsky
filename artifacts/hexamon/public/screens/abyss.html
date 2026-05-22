@@ -1462,6 +1462,19 @@ function updateSeasonTimer() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+//  GHOST-CLICK GUARD
+//  Mobile browsers fire a synthetic click ~300ms after touchend at the
+//  same screen coordinates. This helper blocks all pointer events
+//  briefly after any modal transition so that phantom tap never lands
+//  on the newly-visible UI.
+// ═══════════════════════════════════════════════════════════════════
+function blockClicks(ms) {
+  ms = ms || 450;
+  document.body.style.pointerEvents = 'none';
+  setTimeout(function() { document.body.style.pointerEvents = ''; }, ms);
+}
+
+// ═══════════════════════════════════════════════════════════════════
 //  TAB NAVIGATION
 // ═══════════════════════════════════════════════════════════════════
 let currentTab = 'tower';
@@ -1590,6 +1603,7 @@ function renderFloors() {
 //  DETAIL MODAL
 // ═══════════════════════════════════════════════════════════════════
 function openDetailModal(idx) {
+  blockClicks();
   document.getElementById('modal-battle').classList.remove('open');
   document.getElementById('modal-battle').style.display='none';
   currentFloorIdx = idx;
@@ -1619,6 +1633,7 @@ function openDetailModal(idx) {
   md.classList.add('open');
 }
 function closeDetailModal() {
+  blockClicks();
   const md = document.getElementById('modal-detail');
   md.classList.remove('open');
   md.style.display = '';
@@ -1633,6 +1648,7 @@ let activeSlotIdx = 0;
 let typeFilter = 'All';
 
 function openTeamModal() {
+  blockClicks();
   closeDetailModal();
   const f = FLOOR_DATA[currentFloorIdx];
   party = {first:[null,null,null,null], second:[null,null,null,null]};
@@ -1642,7 +1658,7 @@ function openTeamModal() {
   renderTypeFilters(); renderRoster(); renderPartySlots();
   document.getElementById('modal-team').classList.add('open');
 }
-function closeTeamModal() { document.getElementById('modal-team').classList.remove('open'); openDetailModal(currentFloorIdx); }
+function closeTeamModal() { blockClicks(); document.getElementById('modal-team').classList.remove('open'); openDetailModal(currentFloorIdx); }
 
 function renderTypeFilters() {
   const types=['All',...new Set(POKEMON_ROSTER.map(p=>p.type))];
@@ -1741,6 +1757,7 @@ function getChamberEnemies(floorId, chamberIdx) {
 }
 
 function startChallenge() {
+  blockClicks();
   document.getElementById('modal-team').classList.remove('open');
   const allPokes = [...party.first, ...party.second].filter(Boolean);
   if(allPokes.length === 0) return;
@@ -2346,6 +2363,7 @@ function openBag() {
 }
 
 function fleeBattle() {
+  blockClicks();
   battleSession++; // invalidate all pending callbacks
   battle.phase='result';
   dialogueCallback = null;
@@ -2381,6 +2399,7 @@ function showDefeat() {
 }
 
 function closeBattle() {
+  blockClicks();
   battleSession++; // invalidate any remaining callbacks
   dialogueCallback = null;
   const bm = document.getElementById('modal-battle');
