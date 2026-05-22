@@ -2383,18 +2383,17 @@ function showDefeat() {
 function closeBattle() {
   battleSession++; // invalidate any remaining callbacks
   dialogueCallback = null;
-  const savedFloorIdx = battle.floorIdx ?? currentFloorIdx; // capture before any async cleanup
   const bm = document.getElementById('modal-battle');
   bm.classList.remove('open'); bm.style.display='none';
   document.body.style.overflow = '';
   document.body.style.touchAction = '';
   document.getElementById('battle-result-overlay').style.display='none';
-  // Re-render floors with updated stars
+  // Close all modals and return to the main Rift floor list
+  // Player can tap any floor banner to re-enter whenever they want
+  document.getElementById('modal-detail').classList.remove('open');
+  document.getElementById('modal-detail').style.display = '';
+  document.getElementById('modal-team').classList.remove('open');
   renderFloors();
-  // Delay re-opening the detail modal to avoid mobile ghost-click tap-through
-  // (mobile browsers fire a synthetic click ~300ms after touchend at the same
-  //  coordinates; without the delay it would immediately hit BACK and close the modal)
-  setTimeout(() => openDetailModal(savedFloorIdx), 420);
 }
 
 // ── Particles ──
