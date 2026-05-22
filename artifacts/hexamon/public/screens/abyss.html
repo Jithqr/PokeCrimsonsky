@@ -1187,32 +1187,28 @@ const FLOOR_IMAGES = {
   12:'https://i.ibb.co/MyWQX7h3/Accepting-paid-requests-chikuwa-3296-on-X.jpg'
 };
 
-const POKEMON_ROSTER = [
-  {id:6,  name:'Charizard', level:90, type:'Fire'},
-  {id:9,  name:'Blastoise',level:89, type:'Water'},
-  {id:3,  name:'Venusaur', level:88, type:'Grass'},
-  {id:25, name:'Pikachu',  level:85, type:'Electric'},
-  {id:130,name:'Gyarados', level:84, type:'Water'},
-  {id:149,name:'Dragonite',level:83, type:'Dragon'},
-  {id:94, name:'Gengar',   level:82, type:'Ghost'},
-  {id:131,name:'Lapras',   level:81, type:'Ice'},
-  {id:143,name:'Snorlax',  level:81, type:'Normal'},
-  {id:59, name:'Arcanine', level:80, type:'Fire'},
-  {id:65, name:'Alakazam', level:80, type:'Psychic'},
-  {id:68, name:'Machamp',  level:80, type:'Fighting'},
-  {id:76, name:'Golem',    level:80, type:'Rock'},
-  {id:103,name:'Exeggutor',level:80, type:'Grass'},
-  {id:112,name:'Rhydon',   level:80, type:'Ground'},
-  {id:121,name:'Starmie',  level:80, type:'Water'},
-  {id:135,name:'Jolteon',  level:80, type:'Electric'},
-  {id:136,name:'Flareon',  level:80, type:'Fire'},
-  {id:134,name:'Vaporeon', level:80, type:'Water'},
-  {id:196,name:'Espeon',   level:75, type:'Psychic'},
-  {id:197,name:'Umbreon',  level:75, type:'Dark'},
-  {id:248,name:'Tyranitar',level:70, type:'Dark'},
-  {id:245,name:'Suicune',  level:70, type:'Water'},
-  {id:243,name:'Raikou',   level:70, type:'Electric'},
-];
+let POKEMON_ROSTER = [];
+
+function loadPlayerRoster() {
+  try {
+    const save = JSON.parse(localStorage.getItem('hexamon:save:v2') || '{}');
+    const mons = save.mons || [];
+    POKEMON_ROSTER = mons.map((mon, idx) => {
+      const spriteId = mon.sprite || mon.speciesId || 0;
+      const type1 = mon.type1 || 'Normal';
+      const typeCap = type1.charAt(0).toUpperCase() + type1.slice(1).toLowerCase();
+      return {
+        uid: mon.uid || (String(spriteId) + '_' + idx),
+        spriteId: spriteId,
+        name: mon.nickname || mon.name || 'Unknown',
+        level: mon.level || 1,
+        type: typeCap,
+      };
+    });
+  } catch(e) {
+    POKEMON_ROSTER = [];
+  }
+}
 
 const TYPE_COLORS = {
   Fire:'#cc4422',Water:'#2266cc',Grass:'#3a8a55',Electric:'#ccaa00',
@@ -1501,14 +1497,18 @@ function renderTypeFilters() {
 function setTypeFilter(t){ typeFilter=t; renderTypeFilters(); renderRoster(); }
 
 function renderRoster() {
+  if(POKEMON_ROSTER.length === 0) {
+    document.getElementById('roster-grid').innerHTML = `<div style="grid-column:1/-1;padding:20px 8px;text-align:center;font-family:'Cinzel',serif;font-size:10px;color:var(--text-muted);line-height:1.8">No Pokémon found.<br>Catch some first!</div>`;
+    return;
+  }
   const filtered = typeFilter==='All'?POKEMON_ROSTER:POKEMON_ROSTER.filter(p=>p.type===typeFilter);
-  const otherHalf = (activeHalf==='first'?party.second:party.first).filter(Boolean).map(p=>p.id);
-  const curHalf = party[activeHalf].filter(Boolean).map(p=>p.id);
+  const otherHalf = (activeHalf==='first'?party.second:party.first).filter(Boolean).map(p=>p.uid);
+  const curHalf = party[activeHalf].filter(Boolean).map(p=>p.uid);
   document.getElementById('roster-grid').innerHTML = filtered.map(p=>{
     const tc=TYPE_COLORS[p.type]||'#888';
-    return `<div class="poke-card${curHalf.includes(p.id)?' selected':''}${otherHalf.includes(p.id)?' in-other-half':''}" onclick="assignPokemon(${p.id})">
+    return `<div class="poke-card${curHalf.includes(p.uid)?' selected':''}${otherHalf.includes(p.uid)?' in-other-half':''}" onclick="assignPokemon('${p.uid}')">
       <div class="poke-assigned-badge">✓</div>
-      <img class="poke-sprite" src="${spriteUrl(p.id)}" alt="${p.name}" onerror="this.style.opacity=0.3">
+      <img class="poke-sprite" src="${spriteUrl(p.spriteId)}" alt="${p.name}" onerror="this.style.opacity=0.3">
       <div class="poke-name" style="color:${tc}">${p.name}</div>
       <div class="poke-level">Lv.${p.level}</div>
     </div>`;
@@ -1522,7 +1522,7 @@ function renderPartySlots() {
     row.innerHTML = party[half].map((p,si)=>{
       const isActive=half===activeHalf&&si===activeSlotIdx;
       return `<div class="party-slot${p?' filled':''}${isActive?' active-slot':''}" onclick="selectSlot('${half}',${si})">
-        ${p?`<img class="slot-sprite" src="${spriteUrl(p.id)}" alt="${p.name}"><div class="slot-remove" onclick="event.stopPropagation();removeSlot('${half}',${si})">✕</div>`:'<span class="slot-empty-icon">+</span>'}
+        ${p?`<img class="slot-sprite" src="${spriteUrl(p.spriteId)}" alt="${p.name}"><div class="slot-remove" onclick="event.stopPropagation();removeSlot('${half}',${si})">✕</div>`:'<span class="slot-empty-icon">+</span>'}
       </div>`;
     }).join('');
     const filled=party[half].filter(Boolean).length;
@@ -1531,9 +1531,9 @@ function renderPartySlots() {
   });
 }
 function selectSlot(half,idx){ activeHalf=half; activeSlotIdx=idx; renderPartySlots(); renderRoster(); }
-function assignPokemon(id) {
-  const p=POKEMON_ROSTER.find(x=>x.id===id); if(!p) return;
-  const ci=party[activeHalf].findIndex(x=>x&&x.id===id);
+function assignPokemon(uid) {
+  const p=POKEMON_ROSTER.find(x=>x.uid===uid); if(!p) return;
+  const ci=party[activeHalf].findIndex(x=>x&&x.uid===uid);
   if(ci!==-1){ party[activeHalf][ci]=null; renderPartySlots(); renderRoster(); return; }
   let slot=activeSlotIdx;
   if(party[activeHalf][slot]){ const e=party[activeHalf].findIndex(x=>!x); slot=e!==-1?e:activeSlotIdx; }
@@ -1568,10 +1568,7 @@ function startChallenge() {
 
   // Build player party from team selection
   const allPokes = [...party.first, ...party.second].filter(Boolean);
-  if(allPokes.length === 0) {
-    // Default: give Charizard if nothing selected
-    allPokes.push(POKEMON_ROSTER[0]);
-  }
+  if(allPokes.length === 0) return;
 
   battle.floorIdx = currentFloorIdx;
   battle.chamberIdx = 0;
@@ -1704,7 +1701,7 @@ function renderPlayer() {
   // Use Showdown back animated GIF
   const backUrl = `https://play.pokemonshowdown.com/sprites/ani-back/${pl.poke.name.toLowerCase()}.gif`;
   document.getElementById('player-sprite').src = backUrl;
-  document.getElementById('player-sprite').onerror = function(){ this.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${pl.poke.id}.png`; };
+  document.getElementById('player-sprite').onerror = function(){ this.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${pl.poke.spriteId}.png`; };
   updatePlayerHp(pl.hp, pl.maxHp, false);
 }
 
@@ -1720,7 +1717,7 @@ function renderPartyQueue() {
   const pq = document.getElementById('party-queue');
   pq.innerHTML = battle.playerParty.map((pl,i)=>`
     <div class="pq-icon ${pl.fainted?'fainted':''}${i===battle.playerIdx?' active':''}">
-      <img src="${spriteUrl(pl.poke.id)}" alt="${pl.poke.name}">
+      <img src="${spriteUrl(pl.poke.spriteId)}" alt="${pl.poke.name}">
     </div>`).join('');
 }
 
@@ -2019,7 +2016,7 @@ function openSwapMenu() {
     const pct=p.maxHp>0?p.hp/p.maxHp*100:0;
     return `<button class="swap-poke-btn${i===battle.playerIdx?' active':''}${p.fainted?' fainted':''}"
       onclick="swapTo(${i})" ${p.fainted||i===battle.playerIdx?'disabled':''}>
-      <img src="${spriteUrl(p.poke.id)}" alt="${p.poke.name}">
+      <img src="${spriteUrl(p.poke.spriteId)}" alt="${p.poke.name}">
       <div class="swap-poke-info">
         <span class="swap-poke-name">${p.poke.name}</span>
         <div class="swap-poke-hp-mini"><div class="swap-poke-hp-fill" style="width:${pct}%"></div></div>
@@ -2108,6 +2105,7 @@ function spawnParticles() {
 }
 
 // ── Init ──
+loadPlayerRoster();
 renderFloors();
 </script>
 </body>
