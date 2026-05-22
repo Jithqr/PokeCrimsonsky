@@ -1846,19 +1846,40 @@ function renderPlayer() {
   document.getElementById('player-level').textContent = `Lv.${pl.poke.level}`;
   const sid = pl.poke.spriteId;
   const clean = String(sid).toLowerCase().replace(/[^a-z0-9-]/g,'');
-  const fallbacks = [
+  // Try back sprite first (like Battle Box), then fall back to front GIF flipped
+  const backFallbacks = [
+    `https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif`,
+  ];
+  const frontFallbacks = [
     `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`,
     `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
     `https://play.pokemonshowdown.com/sprites/dex/${clean}.png`,
   ];
-  let fi = 0;
   const img = document.getElementById('player-sprite');
-  img.style.transform = 'scaleX(-1)';
-  img.src = fallbacks[fi];
+  img.style.transform = '';
+  let backIdx = 0;
+  let usingFront = false;
+  let frontIdx = 0;
+  img.src = backFallbacks[backIdx];
   img.onerror = function() {
-    fi++;
-    if (fi < fallbacks.length) { this.src = fallbacks[fi]; }
-    else { this.onerror = null; }
+    if (!usingFront) {
+      backIdx++;
+      if (backIdx < backFallbacks.length) {
+        this.src = backFallbacks[backIdx];
+      } else {
+        // Switch to front GIF, flip it to face away (like back sprite perspective)
+        usingFront = true;
+        this.style.transform = 'scaleX(-1)';
+        this.src = frontFallbacks[frontIdx];
+      }
+    } else {
+      frontIdx++;
+      if (frontIdx < frontFallbacks.length) {
+        this.src = frontFallbacks[frontIdx];
+      } else {
+        this.onerror = null;
+      }
+    }
   };
   updatePlayerHp(pl.hp, pl.maxHp, false);
   updatePlayerStatus(pl);
