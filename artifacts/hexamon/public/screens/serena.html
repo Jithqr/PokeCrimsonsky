@@ -389,13 +389,11 @@ function setActive(btn) {
   btn.classList.add('active');
 }
 
-// Build a Pokémon sprite URL with showdown fallback
+// Build a Pokémon sprite URL using the sprite key (same logic as App.tsx MonSprite)
 function monSprite(mon) {
-  const slug = (mon.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-  const base = mon.isShiny
-    ? `https://play.pokemonshowdown.com/sprites/ani-shiny/${slug}.gif`
-    : `https://play.pokemonshowdown.com/sprites/ani/${slug}.gif`;
-  return base;
+  const clean = (mon.sprite || mon.name || '').toLowerCase().replace(/[^a-z0-9-]/g, '');
+  if (mon.isShiny) return `https://play.pokemonshowdown.com/sprites/ani-shiny/${clean}.gif`;
+  return `https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`;
 }
 
 // Render up to 3 cards into a column element
@@ -406,22 +404,47 @@ function renderCol(colEl, mons) {
     if (!mon) {
       const empty = document.createElement('div');
       empty.className = 'poke-card';
-      empty.style.cssText = 'border:1px dashed rgba(255,255,255,0.08);background:rgba(6,8,13,0.4);opacity:0.25;min-height:108px;';
+      empty.style.cssText = [
+        'border:1px solid rgba(80,120,180,0.15)',
+        'background:linear-gradient(145deg,rgba(10,14,28,0.75) 0%,rgba(6,9,18,0.85) 100%)',
+        'box-shadow:inset 0 1px 0 rgba(255,255,255,0.03),0 2px 12px rgba(0,0,0,0.5)',
+        'display:flex',
+        'flex-direction:column',
+        'align-items:center',
+        'justify-content:center',
+        'gap:6px',
+        'min-height:108px',
+        'cursor:default',
+      ].join(';');
+      empty.innerHTML = `
+        <div style="width:34px;height:34px;border-radius:50%;border:1px solid rgba(70,110,170,0.25);display:flex;align-items:center;justify-content:center;background:rgba(20,30,55,0.4)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(80,120,180,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        </div>
+        <span style="font-size:7px;letter-spacing:1.5px;color:rgba(80,120,170,0.35);font-family:'Rajdhani',sans-serif;font-weight:700;text-transform:uppercase;">EMPTY</span>`;
       colEl.appendChild(empty);
       continue;
     }
     const typeClass = mon.type1 ? `type-${mon.type1.toLowerCase()}` : '';
     const displayName = mon.nickname || mon.name || '???';
-    const sprite = monSprite(mon);
+    const spriteUrl = monSprite(mon);
     const card = document.createElement('div');
     card.className = `poke-card ${typeClass}`;
     const img = document.createElement('img');
     img.alt = displayName;
+    // Fallback chain: ani-shiny → ani → gen5 → home → pokeapi
+    const clean = (mon.sprite || mon.name || '').toLowerCase().replace(/[^a-z0-9-]/g, '');
+    const fallbacks = [
+      spriteUrl,
+      `https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,
+      `https://play.pokemonshowdown.com/sprites/home/${clean}.png`,
+      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${mon.id}.png`,
+    ];
+    let fbIdx = 0;
     img.onerror = function() {
-      const fallback = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${mon.id}.png`;
-      if (this.src !== fallback) this.src = fallback;
+      fbIdx++;
+      if (fbIdx < fallbacks.length) this.src = fallbacks[fbIdx];
     };
-    img.src = sprite;
+    img.src = fallbacks[0];
     const label = document.createElement('span');
     label.className = 'poke-name';
     label.textContent = displayName.toUpperCase();
@@ -442,9 +465,11 @@ function renderCol(colEl, mons) {
     if (tid) document.getElementById('trainerId').textContent = '#' + String(tid).slice(0, 10);
 
     // Party — save stores multiple teams; activeTeamIdx selects the active one
+    // Each team is a TeamGroup object with a `mons` array property
     const teams = save.teams || [];
     const activeIdx = typeof save.activeTeamIdx === 'number' ? save.activeTeamIdx : 0;
-    const team = (teams[activeIdx] || []).slice(0, 6);
+    const activeTeam = teams[activeIdx];
+    const team = ((activeTeam && activeTeam.mons) || []).slice(0, 6);
     renderCol(document.getElementById('party-left'),  team.slice(0, 3));
     renderCol(document.getElementById('party-right'), team.slice(3, 6));
 
