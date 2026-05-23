@@ -786,6 +786,13 @@ const FLOOR_IMAGES = {
   12:'https://i.ibb.co/MyWQX7h3/Accepting-paid-requests-chikuwa-3296-on-X.jpg'
 };
 
+// Per-chamber battle background overrides: CHAMBER_IMAGES[floorId][chamberIndex] (0-based)
+const CHAMBER_IMAGES = {
+  1: {
+    0: 'https://i.ibb.co/27nRKv7L/IMG-20260519-211814.jpg',
+  }
+};
+
 // ═══════════════════════════════════════════════════
 //  ENEMY DATA HELPERS
 // ═══════════════════════════════════════════════════
@@ -1752,7 +1759,8 @@ function startChallenge() {
 
 function initBattleScreen() {
   const f = FLOOR_DATA[battle.floorIdx];
-  const bgImg = FLOOR_IMAGES[f.id] || '';
+  const chamberBg = CHAMBER_IMAGES[f.id] && CHAMBER_IMAGES[f.id][battle.chamberIdx];
+  const bgImg = chamberBg || FLOOR_IMAGES[f.id] || '';
   document.getElementById('battle-bg-img').style.backgroundImage = bgImg?`url(${bgImg})`:'none';
   updateBattleHUD();
   spawnParticles();
@@ -2360,7 +2368,7 @@ function chamberComplete() {
       // Fade bg
       const bgEl=document.getElementById('battle-bg-img');
       bgEl.style.opacity='0';
-      setTimeout(()=>{bgEl.style.backgroundImage=FLOOR_IMAGES[f.id]?`url(${FLOOR_IMAGES[f.id]})`:'none';bgEl.style.opacity='.85';},500);
+      setTimeout(()=>{const _cb=CHAMBER_IMAGES[f.id]&&CHAMBER_IMAGES[f.id][battle.chamberIdx];const _bi=_cb||FLOOR_IMAGES[f.id]||'';bgEl.style.backgroundImage=_bi?`url(${_bi})`:'none';bgEl.style.opacity='.85';},500);
       updateBattleHUD();
       renderPlayer();renderPartyQueue();renderMoveGrid();
       const nextEnemy=battle.enemies[0];
