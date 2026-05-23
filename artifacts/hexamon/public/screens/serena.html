@@ -120,7 +120,7 @@
   .party-layout {
     display:flex; align-items:center; justify-content:center;
     width:100%; height:100%;
-    padding:20px 8px 120px; gap:0; margin-top:-70px;
+    padding:20px 8px 80px; gap:0; margin-top:-40px;
   }
 
   .slots-col { display:flex; flex-direction:column; gap:10px; align-items:center; justify-content:center; flex-shrink:0; z-index:15; }
@@ -217,8 +217,8 @@
 
   /* ── BOTTOM UI: Game-style nav bar ── */
   .bottom-ui {
-    position:fixed; bottom:59px; left:0; right:0;
-    padding:0 clamp(12px,5vw,28px) 14px; z-index:50;
+    position:fixed; bottom:0; left:0; right:0;
+    padding:0 clamp(12px,5vw,28px) 12px; z-index:50;
     display:flex; flex-direction:column; gap:10px;
   }
 
@@ -324,50 +324,24 @@
   </div>
   <div class="dex-id">
     <div class="dex-label">Trainer ID</div>
-    <div class="dex-num">#2091584701</div>
+    <div class="dex-num" id="trainerId">#—</div>
   </div>
 </div>
 
 <div class="screen">
   <div class="party-layout">
-    <div class="slots-col left">
-      <div class="poke-card type-dragon">
-        <img src="https://projectpokemon.org/images/normal-sprite/palkia.gif" alt="Palkia">
-        <span class="poke-name">Palkia</span>
-      </div>
-      <div class="poke-card type-dragon">
-        <img src="https://projectpokemon.org/images/normal-sprite/dialga.gif" alt="Dialga">
-        <span class="poke-name">Dialga</span>
-      </div>
-      <div class="poke-card type-dragon">
-        <img src="https://projectpokemon.org/images/normal-sprite/garchomp.gif" alt="Garchomp">
-        <span class="poke-name">Garchomp</span>
-      </div>
-    </div>
+    <div class="slots-col left" id="party-left"></div>
 
     <div class="trainer-wrap">
       <div class="ring"></div><div class="ring"></div><div class="ring"></div>
       <div class="trainer-glow"></div>
-      <video class="trainer-img"
+      <video class="trainer-img" id="trainerVideo"
         src="https://www.image2url.com/r2/default/videos/1778749524747-a0548b64-5e5d-4c36-8fb7-b8c077423ca3.webm"
         autoplay loop muted playsinline draggable="false">
       </video>
     </div>
 
-    <div class="slots-col right">
-      <div class="poke-card type-psychic">
-        <img src="https://projectpokemon.org/images/normal-sprite/mewtwo.gif" alt="Mewtwo">
-        <span class="poke-name">Mewtwo</span>
-      </div>
-      <div class="poke-card type-fire">
-        <img src="https://projectpokemon.org/images/normal-sprite/charizard.gif" alt="Charizard">
-        <span class="poke-name">Charizard</span>
-      </div>
-      <div class="poke-card type-water">
-        <img src="https://projectpokemon.org/images/normal-sprite/greninja.gif" alt="Greninja">
-        <span class="poke-name">Greninja</span>
-      </div>
-    </div>
+    <div class="slots-col right" id="party-right"></div>
   </div>
 </div>
 
@@ -415,11 +389,62 @@ function setActive(btn) {
   btn.classList.add('active');
 }
 
+// Build a Pokémon sprite URL with showdown fallback
+function monSprite(mon) {
+  const slug = (mon.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  const base = mon.isShiny
+    ? `https://play.pokemonshowdown.com/sprites/ani-shiny/${slug}.gif`
+    : `https://play.pokemonshowdown.com/sprites/ani/${slug}.gif`;
+  return base;
+}
+
+// Render up to 3 cards into a column element
+function renderCol(colEl, mons) {
+  colEl.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const mon = mons[i];
+    if (!mon) {
+      const empty = document.createElement('div');
+      empty.className = 'poke-card';
+      empty.style.cssText = 'border:1px dashed rgba(255,255,255,0.08);background:rgba(6,8,13,0.4);opacity:0.25;min-height:108px;';
+      colEl.appendChild(empty);
+      continue;
+    }
+    const typeClass = mon.type1 ? `type-${mon.type1.toLowerCase()}` : '';
+    const displayName = mon.nickname || mon.name || '???';
+    const sprite = monSprite(mon);
+    const card = document.createElement('div');
+    card.className = `poke-card ${typeClass}`;
+    const img = document.createElement('img');
+    img.alt = displayName;
+    img.onerror = function() {
+      const fallback = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${mon.id}.png`;
+      if (this.src !== fallback) this.src = fallback;
+    };
+    img.src = sprite;
+    const label = document.createElement('span');
+    label.className = 'poke-name';
+    label.textContent = displayName.toUpperCase();
+    card.appendChild(img);
+    card.appendChild(label);
+    colEl.appendChild(card);
+  }
+}
+
 (function() {
   try {
     const save = JSON.parse(localStorage.getItem('hexamon:save:v2') || '{}');
     const name = (save.player && save.player.name) || save.name || '';
     if (name) document.getElementById('trainerName').textContent = name.toUpperCase();
+
+    // Trainer ID
+    const tid = (save.player && save.player.id) || save.id || null;
+    if (tid) document.getElementById('trainerId').textContent = '#' + String(tid).slice(0, 10);
+
+    // Party
+    const team = save.team || [];
+    renderCol(document.getElementById('party-left'),  team.slice(0, 3));
+    renderCol(document.getElementById('party-right'), team.slice(3, 6));
 
     const CHAR_STARS = {
       'Cynthia':5,'Lance':5,'Steven':5,'Leon':5,'N':5,
