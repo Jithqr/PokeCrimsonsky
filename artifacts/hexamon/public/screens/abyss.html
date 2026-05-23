@@ -394,6 +394,26 @@
   /* Half star award animation */
   .half-award-overlay { position:absolute; inset:0; z-index:55; background:rgba(5,2,15,.85); display:flex; align-items:center; justify-content:center; animation:fadeIn .3s ease; backdrop-filter:blur(4px); }
   .half-award-card { text-align:center; padding:20px; }
+
+  /* Chamber advance confirmation */
+  .chamber-advance-overlay { position:absolute; inset:0; z-index:62; background:rgba(5,2,15,.92); display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); animation:fadeIn .4s ease; }
+  .chamber-advance-card { background:linear-gradient(160deg,#1a1530,#0e0b1e); border:1px solid rgba(201,149,42,.4); border-radius:16px; padding:24px 20px; width:290px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.9); animation:resultPop .45s cubic-bezier(.175,.885,.32,1.275) both; }
+  .adv-badge { font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px; color:var(--corrupt-light); border:1px solid rgba(139,0,255,.3); border-radius:3px; padding:2px 8px; display:inline-block; margin-bottom:8px; }
+  .adv-title { font-family:'Cinzel',serif; font-size:20px; font-weight:800; color:var(--gold-light); margin-bottom:4px; text-shadow:0 0 16px rgba(201,149,42,.5); }
+  .adv-sub { font-size:12px; color:var(--text-muted); margin-bottom:14px; }
+  .adv-team-row { display:flex; gap:8px; margin-bottom:14px; }
+  .adv-team-box { flex:1; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:8px; padding:8px; }
+  .adv-team-label { font-family:'Cinzel',serif; font-size:8px; letter-spacing:1px; margin-bottom:6px; }
+  .adv-team-label.first { color:#f0c060; }
+  .adv-team-label.second { color:#88aaff; }
+  .adv-mon-icons { display:flex; gap:3px; justify-content:center; flex-wrap:wrap; }
+  .adv-mon-dot { width:18px; height:18px; border-radius:50%; border:1.5px solid rgba(201,149,42,.3); background:rgba(0,0,0,.4); overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .adv-mon-dot.fainted { border-color:rgba(255,255,255,.1); filter:grayscale(1); opacity:.3; }
+  .adv-mon-dot img { width:24px; height:24px; image-rendering:pixelated; margin-top:3px; margin-left:-2px; }
+  .adv-hp-warning { font-family:'Cinzel',serif; font-size:9px; color:#ff9966; margin-bottom:12px; }
+  .adv-btn-row { display:flex; gap:8px; }
+  .adv-btn-advance { flex:2; background:linear-gradient(135deg,#b8851f,#e0a830); border:none; border-radius:8px; color:#1a0f00; font-family:'Cinzel',serif; font-size:12px; font-weight:700; padding:11px; cursor:pointer; box-shadow:0 4px 15px rgba(201,149,42,.3); letter-spacing:.5px; }
+  .adv-btn-flee { flex:1; background:rgba(180,30,30,.15); border:1px solid rgba(180,30,30,.35); border-radius:8px; color:#ff6666; font-family:'Cinzel',serif; font-size:11px; padding:11px; cursor:pointer; }
   .half-award-label { font-family:'Cinzel',serif; font-size:11px; letter-spacing:2px; color:var(--text-muted); margin-bottom:6px; }
   .half-award-half { font-family:'Cinzel',serif; font-size:16px; color:var(--gold-light); margin-bottom:12px; }
   .half-award-stars { display:flex; gap:10px; justify-content:center; margin-bottom:14px; }
@@ -730,6 +750,30 @@
         <div class="result-sub" id="result-sub">Chamber 1 Cleared</div>
         <div class="result-rewards" id="result-rewards"></div>
         <button class="btn-enter" style="width:100%;font-size:13px" id="result-btn" onclick="closeBattle()">CONTINUE</button>
+      </div>
+    </div>
+
+    <!-- Chamber advance confirmation -->
+    <div class="chamber-advance-overlay" id="chamber-advance-overlay" style="display:none">
+      <div class="chamber-advance-card">
+        <div class="adv-badge">⬡ RIFT CHALLENGE</div>
+        <div class="adv-title" id="adv-title">Chamber 1 Cleared!</div>
+        <div class="adv-sub" id="adv-sub">Both halves defeated. Advance to Chamber 2?</div>
+        <div class="adv-team-row">
+          <div class="adv-team-box">
+            <div class="adv-team-label first">½1 TEAM</div>
+            <div class="adv-mon-icons" id="adv-team1-icons"></div>
+          </div>
+          <div class="adv-team-box">
+            <div class="adv-team-label second">½2 TEAM</div>
+            <div class="adv-mon-icons" id="adv-team2-icons"></div>
+          </div>
+        </div>
+        <div class="adv-hp-warning" id="adv-hp-warning"></div>
+        <div class="adv-btn-row">
+          <button class="adv-btn-flee" onclick="fleeBattle()">✕ FLEE</button>
+          <button class="adv-btn-advance" id="adv-advance-btn" onclick="advanceToNextChamber()">→ ADVANCE</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2341,7 +2385,7 @@ function chamberComplete() {
   const f=FLOOR_DATA[battle.floorIdx];
   saveProgress();
   if(battle.chamberIdx>=2){
-    // Floor complete!
+    // All 3 chambers cleared — floor complete!
     if(f.status!=='cleared'){
       f.status='cleared';
       checkUnlocks();
@@ -2350,35 +2394,75 @@ function chamberComplete() {
     const shards=checkRewardMilestones(f.id);
     showFloorSummary(shards);
   } else {
-    // Next chamber
-    setDialogue(`✓ Chamber ${battle.chamberIdx+1} cleared! Proceeding...`,true,()=>{
-      battle.chamberIdx++;
-      // Switch back to first half, same HP
-      battle.currentHalf='first';
-      battle.playerParty=battle.team1Party;
-      const alive=findFirstAlive(battle.team1Party);
-      battle.playerIdx=alive>=0?alive:0;
-      battle.enemies=getChamberHalfEnemies(f.id,battle.chamberIdx,'half1');
-      battle.enemyIdx=0;
-      battle.playerAtkMult=1;battle.playerAccMult=1;
-      battle.enemyAtkMult=1;battle.enemyAccMult=1;
-      battle.turn=1;battle.phase='player';
-      battle.halfTimeLimit=f.timeLimit;
-      // Fade bg
-      const bgEl=document.getElementById('battle-bg-img');
-      bgEl.style.opacity='0';
-      setTimeout(()=>{const _cb=(CHAMBER_IMAGES[f.id]&&CHAMBER_IMAGES[f.id][battle.chamberIdx])||DEFAULT_CHAMBER_BG;bgEl.style.backgroundImage=`url(${_cb})`;bgEl.style.opacity='.85';},500);
-      updateBattleHUD();
-      renderPlayer();renderPartyQueue();renderMoveGrid();
-      const nextEnemy=battle.enemies[0];
-      setDialogue(`Chamber ${battle.chamberIdx+1} begins! A Corrupted ${nextEnemy.name} appears!`,false,()=>{
-        renderEnemy();
-        const pl=battle.playerParty[battle.playerIdx];
-        setDialogue(`What will ${pl.poke.name} do?`);showActions();
-        startHalfTimer();
-      });
-    });
+    // Show advance confirmation before moving to next chamber
+    showChamberAdvancePrompt();
   }
+}
+
+// ── Chamber advance prompt ──
+function showChamberAdvancePrompt() {
+  const f=FLOOR_DATA[battle.floorIdx];
+  const nextChamberNum=battle.chamberIdx+2; // +1 for 0-index, +1 for next
+
+  document.getElementById('adv-title').textContent=`Chamber ${battle.chamberIdx+1} Cleared!`;
+  document.getElementById('adv-sub').textContent=
+    `Both halves defeated. Ready for Chamber ${nextChamberNum}?`;
+  document.getElementById('adv-advance-btn').textContent=`→ Enter Chamber ${nextChamberNum}`;
+
+  // Render team health icons
+  function renderTeamIcons(team, containerId) {
+    document.getElementById(containerId).innerHTML=team.map(p=>`
+      <div class="adv-mon-dot${p.fainted?' fainted':''}">
+        <img src="${spriteUrl(p.poke.spriteId)}" onerror="this.src='${spriteUrlFb(p.poke.spriteId)}';this.onerror=null">
+      </div>`).join('');
+  }
+  renderTeamIcons(battle.team1Party, 'adv-team1-icons');
+  renderTeamIcons(battle.team2Party, 'adv-team2-icons');
+
+  // HP warning
+  const t1Low=battle.team1Party.filter(p=>!p.fainted&&p.hp/p.maxHp<0.3).length;
+  const t2Low=battle.team2Party.filter(p=>!p.fainted&&p.hp/p.maxHp<0.3).length;
+  const warn=document.getElementById('adv-hp-warning');
+  if(t1Low||t2Low){
+    warn.textContent=`⚠ ${t1Low?`½1: ${t1Low} mon${t1Low>1?'s':''} low HP`:''}${t1Low&&t2Low?' · ':''}${t2Low?`½2: ${t2Low} mon${t2Low>1?'s':''} low HP`:''}`;
+    warn.style.display='';
+  } else { warn.style.display='none'; }
+
+  document.getElementById('chamber-advance-overlay').style.display='flex';
+}
+
+function advanceToNextChamber() {
+  haptic(15);
+  document.getElementById('chamber-advance-overlay').style.display='none';
+  const f=FLOOR_DATA[battle.floorIdx];
+  battle.chamberIdx++;
+  // Switch back to first half, HP carries over (no reset)
+  battle.currentHalf='first';
+  battle.playerParty=battle.team1Party;
+  const alive=findFirstAlive(battle.team1Party);
+  battle.playerIdx=alive>=0?alive:0;
+  battle.enemies=getChamberHalfEnemies(f.id,battle.chamberIdx,'half1');
+  battle.enemyIdx=0;
+  battle.playerAtkMult=1;battle.playerAccMult=1;
+  battle.enemyAtkMult=1;battle.enemyAccMult=1;
+  battle.turn=1;battle.phase='player';
+  battle.halfTimeLimit=f.timeLimit;
+  // Fade background
+  const bgEl=document.getElementById('battle-bg-img');
+  bgEl.style.opacity='0';
+  setTimeout(()=>{
+    const _cb=(CHAMBER_IMAGES[f.id]&&CHAMBER_IMAGES[f.id][battle.chamberIdx])||DEFAULT_CHAMBER_BG;
+    bgEl.style.backgroundImage=`url(${_cb})`;bgEl.style.opacity='.85';
+  },500);
+  updateBattleHUD();
+  renderPlayer();renderPartyQueue();renderMoveGrid();
+  const nextEnemy=battle.enemies[0];
+  setDialogue(`Chamber ${battle.chamberIdx+1} begins! A Corrupted ${nextEnemy.name} appears!`,false,()=>{
+    renderEnemy();
+    const pl=battle.playerParty[battle.playerIdx];
+    setDialogue(`What will ${pl.poke.name} do?`);showActions();
+    startHalfTimer();
+  });
 }
 
 // ── Floor Summary ──
@@ -2514,6 +2598,7 @@ function openBag(){
 function fleeBattle() {
   haptic(20);
   blockClicks();
+  document.getElementById('chamber-advance-overlay').style.display='none';
   battleSession++;battle.phase='result';dialogueCallback=null;stopHalfTimer();
   document.getElementById('result-icon').textContent='🏃';
   document.getElementById('result-title').textContent='Fled!';
@@ -2531,6 +2616,7 @@ function closeBattle() {
   bm.classList.remove('open');bm.style.display='none';
   document.body.style.overflow='';document.body.style.touchAction='';
   document.getElementById('battle-result-overlay').style.display='none';
+  document.getElementById('chamber-advance-overlay').style.display='none';
   document.getElementById('modal-detail').classList.remove('open');
   document.getElementById('modal-detail').style.display='';
   document.getElementById('modal-team').classList.remove('open');
