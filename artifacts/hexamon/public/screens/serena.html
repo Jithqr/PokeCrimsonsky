@@ -441,8 +441,10 @@ function renderCol(colEl, mons) {
     const tid = (save.player && save.player.id) || save.id || null;
     if (tid) document.getElementById('trainerId').textContent = '#' + String(tid).slice(0, 10);
 
-    // Party
-    const team = save.team || [];
+    // Party — save stores multiple teams; activeTeamIdx selects the active one
+    const teams = save.teams || [];
+    const activeIdx = typeof save.activeTeamIdx === 'number' ? save.activeTeamIdx : 0;
+    const team = (teams[activeIdx] || []).slice(0, 6);
     renderCol(document.getElementById('party-left'),  team.slice(0, 3));
     renderCol(document.getElementById('party-right'), team.slice(3, 6));
 
