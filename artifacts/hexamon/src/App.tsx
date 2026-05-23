@@ -35,6 +35,7 @@ import LeagueScreen from "./components/LeagueScreen";
 import safariForestBg from "@assets/6155a54f-3b2d-4298-911f-596582b8196c_1777290294414.jpeg";
 import huntForestBg from "@assets/0d36e278-0668-4064-8738-4427560706e9_1777293871555.jpeg";
 import battleArenaBg from "@assets/battle_arena_meadow.jpeg";
+import chamberBattleBg from "@assets/IMG_20260521_120748_1779345507356.jpg";
 import { GYM_LEADERS, ELITE_FOUR, npcMonToAppMon, type NpcTrainer } from "./lib/league-data";
 import { BackBtn, BACK_BTN_STYLE } from "./components/BackBtn";
 import {
@@ -4852,9 +4853,13 @@ export default function App() {
   if (screen === "battle" && battle) {
     const { wild, pMon } = battle;
     const wildHpPct = Math.max(0, Math.min(100, (wild.currentHp / wild.maxHp) * 100));
-    const wildHpClass = wildHpPct > 50 ? "#4ade80" : wildHpPct > 25 ? "#facc15" : "#f87171";
+    const wildHpLow = wildHpPct <= 25;
     const pHpPct = Math.max(0, Math.min(100, (pMon.currentHp / pMon.maxHp) * 100));
-    const pHpClass = pHpPct > 50 ? "#4ade80" : pHpPct > 25 ? "#facc15" : "#f87171";
+    const pHpLow = pHpPct <= 25;
+    const chamberNum = (huntCount % 3) + 1;
+    const floorNum = Math.floor(huntCount / 3) + 1;
+    const lastLog = log.length > 0 ? log[log.length - 1].msg : `What will ${pMon.name} do?`;
+    const isChoosing = battle.phase === "choose";
     const runAway = () => {
       if (ballAnim || ringActive) return;
       sfx.menuBack();
@@ -4865,298 +4870,321 @@ export default function App() {
       setScreen("hunt");
     };
     return (
-      <div style={{ ...S.root, background: "#0a0a0c" }}>
+      <div style={{ ...S.root, background: "#0a0612", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <style>{css}{`
-          .wb-close-btn {
-            background: #1c1c1e;
-            border: 1px solid #2a2a2d;
-            color: #ffffff;
-            padding: 8px 14px;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            flex-shrink: 0;
-          }
-          .wb-info-card {
-            background: rgba(10,10,14,0.82);
-            border: 1px solid rgba(255,255,255,0.10);
-            border-radius: 10px;
-            padding: 8px 12px;
-            backdrop-filter: blur(6px);
-            min-width: 160px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          }
-          .wb-move-btn {
-            background: linear-gradient(180deg, #1a1a22 0%, #111118 100%);
-            border: 1px solid #a78bfa;
-            border-radius: 10px;
-            padding: 12px 14px;
-            cursor: pointer;
-            text-align: left;
-            transition: all 0.18s ease;
-            color: #f0f0f0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          }
-          .wb-move-btn:hover:not(:disabled) {
-            background: linear-gradient(180deg, #26263a 0%, #1a1a28 100%);
-            border-color: #c4b5fd;
-            transform: translateY(-2px);
-          }
-          .wb-move-btn:active:not(:disabled) { transform: translateY(1px); }
-          .wb-move-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-          .wb-action-btn {
-            flex: 1;
-            background: linear-gradient(180deg, #1c1c21 0%, #121216 100%);
-            border: 1px solid rgba(255,255,255,0.08);
-            color: #f0f0f0;
-            padding: 16px 10px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          }
-          .wb-action-btn:hover:not(:disabled) {
-            background: linear-gradient(180deg, #2a2a32 0%, #1a1a20 100%);
-            border-color: rgba(255,255,255,0.15);
-            transform: translateY(-2px);
-          }
-          .wb-action-btn:active:not(:disabled) { transform: translateY(1px); }
-          .wb-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
           @keyframes megaPulse {
             0%, 100% { box-shadow: 0 0 20px rgba(219,39,119,0.6), 0 0 40px rgba(124,58,237,0.4); transform: scale(1); }
             50% { box-shadow: 0 0 30px rgba(219,39,119,0.9), 0 0 60px rgba(124,58,237,0.7); transform: scale(1.02); }
           }
+          .cb-move-btn {
+            background: rgba(10,6,25,0.88);
+            border: 1.5px solid rgba(255,255,255,0.13);
+            border-radius: 8px;
+            padding: 7px 8px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.15s;
+            position: relative;
+            overflow: hidden;
+          }
+          .cb-move-btn:hover:not(:disabled) { border-color: rgba(201,149,42,0.5); background: rgba(201,149,42,0.08); }
+          .cb-move-btn:active:not(:disabled) { transform: scale(0.97); }
+          .cb-move-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+          .cb-side-btn {
+            flex: 1;
+            background: rgba(10,6,25,0.88);
+            border: 1.5px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #8a7a5a;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            padding: 6px 4px;
+            transition: all 0.15s;
+            min-width: 44px;
+          }
+          .cb-side-btn:hover { border-color: rgba(201,149,42,0.4); color: #c9952a; }
+          .cb-side-btn span:first-child { font-size: 15px; }
         `}</style>
-        <div style={{ ...S.wrap, background: "#0a0a0c", fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", padding: "16px 16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
 
-          {/* Header */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "2px solid #c0392b" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <button className="wb-close-btn" onClick={runAway}>◀ BACK</button>
-              <div className="page-header-title">Wild Battle</div>
-            </div>
-            <div style={{ fontSize: 12, color: "#888890", letterSpacing: 1 }}>Turn {battle.turnCount + 1}</div>
+        {/* ── HUD TOP BAR ── */}
+        <div style={{
+          position: "relative", zIndex: 10, display: "flex", alignItems: "center",
+          padding: "7px 12px 5px", gap: 7,
+          background: "linear-gradient(to bottom, rgba(10,6,18,0.92), transparent)",
+          flexShrink: 0,
+        }}>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: 1.5, color: "#c9952a", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            Floor {floorNum} · Chamber {chamberNum}
           </div>
-
-          {/* Battle arena */}
-          <div className={huntArenaHit ? "hunt-pq-arena-hit" : ""} style={{
-            height: 260,
-            borderRadius: 16,
-            border: "1px solid rgba(180,30,30,0.35)",
-            backgroundImage: `url(${battleArenaBg})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-            position: "relative",
-            overflow: "hidden",
-            boxShadow: "inset 0 0 60px rgba(0,0,0,0.7)",
-          }}>
-            {/* Enemy info card — top-left */}
-            <div style={{ position: "absolute", top: 14, left: 14, zIndex: 4 }}>
-              <div className="wb-info-card">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 0.5, color: wild.isShiny ? "#FFD700" : "#f0f0f0" }}>{wild.isShiny ? "✨ " : ""}{wild.name}</span>
-                  <span style={{ fontSize: 11, color: "#888890" }}>Lv{wild.level}</span>
-                </div>
-                <div style={{ marginBottom: 5, display: "flex", gap: 4 }}>
-                  {wild.type1 && (
-                    <span style={{ display: "inline-block", padding: "1px 7px", borderRadius: 4, fontSize: 12, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", background: (TYPE_COLORS[wild.type1] ?? "#444") + "33", color: TYPE_COLORS[wild.type1] ?? "#f0f0f0", border: `1px solid ${(TYPE_COLORS[wild.type1] ?? "#444")}66` }}>{wild.type1}</span>
-                  )}
-                  {wild.type2 && (
-                    <span style={{ display: "inline-block", padding: "1px 7px", borderRadius: 4, fontSize: 12, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", background: (TYPE_COLORS[wild.type2] ?? "#444") + "33", color: TYPE_COLORS[wild.type2] ?? "#f0f0f0", border: `1px solid ${(TYPE_COLORS[wild.type2] ?? "#444")}66` }}>{wild.type2}</span>
-                  )}
-                </div>
-                <div style={{ height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden", marginBottom: 4 }}>
-                  <div style={{ height: "100%", borderRadius: 3, transition: "width 0.4s ease", width: `${wildHpPct}%`, background: wildHpClass }} />
-                </div>
-                <div style={{ fontSize: 12, color: "#888890" }}>{wild.currentHp}/{wild.maxHp}</div>
-              </div>
-            </div>
-
-            {/* Enemy sprite — top-right */}
-            <div style={{ position: "absolute", top: 10, right: 14, zIndex: 3 }} className={wildHitClass}>
-              {ballAnim !== "capture" && ballAnim !== "wobble" && ballAnim !== "success" && (
-                <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className={ballAnim === "fail" ? "" : "mon-float"} style={{ filter: wild.isShiny ? "drop-shadow(0 6px 18px rgba(255,215,0,0.8))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
-              )}
-              {ballAnim === "capture" && (
-                <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className="mon-suck" style={{ filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.7))" }} />
-              )}
-              {wildDmgFloat && (
-                <div key={wildDmgFloat.key} style={{ position: "absolute", top: 20, left: 8, pointerEvents: "none", zIndex: 20 }}>
-                  <div className="hunt-pq-dmg-float">-{wildDmgFloat.dmg}</div>
-                  {wildDmgFloat.eff >= 2 && <div className="hunt-pq-dmg-eff">Super effective!</div>}
-                  {wildDmgFloat.eff > 0 && wildDmgFloat.eff < 1 && <div className="hunt-pq-dmg-eff" style={{ color: "#90caf9" }}>Not very effective…</div>}
-                </div>
-              )}
-            </div>
-
-            {/* Player sprite — bottom-left */}
-            <div style={{ position: "absolute", bottom: 12, left: 12, zIndex: 3 }} className={pMonHitClass}>
-              <MonSprite sprite={pMon.sprite} size={95} back isShiny={pMon.isShiny} className="mon-float" style={{ filter: pMon.isShiny ? "drop-shadow(0 6px 18px rgba(255,215,0,0.8))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.8))" }} />
-              {pMonDmgFloat && (
-                <div key={pMonDmgFloat.key} style={{ position: "absolute", top: 0, right: 8, pointerEvents: "none", zIndex: 20 }}>
-                  <div className="hunt-pq-dmg-float">-{pMonDmgFloat.dmg}</div>
-                  {pMonDmgFloat.eff >= 2 && <div className="hunt-pq-dmg-eff">Super effective!</div>}
-                  {pMonDmgFloat.eff > 0 && pMonDmgFloat.eff < 1 && <div className="hunt-pq-dmg-eff" style={{ color: "#90caf9" }}>Not very effective…</div>}
-                </div>
-              )}
-            </div>
-
-            {/* Player info card — bottom-right */}
-            <div style={{ position: "absolute", bottom: 12, right: 12, zIndex: 4 }}>
-              <div className="wb-info-card">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 0.5, color: pMon.isShiny ? "#FFD700" : "#f0f0f0" }}>{pMon.isShiny ? "✨ " : ""}{pMon.name}</span>
-                  <span style={{ fontSize: 11, color: "#888890" }}>Lv{pMon.level}</span>
-                </div>
-                <div style={{ height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden", marginBottom: 4 }}>
-                  <div style={{ height: "100%", borderRadius: 3, transition: "width 0.4s ease", width: `${pHpPct}%`, background: pHpClass }} />
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 12, color: "#888890" }}>{pMon.currentHp}/{pMon.maxHp}</span>
-                  <span style={{ fontSize: 12, color: "#888890" }}>ATK: {pMon.atk}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Ball animations */}
-            {ballAnim === "throw" && (
-              <div className="ball-throw" style={{ zIndex: 5 }}><div className="pokeball" /></div>
-            )}
-            {(ballAnim === "capture" || ballAnim === "wobble") && (
-              <div className="ball-static" style={{ zIndex: 5 }}>
-                <div className={ballAnim === "wobble" ? "pokeball ball-wobble" : "pokeball"} />
-              </div>
-            )}
-            {ballAnim === "success" && (
-              <>
-                <div className="ball-static" style={{ zIndex: 5 }}><div className="pokeball" /></div>
-                {[0, 1, 2, 3].map((i) => (
-                  <div key={i} className="catch-star" style={{
-                    left: `calc(100% - ${60 + i * 14}px)`, bottom: `${110 + (i % 2) * 12}px`,
-                    color: "#FFD700", animationDelay: `${i * 0.08}s`, zIndex: 5,
-                  }}>✨</div>
-                ))}
-              </>
-            )}
-            {ballAnim === "fail" && (
-              <div className="ball-static" style={{ zIndex: 5 }}><div className="pokeball ball-burst" /></div>
-            )}
-
-            {/* Aim ring */}
-            {ringActive && (
-              <>
-                <div style={{
-                  position: "absolute", top: 10, right: 14, width: 110, height: 110,
-                  display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", zIndex: 6,
-                }}>
-                  <div style={{
-                    width: ringRadius, height: ringRadius, borderRadius: "50%",
-                    border: `3px solid ${ringQuality(ringRadius).color}`,
-                    boxShadow: `0 0 12px ${ringQuality(ringRadius).color}88`,
-                    transition: "border-color 0.1s",
-                  }} />
-                </div>
-                <div style={{
-                  position: "absolute", left: 0, right: 0, top: 6, textAlign: "center",
-                  color: ringQuality(ringRadius).color, fontSize: 11, fontWeight: 700, letterSpacing: 2,
-                  textShadow: "1px 1px 0 #000", zIndex: 7,
-                }}>
-                  {ringQuality(ringRadius).label}
-                </div>
-                <button onClick={releaseThrow}
-                  style={{
-                    position: "absolute", left: "50%", bottom: 8, transform: "translateX(-50%)",
-                    background: "#4ade80", color: "#0a0e1a", border: "none",
-                    padding: "8px 22px", borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: 1,
-                    cursor: "pointer", boxShadow: "0 2px 10px rgba(74,222,128,0.5)", zIndex: 60,
-                  }}>
-                  TAP TO THROW
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* Terminal log */}
-          <div style={{
-            background: "#050508",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 12,
-            padding: "14px 16px",
-            fontFamily: "'Courier New', Courier, monospace",
-            fontSize: 12,
-            color: "#fb923c",
-            lineHeight: 1.7,
-            boxShadow: "inset 0 4px 10px rgba(0,0,0,0.5)",
-            minHeight: 72,
-            maxHeight: 96,
-            overflowY: "auto",
-          }}>
-            {log.slice(-3).map((l) => (
-              <div key={l.id} style={{ color: l.color || "#fb923c" }}>
-                <span style={{ color: "#fb923c", marginRight: 6 }}>·</span>{l.msg}
-              </div>
+          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            {team.slice(0, 5).map((m, i) => (
+              <div key={i} style={{
+                width: 7, height: 7, borderRadius: "50%",
+                border: `1px solid rgba(201,149,42,${m.currentHp > 0 ? "0.5" : "0.2"})`,
+                background: m.currentHp > 0 ? (m.id === pMon.id ? "#c9952a" : "#6fc98a") : "transparent",
+                boxShadow: m.id === pMon.id ? "0 0 5px rgba(201,149,42,0.6)" : "none",
+              }} />
             ))}
           </div>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: 9, letterSpacing: 1.5, color: "#bf5fff", border: "1px solid rgba(139,0,255,0.3)", borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>
+            T{battle.turnCount + 1}
+          </div>
+          <button onClick={runAway} style={{
+            background: "rgba(180,30,30,0.2)", border: "1px solid rgba(180,30,30,0.4)",
+            borderRadius: 6, color: "#ff6666", fontFamily: "'Cinzel', serif",
+            fontSize: 9, padding: "3px 8px", cursor: "pointer", letterSpacing: 1, flexShrink: 0,
+          }}>✕ FLEE</button>
+        </div>
 
-          {/* Moves */}
-          <div style={{ fontSize: 10, letterSpacing: 2, color: "#888890", textTransform: "uppercase", paddingLeft: 2 }}>Choose a Move</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {pMon.moves.map((m) => {
-              const md = getMove(m);
-              return (
-                <button key={m} className="wb-move-btn" onClick={() => doPlayerMove(m)}>
-                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{m}</div>
-                  <div style={{ fontSize: 12, color: "#888890", letterSpacing: 0.3 }}>
-                    PWR: {md.power || "—"} · ACC: {md.accuracy}% · {md.type}
-                  </div>
-                </button>
-              );
-            })}
+        {/* ── ENEMY HP CARD ── */}
+        <div style={{
+          position: "relative", zIndex: 10, display: "flex", alignItems: "flex-start",
+          padding: "4px 12px 0", gap: 10, flexShrink: 0,
+        }}>
+          <div style={{
+            flex: 1, background: "rgba(5,2,15,0.78)", border: "1px solid rgba(139,0,255,0.35)",
+            borderRadius: 10, padding: "7px 10px", backdropFilter: "blur(6px)",
+            boxShadow: "0 0 20px rgba(139,0,255,0.15)",
+          }}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: 7, letterSpacing: 1.5, color: "#bf5fff", marginBottom: 2 }}>⬡ WILD ENCOUNTER</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 5 }}>
+              <span style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: wild.isShiny ? "#FFD700" : "#e8d0ff", flex: 1 }}>
+                {wild.isShiny ? "✨ " : ""}{wild.name}
+              </span>
+              <span style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: "#bf5fff" }}>Lv{wild.level}</span>
+              {wild.type1 && (
+                <span style={{ fontFamily: "'Cinzel', serif", fontSize: 7, padding: "1px 5px", borderRadius: 3, letterSpacing: 0.5, background: `${TYPE_COLORS[wild.type1] ?? "#888"}33`, color: TYPE_COLORS[wild.type1] ?? "#fff", border: `1px solid ${TYPE_COLORS[wild.type1] ?? "#888"}66` }}>
+                  {wild.type1.toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div style={{ height: 8, background: "rgba(255,255,255,0.08)", borderRadius: 4, overflow: "hidden", position: "relative", marginBottom: 3 }}>
+              <div style={{ height: "100%", borderRadius: 4, transition: "width 0.4s ease", width: `${wildHpPct}%`, background: wildHpLow ? "linear-gradient(90deg,#cc0000,#ff4444)" : "linear-gradient(90deg,#8b00ff,#bf5fff)" }} />
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "50%", background: "rgba(255,255,255,0.08)", borderRadius: "4px 4px 0 0" }} />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontFamily: "'Cinzel', serif", fontSize: 8, color: "#7a5a88" }}>{wild.currentHp} / {wild.maxHp}</span>
+              <span style={{ fontFamily: "'Cinzel', serif", fontSize: 7, padding: "1px 5px", borderRadius: 3, background: "rgba(139,0,255,0.25)", color: "#bf5fff", border: "1px solid rgba(139,0,255,0.4)" }}>WILD</span>
+            </div>
+            {wildDmgFloat && (
+              <div key={wildDmgFloat.key} style={{ position: "absolute", top: 10, right: 14, pointerEvents: "none", zIndex: 20 }}>
+                <div className="hunt-pq-dmg-float">-{wildDmgFloat.dmg}</div>
+                {wildDmgFloat.eff >= 2 && <div className="hunt-pq-dmg-eff">Super effective!</div>}
+                {wildDmgFloat.eff > 0 && wildDmgFloat.eff < 1 && <div className="hunt-pq-dmg-eff" style={{ color: "#90caf9" }}>Not very effective…</div>}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── PLAYER HP CARD ── */}
+        <div style={{
+          position: "relative", zIndex: 10, display: "flex", alignItems: "flex-end",
+          padding: "4px 12px 0", gap: 10, flexShrink: 0, marginTop: 4,
+        }}>
+          <div style={{
+            flex: 1, background: "rgba(5,2,15,0.78)", border: "1px solid rgba(201,149,42,0.3)",
+            borderRadius: 10, padding: "7px 10px", backdropFilter: "blur(6px)",
+          }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 5 }}>
+              <span style={{ fontFamily: "'Cinzel', serif", fontSize: 13, fontWeight: 700, color: pMon.isShiny ? "#FFD700" : "#f0c060", flex: 1 }}>
+                {pMon.isShiny ? "✨ " : ""}{pMon.name}
+              </span>
+              <span style={{ fontFamily: "'Cinzel', serif", fontSize: 10, color: "#c9952a" }}>Lv{pMon.level}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+              <svg width="14" height="14" viewBox="0 0 32 32" style={{ flexShrink: 0 }}>
+                <circle cx="16" cy="16" r="14" fill="#f0f0f0" stroke="#555" strokeWidth="2"/>
+                <path d="M2,16 A14,14 0 0,1 30,16 Z" fill="#ef4444" stroke="#555" strokeWidth="1.5"/>
+                <line x1="2" y1="16" x2="30" y2="16" stroke="#555" strokeWidth="2"/>
+                <circle cx="16" cy="16" r="4" fill="#f0f0f0" stroke="#555" strokeWidth="2"/>
+              </svg>
+              <div style={{ flex: 1, height: 8, background: "rgba(255,255,255,0.08)", borderRadius: 4, overflow: "hidden", position: "relative" }}>
+                <div style={{ height: "100%", borderRadius: 4, transition: "width 0.4s ease", width: `${pHpPct}%`, background: pHpLow ? "linear-gradient(90deg,#cc7700,#ffaa00)" : "linear-gradient(90deg,#22cc66,#44ffaa)" }} />
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "50%", background: "rgba(255,255,255,0.08)", borderRadius: "4px 4px 0 0" }} />
+              </div>
+              <span style={{ fontFamily: "'Cinzel', serif", fontSize: 8, color: "#7a6a3a", minWidth: 42, textAlign: "right" }}>{pMon.currentHp}/{pMon.maxHp}</span>
+            </div>
+            {pMonDmgFloat && (
+              <div key={pMonDmgFloat.key} style={{ position: "absolute", top: 10, left: 14, pointerEvents: "none", zIndex: 20 }}>
+                <div className="hunt-pq-dmg-float">-{pMonDmgFloat.dmg}</div>
+                {pMonDmgFloat.eff >= 2 && <div className="hunt-pq-dmg-eff">Super effective!</div>}
+                {pMonDmgFloat.eff > 0 && pMonDmgFloat.eff < 1 && <div className="hunt-pq-dmg-eff" style={{ color: "#90caf9" }}>Not very effective…</div>}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── BATTLE FIELD (background + sprites) ── */}
+        <div className={huntArenaHit ? "hunt-pq-arena-hit" : ""} style={{
+          flex: 1, position: "relative", overflow: "hidden", minHeight: 0,
+          backgroundImage: `url(${chamberBattleBg})`,
+          backgroundSize: "cover", backgroundPosition: "center top",
+        }}>
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(10,6,18,0.15) 0%,rgba(10,6,18,0) 20%,rgba(10,6,18,0) 60%,rgba(10,6,18,0.55) 85%,rgba(10,6,18,0.82) 100%)" }} />
+
+          {/* Enemy sprite */}
+          <div style={{ position: "absolute", right: "calc(50% - 130px)", bottom: "calc(28% + 10px)", width: 120, height: 120, zIndex: 6, display: "flex", alignItems: "flex-end", justifyContent: "center" }} className={wildHitClass}>
+            {ballAnim !== "capture" && ballAnim !== "wobble" && ballAnim !== "success" && (
+              <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className={ballAnim === "fail" ? "" : "mon-float"} style={{ filter: wild.isShiny ? "drop-shadow(0 0 10px rgba(255,215,0,0.9))" : "drop-shadow(0 0 8px rgba(139,0,255,0.5))" }} />
+            )}
+            {ballAnim === "capture" && (
+              <MonSprite sprite={wild.sprite} size={110} isShiny={wild.isShiny} className="mon-suck" style={{ filter: "drop-shadow(0 0 8px rgba(139,0,255,0.5))" }} />
+            )}
           </div>
 
-          {/* Mega Evolve button */}
+          {/* Player sprite */}
+          <div style={{ position: "absolute", left: "calc(50% - 80px)", transform: "translateX(-50%)", bottom: "calc(28% + 10px)", width: 130, height: 130, zIndex: 6, display: "flex", alignItems: "flex-end", justifyContent: "center" }} className={pMonHitClass}>
+            <MonSprite sprite={pMon.sprite} size={120} back isShiny={pMon.isShiny} className="mon-float" style={{ filter: pMon.isShiny ? "drop-shadow(0 0 10px rgba(255,215,0,0.9))" : "brightness(1.1)" }} />
+          </div>
+
+          {/* Ball animations */}
+          {ballAnim === "throw" && (
+            <div className="ball-throw" style={{ zIndex: 8 }}><div className="pokeball" /></div>
+          )}
+          {(ballAnim === "capture" || ballAnim === "wobble") && (
+            <div className="ball-static" style={{ zIndex: 8 }}>
+              <div className={ballAnim === "wobble" ? "pokeball ball-wobble" : "pokeball"} />
+            </div>
+          )}
+          {ballAnim === "success" && (
+            <>
+              <div className="ball-static" style={{ zIndex: 8 }}><div className="pokeball" /></div>
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="catch-star" style={{
+                  left: `calc(50% + ${20 + i * 14}px)`, bottom: `calc(28% + ${80 + (i % 2) * 12}px)`,
+                  color: "#FFD700", animationDelay: `${i * 0.08}s`, zIndex: 9,
+                }}>✨</div>
+              ))}
+            </>
+          )}
+          {ballAnim === "fail" && (
+            <div className="ball-static" style={{ zIndex: 8 }}><div className="pokeball ball-burst" /></div>
+          )}
+
+          {/* Aim ring */}
+          {ringActive && (
+            <>
+              <div style={{
+                position: "absolute", right: "calc(50% - 185px)", bottom: "calc(28% + 20px)", width: 110, height: 110,
+                display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", zIndex: 10,
+              }}>
+                <div style={{
+                  width: ringRadius, height: ringRadius, borderRadius: "50%",
+                  border: `3px solid ${ringQuality(ringRadius).color}`,
+                  boxShadow: `0 0 12px ${ringQuality(ringRadius).color}88`,
+                  transition: "border-color 0.1s",
+                }} />
+              </div>
+              <div style={{
+                position: "absolute", left: 0, right: 0, top: 8, textAlign: "center",
+                color: ringQuality(ringRadius).color, fontSize: 11, fontWeight: 700, letterSpacing: 2,
+                textShadow: "1px 1px 4px #000", zIndex: 11,
+              }}>
+                {ringQuality(ringRadius).label}
+              </div>
+              <button onClick={releaseThrow} style={{
+                position: "absolute", left: "50%", bottom: 10, transform: "translateX(-50%)",
+                background: "#4ade80", color: "#0a0e1a", border: "none",
+                padding: "8px 22px", borderRadius: 999, fontSize: 12, fontWeight: 800, letterSpacing: 1,
+                cursor: "pointer", boxShadow: "0 2px 10px rgba(74,222,128,0.5)", zIndex: 12,
+              }}>TAP TO THROW</button>
+            </>
+          )}
+        </div>
+
+        {/* ── DIALOGUE + ACTION PANEL ── */}
+        <div style={{
+          position: "relative", zIndex: 10, flexShrink: 0,
+          padding: "7px 10px 10px", display: "flex", flexDirection: "column", gap: 5,
+        }}>
+          {/* Dialogue box */}
+          <div style={{
+            background: "rgba(5,2,15,0.9)", border: "1.5px solid rgba(201,149,42,0.35)",
+            borderRadius: 10, padding: "9px 13px", minHeight: 44, backdropFilter: "blur(8px)",
+            position: "relative", overflow: "hidden",
+          }}>
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,transparent,rgba(201,149,42,0.5),transparent)" }} />
+            <p style={{ fontFamily: "'Crimson Pro', 'Georgia', serif", fontSize: 14, color: "#e8dfc8", lineHeight: 1.5, margin: 0 }}>
+              {isChoosing ? `What will ${pMon.name} do?` : lastLog}
+            </p>
+          </div>
+
+          {/* Mega Evolve */}
           {(() => {
             const megaEntry = Object.entries(STONE_TO_SPRITE).find(
               ([stone, spr]) => spr === pMon.sprite && inventory.some((it) => it.name === stone && it.qty > 0)
             );
             if (!megaEntry || battle.hasMegaEvolved) return null;
             return (
-              <button
-                onClick={doMegaEvolve}
-                style={{
-                  width: "100%", padding: "14px 10px", borderRadius: 12, fontSize: 13, fontWeight: 800,
-                  letterSpacing: 2, textTransform: "uppercase", cursor: "pointer",
-                  background: "linear-gradient(135deg, #7c3aed 0%, #db2777 100%)",
-                  border: "2px solid #f0abfc", color: "#fff",
-                  boxShadow: "0 0 20px rgba(219,39,119,0.6), 0 0 40px rgba(124,58,237,0.4)",
-                  animation: "megaPulse 1.5s ease-in-out infinite",
-                }}>
-                🌟 MEGA EVOLVE
-              </button>
+              <button onClick={doMegaEvolve} style={{
+                width: "100%", padding: "10px", borderRadius: 8, fontSize: 12, fontWeight: 800,
+                letterSpacing: 2, textTransform: "uppercase", cursor: "pointer",
+                background: "linear-gradient(135deg, #7c3aed 0%, #db2777 100%)",
+                border: "2px solid #f0abfc", color: "#fff",
+                boxShadow: "0 0 20px rgba(219,39,119,0.6)", animation: "megaPulse 1.5s ease-in-out infinite",
+              }}>🌟 MEGA EVOLVE</button>
             );
           })()}
 
-          {/* Actions */}
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="wb-action-btn" onClick={openSwitchPicker}>Switch</button>
-            <button className="wb-action-btn" onClick={runAway}>Run</button>
-            <button className="wb-action-btn" onClick={openBallPicker}>
-              Pokéballs <span style={{ fontSize: 10, color: "#888890", fontWeight: 400, letterSpacing: 0, textTransform: "none" }}>({MAX_BATTLE_BALLS - battle.ballsThrown})</span>
-            </button>
-          </div>
+          {/* Move grid + side buttons */}
+          {isChoosing && (
+            <div style={{ display: "flex", gap: 5 }}>
+              <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4 }}>
+                {pMon.moves.map((m) => {
+                  const md = getMove(m);
+                  const tc = TYPE_COLORS[md.type] ?? "#888";
+                  return (
+                    <button key={m} className="cb-move-btn" onClick={() => doPlayerMove(m)}>
+                      <span style={{ fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 600, color: "#e8dfc8", display: "block", marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                        <span style={{ fontFamily: "'Cinzel', serif", fontSize: 7, padding: "1px 4px", borderRadius: 3, letterSpacing: 0.5, background: `${tc}33`, color: tc, border: `1px solid ${tc}66` }}>{md.type.toUpperCase()}</span>
+                        <span style={{ fontFamily: "'Cinzel', serif", fontSize: 7, color: "#7a6a5a", marginLeft: "auto" }}>PWR {md.power || "—"} ACC:{md.accuracy}%</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <button className="cb-side-btn" onClick={openSwitchPicker}><span>🔄</span><span>SWAP</span></button>
+                <button className="cb-side-btn" onClick={openBallPicker}><span>🎒</span><span>BAG</span></button>
+              </div>
+            </div>
+          )}
 
-          {showSwitchPicker && (
+          {!isChoosing && (
+            <div style={{ display: "flex", gap: 5, opacity: 0.5, pointerEvents: "none" }}>
+              <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4 }}>
+                {pMon.moves.map((m) => {
+                  const md = getMove(m);
+                  const tc = TYPE_COLORS[md.type] ?? "#888";
+                  return (
+                    <div key={m} className="cb-move-btn" style={{ cursor: "not-allowed" }}>
+                      <span style={{ fontFamily: "'Cinzel', serif", fontSize: 9, fontWeight: 600, color: "#e8dfc8", display: "block", marginBottom: 3 }}>{m}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                        <span style={{ fontFamily: "'Cinzel', serif", fontSize: 7, padding: "1px 4px", borderRadius: 3, background: `${tc}33`, color: tc, border: `1px solid ${tc}66` }}>{md.type.toUpperCase()}</span>
+                        <span style={{ fontFamily: "'Cinzel', serif", fontSize: 7, color: "#7a6a5a", marginLeft: "auto" }}>PWR {md.power || "—"} ACC:{md.accuracy}%</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <div className="cb-side-btn" style={{ cursor: "not-allowed", opacity: 0.5 }}><span>🔄</span><span>SWAP</span></div>
+                <div className="cb-side-btn" style={{ cursor: "not-allowed", opacity: 0.5 }}><span>🎒</span><span>BAG</span></div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {showSwitchPicker && (
             <div
               onClick={() => setShowSwitchPicker(false)}
               style={{
@@ -5278,7 +5306,6 @@ export default function App() {
               </div>
             </div>
           )}
-        </div>
       </div>
     );
   }
