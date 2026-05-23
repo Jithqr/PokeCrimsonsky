@@ -3347,18 +3347,21 @@ export default function App() {
       .tc-section-hdr { display:flex; align-items:center; gap:10px; padding:14px 18px 12px; border-bottom:1px solid rgba(255,255,255,0.05); }
       .tc-section-title { font-family:'Orbitron',sans-serif; font-size:10px; font-weight:700; color:#fff; letter-spacing:2px; }
       .tc-section-line { flex:1; height:1px; background:linear-gradient(to right,rgba(80,110,140,0.2),transparent); }
-      .tc-poke-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 10px 28px; }
-      .tc-poke-card { background:rgba(6,8,13,0.95); background-image:url('https://i.ibb.co/J6xK8XK/20260510-172311.png'); background-size:100% 100%; border:1px solid rgba(35,45,58,0.8); border-radius:12px; padding:8px 6px 6px; display:flex; flex-direction:column; align-items:center; gap:3px; position:relative; overflow:hidden; cursor:pointer; min-height:150px; justify-content:center; box-shadow:inset 0 1px 0 rgba(255,255,255,0.02); transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s; }
-      .tc-poke-card::after { content:''; position:absolute; inset:0; background:rgba(3,4,10,0.55); border-radius:12px; pointer-events:none; z-index:0; }
+      .tc-poke-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; padding:12px 12px 24px; }
+      .tc-poke-card { background:linear-gradient(145deg,rgba(15,20,35,0.85) 0%,rgba(8,12,22,0.92) 100%); border:1px solid rgba(80,120,180,0.22); border-radius:16px; padding:14px 10px 10px; display:flex; flex-direction:column; align-items:center; gap:6px; position:relative; overflow:hidden; cursor:pointer; min-height:140px; justify-content:center; box-shadow:0 4px 24px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.07),inset 0 0 30px rgba(60,100,160,0.04); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s; }
+      .tc-poke-card::after { content:''; position:absolute; inset:0; background:linear-gradient(160deg,rgba(255,255,255,0.04) 0%,transparent 45%,rgba(0,0,0,0.15) 100%); border-radius:16px; pointer-events:none; z-index:0; }
       .tc-poke-card > * { position:relative; z-index:1; }
-      .tc-poke-card::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,0.015) 0%,transparent 60%); pointer-events:none; border-radius:12px; z-index:2; }
-      .tc-poke-card:active { transform:scale(0.96); border-color:rgba(80,110,140,0.3); box-shadow:0 4px 16px rgba(0,0,0,0.7); }
-      .tc-poke-card.featured { border-color:rgba(100,130,160,0.35); box-shadow:0 0 20px rgba(70,100,130,0.1),inset 0 1px 0 rgba(255,255,255,0.04); }
-      .tc-poke-card.featured::after { background:rgba(3,4,10,0.48); }
-      .tc-type-badge { position:absolute; top:6px; left:6px; width:20px; height:20px; border-radius:50%; background:rgba(0,0,0,0.7); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; padding:3px; backdrop-filter:blur(4px); z-index:3; filter:grayscale(0.55) brightness(0.8); }
+      .tc-poke-card::before { content:''; position:absolute; top:0; left:10%; right:10%; height:1px; background:linear-gradient(to right,transparent,rgba(120,180,255,0.25),transparent); pointer-events:none; z-index:2; }
+      .tc-poke-card:active { transform:scale(0.96); border-color:rgba(100,150,220,0.4); box-shadow:0 2px 12px rgba(0,0,0,0.8); }
+      .tc-poke-card.featured { border-color:rgba(120,160,220,0.4); box-shadow:0 4px 28px rgba(0,0,0,0.7),0 0 18px rgba(80,130,200,0.12),inset 0 1px 0 rgba(255,255,255,0.09); }
+      .tc-type-badge { position:absolute; top:8px; left:8px; width:20px; height:20px; border-radius:50%; background:rgba(0,0,0,0.65); border:1px solid rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; padding:3px; backdrop-filter:blur(6px); z-index:3; filter:grayscale(0.4) brightness(0.85); }
       .tc-type-badge img { width:100%; height:100%; object-fit:contain; }
-      .tc-poke-level { font-family:'Orbitron',sans-serif; font-size:7px; font-weight:600; color:#fff; letter-spacing:0.4px; padding:2px 7px; background:rgba(0,0,0,0.75); border-radius:4px; border:1px solid rgba(255,255,255,0.05); white-space:nowrap; position:absolute; bottom:6px; left:50%; transform:translateX(-50%); z-index:3; }
-      .tc-poke-empty { border:1px dashed rgba(255,255,255,0.08); background:rgba(6,8,13,0.5); border-radius:12px; min-height:150px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; opacity:0.25; }
+      .tc-poke-level { font-family:'Orbitron',sans-serif; font-size:7px; font-weight:600; color:rgba(180,210,255,0.8); letter-spacing:0.5px; padding:2px 8px; background:rgba(0,0,0,0.6); border-radius:4px; border:1px solid rgba(80,120,180,0.2); white-space:nowrap; z-index:3; }
+      .tc-poke-name { font-family:'Orbitron',sans-serif; font-size:8px; font-weight:700; color:#fff; letter-spacing:1.5px; text-transform:uppercase; text-align:center; text-shadow:0 1px 6px rgba(0,0,0,0.9); z-index:3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; padding:0 4px; }
+      .tc-poke-empty { border:1px solid rgba(60,90,130,0.2); background:linear-gradient(145deg,rgba(10,14,24,0.7) 0%,rgba(6,9,16,0.8) 100%); border-radius:16px; min-height:140px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); box-shadow:inset 0 1px 0 rgba(255,255,255,0.03),0 2px 12px rgba(0,0,0,0.4); position:relative; overflow:hidden; }
+      .tc-poke-empty::before { content:''; position:absolute; top:0; left:20%; right:20%; height:1px; background:linear-gradient(to right,transparent,rgba(80,120,180,0.12),transparent); }
+      .tc-poke-empty-icon { width:36px; height:36px; border-radius:50%; border:1px solid rgba(60,90,130,0.25); display:flex; align-items:center; justify-content:center; background:rgba(20,30,50,0.4); }
+      .tc-poke-empty-lbl { font-family:'Orbitron',sans-serif; font-size:7px; color:rgba(100,130,170,0.4); letter-spacing:1.5px; }
       .tc-stats-row { display:flex; align-items:stretch; padding:6px 10px; gap:0; }
       .tc-stat-block { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:14px 8px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); margin:3px; transition:background 0.2s,border-color 0.2s; animation:tc-stat-in 0.5s ease both; }
       @keyframes tc-stat-in { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
@@ -3505,12 +3508,18 @@ export default function App() {
                           <div className="tc-type-badge">
                             <img src={pTypeIcon(m.type1)} alt={m.type1} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                           </div>
-                          <MonSprite sprite={m.sprite} size={64} className="" isShiny={m.isShiny} style={{ width: 64, height: 64, objectFit: "contain", filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.85)) grayscale(0.3) brightness(0.85)", marginTop: 8, imageRendering: "auto" }} />
+                          <MonSprite sprite={m.sprite} size={80} className="" isShiny={m.isShiny} style={{ width: 80, height: 80, objectFit: "contain", filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.9))", imageRendering: "auto" }} />
+                          <div className="tc-poke-name">{(m.nickname || m.name).toUpperCase()}</div>
                           <div className="tc-poke-level">Lv. {m.level}</div>
                         </div>
                       ) : (
                         <div key={`empty-${i}`} className="tc-poke-empty">
-                          <i className="fa-solid fa-plus" style={{ fontSize: 18, color: "rgba(255,255,255,0.2)" }} />
+                          <div className="tc-poke-empty-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(80,120,180,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+                            </svg>
+                          </div>
+                          <div className="tc-poke-empty-lbl">EMPTY</div>
                         </div>
                       ))}
                     </div>
