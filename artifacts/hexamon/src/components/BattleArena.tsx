@@ -297,7 +297,7 @@ export default function BattleArena(props: Props) {
     }}>
       <style>{css}</style>
       <div style={{
-        width: "100%", maxWidth: 460, minHeight: "100vh", background: "#0a0a1e",
+        width: "100%", maxWidth: 460, minHeight: "100dvh", background: "#0a0a1e",
         display: "flex", flexDirection: "column", overflow: "hidden",
       }}>
         {/* Header */}

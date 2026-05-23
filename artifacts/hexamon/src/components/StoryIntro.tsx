@@ -183,7 +183,7 @@ export function StoryIntro({ onComplete }: { onComplete: (r: StoryResult) => voi
   return (
     <div
       style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
         background: "#000",
         color: "#d4d4d4",
         fontFamily:

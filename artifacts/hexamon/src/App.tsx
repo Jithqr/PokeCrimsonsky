@@ -2451,7 +2451,7 @@ export default function App() {
       --m-yellow: #eab308;
       --m-cyan: #06b6d4;
     }
-    .m-app { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; color: var(--m-text); background: var(--m-bg); padding-bottom: 80px; min-height: 100vh; display:flex; flex-direction:column; position:relative; }
+    .m-app { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; color: var(--m-text); background: var(--m-bg); padding-bottom: 80px; min-height: 100dvh; display:flex; flex-direction:column; position:relative; }
     .m-topbar { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--m-border); }
     .m-game-title { color: var(--m-pink); font-size:13px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; }
     .m-location { color: var(--m-muted); font-size:11px; display:flex; align-items:center; gap:6px; margin-top:4px; }
@@ -2620,8 +2620,8 @@ export default function App() {
   }
 
   const S: Record<string, React.CSSProperties> = {
-    root: { fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif", background: "#09090b", minHeight: "100vh", display: "flex", justifyContent: "center" },
-    wrap: { width: "100%", maxWidth: 460, minHeight: "100vh", background: "#09090b", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" },
+    root: { fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif", background: "#09090b", minHeight: "100dvh", display: "flex", justifyContent: "center" },
+    wrap: { width: "100%", maxWidth: 460, minHeight: "100dvh", background: "#09090b", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" },
     header: { background: "#0a0a0a", borderBottom: "1px solid #1f1f1f", padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" },
   };
 
@@ -2724,8 +2724,8 @@ export default function App() {
   // ── Ban overlay — shown immediately after splash, blocks all content ──────
   if (isBanned) {
     return (
-      <div style={{ fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", background: "#09090b", minHeight: "100vh", display: "flex", justifyContent: "center" }}>
-        <div style={{ width: "100%", maxWidth: 460, minHeight: "100vh", background: "#09090b", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <div style={{ fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", background: "#09090b", minHeight: "100dvh", display: "flex", justifyContent: "center" }}>
+        <div style={{ width: "100%", maxWidth: 460, minHeight: "100dvh", background: "#09090b", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
           <div style={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(220,38,38,0.15)", border: "2px solid #dc2626", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
             <i className="fa-solid fa-ban" style={{ fontSize: 32, color: "#ef4444" }} />
           </div>
@@ -2775,7 +2775,7 @@ export default function App() {
       setScreen("starter");
     };
     return (
-      <div style={{ minHeight: "100vh", background: "#000", color: "#d4d4d4", fontFamily: "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div style={{ minHeight: "100dvh", background: "#000", color: "#d4d4d4", fontFamily: "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
         <div style={{ width: "100%", maxWidth: 384, background: "#0a0a0a", border: "1px solid #404040", padding: 32, borderRadius: 16, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.8)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
             <div style={{ padding: 8, background: "#171717", borderRadius: 9999, border: "1px solid #262626", display: "inline-flex" }}>
@@ -3288,7 +3288,7 @@ export default function App() {
       .tc-scanlines { position:fixed; inset:0; z-index:50; pointer-events:none; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px); }
       .tc-page { position:relative; z-index:10; width:100%; padding:0 0 90px; display:flex; flex-direction:column; gap:10px; font-family:'Rajdhani',sans-serif; animation:tc-in 0.7s ease both; }
       @keyframes tc-in { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:none} }
-      .tc-hero { position:relative; border-radius:0 0 20px 20px; overflow:hidden; height:230px; border:none; border-bottom:1px solid rgba(40,50,65,0.5); box-shadow:0 24px 64px rgba(0,0,0,0.9); }
+      .tc-hero { position:relative; border-radius:0 0 20px 20px; overflow:hidden; height:clamp(180px,30dvh,230px); border:none; border-bottom:1px solid rgba(40,50,65,0.5); box-shadow:0 24px 64px rgba(0,0,0,0.9); }
       .tc-hero-bg { position:absolute; inset:0; background:url('https://i.ibb.co/sJjd2zpv/IMG-20260509-211652.jpg') center top/cover; filter:saturate(0.6) brightness(0.55) contrast(1.05); }
       .tc-hero-bg::after { content:''; position:absolute; inset:0; background:linear-gradient(to bottom,rgba(3,4,10,0.05) 0%,rgba(3,4,10,0.65) 100%); }
       .tc-hero-content { position:relative; z-index:3; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:16px; text-align:center; }
@@ -6801,12 +6801,12 @@ export default function App() {
     );
 
     return (
-      <div style={{ background: C.bgDark, minHeight: "100vh", display: "flex", justifyContent: "center", color: C.textMain, fontFamily: FONT_BASE }}>
+      <div style={{ background: C.bgDark, minHeight: "100dvh", display: "flex", justifyContent: "center", color: C.textMain, fontFamily: FONT_BASE }}>
         <div style={{
           width: "100%",
           maxWidth: 400,
           background: C.bgDark,
-          minHeight: "100vh",
+          minHeight: "100dvh",
           display: "flex",
           flexDirection: "column",
           paddingBottom: 100,
@@ -8366,7 +8366,7 @@ export default function App() {
         <div style={{ ...S.wrap, paddingBottom: 0 }}>
           <iframe
             src="/screens/serena.html"
-            style={{ width: "100%", height: "calc(100vh - 62px)", border: "none", display: "block" }}
+            style={{ width: "100%", height: "calc(100dvh - 62px)", border: "none", display: "block" }}
             allow="autoplay"
             title="Serena"
           />
@@ -8383,7 +8383,7 @@ export default function App() {
         <div style={{ ...S.wrap, paddingBottom: 0 }}>
           <iframe
             src="/screens/gacha.html"
-            style={{ width: "100%", height: "100vh", border: "none", display: "block" }}
+            style={{ width: "100%", height: "100dvh", border: "none", display: "block" }}
             allow="autoplay"
             title="Gacha"
           />
@@ -8399,7 +8399,7 @@ export default function App() {
         <div style={{ ...S.wrap, paddingBottom: 0 }}>
           <iframe
             src="/screens/abyss.html"
-            style={{ width: "100%", height: "100vh", border: "none", display: "block" }}
+            style={{ width: "100%", height: "100dvh", border: "none", display: "block" }}
             allow="autoplay"
             title="Abyss"
           />
@@ -8415,7 +8415,7 @@ export default function App() {
         <div style={{ ...S.wrap, paddingBottom: 0 }}>
           <iframe
             src="/screens/characters.html"
-            style={{ width: "100%", height: "100vh", border: "none", display: "block" }}
+            style={{ width: "100%", height: "100dvh", border: "none", display: "block" }}
             allow="autoplay"
             title="Characters"
           />
