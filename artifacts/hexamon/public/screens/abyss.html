@@ -455,7 +455,8 @@
   .pq-icon.fainted { border-color:rgba(255,255,255,0.1); filter:grayscale(1); opacity:0.4; }
   .pq-icon.active { border-color:var(--gold); box-shadow:0 0 6px rgba(201,149,42,0.5); }
 
-  .battle-dialogue-wrap { position:relative; z-index:10; margin-top:auto; padding:8px 10px 12px; display:flex; flex-direction:column; gap:6px; }
+  .battle-spacer { flex: 1 1 0; min-height: 0; }
+  .battle-dialogue-wrap { position:relative; z-index:10; flex: 0 0 auto; padding:8px 10px 12px; display:flex; flex-direction:column; gap:6px; }
   .battle-dialogue-box {
     background:rgba(5,2,15,0.88); border:1.5px solid rgba(201,149,42,0.35);
     border-radius:10px; padding:10px 14px; min-height:52px; backdrop-filter:blur(8px);
@@ -568,6 +569,23 @@
   .type-ground  { background:rgba(160,130,50,0.25); border-color:rgba(160,130,50,0.5); color:#ddbb66; }
 
   @media(max-width:360px) { .floor-number{font-size:12px} .header h1{font-size:19px} }
+
+  /* Compact battle controls on short viewports (e.g. Chrome with visible address bar) */
+  @media(max-height:680px) {
+    .battle-hud-top { padding:6px 14px 4px; }
+    .battle-enemy-zone { padding:4px 14px 0; }
+    .battle-player-zone { padding:2px 14px 0; margin-top:2px; }
+    .enemy-info-card, .player-info-card { padding:6px 8px; }
+    .enemy-name-row, .player-name-row { margin-bottom:4px; }
+    .battle-dialogue-wrap { padding:6px 10px 8px; gap:4px; }
+    .battle-dialogue-box { padding:8px 12px; min-height:40px; }
+    .move-btn { padding:5px 7px; }
+    .move-btn-name { font-size:9px; margin-bottom:2px; }
+    .side-btn { padding:5px 7px; min-width:40px; }
+    .side-btn span:first-child { font-size:14px; }
+    .party-queue { margin-top:4px; }
+    .pq-icon { width:20px; height:20px; }
+  }
 </style>
 </head>
 <body>
@@ -783,6 +801,8 @@
         <div class="party-queue" id="party-queue"></div>
       </div>
     </div>
+
+    <div class="battle-spacer"></div>
 
     <div class="battle-dialogue-wrap">
       <div class="battle-dialogue-box">
