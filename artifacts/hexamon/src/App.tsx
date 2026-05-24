@@ -4909,15 +4909,16 @@ export default function App() {
         {/* ── HEADER ── */}
         <div style={{
           display: "flex", alignItems: "center", padding: "10px 14px",
-          background: "#111114", borderBottom: "2px solid #cc2222", flexShrink: 0,
+          background: "#111114", borderBottom: "2px solid #cc2222", flexShrink: 0, gap: 10,
         }}>
           <button onClick={runAway} style={{
-            background: "none", border: "none", color: "#f0f0f0", fontSize: 13,
-            fontWeight: 700, cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 4,
-          }}>◄ BACK</button>
-          <span style={{ color: "#555", margin: "0 8px", fontSize: 14 }}>|</span>
+            background: "#1c1c1e", border: "1px solid #2a2a2d", color: "#ffffff",
+            padding: "8px 14px", borderRadius: 10, fontSize: 12, fontWeight: 700,
+            letterSpacing: 1, cursor: "pointer", display: "inline-flex", alignItems: "center",
+            gap: 6, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif", flexShrink: 0,
+          }}><span style={{ fontSize: 10, lineHeight: 1 }}>◀</span> BACK</button>
           <span style={{ color: "#f0f0f0", fontWeight: 700, fontSize: 14, letterSpacing: 1, fontFamily: "'Segoe UI', sans-serif" }}>WILD BATTLE</span>
-          <span style={{ marginLeft: "auto", color: "#f0f0f0", fontSize: 12, fontWeight: 600 }}>Turn {battle.turnCount + 1}</span>
+          <span style={{ marginLeft: "auto", color: "#aaa", fontSize: 12, fontWeight: 600 }}>Turn {battle.turnCount + 1}</span>
         </div>
 
         {/* ── SCROLLABLE CONTENT ── */}
@@ -4925,11 +4926,11 @@ export default function App() {
 
           {/* ── BATTLE ARENA ── */}
           <div className={huntArenaHit ? "hunt-pq-arena-hit" : ""} style={{
-            position: "relative", flexShrink: 0,
-            backgroundImage: `url(${chamberBattleBg})`,
+            position: "relative", flexShrink: 0, margin: "10px 14px 0",
+            backgroundImage: `url('https://i.ibb.co/Vpwhc3Bd/DVMT-6-OXc-AE2r-ZY.jpg'), url(${huntForestBg})`,
             backgroundSize: "cover", backgroundPosition: "center",
-            height: 220,
-            border: "1px solid rgba(255,255,255,0.08)",
+            height: 220, borderRadius: 10, overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.12)",
           }}>
             <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.18)" }} />
 
