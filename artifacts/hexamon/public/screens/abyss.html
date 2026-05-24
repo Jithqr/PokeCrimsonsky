@@ -528,6 +528,73 @@
   @keyframes boss-materialize { 0%{transform:scale(0) translateY(30px);filter:brightness(0) saturate(0) blur(8px)} 40%{filter:brightness(4) saturate(.2) blur(2px)} 70%{transform:scale(1.1) translateY(-5px)} 100%{transform:scale(1) translateY(0);filter:saturate(.6) hue-rotate(240deg)} }
   .enemy-canvas.materializing { animation:boss-materialize .6s cubic-bezier(.175,.885,.32,1.275) forwards; }
 
+  /* ── 2nd-half quake entry ── */
+  @keyframes quake-heavy {
+    0%{transform:translate(0,0)} 7%{transform:translate(-9px,5px)} 14%{transform:translate(9px,-7px)}
+    21%{transform:translate(-12px,6px)} 28%{transform:translate(12px,-5px)} 35%{transform:translate(-8px,8px)}
+    42%{transform:translate(8px,-6px)} 50%{transform:translate(-6px,4px)} 60%{transform:translate(5px,-3px)}
+    72%{transform:translate(-3px,2px)} 86%{transform:translate(2px,-1px)} 100%{transform:translate(0,0)}
+  }
+  .quake-heavy { animation:quake-heavy .75s ease-in-out; }
+  @keyframes quake-light {
+    0%{transform:translate(0,0)} 20%{transform:translate(-5px,3px)} 40%{transform:translate(5px,-3px)}
+    60%{transform:translate(-3px,2px)} 80%{transform:translate(2px,-1px)} 100%{transform:translate(0,0)}
+  }
+  .quake-light { animation:quake-light .35s ease-out; }
+
+  @keyframes enemy-rise-in {
+    0%{transform:translateY(90px) scale(.55);filter:brightness(0) saturate(0) blur(14px) hue-rotate(260deg);opacity:0}
+    18%{opacity:1;filter:brightness(7) saturate(0) blur(5px) hue-rotate(280deg)}
+    45%{transform:translateY(-14px) scale(1.14);filter:brightness(3.5) saturate(.25) blur(1px) hue-rotate(255deg)}
+    68%{transform:translateY(6px) scale(.96);filter:brightness(1.5) saturate(.5) hue-rotate(245deg)}
+    84%{transform:translateY(-3px) scale(1.02)}
+    100%{transform:translateY(0) scale(1);filter:saturate(.65) hue-rotate(240deg)}
+  }
+  .enemy-canvas.rising { animation:enemy-rise-in 1s cubic-bezier(.175,.885,.32,1.275) forwards; }
+
+  @keyframes shockwave-expand {
+    0%{transform:translate(-50%,-50%) scale(0);opacity:1;border-width:5px}
+    55%{opacity:.55;border-width:2px}
+    100%{transform:translate(-50%,-50%) scale(4.5);opacity:0;border-width:0px}
+  }
+  .corrupt-shockwave {
+    position:absolute; width:90px; height:90px; left:62%; top:34%;
+    border-radius:50%; border:4px solid rgba(190,80,255,.95);
+    box-shadow:0 0 24px rgba(190,80,255,.7),inset 0 0 24px rgba(190,80,255,.4);
+    pointer-events:none; z-index:16; opacity:0; transform:translate(-50%,-50%) scale(0);
+  }
+  .corrupt-shockwave.burst { animation:shockwave-expand .75s ease-out forwards; }
+
+  @keyframes shockwave-expand2 {
+    0%{transform:translate(-50%,-50%) scale(0);opacity:.7;border-width:3px}
+    100%{transform:translate(-50%,-50%) scale(6);opacity:0;border-width:0px}
+  }
+  .corrupt-shockwave2 {
+    position:absolute; width:90px; height:90px; left:62%; top:34%;
+    border-radius:50%; border:2px solid rgba(255,160,255,.6);
+    pointer-events:none; z-index:15; opacity:0; transform:translate(-50%,-50%) scale(0);
+  }
+  .corrupt-shockwave2.burst { animation:shockwave-expand2 1s ease-out .15s forwards; }
+
+  @keyframes crack-reveal { 0%{opacity:0;transform:scaleX(0)} 30%{opacity:1;transform:scaleX(1)} 70%{opacity:1} 100%{opacity:0} }
+  #quake-crack-layer { position:absolute; bottom:0; left:0; right:0; height:32%; z-index:13; pointer-events:none; opacity:0; }
+  #quake-crack-layer.show { animation:crack-reveal 1.6s ease-out forwards; }
+
+  @keyframes corrupt-vignette-pulse {
+    0%{box-shadow:inset 0 0 0 transparent}
+    30%{box-shadow:inset 0 0 100px rgba(160,0,255,.55)}
+    65%{box-shadow:inset 0 0 80px rgba(160,0,255,.35)}
+    100%{box-shadow:inset 0 0 0 transparent}
+  }
+  .battle-screen.corruption-pulse { animation:corrupt-vignette-pulse .9s ease-out forwards; }
+
+  @keyframes corrupt-particle-burst { 0%{transform:translate(0,0) scale(1);opacity:1} 100%{transform:var(--tx,translateX(50px)) var(--ty,translateY(-60px)) scale(0);opacity:0} }
+  .corrupt-particle {
+    position:absolute; border-radius:50%; pointer-events:none; z-index:17;
+    animation:corrupt-particle-burst .8s ease-out forwards;
+    left:62%; top:34%;
+  }
+
   /* ── Reward reveal overlay ── */
   .reward-reveal-overlay { position:fixed; inset:0; z-index:500; background:rgba(5,2,15,.97); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; padding:24px; }
   .reward-reveal-title { font-family:'Cinzel',serif; font-size:20px; font-weight:800; color:var(--gold-light); letter-spacing:3px; text-align:center; }
@@ -716,6 +783,15 @@
       <div class="battle-bg-overlay"></div>
       <div class="corruption-particles" id="corruption-particles"></div>
     <div class="flash-layer" id="flash-layer"></div>
+    <div class="corrupt-shockwave" id="corrupt-shockwave"></div>
+    <div class="corrupt-shockwave2" id="corrupt-shockwave2"></div>
+    <svg id="quake-crack-layer" viewBox="0 0 375 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20,115 L75,72 L98,88 L145,42 L165,68 L210,22 L238,60 L278,28 L318,66 L355,45" stroke="rgba(160,60,255,.65)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      <path d="M0,100 L55,78 L88,95 L135,58 L172,82 L225,48 L265,74 L308,44 L375,62" stroke="rgba(220,140,255,.4)" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+      <path d="M145,42 L152,55 L160,50" stroke="rgba(160,60,255,.55)" stroke-width="1.2" fill="none"/>
+      <path d="M210,22 L218,38 L205,42" stroke="rgba(160,60,255,.55)" stroke-width="1.2" fill="none"/>
+      <path d="M278,28 L285,44 L272,46" stroke="rgba(160,60,255,.55)" stroke-width="1.2" fill="none"/>
+    </svg>
     <div class="glitch-layer" id="glitch-layer"></div>
     <div class="phase-transition-overlay" id="phase-transition-overlay">
       <div class="phase-transition-text" id="phase-transition-text"></div>
@@ -2483,6 +2559,55 @@ function showHalfStarAward(stars, cb) {
   }, delay(2000));
 }
 
+// ── Quake Entry — 2nd half spawn effects ──
+function triggerQuakeEntry() {
+  const bs = document.getElementById('battle-screen');
+  const ei = document.getElementById('enemy-canvas');
+  const sw1 = document.getElementById('corrupt-shockwave');
+  const sw2 = document.getElementById('corrupt-shockwave2');
+  const cracks = document.getElementById('quake-crack-layer');
+
+  // Wave 1: heavy quake + enemy rises
+  if(bs){ bs.classList.remove('quake-heavy','quake-light','corruption-pulse'); void bs.offsetWidth; bs.classList.add('quake-heavy','corruption-pulse'); setTimeout(()=>bs.classList.remove('quake-heavy'),800); setTimeout(()=>bs.classList.remove('corruption-pulse'),1000); }
+  if(ei){ ei.classList.remove('rising','materializing'); void ei.offsetWidth; ei.classList.add('rising'); setTimeout(()=>ei.classList.remove('rising'),1050); }
+
+  // Shockwave rings burst out from enemy position
+  if(sw1){ sw1.classList.remove('burst'); void sw1.offsetWidth; sw1.classList.add('burst'); setTimeout(()=>sw1.classList.remove('burst'),800); }
+  if(sw2){ sw2.classList.remove('burst'); void sw2.offsetWidth; sw2.classList.add('burst'); setTimeout(()=>sw2.classList.remove('burst'),1200); }
+
+  // Ground crack lines appear then fade
+  if(cracks){ cracks.classList.remove('show'); void cracks.offsetWidth; cracks.classList.add('show'); setTimeout(()=>cracks.classList.remove('show'),1700); }
+
+  // Corruption particles burst radially
+  spawnCorruptionEntryParticles();
+
+  // Wave 2: lighter aftershock at 220ms
+  setTimeout(()=>{
+    if(bs){ bs.classList.remove('quake-light'); void bs.offsetWidth; bs.classList.add('quake-light'); setTimeout(()=>bs.classList.remove('quake-light'),400); }
+  }, 220);
+}
+
+function spawnCorruptionEntryParticles() {
+  const bs = document.getElementById('battle-screen');
+  if(!bs) return;
+  const colors = ['rgba(190,80,255,.9)','rgba(140,40,220,.85)','rgba(240,160,255,.8)','rgba(255,100,220,.7)','rgba(100,40,180,.9)'];
+  const angles = [0,36,72,108,144,180,216,252,288,324];
+  angles.forEach((deg,i)=>{
+    setTimeout(()=>{
+      const p = document.createElement('div');
+      p.className = 'corrupt-particle';
+      const rad = deg * Math.PI/180;
+      const dist = 55 + Math.random()*45;
+      const tx = `translateX(${Math.cos(rad)*dist}px)`;
+      const ty = `translateY(${Math.sin(rad)*dist - 30}px)`;
+      const size = 4 + Math.random()*5;
+      p.style.cssText = `width:${size}px;height:${size}px;background:${colors[i%colors.length]};--tx:${tx};--ty:${ty};box-shadow:0 0 6px ${colors[i%colors.length]};animation-duration:${0.6+Math.random()*0.35}s;animation-delay:${i*18}ms;`;
+      bs.appendChild(p);
+      setTimeout(()=>p.remove(), 1100);
+    }, i*18);
+  });
+}
+
 // ── Phase Transition Animation ──
 function showPhaseTransition(switchFn) {
   const overlay=document.getElementById('phase-transition-overlay');
@@ -2518,9 +2643,8 @@ function showPhaseTransition(switchFn) {
       setTimeout(()=>{
         if(battleSession!==_s)return;
         overlay.classList.remove('active');
-        // Boss materialize animation
-        const ei=document.getElementById('enemy-canvas');
-        if(ei){ei.classList.remove('materializing');void ei.offsetWidth;ei.classList.add('materializing');setTimeout(()=>ei.classList.remove('materializing'),700);}
+        // 2nd-half quake entry sequence
+        triggerQuakeEntry();
       },550);
     },delay(1300));
   },700);
