@@ -1664,12 +1664,13 @@ function renderFloors() {
 //  UNLOCK CHAIN
 // ═══════════════════════════════════════════════════
 function checkUnlocks() {
-  // Floors 1-3 always unlocked
+  // Only Floor 1 starts active; each floor unlocks only after the previous is cleared
   FLOOR_DATA.forEach((f,i)=>{
-    if (i<=2 && f.status==='locked') f.status='active';
-    else if (i>2) {
+    if (i===0) {
+      if (f.status==='locked') f.status='active';
+    } else {
       const prev=FLOOR_DATA[i-1];
-      if (prev.stars>=1 && f.status==='locked') f.status='active';
+      if (prev.status==='cleared' && f.status==='locked') f.status='active';
     }
   });
 }
