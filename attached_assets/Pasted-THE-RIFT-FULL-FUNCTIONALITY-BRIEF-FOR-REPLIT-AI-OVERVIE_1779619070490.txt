@@ -1,0 +1,197 @@
+THE RIFT — FULL FUNCTIONALITY BRIEF FOR REPLIT AI
+OVERVIEW OF WHAT ALREADY EXISTS
+I already have the UI built: the 12 Floors screen, the 3 Chambers per floor layout, and the chamber card visuals. Do not rebuild any UI. Only add the functionality described below.
+CORE STRUCTURE (Read This First)
+The Rift is an end-game dungeon system. It has:
+12 Floors total
+3 Chambers per Floor
+2 Phases per Chamber: Phase 1 (First Half) and Phase 2 (Second Half)
+Each Phase contains 1 Corrupted Boss Pokémon as the enemy
+The player brings 12 Pokémon total into the entire floor — 6 assigned to Phase 1, 6 assigned to Phase 2
+These 12 Pokémon are locked to that floor's 3 chambers. The same 12 Pokémon are used across all 3 chambers of the same floor. They do NOT reset between chambers.
+HP and status carry over between chambers. If a Pokémon loses 300 HP in Chamber 1, it enters Chamber 2 with that same reduced HP. If a Pokémon faints, it stays fainted for the rest of that floor.
+FLOOR DIVISION
+Floors 1–6 (Resets Monthly)
+Corrupted Boss Pokémon are non-legendary
+Boss HP range: 1,000 – 1,500 HP
+This section resets every month on the 1st. Players can re-attempt it after reset.
+Floors 7–12 (Permanent Progression)
+Corrupted Boss Pokémon are legendary
+Boss HP range: 2,000 – 3,000 HP
+This section does NOT reset. Once cleared, it stays cleared permanently on that account.
+TEAM ASSIGNMENT SCREEN
+When a player clicks to attempt a Floor, before entering Chamber 1, show a Team Assignment Screen:
+Display two team slots side by side: "Phase 1 Team" and "Phase 2 Team"
+Each team holds exactly 6 Pokémon
+The player selects from their owned Pokémon roster
+A Pokémon cannot be placed in both Phase 1 and Phase 2 at the same time
+Once confirmed, these 12 Pokémon are locked for all 3 chambers of this floor
+Show a "Lock Teams & Enter" button that only activates when both teams have exactly 6 Pokémon selected
+Above the confirm button, show this warning text: "Your Pokémon's HP and status will carry between chambers. Choose wisely."
+CHAMBER FLOW — STEP BY STEP
+When the player enters a Chamber, this is the exact sequence:
+Step 1 — Phase 1 Begins
+Show the Phase 1 arena. Display the player's 6 Phase 1 Pokémon on one side.
+Display the Corrupted Boss Pokémon on the other side with its full HP bar (1,000–1,500 for floors 1–6, 2,000–3,000 for floors 7–12).
+The boss HP bar should be styled differently from normal — use a dark purple/corruption color with a pulsing glow animation.
+Start the Phase 1 Timer (see Timer section below).
+Combat plays out using the existing combat system.
+Step 2 — Phase 1 End Conditions
+Win condition: Boss HP reaches 0 before the timer expires.
+Lose condition: Timer reaches 0 OR all 6 Phase 1 Pokémon faint.
+If the player wins Phase 1, trigger the Phase Transition Animation (described below), then begin Phase 2.
+If the player loses Phase 1, the chamber is failed. Show a "Chamber Failed" screen. The player may retry the chamber but their Pokémon HP does NOT reset — they retry with whatever HP they had when they entered this chamber attempt.
+Step 3 — Phase 2 Begins
+After the transition animation, show the Phase 2 arena.
+Display the player's 6 Phase 2 Pokémon with their current HP (not full HP — they carry over from prior chambers).
+Display a new Corrupted Boss Pokémon (different from Phase 1) with its full HP.
+Start the Phase 2 Timer.
+Combat plays out.
+Step 4 — Phase 2 End Conditions
+Same as Phase 1: win if boss reaches 0 HP before timer expires and before all 6 Pokémon faint.
+If the player wins Phase 2, the Chamber is Cleared.
+Show a Chamber Clear screen with the star rating for that chamber (see Stars section below).
+After 2 seconds, transition to the next chamber or floor completion screen.
+PHASE TRANSITION ANIMATION (Between Phase 1 and Phase 2 of the Same Chamber)
+When Phase 1 is cleared and Phase 2 is about to begin:
+The screen dims to near-black over 0.5 seconds.
+A cracked/glitch effect plays — the arena visually "corrupts" for 0.8 seconds (use a CSS glitch filter or canvas distortion).
+White text appears center screen: "The corruption deepens..." — fade in over 0.4 seconds, hold for 1 second, fade out over 0.4 seconds.
+The screen brightens into the Phase 2 arena.
+The new Corrupted Boss Pokémon "materializes" — it should appear with a dark energy burst particle effect, scaling from 0 to full size over 0.6 seconds.
+Total transition duration: approximately 3–4 seconds.
+CHAMBER CLEAR TRANSITION (After Both Phases Complete)
+When both Phase 1 and Phase 2 of a chamber are cleared:
+Screen flashes white once.
+Text appears: "Chamber [X] — Cleared" with the star rating displayed as icons below.
+A brief fanfare sound cue triggers (use the existing sound system if one exists, otherwise leave a comment: // PLAY: chamber_clear_sfx).
+After 2.5 seconds, automatically load the next chamber or, if this was Chamber 3, load the Floor Clear screen.
+FLOOR CLEAR SCREEN
+After all 3 chambers of a floor are cleared:
+Display: "Floor [X] Cleared"
+Show total stars earned across all 3 chambers (max 9 stars per floor, 3 per chamber)
+Show the rewards earned (see Rewards section)
+Show a "Claim Rewards" button
+After claiming, return to the main Rift floor selection screen
+TIMER SYSTEM
+Each Phase (Phase 1 and Phase 2) has its own independent countdown timer.
+Timer values by floor group:
+Floors 1–3: 3 minutes (180 seconds) per phase
+Floors 4–6: 2 minutes 30 seconds (150 seconds) per phase
+Floors 7–9: 3 minutes (180 seconds) per phase (longer due to higher boss HP)
+Floors 10–12: 2 minutes 30 seconds (150 seconds) per phase
+Timer display rules:
+Show the timer as MM:SS in the top-center of the combat screen
+Timer color: white by default
+When 30 seconds remain: timer turns yellow and begins a subtle pulse animation
+When 10 seconds remain: timer turns red and the pulse animation speeds up
+When timer hits 0:00: freeze all combat, play a "time expired" flash (red screen flash), then show "Phase Failed — Time's Up"
+Timer pauses:
+The timer pauses during any dialogue, cutscene, or transition animation
+The timer does NOT pause for move selection — players must act under pressure
+STAR RATING SYSTEM (Per Chamber)
+Each chamber awards 0 to 3 stars based on performance. Stars are calculated after BOTH phases of a chamber are complete.
+Star conditions:
+⭐ 1 Star — Both phases cleared. At least 1 Pokémon survived. No other conditions met.
+⭐⭐ 2 Stars — Both phases cleared. At least 3 Pokémon across both teams are still conscious (not fainted) at the end of Phase 2. AND at least one phase was completed with more than 30 seconds remaining on its timer.
+⭐⭐⭐ 3 Stars — Both phases cleared. At least 4 Pokémon across both teams are still conscious. AND both phases were completed with more than 30 seconds remaining on their respective timers.
+Important star rules:
+Stars are calculated per chamber, not per phase
+Stars are saved permanently — if a player earned 2 stars before and retries for 3 stars, only the highest star count is kept
+The star count for a floor is the sum of stars from all 3 of its chambers (max 9 per floor)
+Stars are displayed on the chamber card in the floor selection UI as filled/empty star icons
+BOSS POKÉMON DATA STRUCTURE
+Each chamber phase has a pre-assigned Corrupted Boss Pokémon. Store this in a data file (JSON or JS object) with the following structure per entry:
+Code
+For now, generate placeholder boss names and HP values following these rules:
+Floors 1–6, Phase 1 bosses: non-legendary, HP between 1000–1300
+Floors 1–6, Phase 2 bosses: non-legendary, HP between 1200–1500
+Floors 7–12, Phase 1 bosses: legendary, HP between 2000–2500
+Floors 7–12, Phase 2 bosses: legendary, HP between 2500–3000
+That gives us: 12 floors × 3 chambers × 2 phases = 72 total boss entries. Generate all 72 with unique names (use "Corrupted [PokémonName]" format).
+REWARD SYSTEM
+Rewards are granted once per floor completion per reset cycle. Retrying a floor you already cleared in the same cycle gives no additional rewards.
+Floors 1–6 Rewards (per floor cleared):
+Stars Earned
+Stardust
+Stellar Ignites
+Poké Balls Mix
+1–3 stars
+50
+1
+5 random balls
+4–6 stars
+100
+2
+8 random balls
+7–9 stars
+150
+3
+10 random balls
+Stardust = the premium currency in this game (referred to as "premos" in the economy)
+Stellar Ignites = blue fate currency (used for pulls/gacha)
+Poké Balls mix = a random assortment from: Poké Ball, Great Ball, Ultra Ball (weighted toward lower tier)
+Floors 7–12 Rewards (per floor cleared):
+Stars Earned
+Stardust
+Cosmic Ignites
+Poké Balls Mix
+TMs
+1–3 stars
+75
+1
+5 random balls
+0
+4–6 stars
+125
+2
+8 random balls
+1 random TM
+7–9 stars
+200
+3
+10 random balls
+2 random TMs
+Cosmic Ignites = pink fate currency (higher tier than Stellar, used for premium pulls)
+TMs = random from a TM pool (store as an array of TM names, pick randomly)
+Reward Delivery:
+When the player clicks "Claim Rewards", add each item directly to their inventory/wallet
+Show an animated reward reveal: each item flies in from the sides one by one with a bounce animation, 0.3 seconds apart
+Show the exact quantity next to each item icon
+After all items are shown, display a "Rewards Claimed!" confirmation and enable the close button
+DATA PERSISTENCE
+The following must be saved to the player's account/local storage (use whatever save system the game already uses):
+Per-floor: isCleared (boolean)
+Per-floor: highestStars (number, 0–9)
+Per-chamber: highestStars (number, 0–3)
+Per-floor: rewardsClaimed (boolean, resets monthly for floors 1–6 only)
+Per-floor: currentTeamAssignment (the 12 Pokémon selected, preserved if player exits mid-floor)
+Monthly reset timestamp for floors 1–6
+Monthly Reset Logic:
+Store the last reset date for floors 1–6
+On app load, check if the current date's month/year is different from the stored reset month/year
+If yes: reset isCleared, rewardsClaimed, and highestStars for floors 1–6 only
+Do NOT reset floors 7–12 ever
+CORRUPTION VISUAL EFFECTS ON BOSSES
+Every Corrupted Boss Pokémon sprite should have these effects applied via CSS or canvas:
+A dark purple/black aura that pulses outward slowly (CSS box-shadow animation or radial gradient pulse)
+A slight color-desaturation filter on the sprite itself (filter: saturate(0.6) hue-rotate(240deg))
+Occasional "glitch" flicker — every 4–8 seconds, randomly, apply a quick horizontal shift glitch for 0.15 seconds then return to normal
+When the boss takes damage: flash the sprite white for 0.1 seconds (filter: brightness(10))
+When the boss is at 25% HP or below: increase the aura pulse speed and add a red tint to the aura
+FLOOR LOCKED / UNLOCK LOGIC
+Floor 1 is always unlocked
+Each floor unlocks only when the previous floor has been cleared at least once (any star rating)
+Locked floors display a lock icon over the chamber cards and a message: "Clear Floor [X-1] to unlock"
+Floors 7–12 have an additional visual indicator (a legendary aura/glow on the floor card) to signal they contain legendary bosses
+RETRY LOGIC
+A player can retry any chamber at any time
+When retrying, the Pokémon HP does NOT reset to full — they enter with whatever HP they had when they first entered the floor
+The only way to get full HP on all Pokémon for a floor is to exit the floor entirely and re-enter (which triggers a new Team Assignment screen and resets all Pokémon HP to full for the new attempt)
+Exiting mid-floor and re-entering counts as a fresh attempt — prior partial progress on chambers in that attempt is lost
+WHAT NOT TO BUILD
+Do not rebuild the floor selection UI
+Do not rebuild the chamber card UI
+Do not change any existing art assets
+Do not add a PvP mode or anything outside this scope
+Do not add difficulty settings — the floor number IS the difficulty

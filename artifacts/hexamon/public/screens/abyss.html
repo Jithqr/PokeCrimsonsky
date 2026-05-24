@@ -497,6 +497,68 @@
     .party-queue{margin-top:3px}
     .pq-icon{width:20px;height:20px}
   }
+
+  /* ── Timer MM:SS display ── */
+  .timer-mmss { font-family:'Cinzel',serif; font-size:13px; font-weight:700; color:white; flex-shrink:0; letter-spacing:1px; min-width:42px; text-align:center; transition:color .3s; }
+  .timer-mmss.warn { color:#ffdd44; animation:timer-mmss-pulse 1s ease infinite alternate; }
+  .timer-mmss.danger { color:#ff4444; animation:timer-mmss-pulse .35s ease infinite alternate; }
+  @keyframes timer-mmss-pulse { from{opacity:1} to{opacity:.45} }
+
+  /* ── Phase transition overlay ── */
+  .phase-transition-overlay { position:absolute; inset:0; z-index:90; background:rgba(5,2,15,0); display:flex; align-items:center; justify-content:center; pointer-events:none; transition:background .5s ease; }
+  .phase-transition-overlay.active { pointer-events:all; }
+  .phase-transition-text { font-family:'Cinzel',serif; font-size:18px; font-weight:700; color:#e8d0ff; letter-spacing:3px; text-shadow:0 0 30px rgba(139,0,255,.9); opacity:0; text-align:center; line-height:1.6; }
+  .glitch-layer { position:absolute; inset:0; pointer-events:none; z-index:89; opacity:0; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(139,0,255,.08) 2px,rgba(139,0,255,.08) 4px); }
+  @keyframes glitch-anim { 0%,100%{opacity:0;transform:none} 10%{opacity:1;transform:translateX(-5px) skewX(3deg)} 20%{opacity:.8;transform:translateX(5px)} 30%{opacity:1;transform:translateX(-3px) skewX(-2deg)} 50%{opacity:.7;transform:translateX(2px)} 70%{opacity:1;transform:translateX(-2px)} 80%{opacity:.6;transform:none} }
+  .glitch-layer.active { animation:glitch-anim .8s steps(1) forwards; }
+
+  /* ── Chamber clear overlay ── */
+  .chamber-clear-overlay { position:absolute; inset:0; z-index:85; background:transparent; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+  .chamber-clear-card { background:linear-gradient(160deg,rgba(20,10,50,.96),rgba(10,5,25,.98)); border:1px solid rgba(201,149,42,.5); border-radius:16px; padding:26px 32px; text-align:center; box-shadow:0 0 60px rgba(201,149,42,.25),0 20px 60px rgba(0,0,0,.9); opacity:0; transform:scale(.82); transition:opacity .35s ease, transform .35s cubic-bezier(.175,.885,.32,1.275); }
+  .chamber-clear-title { font-family:'Cinzel',serif; font-size:15px; font-weight:800; color:#f0c060; letter-spacing:3px; margin-bottom:4px; }
+  .chamber-clear-sub { font-family:'Cinzel',serif; font-size:9px; letter-spacing:4px; color:var(--text-muted); margin-bottom:16px; }
+  .chamber-clear-stars { display:flex; gap:14px; justify-content:center; }
+  .chamber-clear-star { font-size:30px; opacity:0; transform:scale(0); transition:opacity .35s ease, transform .35s cubic-bezier(.175,.885,.32,1.275); }
+  .chamber-clear-star.lit { opacity:1; transform:scale(1.15); filter:drop-shadow(0 0 10px rgba(255,200,0,.9)); }
+  @keyframes white-flash { 0%{opacity:0} 12%{opacity:1} 100%{opacity:0} }
+  .flash-layer { position:absolute; inset:0; background:white; z-index:84; opacity:0; pointer-events:none; border-radius:inherit; }
+  .flash-layer.flash { animation:white-flash .45s ease-out forwards; }
+
+  /* ── Boss materialize ── */
+  @keyframes boss-materialize { 0%{transform:scale(0) translateY(30px);filter:brightness(0) saturate(0) blur(8px)} 40%{filter:brightness(4) saturate(.2) blur(2px)} 70%{transform:scale(1.1) translateY(-5px)} 100%{transform:scale(1) translateY(0);filter:saturate(.6) hue-rotate(240deg)} }
+  .enemy-canvas.materializing { animation:boss-materialize .6s cubic-bezier(.175,.885,.32,1.275) forwards; }
+
+  /* ── Reward reveal overlay ── */
+  .reward-reveal-overlay { position:fixed; inset:0; z-index:500; background:rgba(5,2,15,.97); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; padding:24px; }
+  .reward-reveal-title { font-family:'Cinzel',serif; font-size:20px; font-weight:800; color:var(--gold-light); letter-spacing:3px; text-align:center; }
+  .reward-reveal-floor { font-family:'Cinzel',serif; font-size:10px; letter-spacing:4px; color:var(--text-muted); margin-top:-14px; }
+  .reward-reveal-items { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; max-width:380px; }
+  .reward-reveal-item { display:flex; flex-direction:column; align-items:center; gap:5px; opacity:0; transition:opacity .4s ease, transform .4s cubic-bezier(.175,.885,.32,1.275); }
+  .reward-reveal-item.from-left { transform:translateX(-70px); }
+  .reward-reveal-item.from-right { transform:translateX(70px); }
+  .reward-reveal-item.shown { opacity:1; transform:translateX(0) scale(1.08); }
+  .reward-reveal-item.settle { transform:translateX(0) scale(1) !important; transition:transform .2s ease; }
+  .reward-item-bg { width:70px; height:70px; border-radius:12px; background:linear-gradient(135deg,rgba(201,149,42,.15),rgba(74,50,130,.2)); border:1px solid rgba(201,149,42,.35); display:flex; align-items:center; justify-content:center; font-size:32px; }
+  .reward-item-name { font-family:'Cinzel',serif; font-size:8px; color:var(--text-muted); letter-spacing:.5px; text-align:center; max-width:72px; line-height:1.3; }
+  .reward-item-qty { font-family:'Cinzel',serif; font-size:17px; font-weight:800; color:var(--gold-light); }
+  .reward-reveal-claimed { font-family:'Cinzel',serif; font-size:13px; color:#6fc98a; letter-spacing:2px; opacity:0; transition:opacity .5s; }
+  .reward-reveal-close { background:linear-gradient(135deg,#b8851f,#e0a830); border:none; border-radius:8px; color:#1a0f00; font-family:'Cinzel',serif; font-size:13px; font-weight:700; padding:12px 32px; cursor:pointer; opacity:0; transition:opacity .5s; letter-spacing:1px; }
+  .reward-already-claimed { font-family:'Cinzel',serif; font-size:11px; color:var(--text-muted); text-align:center; font-style:italic; padding:0 20px; }
+
+  /* ── Legendary glow for floors 7-12 ── */
+  .floor-banner.legendary .banner-svg .arch-stroke { stroke:#9966ff; }
+  .floor-banner.legendary .banner-svg .deco-stroke { stroke:#6633cc; }
+  .floor-banner.legendary .floor-number { color:#cc99ff; }
+  .floor-banner.legendary .floor-num-bg { border-color:#9966ff; box-shadow:0 0 10px rgba(153,102,255,.6); }
+  .floor-banner.legendary::after { content:''; position:absolute; inset:-2px; border-radius:4px; box-shadow:0 0 12px rgba(153,102,255,.4); pointer-events:none; animation:legend-pulse 2.5s ease-in-out infinite; }
+  @keyframes legend-pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+  .floor-banner.cleared.legendary .banner-svg .arch-stroke { stroke:#66ffcc; }
+  .floor-banner.cleared.legendary .floor-number { color:#88ffcc; }
+  .floor-banner.cleared.legendary .floor-num-bg { border-color:#66ffcc; box-shadow:0 0 10px rgba(102,255,204,.5); }
+
+  /* ── Warning text ── */
+  .team-warning-text { font-size:10px; color:rgba(255,200,100,.75); text-align:center; padding:5px 16px 0; line-height:1.5; font-style:italic; }
+
 </style>
 </head>
 <body>
@@ -638,9 +700,10 @@
         </div>
       </div>
     </div>
+    <div class="team-warning-text">Your Pokémon's HP and status will carry between chambers. Choose wisely.</div>
     <div class="team-btn-row">
       <button class="btn-preset" onclick="autoFillTeam()">⊞ AUTO FILL</button>
-      <button class="btn-start" id="btn-start" onclick="startChallenge()" disabled>▶ ENTER THE RIFT</button>
+      <button class="btn-start" id="btn-start" onclick="startChallenge()" disabled>🔒 Lock Teams & Enter</button>
     </div>
   </div>
 </div>
@@ -652,6 +715,22 @@
       <div class="battle-bg-img" id="battle-bg-img"></div>
       <div class="battle-bg-overlay"></div>
       <div class="corruption-particles" id="corruption-particles"></div>
+    <div class="flash-layer" id="flash-layer"></div>
+    <div class="glitch-layer" id="glitch-layer"></div>
+    <div class="phase-transition-overlay" id="phase-transition-overlay">
+      <div class="phase-transition-text" id="phase-transition-text"></div>
+    </div>
+    <div class="chamber-clear-overlay" id="chamber-clear-overlay" style="pointer-events:none">
+      <div class="chamber-clear-card" id="chamber-clear-card">
+        <div class="chamber-clear-title" id="chamber-clear-title">CHAMBER 1</div>
+        <div class="chamber-clear-sub">CLEARED</div>
+        <div class="chamber-clear-stars">
+          <span class="chamber-clear-star" id="ccs0">⭐</span>
+          <span class="chamber-clear-star" id="ccs1">⭐</span>
+          <span class="chamber-clear-star" id="ccs2">⭐</span>
+        </div>
+      </div>
+    </div>
     </div>
     <div class="battle-field"></div>
 
@@ -661,6 +740,7 @@
       <div class="battle-floor-tag" id="battle-floor-tag">Floor 1 · Chamber 1</div>
       <div class="chamber-dots" id="chamber-dots"></div>
       <div class="half-indicator half-first" id="half-indicator">½1</div>
+      <span class="timer-mmss" id="timer-mmss">3:00</span>
       <div class="battle-turn-tag" id="battle-turn-tag">T1</div>
       <button class="battle-speed-btn" id="speed-btn" onclick="toggleSpeed()">1×</button>
       <button class="battle-flee-btn" onclick="fleeBattle()">✕</button>
@@ -1052,54 +1132,54 @@ const FLOOR_ENEMIES = {
 //  FLOOR DATA
 // ═══════════════════════════════════════════════════
 const FLOOR_DATA = [
-  {id:1,name:'Meadow Trial',section:'outer',status:'active',stars:0,timeLimit:90,
+  {id:1,name:'Meadow Trial',section:'outer',status:'active',stars:0,timeLimit:180,
    disorder:{label:'Overgrowth',description:'Grass-type moves deal 50% bonus damage to all.',effect:{type:'type_boost',moveType:'grass',multiplier:1.5}},
-   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0}],
-   rewards:[{icon:'💎',name:'Rift Shards',qty:50,threshold:6},{icon:'💎',name:'Rift Shards',qty:100,threshold:12},{icon:'💎',name:'Rift Shards',qty:150,threshold:18}]},
-  {id:2,name:'Ember Cavern',section:'outer',status:'locked',stars:0,timeLimit:90,
+   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0,chamberStars:0}],
+   rewards:[{icon:'⭐',name:'Stardust',qty:50,threshold:3},{icon:'🔥',name:'Stellar Ignite',qty:1,threshold:3},{icon:'🔵',name:'Poké Ball',qty:5,threshold:3},{icon:'⭐',name:'Stardust',qty:100,threshold:6},{icon:'🔥',name:'Stellar Ignite',qty:2,threshold:6},{icon:'🔵',name:'Poké Ball',qty:8,threshold:6},{icon:'⭐',name:'Stardust',qty:150,threshold:9},{icon:'🔥',name:'Stellar Ignite',qty:3,threshold:9},{icon:'🔵',name:'Poké Ball',qty:10,threshold:9}]},
+  {id:2,name:'Ember Cavern',section:'outer',status:'locked',stars:0,timeLimit:180,
    disorder:{label:'Blazing Ground',description:'Fire-type moves deal 50% bonus damage to all.',effect:{type:'type_boost',moveType:'fire',multiplier:1.5}},
-   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0}],
-   rewards:[{icon:'💎',name:'Rift Shards',qty:50,threshold:6},{icon:'💎',name:'Rift Shards',qty:100,threshold:12},{icon:'💎',name:'Rift Shards',qty:150,threshold:18}]},
-  {id:3,name:'Tide Shore',section:'outer',status:'locked',stars:0,timeLimit:90,
+   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0,chamberStars:0}],
+   rewards:[{icon:'⭐',name:'Stardust',qty:50,threshold:3},{icon:'🔥',name:'Stellar Ignite',qty:1,threshold:3},{icon:'🔵',name:'Poké Ball',qty:5,threshold:3},{icon:'⭐',name:'Stardust',qty:100,threshold:6},{icon:'🔥',name:'Stellar Ignite',qty:2,threshold:6},{icon:'🔵',name:'Poké Ball',qty:8,threshold:6},{icon:'⭐',name:'Stardust',qty:150,threshold:9},{icon:'🔥',name:'Stellar Ignite',qty:3,threshold:9},{icon:'🔵',name:'Poké Ball',qty:10,threshold:9}]},
+  {id:3,name:'Tide Shore',section:'outer',status:'locked',stars:0,timeLimit:180,
    disorder:{label:'Rising Waters',description:'Water-type moves deal 50% bonus damage to all.',effect:{type:'type_boost',moveType:'water',multiplier:1.5}},
-   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0}],
-   rewards:[{icon:'💎',name:'Rift Shards',qty:60,threshold:6},{icon:'💎',name:'Rift Shards',qty:120,threshold:12},{icon:'💎',name:'Rift Shards',qty:180,threshold:18}]},
-  {id:4,name:'Storm Peak',section:'inner',status:'locked',stars:0,timeLimit:75,
+   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0,chamberStars:0}],
+   rewards:[{icon:'⭐',name:'Stardust',qty:60,threshold:3},{icon:'🔥',name:'Stellar Ignite',qty:1,threshold:3},{icon:'🔵',name:'Poké Ball',qty:5,threshold:3},{icon:'⭐',name:'Stardust',qty:120,threshold:6},{icon:'🔥',name:'Stellar Ignite',qty:2,threshold:6},{icon:'🔵',name:'Poké Ball',qty:8,threshold:6},{icon:'⭐',name:'Stardust',qty:180,threshold:9},{icon:'🔥',name:'Stellar Ignite',qty:3,threshold:9},{icon:'🔵',name:'Poké Ball',qty:10,threshold:9}]},
+  {id:4,name:'Storm Peak',section:'inner',status:'locked',stars:0,timeLimit:150,
    disorder:{label:'Static Field',description:'Electric-type moves deal 60% bonus damage to all.',effect:{type:'type_boost',moveType:'electric',multiplier:1.6}},
-   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0}],
-   rewards:[{icon:'💎',name:'Rift Shards',qty:80,threshold:6},{icon:'💎',name:'Rift Shards',qty:150,threshold:12},{icon:'💎',name:'Rift Shards',qty:200,threshold:18}]},
-  {id:5,name:'Shadow Maze',section:'inner',status:'locked',stars:0,timeLimit:75,
+   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0,chamberStars:0}],
+   rewards:[{icon:'⭐',name:'Stardust',qty:80,threshold:3},{icon:'🔥',name:'Stellar Ignite',qty:1,threshold:3},{icon:'🔵',name:'Poké Ball',qty:5,threshold:3},{icon:'⭐',name:'Stardust',qty:150,threshold:6},{icon:'🔥',name:'Stellar Ignite',qty:2,threshold:6},{icon:'🔵',name:'Poké Ball',qty:8,threshold:6},{icon:'⭐',name:'Stardust',qty:200,threshold:9},{icon:'🔥',name:'Stellar Ignite',qty:3,threshold:9},{icon:'🔵',name:'Poké Ball',qty:10,threshold:9}]},
+  {id:5,name:'Shadow Maze',section:'inner',status:'locked',stars:0,timeLimit:150,
    disorder:{label:'Haunted Grounds',description:'Ghost/Dark-type moves deal 60% bonus damage.',effect:{type:'type_boost',moveType:'ghost',multiplier:1.6}},
-   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0}],
-   rewards:[{icon:'💎',name:'Rift Shards',qty:100,threshold:6},{icon:'💎',name:'Rift Shards',qty:180,threshold:12},{icon:'💎',name:'Rift Shards',qty:250,threshold:18}]},
-  {id:6,name:'Dragon Keep',section:'inner',status:'locked',stars:0,timeLimit:75,
+   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0,chamberStars:0}],
+   rewards:[{icon:'⭐',name:'Stardust',qty:100,threshold:3},{icon:'🔥',name:'Stellar Ignite',qty:1,threshold:3},{icon:'🔵',name:'Poké Ball',qty:5,threshold:3},{icon:'⭐',name:'Stardust',qty:180,threshold:6},{icon:'🔥',name:'Stellar Ignite',qty:2,threshold:6},{icon:'🔵',name:'Poké Ball',qty:8,threshold:6},{icon:'⭐',name:'Stardust',qty:250,threshold:9},{icon:'🔥',name:'Stellar Ignite',qty:3,threshold:9},{icon:'🔵',name:'Poké Ball',qty:10,threshold:9}]},
+  {id:6,name:'Dragon Keep',section:'inner',status:'locked',stars:0,timeLimit:150,
    disorder:{label:'Draconic Surge',description:'Dragon-type moves deal 70% bonus damage.',effect:{type:'type_boost',moveType:'dragon',multiplier:1.7}},
-   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0}],
-   rewards:[{icon:'💎',name:'Rift Shards',qty:120,threshold:6},{icon:'💎',name:'Rift Shards',qty:220,threshold:12},{icon:'💎',name:'Rift Shards',qty:300,threshold:18}]},
-  {id:7,name:'Legendary Vault',section:'celestial',status:'locked',stars:0,timeLimit:60,
+   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0,chamberStars:0}],
+   rewards:[{icon:'⭐',name:'Stardust',qty:120,threshold:3},{icon:'🔥',name:'Stellar Ignite',qty:1,threshold:3},{icon:'🔵',name:'Poké Ball',qty:5,threshold:3},{icon:'⭐',name:'Stardust',qty:220,threshold:6},{icon:'🔥',name:'Stellar Ignite',qty:2,threshold:6},{icon:'🔵',name:'Poké Ball',qty:8,threshold:6},{icon:'⭐',name:'Stardust',qty:300,threshold:9},{icon:'🔥',name:'Stellar Ignite',qty:3,threshold:9},{icon:'🔵',name:'Poké Ball',qty:10,threshold:9}]},
+  {id:7,name:'Legendary Vault',section:'celestial',status:'locked',stars:0,timeLimit:180,
    disorder:{label:'Sacred Aura',description:'All moves deal 25% more damage. Regen 60 HP/turn.',effect:{type:'regen',amount:60,target:'player'}},
-   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0}],
-   rewards:[{icon:'💎',name:'Rift Shards',qty:200,threshold:6},{icon:'💎',name:'Rift Shards',qty:350,threshold:12},{icon:'💎',name:'Rift Shards',qty:500,threshold:18}]},
-  {id:8,name:'Astral Sanctum',section:'celestial',status:'locked',stars:0,timeLimit:60,
+   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0,chamberStars:0}],
+   rewards:[{icon:'⭐',name:'Stardust',qty:75,threshold:3},{icon:'🌌',name:'Cosmic Ignite',qty:1,threshold:3},{icon:'🔵',name:'Poké Ball',qty:5,threshold:3},{icon:'⭐',name:'Stardust',qty:125,threshold:6},{icon:'🌌',name:'Cosmic Ignite',qty:2,threshold:6},{icon:'🔵',name:'Poké Ball',qty:8,threshold:6},{icon:'📀',name:'TM',qty:1,threshold:6},{icon:'⭐',name:'Stardust',qty:200,threshold:9},{icon:'🌌',name:'Cosmic Ignite',qty:3,threshold:9},{icon:'🔵',name:'Poké Ball',qty:10,threshold:9},{icon:'📀',name:'TM',qty:2,threshold:9}]},
+  {id:8,name:'Astral Sanctum',section:'celestial',status:'locked',stars:0,timeLimit:180,
    disorder:{label:'Psychic Surge',description:'Psychic-type moves deal 75% bonus damage.',effect:{type:'type_boost',moveType:'psychic',multiplier:1.75}},
-   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0}],
-   rewards:[{icon:'💎',name:'Rift Shards',qty:250,threshold:6},{icon:'💎',name:'Rift Shards',qty:450,threshold:12},{icon:'💎',name:'Rift Shards',qty:600,threshold:18}]},
-  {id:9,name:'Forsaken Rift',section:'celestial',status:'locked',stars:0,timeLimit:60,
+   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0,chamberStars:0}],
+   rewards:[{icon:'⭐',name:'Stardust',qty:75,threshold:3},{icon:'🌌',name:'Cosmic Ignite',qty:1,threshold:3},{icon:'🔵',name:'Poké Ball',qty:5,threshold:3},{icon:'⭐',name:'Stardust',qty:125,threshold:6},{icon:'🌌',name:'Cosmic Ignite',qty:2,threshold:6},{icon:'🔵',name:'Poké Ball',qty:8,threshold:6},{icon:'📀',name:'TM',qty:1,threshold:6},{icon:'⭐',name:'Stardust',qty:200,threshold:9},{icon:'🌌',name:'Cosmic Ignite',qty:3,threshold:9},{icon:'🔵',name:'Poké Ball',qty:10,threshold:9},{icon:'📀',name:'TM',qty:2,threshold:9}]},
+  {id:9,name:'Forsaken Rift',section:'celestial',status:'locked',stars:0,timeLimit:180,
    disorder:{label:'Gravity Shift',description:'Player regen 80 HP/turn. Ground moves hit all.',effect:{type:'regen',amount:80,target:'player'}},
-   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0}],
-   rewards:[{icon:'💎',name:'Rift Shards',qty:300,threshold:6},{icon:'💎',name:'Rift Shards',qty:550,threshold:12},{icon:'💎',name:'Rift Shards',qty:750,threshold:18}]},
-  {id:10,name:"Dragon's Crown",section:'apex',status:'locked',stars:0,timeLimit:45,
+   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0,chamberStars:0}],
+   rewards:[{icon:'⭐',name:'Stardust',qty:75,threshold:3},{icon:'🌌',name:'Cosmic Ignite',qty:1,threshold:3},{icon:'🔵',name:'Poké Ball',qty:5,threshold:3},{icon:'⭐',name:'Stardust',qty:125,threshold:6},{icon:'🌌',name:'Cosmic Ignite',qty:2,threshold:6},{icon:'🔵',name:'Poké Ball',qty:8,threshold:6},{icon:'📀',name:'TM',qty:1,threshold:6},{icon:'⭐',name:'Stardust',qty:200,threshold:9},{icon:'🌌',name:'Cosmic Ignite',qty:3,threshold:9},{icon:'🔵',name:'Poké Ball',qty:10,threshold:9},{icon:'📀',name:'TM',qty:2,threshold:9}]},
+  {id:10,name:"Dragon's Crown",section:'apex',status:'locked',stars:0,timeLimit:150,
    disorder:{label:'Temporal Fracture',description:'Dragon-type moves deal 100% bonus damage.',effect:{type:'type_boost',moveType:'dragon',multiplier:2.0}},
-   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0}],
-   rewards:[{icon:'💎',name:'Rift Shards',qty:400,threshold:6},{icon:'💎',name:'Rift Shards',qty:700,threshold:12},{icon:'💎',name:'Rift Shards',qty:1000,threshold:18}]},
-  {id:11,name:'Twilight Summit',section:'apex',status:'locked',stars:0,timeLimit:45,
+   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0,chamberStars:0}],
+   rewards:[{icon:'⭐',name:'Stardust',qty:100,threshold:3},{icon:'🌌',name:'Cosmic Ignite',qty:1,threshold:3},{icon:'🔵',name:'Poké Ball',qty:5,threshold:3},{icon:'⭐',name:'Stardust',qty:175,threshold:6},{icon:'🌌',name:'Cosmic Ignite',qty:2,threshold:6},{icon:'🔵',name:'Poké Ball',qty:8,threshold:6},{icon:'📀',name:'TM',qty:1,threshold:6},{icon:'⭐',name:'Stardust',qty:250,threshold:9},{icon:'🌌',name:'Cosmic Ignite',qty:3,threshold:9},{icon:'🔵',name:'Poké Ball',qty:10,threshold:9},{icon:'📀',name:'TM',qty:2,threshold:9}]},
+  {id:11,name:'Twilight Summit',section:'apex',status:'locked',stars:0,timeLimit:150,
    disorder:{label:'Dusk Tide',description:'Dark-type moves deal 80% bonus damage. Enemy regen.',effect:{type:'regen',amount:50,target:'enemy'}},
-   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0}],
-   rewards:[{icon:'💎',name:'Rift Shards',qty:500,threshold:6},{icon:'💎',name:'Rift Shards',qty:900,threshold:12},{icon:'💎',name:'Rift Shards',qty:1200,threshold:18}]},
-  {id:12,name:'Apex Eternal',section:'apex',status:'locked',stars:0,timeLimit:45,
+   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0,chamberStars:0}],
+   rewards:[{icon:'⭐',name:'Stardust',qty:100,threshold:3},{icon:'🌌',name:'Cosmic Ignite',qty:1,threshold:3},{icon:'🔵',name:'Poké Ball',qty:5,threshold:3},{icon:'⭐',name:'Stardust',qty:175,threshold:6},{icon:'🌌',name:'Cosmic Ignite',qty:2,threshold:6},{icon:'🔵',name:'Poké Ball',qty:8,threshold:6},{icon:'📀',name:'TM',qty:1,threshold:6},{icon:'⭐',name:'Stardust',qty:250,threshold:9},{icon:'🌌',name:'Cosmic Ignite',qty:3,threshold:9},{icon:'🔵',name:'Poké Ball',qty:10,threshold:9},{icon:'📀',name:'TM',qty:2,threshold:9}]},
+  {id:12,name:'Apex Eternal',section:'apex',status:'locked',stars:0,timeLimit:150,
    disorder:{label:'Absolute Zero',description:'All Pokémon lose 30 HP per turn. Residual chaos.',effect:{type:'residual',amount:30,target:'both'}},
-   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0}],
-   rewards:[{icon:'💎',name:'Rift Shards',qty:600,threshold:6},{icon:'💎',name:'Rift Shards',qty:1100,threshold:12},{icon:'💎',name:'Rift Shards',qty:1500,threshold:18}]},
+   chambers:[{name:'Chamber 1',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 2',half1Stars:0,half2Stars:0,chamberStars:0},{name:'Chamber 3',half1Stars:0,half2Stars:0,chamberStars:0}],
+   rewards:[{icon:'⭐',name:'Stardust',qty:120,threshold:3},{icon:'🌌',name:'Cosmic Ignite',qty:1,threshold:3},{icon:'🔵',name:'Poké Ball',qty:5,threshold:3},{icon:'⭐',name:'Stardust',qty:200,threshold:6},{icon:'🌌',name:'Cosmic Ignite',qty:2,threshold:6},{icon:'🔵',name:'Poké Ball',qty:8,threshold:6},{icon:'📀',name:'TM',qty:1,threshold:6},{icon:'⭐',name:'Stardust',qty:300,threshold:9},{icon:'🌌',name:'Cosmic Ignite',qty:3,threshold:9},{icon:'🔵',name:'Poké Ball',qty:10,threshold:9},{icon:'📀',name:'TM',qty:2,threshold:9}]},
 ];
 
 // ═══════════════════════════════════════════════════
@@ -1139,7 +1219,7 @@ const SAVE_KEY = 'crimsonrift:save:v4';
 function saveProgress() {
   const data = {floors:{}};
   FLOOR_DATA.forEach(f => {
-    data.floors[f.id] = {status:f.status, stars:f.stars, chambers:f.chambers.map(c=>({half1Stars:c.half1Stars,half2Stars:c.half2Stars}))};
+    data.floors[f.id] = {status:f.status, stars:f.stars, chambers:f.chambers.map(c=>({half1Stars:c.half1Stars,half2Stars:c.half2Stars,chamberStars:c.chamberStars||0}))};
   });
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch(e){}
 }
@@ -1156,7 +1236,7 @@ function loadProgress() {
       f.status = saved.status;
       f.stars = saved.stars || 0;
       if (saved.chambers) saved.chambers.forEach((c,i)=>{
-        if (f.chambers[i]) { f.chambers[i].half1Stars = c.half1Stars||0; f.chambers[i].half2Stars = c.half2Stars||0; }
+        if (f.chambers[i]) { f.chambers[i].half1Stars = c.half1Stars||0; f.chambers[i].half2Stars = c.half2Stars||0; f.chambers[i].chamberStars = c.chamberStars||0; }
       });
     });
     recalcFloorStars();
@@ -1165,17 +1245,23 @@ function loadProgress() {
 
 function recalcFloorStars() {
   FLOOR_DATA.forEach(f => {
-    f.stars = f.chambers.reduce((s,c)=>s + c.half1Stars + c.half2Stars, 0);
+    f.stars = f.chambers.reduce((s,c)=>s + (c.chamberStars||0), 0);
   });
 }
 
 function resetAllFloors() {
-  try { localStorage.removeItem(SAVE_KEY); } catch(e){}
+  // Only floors 1-6 reset monthly; floors 7-12 are permanent
   FLOOR_DATA.forEach((f,i) => {
-    f.status = i===0?'active':'locked';
-    f.stars = 0;
-    f.chambers.forEach(c => { c.half1Stars=0; c.half2Stars=0; });
+    if (i <= 5) {
+      f.status = i===0?'active':'locked';
+      f.stars = 0;
+      f.chambers.forEach(c => { c.half1Stars=0; c.half2Stars=0; c.chamberStars=0; });
+    }
   });
+  // Clear only F1-6 reward claims
+  for (let id=1; id<=6; id++) {
+    try { localStorage.removeItem(`${REWARDS_CLAIMED_KEY}_${id}`); } catch(e){}
+  }
   saveProgress();
   renderFloors();
   renderRewardsScreen && renderRewardsScreen();
@@ -1492,17 +1578,17 @@ function switchTab(tab) {
 //  RANKS SCREEN
 // ═══════════════════════════════════════════════════
 const RANK_TIERS = [
-  {name:'⛰️ Wanderer',minStars:0,  color:'#8a7a5a'},
-  {name:'🥉 Bronze',  minStars:30, color:'#cd7f32'},
-  {name:'🥈 Silver',  minStars:72, color:'#aaaacc'},
-  {name:'🥇 Gold',    minStars:126,color:'#f0c060'},
-  {name:'💠 Platinum',minStars:162,color:'#88ccff'},
-  {name:'👑 Champion',minStars:216,color:'#ff88ff'},
+  {name:'⛰️ Wanderer', minStars:0,  color:'#8a7a5a'},
+  {name:'🥉 Bronze',   minStars:15, color:'#cd7f32'},
+  {name:'🥈 Silver',   minStars:36, color:'#aaaacc'},
+  {name:'🥇 Gold',     minStars:63, color:'#f0c060'},
+  {name:'💠 Platinum', minStars:81, color:'#88ccff'},
+  {name:'👑 Champion', minStars:108,color:'#ff88ff'},
 ];
 function getTotalStars() { return FLOOR_DATA.reduce((s,f)=>s+f.stars,0); }
 function renderRanksScreen() {
   const total = getTotalStars();
-  const maxStars = 216;
+  const maxStars = 108;
   const tier = RANK_TIERS.slice().reverse().find(t=>total>=t.minStars)||RANK_TIERS[0];
   const nextTier = RANK_TIERS[RANK_TIERS.indexOf(tier)+1];
   const pct = nextTier ? Math.round(((total-tier.minStars)/(nextTier.minStars-tier.minStars))*100) : 100;
@@ -1515,9 +1601,9 @@ function renderRanksScreen() {
   document.getElementById('ranks-floor-table').innerHTML =
     `<tr><th>FLOOR</th><th>NAME</th><th>STARS</th><th>STATUS</th></tr>` +
     FLOOR_DATA.map(f=>{
-      const s3=[chamberStarSVG(f.stars>=6),chamberStarSVG(f.stars>=12),chamberStarSVG(f.stars>=18)].join('');
+      const s3=[chamberStarSVG(f.stars>=3),chamberStarSVG(f.stars>=6),chamberStarSVG(f.stars>=9)].join('');
       const badge=f.status==='cleared'?`<span class="floor-status-badge status-cleared-badge">CLEARED</span>`:f.status==='active'?`<span class="floor-status-badge status-active-badge">ACTIVE</span>`:`<span class="floor-status-badge status-locked-badge">LOCKED</span>`;
-      return `<tr><td style="font-family:'Cinzel',serif;color:var(--gold)">F${f.id}</td><td>${f.name}</td><td><div style="display:flex;gap:2px;align-items:center">${s3}<span style="font-size:9px;color:var(--text-muted);margin-left:4px">${f.stars}/18</span></div></td><td>${badge}</td></tr>`;
+      return `<tr><td style="font-family:'Cinzel',serif;color:var(--gold)">F${f.id}</td><td>${f.name}</td><td><div style="display:flex;gap:2px;align-items:center">${s3}<span style="font-size:9px;color:var(--text-muted);margin-left:4px">${f.stars}/9</span></div></td><td>${badge}</td></tr>`;
     }).join('');
 }
 
@@ -1531,7 +1617,7 @@ function renderRewardsScreen() {
   document.getElementById('rewards-cleared-floors').textContent = `${cleared} / 12 floors cleared`;
   document.getElementById('rewards-list').innerHTML = FLOOR_DATA.map(f=>{
     const earned = f.stars>0;
-    const s3=[chamberStarSVG(f.stars>=6),chamberStarSVG(f.stars>=12),chamberStarSVG(f.stars>=18)].join('');
+    const s3=[chamberStarSVG(f.stars>=3),chamberStarSVG(f.stars>=6),chamberStarSVG(f.stars>=9)].join('');
     const chips = f.rewards.map(r=>{
       const got = earned && f.stars>=r.threshold;
       return `<div class="reward-chip${got?' earned':''}"><span>${got?r.icon:'🔒'}</span><span${got?'':' style="color:rgba(255,255,255,.2)"'}>${r.name} ${got?r.qty:''}</span></div>`;
@@ -1574,9 +1660,10 @@ function renderFloors() {
     const starColor=f.status==='cleared'?'#6fc98a':f.status==='active'?'#f0c060':'#4a4060';
     const numColor=f.status==='cleared'?'#6fc98a':f.status==='active'?'#f0c060':'#3a3555';
     // Show 3 stars: each at threshold 6/12/18
-    const stars3=[buildStarSVG(f.stars>=6,starColor),buildStarSVG(f.stars>=12,starColor),buildStarSVG(f.stars>=18,starColor)].join('');
+    const stars3=[buildStarSVG(f.stars>=3,starColor),buildStarSVG(f.stars>=6,starColor),buildStarSVG(f.stars>=9,starColor)].join('');
     const banner=document.createElement('div');
-    banner.className=`floor-banner ${f.status}`;
+    const legendaryClass=(f.id>=7)?' legendary':'';
+    banner.className=`floor-banner ${f.status}${legendaryClass}`;
     banner.style.animationDelay=`${0.04*i}s`;
     banner.innerHTML=`${buildArchSVG(f.id,f.status,FLOOR_IMAGES[f.id]||null)}<div class="banner-content"><div class="floor-num-wrap"><div class="floor-num-bg"></div><span class="floor-number" style="color:${numColor}">${f.status==='locked'?'🔒':f.id}</span></div><div class="stars-row">${stars3}</div></div>`;
     banner.addEventListener('click',()=>{haptic(10);openDetailModal(f.id-1);});
@@ -1640,11 +1727,38 @@ function closeDetailModal() {
 let party = {first:[null,null,null,null,null,null], second:[null,null,null,null,null,null]};
 let activeHalf = 'first', activeSlotIdx = 0, typeFilter = 'All';
 
+// ── Team Persistence ──
+function saveTeamAssignment() {
+  try {
+    const key = `crimson_rift_team_${currentFloorIdx}`;
+    const toId = p => p ? p.uid||p.id||null : null;
+    localStorage.setItem(key, JSON.stringify({
+      first: party.first.map(toId),
+      second: party.second.map(toId)
+    }));
+  } catch(e) {}
+}
+function loadTeamAssignment() {
+  try {
+    const key = `crimson_rift_team_${currentFloorIdx}`;
+    const raw = localStorage.getItem(key);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    const byId = {};
+    POKEMON_ROSTER.forEach(p=>{ byId[p.uid||p.id] = p; });
+    if (Array.isArray(saved.first))
+      party.first = saved.first.map(id=>id&&byId[id]?byId[id]:null);
+    if (Array.isArray(saved.second))
+      party.second = saved.second.map(id=>id&&byId[id]?byId[id]:null);
+  } catch(e) {}
+}
+
 function openTeamModal() {
   blockClicks();
   closeDetailModal();
   const f = FLOOR_DATA[currentFloorIdx];
   party = {first:[null,null,null,null,null,null], second:[null,null,null,null,null,null]};
+  loadTeamAssignment();
   activeHalf='first'; activeSlotIdx=0; typeFilter='All';
   document.getElementById('team-floor-label').textContent = `Floor ${f.id} · ${f.name}`;
   document.getElementById('team-disorder-text').textContent = `${f.disorder.label}: ${f.disorder.description}`;
@@ -1693,11 +1807,12 @@ function renderPartySlots() {
     starsRow.innerHTML=Array(6).fill(0).map((_,i)=>buildStarSVG(i<filled,sc)).join('');
     document.getElementById(`count-${half}`).textContent=`${filled} / 6`;
   });
-  const both=[...party.first,...party.second].filter(Boolean);
+  const t1=party.first.filter(Boolean).length;
+  const t2=party.second.filter(Boolean).length;
   const btn=document.getElementById('btn-start');
-  const ok=both.length>=1;
+  const ok=t1===6&&t2===6;
   btn.disabled=!ok;
-  btn.textContent=ok?'▶ ENTER THE RIFT':'Select Pokémon';
+  btn.textContent=ok?'🔒 Lock Teams & Enter':t1<6?`Team 1: ${t1}/6 filled`:t2<6?`Team 2: ${t2}/6 filled`:'Select Pokémon';
 }
 
 function selectSlot(half,idx){activeHalf=half;activeSlotIdx=idx;renderPartySlots();renderRoster();}
@@ -1744,8 +1859,12 @@ let battle = {
   halfResults: {},
   halfTimerInterval: null,
   halfTimerStart: 0,
-  halfTimeLimit: 90,
+  halfTimeLimit: 180,
   halfTimeElapsed: 0,
+  phase1TimeRemaining: 0,
+  phase2TimeRemaining: 0,
+  phase1Won: false,
+  phase2Won: false,
 };
 
 function calcMaxHp(level) { return Math.floor(30 + level*3.5); }
@@ -1797,6 +1916,11 @@ function startChallenge() {
   battle.playerAtkMult=1; battle.playerAccMult=1;
   battle.enemyAtkMult=1; battle.enemyAccMult=1;
   battle.halfTimeLimit = f.timeLimit;
+  battle.phase1Won = false;
+  battle.phase2Won = false;
+  battle.phase1TimeRemaining = 0;
+  battle.phase2TimeRemaining = 0;
+  saveTeamAssignment();
 
   initBattleScreen();
 }
@@ -1883,18 +2007,29 @@ function tickTimer() {
   if (battle.halfTimeElapsed >= battle.halfTimeLimit) {
     stopHalfTimer();
     timeExpired();
-  } else if (battle.halfTimeElapsed >= battle.halfTimeLimit - 10) {
+  } else if (battle.halfTimeElapsed >= battle.halfTimeLimit - 30 && battle.halfTimeElapsed < battle.halfTimeLimit - 29) {
     playBattleBeep();
   }
 }
 function updateTimerBar() {
+  const remaining = Math.max(0, battle.halfTimeLimit - battle.halfTimeElapsed);
+  const pct = Math.max(0, remaining / battle.halfTimeLimit) * 100;
   const fill = document.getElementById('timer-fill');
-  if (!fill) return;
-  const pct = Math.max(0, 1 - battle.halfTimeElapsed/battle.halfTimeLimit) * 100;
-  fill.style.width = pct+'%';
-  fill.className = 'battle-timer-fill';
-  if (pct < 33) fill.classList.add('low');
-  else if (pct < 66) fill.classList.add('mid');
+  if (fill) {
+    fill.style.width = pct + '%';
+    fill.className = 'battle-timer-fill';
+    if (pct < 33) fill.classList.add('low');
+    else if (pct < 66) fill.classList.add('mid');
+  }
+  const mmss = document.getElementById('timer-mmss');
+  if (mmss) {
+    const m = Math.floor(remaining / 60);
+    const s = Math.floor(remaining % 60);
+    mmss.textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+    mmss.className = 'timer-mmss';
+    if (remaining <= 10) mmss.classList.add('danger');
+    else if (remaining <= 30) mmss.classList.add('warn');
+  }
 }
 function timeExpired() {
   if (battle.phase==='result') return;
@@ -2312,6 +2447,14 @@ function enemyFainted() {
 function recordHalfResult(stars) {
   const key=`${battle.chamberIdx}_${battle.currentHalf}`;
   battle.halfResults[key] = stars;
+  const remaining = Math.max(0, battle.halfTimeLimit - battle.halfTimeElapsed);
+  if (battle.currentHalf==='first') {
+    battle.phase1Won = stars > 0;
+    battle.phase1TimeRemaining = battle.phase1Won ? remaining : 0;
+  } else {
+    battle.phase2Won = stars > 0;
+    battle.phase2TimeRemaining = battle.phase2Won ? remaining : 0;
+  }
   // Persist to floor data
   const f=FLOOR_DATA[battle.floorIdx];
   const c=f.chambers[battle.chamberIdx];
@@ -2350,29 +2493,74 @@ function showHalfStarAward(stars, cb) {
   }, delay(2000));
 }
 
+// ── Phase Transition Animation ──
+function showPhaseTransition(switchFn) {
+  const overlay=document.getElementById('phase-transition-overlay');
+  const text=document.getElementById('phase-transition-text');
+  const glitch=document.getElementById('glitch-layer');
+  if(!overlay){switchFn();return;}
+  const _s=battleSession;
+  // Step 1: dim screen
+  overlay.style.transition='none';
+  overlay.style.background='rgba(5,2,15,0)';
+  overlay.classList.add('active');
+  requestAnimationFrame(()=>{
+    overlay.style.transition='background .5s ease';
+    overlay.style.background='rgba(5,2,15,.9)';
+  });
+  // Step 2: glitch effect at 0.6s
+  setTimeout(()=>{
+    if(battleSession!==_s)return;
+    if(glitch){glitch.classList.remove('active');void glitch.offsetWidth;glitch.classList.add('active');}
+    // Step 3: corruption text fades in
+    if(text){
+      text.innerHTML='The corruption<br>deepens...';
+      text.style.transition='opacity .4s ease';
+      text.style.opacity='1';
+    }
+    // Step 4: perform switch, then brighten
+    setTimeout(()=>{
+      if(battleSession!==_s)return;
+      switchFn();
+      if(text){text.style.opacity='0';}
+      overlay.style.transition='background .5s ease';
+      overlay.style.background='rgba(5,2,15,0)';
+      setTimeout(()=>{
+        if(battleSession!==_s)return;
+        overlay.classList.remove('active');
+        // Boss materialize animation
+        const ei=document.getElementById('enemy-canvas');
+        if(ei){ei.classList.remove('materializing');void ei.offsetWidth;ei.classList.add('materializing');setTimeout(()=>ei.classList.remove('materializing'),700);}
+      },550);
+    },delay(1300));
+  },700);
+}
+
 // ── Proceed after half ──
 function proceedAfterHalf() {
   if(battle.phase==='result')return;
   const f=FLOOR_DATA[battle.floorIdx];
   if(battle.currentHalf==='first'){
-    // Switch to second half
-    battle.currentHalf='second';
-    battle.playerParty=battle.team2Party;
-    const alive=findFirstAlive(battle.team2Party);
-    battle.playerIdx=alive>=0?alive:0;
-    battle.enemies=getChamberHalfEnemies(f.id,battle.chamberIdx,'half2');
-    battle.enemyIdx=0;
-    battle.playerAtkMult=1;battle.playerAccMult=1;
-    battle.enemyAtkMult=1;battle.enemyAccMult=1;
-    battle.turn=1;battle.phase='player';
-    updateBattleHUD();
-    renderPlayer();renderPartyQueue();renderMoveGrid();
-    const enemy=battle.enemies[battle.enemyIdx];
-    setDialogue(`2nd Half begins! A Corrupted ${enemy.name} appears!`,false,()=>{
-      renderEnemy();
-      const pl=battle.playerParty[battle.playerIdx];
-      setDialogue(`What will ${pl.poke.name} do?`);showActions();
-      startHalfTimer();
+    // Phase transition animation before switching to 2nd half
+    showPhaseTransition(()=>{
+      battle.currentHalf='second';
+      battle.playerParty=battle.team2Party;
+      const alive=findFirstAlive(battle.team2Party);
+      battle.playerIdx=alive>=0?alive:0;
+      battle.enemies=getChamberHalfEnemies(f.id,battle.chamberIdx,'half2');
+      battle.enemyIdx=0;
+      battle.playerAtkMult=1;battle.playerAccMult=1;
+      battle.enemyAtkMult=1;battle.enemyAccMult=1;
+      battle.turn=1;battle.phase='player';
+      battle.phase2Won=false;battle.phase2TimeRemaining=0;
+      updateBattleHUD();
+      renderEnemy();renderPlayer();renderPartyQueue();renderMoveGrid();
+      const enemy=battle.enemies[battle.enemyIdx];
+      setDialogue(`2nd Half begins! Corrupted ${enemy.name} emerges!`,false,()=>{
+        const pl=battle.playerParty[battle.playerIdx];
+        setDialogue(`What will ${pl.poke.name} do?`);showActions();
+        startHalfTimer();
+      });
     });
   } else {
     // Both halves of this chamber done
@@ -2380,23 +2568,68 @@ function proceedAfterHalf() {
   }
 }
 
+// ── Chamber stars (spec criteria) ──
+function calcChamberStars() {
+  // 1★: both phases cleared + ≥1 Pokémon alive
+  // 2★: both phases cleared + ≥3 conscious at end of Phase 2 + one phase >30s remaining
+  // 3★: both phases cleared + ≥4 conscious + both phases >30s remaining
+  if(!battle.phase1Won || !battle.phase2Won) return 0;
+  const t1Alive = battle.team1Party.filter(p=>!p.fainted).length;
+  const t2Alive = battle.team2Party.filter(p=>!p.fainted).length;
+  const totalAlive = t1Alive + t2Alive;
+  const p1t = battle.phase1TimeRemaining;
+  const p2t = battle.phase2TimeRemaining;
+  if(totalAlive >= 4 && p1t > 30 && p2t > 30) return 3;
+  if(totalAlive >= 3 && (p1t > 30 || p2t > 30)) return 2;
+  if(totalAlive >= 1) return 1;
+  return 0;
+}
+
+// ── Chamber Clear Animation ──
+function showChamberClear(stars, cb) {
+  const flashEl = document.getElementById('flash-layer');
+  if(flashEl){flashEl.classList.remove('flash');void flashEl.offsetWidth;flashEl.classList.add('flash');}
+  const overlay = document.getElementById('chamber-clear-overlay');
+  const card = document.getElementById('chamber-clear-card');
+  const title = document.getElementById('chamber-clear-title');
+  if(overlay && card && title){
+    overlay.style.pointerEvents = 'all';
+    title.textContent = `CHAMBER ${battle.chamberIdx+1}`;
+    void card.offsetWidth;
+    card.style.transition = 'opacity .35s ease, transform .35s cubic-bezier(.175,.885,.32,1.275)';
+    card.style.opacity = '1';
+    card.style.transform = 'scale(1)';
+    [0,1,2].forEach(i=>{
+      const el = document.getElementById('ccs'+i);
+      if(el){el.classList.remove('lit');void el.offsetWidth;}
+      if(i < stars) setTimeout(()=>{ const e=document.getElementById('ccs'+i); if(e) e.classList.add('lit'); }, 350+i*350);
+    });
+  }
+  setTimeout(()=>{
+    if(card){card.style.opacity='0';card.style.transform='scale(.82)';}
+    if(overlay) overlay.style.pointerEvents='none';
+    setTimeout(cb, 350);
+  }, delay(2700));
+}
+
 // ── Chamber complete ──
 function chamberComplete() {
-  const f=FLOOR_DATA[battle.floorIdx];
+  const f = FLOOR_DATA[battle.floorIdx];
+  const cIdx = battle.chamberIdx;
+  const c = f.chambers[cIdx];
+  const cs = calcChamberStars();
+  c.chamberStars = Math.max(c.chamberStars||0, cs);
   saveProgress();
-  if(battle.chamberIdx>=2){
-    // All 3 chambers cleared — floor complete!
-    if(f.status!=='cleared'){
-      f.status='cleared';
-      checkUnlocks();
+  showChamberClear(cs, ()=>{
+    if(cIdx >= 2){
+      // All 3 chambers cleared — floor complete!
+      if(f.status !== 'cleared'){ f.status='cleared'; checkUnlocks(); }
+      saveProgress();
+      showFloorSummary();
+    } else {
+      showChamberAdvancePrompt();
     }
-    saveProgress();
-    const shards=checkRewardMilestones(f.id);
-    showFloorSummary(shards);
-  } else {
-    // Show advance confirmation before moving to next chamber
-    showChamberAdvancePrompt();
-  }
+  });
 }
 
 // ── Chamber advance prompt ──
@@ -2465,12 +2698,95 @@ function advanceToNextChamber() {
   });
 }
 
+// ── Deliver rewards to main save ──
+function deliverRewardsToMainSave(rewardItems) {
+  try {
+    const raw = localStorage.getItem('hexamon:save:v2');
+    if (!raw) return false;
+    const save = JSON.parse(raw);
+    rewardItems.forEach(r => {
+      if (r.name === 'Stardust') {
+        if (!save.player) save.player = {};
+        save.player.stardust = (save.player.stardust||0) + r.qty;
+      } else {
+        if (!Array.isArray(save.inventory)) save.inventory = [];
+        const existing = save.inventory.find(i=>i.name===r.name);
+        if (existing) existing.qty += r.qty;
+        else save.inventory.push({name:r.name, qty:r.qty});
+      }
+    });
+    localStorage.setItem('hexamon:save:v2', JSON.stringify(save));
+    return true;
+  } catch(e) { return false; }
+}
+
+// ── Claim floor rewards ──
+function claimFloorRewards(floorId, total) {
+  const f = FLOOR_DATA[floorId-1];
+  const highestThreshold = total>=9?9:total>=6?6:total>=3?3:0;
+  if (!highestThreshold) return;
+  // Mark claimed
+  const claimedKey = `${REWARDS_CLAIMED_KEY}_${floorId}`;
+  let claimed; try{claimed=JSON.parse(localStorage.getItem(claimedKey)||'{}');}catch(e){claimed={};}
+  claimed[highestThreshold] = true;
+  try{localStorage.setItem(claimedKey,JSON.stringify(claimed));}catch(e){}
+  // Build reward list for this threshold level (cumulative — all thresholds up to highest)
+  const rewardMap = {};
+  f.rewards.filter(r=>r.threshold<=highestThreshold).forEach(r=>{
+    if(!rewardMap[r.name]) rewardMap[r.name]={icon:r.icon,name:r.name,qty:0};
+    rewardMap[r.name].qty += r.qty;
+  });
+  const rewardItems = Object.values(rewardMap);
+  // Deliver to main save
+  deliverRewardsToMainSave(rewardItems);
+  // Update summary section to show claimed
+  const sec = document.getElementById('summary-reward-section');
+  if(sec) sec.innerHTML='<div class="reward-already-claimed">✓ Rewards delivered to your inventory!</div>';
+  // Show reward reveal animation
+  showRewardReveal(f, highestThreshold, rewardItems);
+}
+
+function showRewardReveal(f, threshold, rewardItems) {
+  const overlay = document.createElement('div');
+  overlay.className = 'reward-reveal-overlay';
+  const starLabel = threshold===9?'★★★':threshold===6?'★★':'★';
+  overlay.innerHTML = `
+    <div class="reward-reveal-title">REWARDS</div>
+    <div class="reward-reveal-floor">FLOOR ${f.id} · ${f.name.toUpperCase()} · ${starLabel}</div>
+    <div class="reward-reveal-items" id="rrev-items">
+      ${rewardItems.map((_,i)=>`<div class="reward-reveal-item ${i%2===0?'from-left':'from-right'}" id="rri-${i}">
+        <div class="reward-item-bg">${rewardItems[i].icon}</div>
+        <div class="reward-item-qty">×${rewardItems[i].qty}</div>
+        <div class="reward-item-name">${rewardItems[i].name}</div>
+      </div>`).join('')}
+    </div>
+    <div class="reward-reveal-claimed" id="rrev-claimed">✓ Added to your inventory</div>
+    <button class="reward-reveal-close" id="rrev-close" onclick="this.closest('.reward-reveal-overlay').remove()">COLLECT</button>`;
+  document.body.appendChild(overlay);
+  // Animate items in
+  rewardItems.forEach((_,i)=>{
+    setTimeout(()=>{
+      const el=document.getElementById('rri-'+i);
+      if(!el)return;
+      el.classList.add('shown');
+      setTimeout(()=>el.classList.add('settle'),200);
+    },300+i*250);
+  });
+  const totalDelay = 300 + rewardItems.length*250 + 200;
+  setTimeout(()=>{
+    const cl=document.getElementById('rrev-claimed');
+    const cb=document.getElementById('rrev-close');
+    if(cl) cl.style.opacity='1';
+    if(cb) cb.style.opacity='1';
+  }, totalDelay+100);
+}
+
 // ── Floor Summary ──
-function showFloorSummary(bonusShards=0) {
+function showFloorSummary() {
   battle.phase='result';
   stopHalfTimer();
   const f=FLOOR_DATA[battle.floorIdx];
-  const total=f.chambers.reduce((s,c)=>s+c.half1Stars+c.half2Stars,0);
+  const total=f.chambers.reduce((s,c)=>s+(c.chamberStars||0),0);
   // Check for new record
   const recordKey=`crimson_rift_best_${f.id}`;
   let prevBest=0;
@@ -2478,18 +2794,21 @@ function showFloorSummary(bonusShards=0) {
   const isNewRecord=total>prevBest;
   if(isNewRecord) try{localStorage.setItem(recordKey,String(total));}catch(e){}
 
-  const halfStarRow=(h1,h2)=>{
-    const star=f=>`<span style="color:${f?'#f0c060':'rgba(255,255,255,.15)'};font-size:13px">★</span>`;
-    return `${star(h1>=1)}${star(h1>=2)}${star(h1>=3)} <span style="color:var(--text-muted);font-size:10px">|</span> ${star(h2>=1)}${star(h2>=2)}${star(h2>=3)}`;
+  const starDisplay=n=>{
+    const star=lit=>`<span style="color:${lit?'#f0c060':'rgba(255,255,255,.15)'};font-size:13px">★</span>`;
+    return `${star(n>=1)}${star(n>=2)}${star(n>=3)}`;
   };
   const tableRows=f.chambers.map((c,i)=>`
     <tr>
       <td style="font-family:'Cinzel',serif;color:var(--gold)">C${i+1}</td>
-      <td>${halfStarRow(c.half1Stars,c.half2Stars)}</td>
-      <td style="font-family:'Cinzel',serif;font-size:11px;color:var(--text-muted)">${c.half1Stars+c.half2Stars}/6</td>
+      <td>${starDisplay(c.chamberStars||0)}</td>
+      <td style="font-family:'Cinzel',serif;font-size:11px;color:var(--text-muted)">${c.chamberStars||0}/3</td>
     </tr>`).join('');
 
-  const rewardChips=f.rewards.filter(r=>total>=r.threshold).map(r=>`<div class="summary-reward-chip"><div class="r-icon">${r.icon}</div><div class="r-name">${r.name}</div><div class="r-qty">${r.qty}</div></div>`).join('');
+  const highestThreshold=total>=9?9:total>=6?6:total>=3?3:0;
+  let claimed; const claimedKey=`${REWARDS_CLAIMED_KEY}_${f.id}`;
+  try{claimed=JSON.parse(localStorage.getItem(claimedKey)||'{}');}catch(e){claimed={};}
+  const alreadyClaimed=highestThreshold>0&&claimed[highestThreshold];
 
   const overlay=document.getElementById('floor-summary-overlay');
   overlay.style.display='flex';
@@ -2501,15 +2820,21 @@ function showFloorSummary(bonusShards=0) {
       ${isNewRecord?`<div class="summary-new-record">✦ New Record! +${total-prevBest} ★</div>`:''}
     </div>
     <table class="summary-table">
-      <tr><th>CHAMBER</th><th>½1 ★★★ | ½2 ★★★</th><th>TOTAL</th></tr>
+      <tr><th>CHAMBER</th><th>STARS</th><th>SCORE</th></tr>
       ${tableRows}
     </table>
     <div class="summary-total">
       <span class="summary-total-label">Total Stars</span>
-      <span class="summary-total-stars">${total} <span style="font-size:13px;color:var(--text-muted)">/ 18</span></span>
+      <span class="summary-total-stars">${total} <span style="font-size:13px;color:var(--text-muted)">/ 9</span></span>
     </div>
-    ${rewardChips?`<div class="summary-rewards">${rewardChips}</div>`:''}
-    ${bonusShards>0?`<div style="text-align:center;font-family:'Cinzel',serif;font-size:13px;color:var(--gold);margin-bottom:12px">+${bonusShards} 💎 Rift Shards earned!</div>`:''}
+    <div id="summary-reward-section" style="text-align:center;margin-bottom:12px">
+      ${highestThreshold>0&&!alreadyClaimed
+        ?`<button class="btn-return" style="background:linear-gradient(135deg,#8b3a9a,#c060dd);color:#fff;font-family:'Cinzel',serif;letter-spacing:1px;padding:11px 28px;border:none;border-radius:8px;cursor:pointer;font-size:12px" onclick="claimFloorRewards(${f.id},${total})">✦ Claim Rewards</button>`
+        :highestThreshold>0&&alreadyClaimed
+          ?`<div class="reward-already-claimed">Rewards already claimed this season.</div>`
+          :`<div style="font-size:10px;color:var(--text-muted);font-style:italic">Earn ≥3 stars to unlock rewards.</div>`
+      }
+    </div>
     <div class="summary-btn-row">
       <button class="btn-retry" onclick="retrySummary()">↺ RETRY</button>
       <button class="btn-return" onclick="returnFromSummary()">◀ RETURN</button>
@@ -2598,6 +2923,7 @@ function openBag(){
 function fleeBattle() {
   haptic(20);
   blockClicks();
+  saveTeamAssignment();
   document.getElementById('chamber-advance-overlay').style.display='none';
   battleSession++;battle.phase='result';dialogueCallback=null;stopHalfTimer();
   document.getElementById('result-icon').textContent='🏃';
@@ -2611,6 +2937,7 @@ function fleeBattle() {
 function closeBattle() {
   haptic(10);
   blockClicks();
+  saveTeamAssignment();
   battleSession++;dialogueCallback=null;stopHalfTimer();
   const bm=document.getElementById('modal-battle');
   bm.classList.remove('open');bm.style.display='none';
