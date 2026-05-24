@@ -933,197 +933,186 @@ function mkEnemy(name,sprite,type,baseHp,bonus,moves){
 }
 
 const FLOOR_ENEMIES = {
-  // ── Floor 1: Meadow — Grass/Poison finals, bonus 1000 ──
+  // ── Floor 1: Meadow Trial — bonus 1000/1150/1300 ──
   1:[
     {
-      half1:[mkEnemy('Venusaur','venusaur','Grass',80,1000,[sm('Rift Bloom',220),atk('Solar Beam','grass',180,10),atk('Petal Blizzard','grass',160,15),sta('Leech Seed','grass','leech')])],
-      half2:[mkEnemy('Vileplume','vileplume','Grass',75,1000,[sm('Corrupt Pollen',220),atk('Moonblast','fairy',170,10),atk('Sludge Bomb','poison',160,10),sta('Sleep Powder','grass','sleep')])]
+      half1:[mkEnemy('Leafeon','leafeon','Grass',65,1000,[sm('Rift Razor Leaf',220),atk('Leaf Blade','grass',180,15),atk('X-Scissor','bug',160,10),sta('Swords Dance','normal','heal')])],
+      half2:[mkEnemy('Beedrill','beedrill','Poison',65,1000,[sm('Corrupt Sting',220),atk('Poison Jab','poison',175,15),atk('X-Scissor','bug',165,10),sta('Swords Dance','normal','heal')])]
     },
     {
-      half1:[mkEnemy('Meganium','meganium','Grass',80,1150,[sm('Rift Blossom',230),atk('Leaf Storm','grass',200,8),atk('Body Slam','normal',150,15),sta('Aromatherapy','grass','heal')])],
-      half2:[mkEnemy('Torterra','torterra','Grass',95,1150,[sm('Quake Bloom',240),atk('Wood Hammer','grass',190,10),atk('Earthquake','ground',180,10),sta('Curse','ghost','atkDown')])]
+      half1:[mkEnemy('Butterfree','butterfree','Bug',60,1150,[sm('Rift Powder',230),atk('Bug Buzz','bug',175,10),atk('Psychic','psychic',175,10),sta('Sleep Powder','grass','sleep')])],
+      half2:[mkEnemy('Tangrowth','tangrowth','Grass',100,1150,[sm('Rift Vine',240),atk('Power Whip','grass',190,10),atk('Earthquake','ground',180,10),sta('Leech Seed','grass','leech')])]
     },
     {
-      half1:[mkEnemy('Decidueye','decidueye','Grass',78,1300,[sm('Spirit Arrow',250),atk('Leaf Blade','grass',180,15),atk('Shadow Ball','ghost',170,10),sta('Swords Dance','ghost','heal')])],
-      half2:[mkEnemy('Serperior','serperior','Grass',75,1300,[sm('Regal Surge',250),atk('Giga Drain','grass',200,10),atk('Leaf Storm','grass',200,8),sta('Coil','normal','heal')])]
+      half1:[mkEnemy('Roserade','roserade','Grass',60,1300,[sm('Petal Rift',250),atk('Petal Blizzard','grass',185,15),atk('Sludge Bomb','poison',175,10),sta('Sleep Powder','grass','sleep')])],
+      half2:[mkEnemy('Venusaur','venusaur','Grass',80,1300,[sm('Rift Bloom',250),atk('Solar Beam','grass',195,10),atk('Sludge Wave','poison',185,10),sta('Leech Seed','grass','leech')])]
     }
   ],
-  // ── Floor 2: Ember Cavern — Fire finals, bonus 1200 ──
+  // ── Floor 2: Ember Cavern — bonus 1200/1350/1500 ──
   2:[
     {
-      half1:[mkEnemy('Charizard','charizard','Fire',78,1200,[sm('Rift Inferno',230),atk('Fire Blast','fire',185,8),atk('Dragon Claw','dragon',160,15),sta('Flame Burst','fire','heal')])],
-      half2:[mkEnemy('Typhlosion','typhlosion','Fire',78,1200,[sm('Eruption Rift',230),atk('Eruption','fire',195,8),atk('Flamethrower','fire',170,15),sta('Sunny Day','fire','heal')])]
+      half1:[mkEnemy('Arcanine','arcanine','Fire',90,1200,[sm('Sacred Blaze',230),atk('Flare Blitz','fire',190,10),atk('Extreme Speed','normal',165,8),sta('Flame Burst','fire','heal')])],
+      half2:[mkEnemy('Magmortar','magmortar','Fire',75,1200,[sm('Corrupt Blast',230),atk('Fire Blast','fire',190,8),atk('Thunderbolt','electric',180,10),sta('Sunny Day','fire','heal')])]
     },
     {
-      half1:[mkEnemy('Blaziken','blaziken','Fire',80,1350,[sm('Blaze Kick Rift',240),atk('Blaze Kick','fire',180,10),atk('High Jump Kick','fighting',195,10),sta('Swords Dance','fighting','heal')])],
-      half2:[mkEnemy('Infernape','infernape','Fire',76,1350,[sm('Firestorm',240),atk('Fire Blast','fire',185,8),atk('Close Combat','fighting',190,8),sta('Nasty Plot','fire','heal')])]
+      half1:[mkEnemy('Ninetales','ninetales','Fire',73,1350,[sm('Rift Fox Fire',240),atk('Flamethrower','fire',182,15),atk('Energy Ball','grass',175,10),sta('Will-O-Wisp','ghost','leech')])],
+      half2:[mkEnemy('Flareon','flareon','Fire',65,1350,[sm('Corrupt Ember',240),atk('Flare Blitz','fire',195,10),atk('Superpower','fighting',190,8),sta('Sunny Day','fire','heal')])]
     },
     {
-      half1:[mkEnemy('Incineroar','incineroar','Fire',95,1500,[sm('Darkest Blaze',255),atk('Flare Blitz','fire',195,10),atk('Dark Lariat','dark',175,10),sta('Swords Dance','dark','heal')])],
-      half2:[mkEnemy('Arcanine','arcanine','Fire',90,1500,[sm('Sacred Blaze',255),atk('Flare Blitz','fire',195,10),atk('Extreme Speed','normal',160,8),sta('Extreme Speed','normal','heal')])]
+      half1:[mkEnemy('Rapidash','rapidash','Fire',65,1500,[sm('Rift Gallop',255),atk('Flare Blitz','fire',195,10),atk('Drill Run','ground',178,10),sta('Flame Charge','fire','heal')])],
+      half2:[mkEnemy('Charizard','charizard','Fire',78,1500,[sm('Rift Inferno',255),atk('Fire Blast','fire',190,8),atk('Dragon Claw','dragon',175,15),sta('Flame Burst','fire','heal')])]
     }
   ],
-  // ── Floor 3: Tide Shore — Water finals, bonus 1400 ──
+  // ── Floor 3: Tide Shore — bonus 1400/1550/1700 ──
   3:[
     {
-      half1:[mkEnemy('Blastoise','blastoise','Water',79,1400,[sm('Hydro Rift',240),atk('Hydro Pump','water',190,8),atk('Flash Cannon','steel',170,10),sta('Rain Dance','water','heal')])],
-      half2:[mkEnemy('Feraligatr','feraligatr','Water',85,1400,[sm('Aqua Fang',240),atk('Waterfall','water',175,15),atk('Crunch','dark',175,15),sta('Dragon Dance','dragon','heal')])]
+      half1:[mkEnemy('Vaporeon','vaporeon','Water',130,1400,[sm('Rift Surge',240),atk('Hydro Pump','water',190,8),atk('Ice Beam','ice',180,10),sta('Acid Armor','water','heal')])],
+      half2:[mkEnemy('Tentacruel','tentacruel','Water',80,1400,[sm('Corrupt Tentacle',240),atk('Surf','water',185,15),atk('Sludge Wave','poison',185,10),sta('Barrier','psychic','atkDown')])]
     },
     {
-      half1:[mkEnemy('Swampert','swampert','Water',100,1550,[sm('Mud Rift',250),atk('Earthquake','ground',185,10),atk('Waterfall','water',175,15),sta('Curse','ghost','heal')])],
-      half2:[mkEnemy('Empoleon','empoleon','Water',84,1550,[sm('Rift Torrent',250),atk('Surf','water',180,15),atk('Flash Cannon','steel',170,10),sta('Agility','steel','heal')])]
+      half1:[mkEnemy('Cloyster','cloyster','Water',50,1550,[sm('Rift Shell',250),atk('Icicle Spear','ice',185,10),atk('Hydro Pump','water',190,8),sta('Withdraw','water','heal')])],
+      half2:[mkEnemy('Gyarados','gyarados','Water',95,1550,[sm('Aqua Rage',255),atk('Waterfall','water',180,15),atk('Ice Fang','ice',175,15),sta('Dragon Dance','dragon','heal')])]
     },
     {
-      half1:[mkEnemy('Greninja','greninja','Water',72,1700,[sm('Shadow Water Shuriken',260),atk('Hydro Pump','water',190,8),atk('Dark Pulse','dark',175,15),sta('Mat Block','water','heal')])],
-      half2:[mkEnemy('Gyarados','gyarados','Water',95,1700,[sm('Aqua Rage',260),atk('Waterfall','water',175,15),atk('Ice Fang','ice',165,15),sta('Dragon Dance','dragon','heal')])]
+      half1:[mkEnemy('Lapras','lapras','Water',130,1700,[sm('Rift Aurora',260),atk('Blizzard','ice',200,8),atk('Hydro Pump','water',192,8),sta('Rain Dance','water','heal')])],
+      half2:[mkEnemy('Blastoise','blastoise','Water',79,1700,[sm('Hydro Rift',260),atk('Hydro Pump','water',195,8),atk('Flash Cannon','steel',180,10),sta('Rain Dance','water','heal')])]
     }
   ],
-  // ── Floor 4: Storm Peak — Electric/Fighting finals, bonus 1600 ──
+  // ── Floor 4: Storm Peak — bonus 1600/1750/1900 ──
   4:[
     {
-      half1:[mkEnemy('Electivire','electivire','Electric',75,1600,[sm('Volt Rift',255),atk('Thunder','electric',195,8),atk('Ice Punch','ice',170,15),sta('Agility','electric','heal')])],
-      half2:[mkEnemy('Machamp','machamp','Fighting',80,1600,[sm('Seismic Rift',255),atk('Dynamic Punch','fighting',195,8),atk('Heavy Slam','steel',170,10),sta('Bulk Up','fighting','heal')])]
+      half1:[mkEnemy('Jolteon','jolteon','Electric',65,1600,[sm('Volt Rift',255),atk('Thunder','electric',195,8),atk('Shadow Ball','ghost',180,10),sta('Agility','electric','heal')])],
+      half2:[mkEnemy('Electrode','electrode','Electric',60,1600,[sm('Corrupt Discharge',255),atk('Thunderbolt','electric',185,10),atk('Explosion','normal',200,5),sta('Screech','normal','atkDown')])]
     },
     {
-      half1:[mkEnemy('Ampharos','ampharos','Electric',90,1750,[sm('Dragon Pulse Rift',265),atk('Thunderbolt','electric',185,10),atk('Dragon Pulse','dragon',175,10),sta('Charge','electric','heal')])],
-      half2:[mkEnemy('Lucario','lucario','Fighting',72,1750,[sm('Aura Rift',265),atk('Aura Sphere','fighting',190,10),atk('Flash Cannon','steel',170,10),sta('Calm Mind','psychic','heal')])]
+      half1:[mkEnemy('Raichu','raichu','Electric',60,1750,[sm('Rift Thunder',265),atk('Thunderbolt','electric',185,10),atk('Focus Blast','fighting',190,8),sta('Agility','electric','heal')])],
+      half2:[mkEnemy('Magnezone','magnezone','Electric',70,1750,[sm('Rift Magnet',265),atk('Thunderbolt','electric',185,10),atk('Flash Cannon','steel',180,10),sta('Charge','electric','heal')])]
     },
     {
-      half1:[mkEnemy('Toxtricity','toxtricity','Electric',75,1900,[sm('Overdrive Rift',270),atk('Overdrive','electric',195,10),atk('Sludge Wave','poison',185,10),sta('Shift Gear','electric','heal')])],
-      half2:[mkEnemy('Conkeldurr','conkeldurr','Fighting',105,1900,[sm('Guts Fist',270),atk('Hammer Arm','fighting',200,10),atk('Stone Edge','rock',185,8),sta('Bulk Up','fighting','heal')])]
+      half1:[mkEnemy('Electivire','electivire','Electric',75,1900,[sm('Volt Rift Fist',270),atk('Thunder','electric',195,8),atk('Ice Punch','ice',175,15),sta('Agility','electric','heal')])],
+      half2:[mkEnemy('Ampharos','ampharos','Electric',90,1900,[sm('Dragon Pulse Rift',270),atk('Thunderbolt','electric',185,10),atk('Dragon Pulse','dragon',180,10),sta('Charge','electric','heal')])]
     }
   ],
-  // ── Floor 5: Shadow Maze — Ghost/Dark finals, bonus 1800 ──
+  // ── Floor 5: Shadow Maze — bonus 1800/1950/2100 ──
   5:[
     {
       half1:[mkEnemy('Gengar','gengar','Ghost',60,1800,[sm('Rift Phantom',270),atk('Shadow Ball','ghost',185,10),atk('Sludge Wave','poison',185,10),sta('Hypnosis','psychic','sleep')])],
-      half2:[mkEnemy('Umbreon','umbreon','Dark',95,1800,[sm('Dark Rift',270),atk('Foul Play','dark',185,15),atk('Moonblast','fairy',175,10),sta('Nasty Plot','dark','heal')])]
+      half2:[mkEnemy('Mismagius','mismagius','Ghost',60,1800,[sm('Corrupt Hex',270),atk('Shadow Ball','ghost',185,10),atk('Mystical Fire','fire',178,10),sta('Perish Song','ghost','sleep')])]
     },
     {
-      half1:[mkEnemy('Chandelure','chandelure','Ghost',60,1950,[sm('Soul Blaze',280),atk('Shadow Ball','ghost',185,10),atk('Fire Blast','fire',185,8),sta('Will-O-Wisp','ghost','leech')])],
-      half2:[mkEnemy('Weavile','weavile','Dark',70,1950,[sm('Blizzard Fang',280),atk('Ice Punch','ice',175,15),atk('Night Slash','dark',175,15),sta('Swords Dance','dark','heal')])]
+      half1:[mkEnemy('Banette','banette','Ghost',64,1950,[sm('Rift Curse',280),atk('Shadow Claw','ghost',180,15),atk('Shadow Ball','ghost',185,10),sta('Will-O-Wisp','ghost','leech')])],
+      half2:[mkEnemy('Dusknoir','dusknoir','Ghost',45,1950,[sm('Corrupt Force',280),atk('Shadow Punch','ghost',182,10),atk('Earthquake','ground',185,10),sta('Trick Room','psychic','atkDown')])]
     },
     {
-      half1:[mkEnemy('Aegislash','aegislash','Ghost',60,2100,[sm('King\'s Rift',290),atk('Sacred Sword','fighting',190,15),atk('Shadow Ball','ghost',185,10),sta('King\'s Shield','steel','atkDown')])],
-      half2:[mkEnemy('Hydreigon','hydreigon','Dragon',92,2100,[sm('Void Roar',290),atk('Draco Meteor','dragon',200,8),atk('Dark Pulse','dark',175,15),sta('Nasty Plot','dark','heal')])]
+      half1:[mkEnemy('Spiritomb','spiritomb','Ghost',50,2100,[sm('Rift Darkness',290),atk('Shadow Ball','ghost',185,10),atk('Dark Pulse','dark',180,10),sta('Hypnosis','psychic','sleep')])],
+      half2:[mkEnemy('Umbreon','umbreon','Dark',95,2100,[sm('Dark Rift',290),atk('Foul Play','dark',185,15),atk('Moonblast','fairy',180,10),sta('Nasty Plot','dark','heal')])]
     }
   ],
-  // ── Floor 6: Dragon Keep — Dragon finals, bonus 2000 ──
+  // ── Floor 6: Dragon Keep — bonus 2000/2200/2400 ──
   6:[
     {
-      half1:[mkEnemy('Dragonite','dragonite','Dragon',91,2000,[sm('Dragon Rift',285),atk('Draco Meteor','dragon',200,8),atk('Hurricane','flying',195,10),sta('Dragon Dance','dragon','heal')])],
-      half2:[mkEnemy('Salamence','salamence','Dragon',95,2000,[sm('Scale Storm',285),atk('Draco Meteor','dragon',200,8),atk('Fire Blast','fire',185,8),sta('Dragon Dance','dragon','heal')])]
+      half1:[mkEnemy('Dragonair','dragonair','Dragon',61,2000,[sm('Rift Twister',285),atk('Dragon Pulse','dragon',185,10),atk('Ice Beam','ice',180,10),sta('Dragon Dance','dragon','heal')])],
+      half2:[mkEnemy('Flygon','flygon','Dragon',80,2000,[sm('Desert Rift',285),atk('Dragon Claw','dragon',185,15),atk('Earthquake','ground',185,10),sta('Dragon Dance','dragon','heal')])]
     },
     {
-      half1:[mkEnemy('Garchomp','garchomp','Dragon',108,2200,[sm('Rift Lance',295),atk('Outrage','dragon',205,10),atk('Earthquake','ground',185,10),sta('Swords Dance','ground','heal')])],
-      half2:[mkEnemy('Haxorus','haxorus','Dragon',76,2200,[sm('Axe Rift',295),atk('Outrage','dragon',205,10),atk('Earthquake','ground',185,10),sta('Dragon Dance','dragon','heal')])]
+      half1:[mkEnemy('Kingdra','kingdra','Dragon',75,2200,[sm('Rift Cascade',295),atk('Draco Meteor','dragon',200,8),atk('Hydro Pump','water',195,8),sta('Dragon Dance','dragon','heal')])],
+      half2:[mkEnemy('Altaria','altaria','Dragon',75,2200,[sm('Mist Rift',295),atk('Draco Meteor','dragon',200,8),atk('Moonblast','fairy',185,10),sta('Dragon Dance','dragon','heal')])]
     },
     {
-      half1:[mkEnemy('Dragapult','dragapult','Dragon',88,2400,[sm('Phantom Draco',305),atk('Draco Meteor','dragon',200,8),atk('Shadow Ball','ghost',185,10),sta('Agility','dragon','heal')])],
-      half2:[mkEnemy('Kommo-o','kommo-o','Dragon',75,2400,[sm('Clanging Scales Rift',305),atk('Clanging Scales','dragon',205,10),atk('Close Combat','fighting',190,8),sta('Clangorous Soul','dragon','heal')])]
+      half1:[mkEnemy('Haxorus','haxorus','Dragon',76,2400,[sm('Axe Rift',305),atk('Outrage','dragon',205,10),atk('Earthquake','ground',185,10),sta('Dragon Dance','dragon','heal')])],
+      half2:[mkEnemy('Dragonite','dragonite','Dragon',91,2400,[sm('Dragon Rift',305),atk('Draco Meteor','dragon',200,8),atk('Hurricane','flying',195,10),sta('Dragon Dance','dragon','heal')])]
     }
   ],
 
-  // ─── FLOORS 7-12: LEGENDARIES ONLY, Lv100, base HP + 1500-4500 ───
-  // ── Floor 7: Legendary Vault — Legendary birds/beasts, bonus 1500 ──
+  // ─── FLOORS 7-12: LEGENDARIES, Lv100 ───
+  // ── Floor 7: Legendary Vault — Kanto birds & Johto beasts ──
   7:[
     {
-      half1:[mkEnemy('Raikou','raikou','Electric',90,1500,[sm('Thunder Rift',290),atk('Thunder','electric',200,10),atk('Shadow Ball','ghost',185,10),sta('Calm Mind','psychic','heal')])],
-      half2:[mkEnemy('Entei','entei','Fire',115,1500,[sm('Sacred Blaze Rift',295),atk('Sacred Fire','fire',200,8),atk('Flare Blitz','fire',195,10),sta('Extreme Speed','normal','heal')])]
+      half1:[mkEnemy('Articuno','articuno','Ice',90,1500,[sm('Blizzard Rift',290),atk('Blizzard','ice',200,8),atk('Hurricane','flying',195,10),sta('Sheer Cold','ice','sleep')])],
+      half2:[mkEnemy('Zapdos','zapdos','Electric',90,1500,[sm('Discharge Rift',295),atk('Thunder','electric',200,10),atk('Drill Peck','flying',180,15),sta('Discharge','electric','sleep')])]
     },
     {
-      half1:[mkEnemy('Suicune','suicune','Water',100,1650,[sm('Aurora Rift',295),atk('Surf','water',185,10),atk('Ice Beam','ice',185,10),sta('Calm Mind','psychic','heal')])],
-      half2:[mkEnemy('Articuno','articuno','Ice',90,1650,[sm('Blizzard Rift',295),atk('Blizzard','ice',200,8),atk('Hurricane','flying',195,10),sta('Sheer Cold','ice','sleep')])]
+      half1:[mkEnemy('Moltres','moltres','Fire',90,1650,[sm('Inferno Rift',295),atk('Fire Blast','fire',190,8),atk('Hurricane','flying',195,10),sta('Will-O-Wisp','ghost','leech')])],
+      half2:[mkEnemy('Raikou','raikou','Electric',90,1650,[sm('Thunder Rift',295),atk('Thunder','electric',200,10),atk('Shadow Ball','ghost',185,10),sta('Calm Mind','psychic','heal')])]
     },
     {
-      half1:[mkEnemy('Zapdos','zapdos','Electric',90,1800,[sm('Discharge Rift',305),atk('Thunder','electric',200,10),atk('Drill Peck','flying',180,15),sta('Discharge','electric','sleep')]),
-             mkEnemy('Moltres','moltres','Fire',90,1800,[sm('Inferno Rift',305),atk('Fire Blast','fire',185,8),atk('Hurricane','flying',195,10),sta('Will-O-Wisp','ghost','leech')])],
-      half2:[mkEnemy('Regirock','regirock','Rock',80,1800,[sm('Stone Rift',295),atk('Stone Edge','rock',195,8),atk('Earthquake','ground',185,10),sta('Curse','ghost','heal')]),
-             mkEnemy('Registeel','registeel','Steel',80,1800,[sm('Iron Rift',295),atk('Iron Head','steel',185,15),atk('Flash Cannon','steel',175,10),sta('Amnesia','psychic','heal')])]
+      half1:[mkEnemy('Entei','entei','Fire',115,1800,[sm('Sacred Blaze Rift',305),atk('Sacred Fire','fire',200,8),atk('Flare Blitz','fire',195,10),sta('Extreme Speed','normal','heal')])],
+      half2:[mkEnemy('Suicune','suicune','Water',100,1800,[sm('Aurora Rift',305),atk('Surf','water',190,15),atk('Ice Beam','ice',190,10),sta('Calm Mind','psychic','heal')])]
     }
   ],
-  // ── Floor 8: Astral Sanctum — Psychic legendaries, bonus 2000 ──
+  // ── Floor 8: Astral Sanctum — Johto tower legendaries ──
   8:[
     {
-      half1:[mkEnemy('Latias','latias','Dragon',80,2000,[sm('Psychic Rift',300),atk('Psychic','psychic',190,10),atk('Dragon Pulse','dragon',180,10),sta('Calm Mind','psychic','heal')])],
-      half2:[mkEnemy('Latios','latios','Dragon',80,2000,[sm('Mist Ball Rift',300),atk('Draco Meteor','dragon',200,8),atk('Psychic','psychic',190,10),sta('Calm Mind','psychic','heal')])]
+      half1:[mkEnemy('Lugia','lugia','Psychic',106,2000,[sm('Aeroblast Rift',305),atk('Aeroblast','flying',210,8),atk('Psychic','psychic',195,10),sta('Recover','psychic','heal')])],
+      half2:[mkEnemy('Ho-Oh','ho-oh','Fire',106,2000,[sm('Sacred Blaze Rift',305),atk('Sacred Fire','fire',210,8),atk('Brave Bird','flying',200,8),sta('Recover','fire','heal')])]
     },
     {
-      half1:[mkEnemy('Jirachi','jirachi','Steel',100,2200,[sm('Doom Desire Rift',310),atk('Iron Head','steel',185,15),atk('Psychic','psychic',190,10),sta('Cosmic Power','psychic','heal')])],
-      half2:[mkEnemy('Celebi','celebi','Psychic',100,2200,[sm('Time Rift',305),atk('Psychic','psychic',190,10),atk('Leaf Storm','grass',200,8),sta('Recover','psychic','heal')])]
+      half1:[mkEnemy('Celebi','celebi','Psychic',100,2200,[sm('Time Rift',310),atk('Psychic','psychic',195,10),atk('Leaf Storm','grass',205,8),sta('Recover','psychic','heal')])],
+      half2:[mkEnemy('Regirock','regirock','Rock',80,2200,[sm('Stone Rift',310),atk('Stone Edge','rock',195,8),atk('Hammer Arm','fighting',195,10),sta('Curse','ghost','heal')])]
     },
     {
-      half1:[mkEnemy('Mewtwo','mewtwo','Psychic',106,2400,[sm('Rift Genesis',320),atk('Psychic','psychic',200,10),atk('Shadow Ball','ghost',185,10),sta('Recover','psychic','heal')]),
-             mkEnemy('Mew','mew','Psychic',100,2000,[sm('Transform Rift',305),atk('Psychic','psychic',190,10),atk('Aura Sphere','fighting',185,10),sta('Recover','psychic','heal')])],
-      half2:[mkEnemy('Deoxys','deoxys','Psychic',50,2500,[sm('Psycho Boost Rift',325),atk('Psycho Boost','psychic',210,5),atk('Shadow Ball','ghost',185,10),sta('Recover','psychic','heal')])]
+      half1:[mkEnemy('Regice','regice','Ice',80,2400,[sm('Blizzard Rift',315),atk('Blizzard','ice',200,8),atk('Thunderbolt','electric',190,10),sta('Amnesia','psychic','heal')])],
+      half2:[mkEnemy('Registeel','registeel','Steel',80,2400,[sm('Iron Rift',315),atk('Iron Head','steel',190,15),atk('Flash Cannon','steel',180,10),sta('Amnesia','psychic','heal')])]
     }
   ],
-  // ── Floor 9: Forsaken Rift — Weather trio + Lake trio, bonus 2500 ──
+  // ── Floor 9: Forsaken Rift — Hoenn legendaries ──
   9:[
     {
-      half1:[mkEnemy('Groudon','groudon','Ground',100,2500,[sm('Precipice Blades Rift',315),atk('Precipice Blades','ground',200,8),atk('Fire Punch','fire',180,15),sta('Swords Dance','ground','heal')])],
-      half2:[mkEnemy('Kyogre','kyogre','Water',100,2500,[sm('Origin Pulse Rift',315),atk('Origin Pulse','water',210,8),atk('Ice Beam','ice',190,10),sta('Calm Mind','water','heal')])]
+      half1:[mkEnemy('Latios','latios','Dragon',80,2500,[sm('Mist Ball Rift',315),atk('Draco Meteor','dragon',200,8),atk('Psychic','psychic',195,10),sta('Calm Mind','psychic','heal')])],
+      half2:[mkEnemy('Latias','latias','Dragon',80,2500,[sm('Psychic Rift',315),atk('Psychic','psychic',195,10),atk('Dragon Pulse','dragon',185,10),sta('Calm Mind','psychic','heal')])]
     },
     {
-      half1:[mkEnemy('Uxie','uxie','Psychic',75,2650,[sm('Amnesia Rift',310),atk('Psychic','psychic',190,10),atk('Energy Ball','grass',185,10),sta('Amnesia','psychic','heal')])],
-      half2:[mkEnemy('Mesprit','mesprit','Psychic',80,2650,[sm('Healing Rift',310),atk('Psychic','psychic',190,10),atk('Swift','normal',175,20),sta('Healing Wish','psychic','heal')])],
+      half1:[mkEnemy('Kyogre','kyogre','Water',100,2650,[sm('Origin Pulse Rift',320),atk('Origin Pulse','water',215,8),atk('Thunder','electric',200,10),sta('Calm Mind','water','heal')])],
+      half2:[mkEnemy('Groudon','groudon','Ground',100,2650,[sm('Precipice Blades Rift',320),atk('Precipice Blades','ground',205,8),atk('Fire Punch','fire',185,15),sta('Swords Dance','ground','heal')])]
     },
     {
-      half1:[mkEnemy('Rayquaza','rayquaza','Dragon',105,2800,[sm('Dragon Ascent Rift',330),atk('Dragon Ascent','flying',210,8),atk('Draco Meteor','dragon',200,8),sta('Dragon Dance','dragon','heal')]),
-             mkEnemy('Groudon','groudon','Ground',100,2200,[sm('Lava Plume Rift',310),atk('Precipice Blades','ground',200,8),atk('Lava Plume','fire',185,10),sta('Curse','ghost','heal')])],
-      half2:[mkEnemy('Kyogre','kyogre','Water',100,2800,[sm('Hydro Rift Storm',330),atk('Origin Pulse','water',210,8),atk('Thunder','electric',200,10),sta('Calm Mind','water','heal')]),
-             mkEnemy('Azelf','azelf','Psychic',75,2200,[sm('Explosion Rift',305),atk('Psychic','psychic',190,10),atk('Aura Sphere','fighting',185,10),sta('Nasty Plot','dark','heal')])]
+      half1:[mkEnemy('Rayquaza','rayquaza','Dragon',105,2800,[sm('Dragon Ascent Rift',330),atk('Dragon Ascent','flying',215,8),atk('Draco Meteor','dragon',200,8),sta('Dragon Dance','dragon','heal')])],
+      half2:[mkEnemy('Deoxys','deoxys','Psychic',50,2800,[sm('Psycho Boost Rift',330),atk('Psycho Boost','psychic',215,5),atk('Shadow Ball','ghost',190,10),sta('Recover','psychic','heal')])]
     }
   ],
-  // ── Floor 10: Celestial Spire — Sinnoh legendaries, bonus 3000 ──
+  // ── Floor 10: Dragon's Crown — Sinnoh legendaries ──
   10:[
     {
-      half1:[mkEnemy('Dialga','dialga','Steel',100,3000,[sm('Roar of Time Rift',330),atk('Roar of Time','dragon',215,8),atk('Flash Cannon','steel',185,10),sta('Calm Mind','psychic','heal')])],
+      half1:[mkEnemy('Dialga','dialga','Steel',100,3000,[sm('Roar of Time Rift',330),atk('Roar of Time','dragon',215,8),atk('Flash Cannon','steel',190,10),sta('Calm Mind','psychic','heal')])],
       half2:[mkEnemy('Palkia','palkia','Water',90,3000,[sm('Spacial Rend Rift',330),atk('Spacial Rend','dragon',215,8),atk('Hydro Pump','water',200,8),sta('Calm Mind','psychic','heal')])]
     },
     {
-      half1:[mkEnemy('Heatran','heatran','Fire',91,3150,[sm('Magma Storm Rift',335),atk('Magma Storm','fire',210,8),atk('Flash Cannon','steel',185,10),sta('Flame Charge','fire','heal')])],
-      half2:[mkEnemy('Cresselia','cresselia','Psychic',120,3150,[sm('Lunar Rift',330),atk('Psychic','psychic',195,10),atk('Moonblast','fairy',185,10),sta('Lunar Dance','psychic','heal')])]
+      half1:[mkEnemy('Giratina','giratina','Ghost',150,3150,[sm('Shadow Force Rift',340),atk('Shadow Force','ghost',220,8),atk('Dragon Pulse','dragon',190,10),sta('Calm Mind','psychic','heal')])],
+      half2:[mkEnemy('Heatran','heatran','Fire',91,3150,[sm('Magma Storm Rift',340),atk('Magma Storm','fire',215,8),atk('Flash Cannon','steel',190,10),sta('Flame Charge','fire','heal')])]
     },
     {
-      half1:[mkEnemy('Giratina','giratina','Ghost',150,3300,[sm('Shadow Force Rift',345),atk('Shadow Force','ghost',220,8),atk('Dragon Pulse','dragon',185,10),sta('Calm Mind','psychic','heal')]),
-             mkEnemy('Dialga','dialga','Steel',100,2800,[sm('Temporal Rift',320),atk('Roar of Time','dragon',215,8),atk('Aura Sphere','fighting',185,10),sta('Magnet Rise','steel','heal')])],
-      half2:[mkEnemy('Palkia','palkia','Water',90,3000,[sm('Spatial Distortion',335),atk('Spacial Rend','dragon',215,8),atk('Surf','water',190,10),sta('Trick Room','psychic','atkDown')]),
-             mkEnemy('Regigigas','regigigas','Normal',110,2800,[sm('Crush Grip Rift',320),atk('Crush Grip','normal',210,8),atk('Superpower','fighting',200,8),sta('Scary Face','normal','accDown')])]
+      half1:[mkEnemy('Cresselia','cresselia','Psychic',120,3300,[sm('Lunar Rift',345),atk('Psychic','psychic',200,10),atk('Moonblast','fairy',190,10),sta('Lunar Dance','psychic','heal')])],
+      half2:[mkEnemy('Regigigas','regigigas','Normal',110,3300,[sm('Crush Grip Rift',345),atk('Crush Grip','normal',215,8),atk('Superpower','fighting',205,8),sta('Scary Face','normal','accDown')])]
     }
   ],
-  // ── Floor 11: Twilight Summit — Unova/Kalos legendaries, bonus 3500 ──
+  // ── Floor 11: Twilight Summit — Sinnoh/Unova legendaries ──
   11:[
     {
-      half1:[mkEnemy('Reshiram','reshiram','Dragon',115,3500,[sm('Fusion Flare Rift',345),atk('Blue Flare','fire',215,8),atk('Draco Meteor','dragon',200,8),sta('Flame Charge','fire','heal')])],
-      half2:[mkEnemy('Zekrom','zekrom','Dragon',100,3500,[sm('Fusion Bolt Rift',345),atk('Bolt Strike','electric',220,8),atk('Dragon Claw','dragon',185,15),sta('Hone Claws','dark','heal')])]
+      half1:[mkEnemy('Darkrai','darkrai','Dark',70,3500,[sm('Dark Void Rift',345),atk('Dark Pulse','dark',195,10),atk('Shadow Ball','ghost',190,10),sta('Dark Void','dark','sleep')])],
+      half2:[mkEnemy('Shaymin','shaymin','Grass',100,3500,[sm('Seed Rift',345),atk('Seed Flare','grass',215,8),atk('Energy Ball','grass',195,10),sta('Healing Wish','psychic','heal')])]
     },
     {
-      half1:[mkEnemy('Xerneas','xerneas','Fairy',126,3650,[sm('Geomancy Rift',345),atk('Moonblast','fairy',200,10),atk('Focus Blast','fighting',195,8),sta('Geomancy','fairy','heal')])],
-      half2:[mkEnemy('Yveltal','yveltal','Dark',126,3650,[sm('Oblivion Wing Rift',350),atk('Oblivion Wing','flying',215,8),atk('Dark Pulse','dark',190,10),sta('Nasty Plot','dark','heal')])]
+      half1:[mkEnemy('Arceus','arceus','Normal',120,3650,[sm('Judgment Rift',350),atk('Judgment','normal',225,8),atk('Extreme Speed','normal',180,8),sta('Recover','normal','heal')])],
+      half2:[mkEnemy('Victini','victini','Psychic',100,3650,[sm('V-Create Rift',350),atk('V-create','fire',225,5),atk('Psychic','psychic',200,10),sta('Recover','psychic','heal')])]
     },
     {
-      half1:[mkEnemy('Kyurem','kyurem','Dragon',125,3800,[sm('Glaciate Rift',355),atk('Glaciate','ice',215,8),atk('Draco Meteor','dragon',200,8),sta('Roost','ice','heal')]),
-             mkEnemy('Reshiram','reshiram','Dragon',115,3200,[sm('Dragon Fire Rift',330),atk('Blue Flare','fire',215,8),atk('Dragon Breath','dragon',185,15),sta('Recover','fire','heal')])],
-      half2:[mkEnemy('Zygarde','zygarde','Dragon',108,3800,[sm('Core Enforcer Rift',355),atk('Core Enforcer','dragon',215,8),atk('Earthquake','ground',195,10),sta('Coil','normal','heal')]),
-             mkEnemy('Zekrom','zekrom','Dragon',100,3200,[sm('Lightning Surge',330),atk('Bolt Strike','electric',220,8),atk('Outrage','dragon',205,10),sta('Hone Claws','dark','heal')])]
+      half1:[mkEnemy('Cobalion','cobalion','Steel',91,3800,[sm('Iron Rift',355),atk('Iron Head','steel',195,15),atk('Sacred Sword','fighting',200,15),sta('Swords Dance','fighting','heal')])],
+      half2:[mkEnemy('Terrakion','terrakion','Rock',91,3800,[sm('Stone Rift Edge',355),atk('Stone Edge','rock',200,8),atk('Sacred Sword','fighting',200,15),sta('Swords Dance','fighting','heal')])]
     }
   ],
-  // ── Floor 12: Apex Eternal — Rarest legendaries, bonus 4000-4500 ──
+  // ── Floor 12: Apex Eternal — Ultimate legendaries ──
   12:[
     {
-      half1:[mkEnemy('Solgaleo','solgaleo','Psychic',137,4000,[sm('Sunsteel Strike Rift',360),atk('Sunsteel Strike','steel',225,8),atk('Psychic','psychic',200,10),sta('Cosmic Power','psychic','heal')])],
-      half2:[mkEnemy('Lunala','lunala','Psychic',137,4000,[sm('Moongeist Beam Rift',360),atk('Moongeist Beam','ghost',225,8),atk('Moonblast','fairy',200,10),sta('Calm Mind','psychic','heal')])]
+      half1:[mkEnemy('Reshiram','reshiram','Dragon',115,4000,[sm('Blue Flare Rift',360),atk('Blue Flare','fire',220,8),atk('Draco Meteor','dragon',200,8),sta('Flame Charge','fire','heal')])],
+      half2:[mkEnemy('Zekrom','zekrom','Dragon',100,4000,[sm('Bolt Strike Rift',360),atk('Bolt Strike','electric',225,8),atk('Dragon Claw','dragon',190,15),sta('Hone Claws','dark','heal')])]
     },
     {
-      half1:[mkEnemy('Necrozma','necrozma','Psychic',97,4200,[sm('Prismatic Laser Rift',365),atk('Prismatic Laser','psychic',230,8),atk('Photon Geyser','psychic',220,8),sta('Calm Mind','psychic','heal')])],
-      half2:[mkEnemy('Eternatus','eternatus','Poison',140,4200,[sm('Dynamax Cannon Rift',365),atk('Dynamax Cannon','dragon',220,8),atk('Sludge Wave','poison',200,10),sta('Recover','poison','heal')])]
+      half1:[mkEnemy('Kyurem','kyurem','Dragon',125,4200,[sm('Glaciate Rift',365),atk('Glaciate','ice',215,8),atk('Draco Meteor','dragon',200,8),sta('Roost','ice','heal')])],
+      half2:[mkEnemy('Xerneas','xerneas','Fairy',126,4200,[sm('Geomancy Rift',365),atk('Moonblast','fairy',205,10),atk('Focus Blast','fighting',200,8),sta('Geomancy','fairy','heal')])]
     },
     {
-      half1:[mkEnemy('Zacian','zacian','Fairy',92,4500,[sm('Behemoth Blade Rift',375),atk('Behemoth Blade','steel',230,8),atk('Close Combat','fighting',200,8),sta('Swords Dance','fairy','heal')]),
-             mkEnemy('Arceus','arceus','Normal',120,4200,[sm('Judgment Rift',365),atk('Judgment','normal',225,8),atk('Extreme Speed','normal',175,8),sta('Recover','normal','heal')])],
-      half2:[mkEnemy('Zamazenta','zamazenta','Fighting',92,4500,[sm('Behemoth Bash Rift',375),atk('Behemoth Bash','steel',230,8),atk('Close Combat','fighting',200,8),sta('Iron Defense','steel','heal')]),
-             mkEnemy('Arceus','arceus','Dragon',120,4200,[sm('Draco Judgment',370),atk('Judgment','dragon',230,8),atk('Draco Meteor','dragon',200,8),sta('Recover','dragon','heal')])]
+      half1:[mkEnemy('Yveltal','yveltal','Dark',126,4500,[sm('Oblivion Wing Rift',375),atk('Oblivion Wing','flying',220,8),atk('Dark Pulse','dark',195,10),sta('Nasty Plot','dark','heal')])],
+      half2:[mkEnemy('Mewtwo','mewtwo','Psychic',106,4500,[sm('Rift Genesis',375),atk('Psychic','psychic',210,10),atk('Shadow Ball','ghost',195,10),sta('Recover','psychic','heal')])]
     }
   ]
 };

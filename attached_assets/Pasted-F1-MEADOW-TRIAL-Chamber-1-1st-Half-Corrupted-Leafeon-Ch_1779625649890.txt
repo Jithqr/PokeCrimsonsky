@@ -1,0 +1,84 @@
+F1 — MEADOW TRIAL
+Chamber 1 — 1st Half: Corrupted Leafeon
+Chamber 1 — 2nd Half: Corrupted Beedrill
+Chamber 2 — 1st Half: Corrupted Butterfree
+Chamber 2 — 2nd Half: Corrupted Tangrowth
+Chamber 3 — 1st Half: Corrupted Roserade
+Chamber 3 — 2nd Half: Corrupted Venusaur
+F2 — EMBER CAVERN
+Chamber 1 — 1st Half: Corrupted Arcanine
+Chamber 1 — 2nd Half: Corrupted Magmortar
+Chamber 2 — 1st Half: Corrupted Ninetales
+Chamber 2 — 2nd Half: Corrupted Flareon
+Chamber 3 — 1st Half: Corrupted Rapidash
+Chamber 3 — 2nd Half: Corrupted Charizard
+F3 — TIDE SHORE
+Chamber 1 — 1st Half: Corrupted Vaporeon
+Chamber 1 — 2nd Half: Corrupted Tentacruel
+Chamber 2 — 1st Half: Corrupted Cloyster
+Chamber 2 — 2nd Half: Corrupted Gyarados
+Chamber 3 — 1st Half: Corrupted Lapras
+Chamber 3 — 2nd Half: Corrupted Blastoise
+F4 — STORM PEAK
+Chamber 1 — 1st Half: Corrupted Jolteon
+Chamber 1 — 2nd Half: Corrupted Electrode
+Chamber 2 — 1st Half: Corrupted Raichu
+Chamber 2 — 2nd Half: Corrupted Magnezone
+Chamber 3 — 1st Half: Corrupted Electivire
+Chamber 3 — 2nd Half: Corrupted Ampharos
+F5 — SHADOW MAZE
+Chamber 1 — 1st Half: Corrupted Gengar
+Chamber 1 — 2nd Half: Corrupted Mismagius
+Chamber 2 — 1st Half: Corrupted Banette
+Chamber 2 — 2nd Half: Corrupted Dusknoir
+Chamber 3 — 1st Half: Corrupted Spiritomb
+Chamber 3 — 2nd Half: Corrupted Umbreon
+F6 — DRAGON KEEP
+Chamber 1 — 1st Half: Corrupted Dragonair
+Chamber 1 — 2nd Half: Corrupted Flygon
+Chamber 2 — 1st Half: Corrupted Kingdra
+Chamber 2 — 2nd Half: Corrupted Altaria
+Chamber 3 — 1st Half: Corrupted Haxorus
+Chamber 3 — 2nd Half: Corrupted Dragonite
+F7 — LEGENDARY VAULT
+Chamber 1 — 1st Half: Corrupted Articuno
+Chamber 1 — 2nd Half: Corrupted Zapdos
+Chamber 2 — 1st Half: Corrupted Moltres
+Chamber 2 — 2nd Half: Corrupted Raikou
+Chamber 3 — 1st Half: Corrupted Entei
+Chamber 3 — 2nd Half: Corrupted Suicune
+F8 — ASTRAL SANCTUM
+Chamber 1 — 1st Half: Corrupted Lugia
+Chamber 1 — 2nd Half: Corrupted Ho-Oh
+Chamber 2 — 1st Half: Corrupted Celebi
+Chamber 2 — 2nd Half: Corrupted Regirock
+Chamber 3 — 1st Half: Corrupted Regice
+Chamber 3 — 2nd Half: Corrupted Registeel
+F9 — FORSAKEN RIFT
+Chamber 1 — 1st Half: Corrupted Latios
+Chamber 1 — 2nd Half: Corrupted Latias
+Chamber 2 — 1st Half: Corrupted Kyogre
+Chamber 2 — 2nd Half: Corrupted Groudon
+Chamber 3 — 1st Half: Corrupted Rayquaza
+Chamber 3 — 2nd Half: Corrupted Deoxys
+F10 — DRAGON'S CROWN
+Chamber 1 — 1st Half: Corrupted Dialga
+Chamber 1 — 2nd Half: Corrupted Palkia
+Chamber 2 — 1st Half: Corrupted Giratina
+Chamber 2 — 2nd Half: Corrupted Heatran
+Chamber 3 — 1st Half: Corrupted Cresselia
+Chamber 3 — 2nd Half: Corrupted Regigigas
+F11 — TWILIGHT SUMMIT
+Chamber 1 — 1st Half: Corrupted Darkrai
+Chamber 1 — 2nd Half: Corrupted Shaymin
+Chamber 2 — 1st Half: Corrupted Arceus
+Chamber 2 — 2nd Half: Corrupted Victini
+Chamber 3 — 1st Half: Corrupted Cobalion
+Chamber 3 — 2nd Half: Corrupted Terrakion
+F12 — APEX ETERNAL
+Chamber 1 — 1st Half: Corrupted Reshiram
+Chamber 1 — 2nd Half: Corrupted Zekrom
+Chamber 2 — 1st Half: Corrupted Kyurem
+Chamber 2 — 2nd Half: Corrupted Xerneas
+Chamber 3 — 1st Half: Corrupted Yveltal
+Chamber 3 — 2nd Half: Corrupted Mewtwo
