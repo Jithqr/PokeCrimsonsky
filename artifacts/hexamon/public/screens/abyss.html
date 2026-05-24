@@ -1938,7 +1938,7 @@ function calcMaxHp(level) { return Math.floor(30 + level*3.5); }
 function getChamberHalfEnemies(floorId, chamberIdx, half) {
   const data = FLOOR_ENEMIES[floorId] && FLOOR_ENEMIES[floorId][chamberIdx];
   if (!data) return [];
-  const src = half==='first' ? data.half1 : data.half2;
+  const src = (half==='half1'||half==='first') ? data.half1 : data.half2;
   if (!src) return [];
   return src.map(e=>({...e, hp:e.maxHp, status:null, moves:e.moves.map(m=>({...m}))}));
 }
@@ -2640,11 +2640,11 @@ function showPhaseTransition(switchFn) {
       if(text){text.style.opacity='0';}
       overlay.style.transition='background .5s ease';
       overlay.style.background='rgba(5,2,15,0)';
+      // Always remove overlay — no battleSession guard here so it can't get stuck
       setTimeout(()=>{
-        if(battleSession!==_s)return;
         overlay.classList.remove('active');
         // 2nd-half quake entry sequence
-        triggerQuakeEntry();
+        if(battleSession===_s) triggerQuakeEntry();
       },550);
     },delay(1300));
   },700);
@@ -2670,7 +2670,8 @@ function proceedAfterHalf() {
       updateBattleHUD();
       renderEnemy();renderPlayer();renderPartyQueue();renderMoveGrid();
       const enemy=battle.enemies[battle.enemyIdx];
-      setDialogue(`2nd Half begins! Corrupted ${enemy.name} emerges!`,false,()=>{
+      if(!enemy){ chamberComplete(); return; }
+      setDialogue(`2nd Half begins! Corrupted ${enemy.name} emerges!`,true,()=>{
         const pl=battle.playerParty[battle.playerIdx];
         setDialogue(`What will ${pl.poke.name} do?`);showActions();
         startHalfTimer();
