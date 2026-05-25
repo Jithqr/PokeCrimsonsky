@@ -474,13 +474,26 @@ function renderCol(colEl, mons) {
     renderCol(document.getElementById('party-right'), team.slice(3, 6));
 
     const CHAR_STARS = {
-      'Cynthia':5,'Lance':5,'Steven':5,'Leon':5,'N':5,
-      'Misty':4,'Iris':4,'Elesa':4,'Brock':4
+      'cynthia':5,'lance':5,'steven':5,'leon':5,'n':5,
+      'misty':4,'iris':4,'elesa':4,'brock':4,'noah':4
     };
-    const activeChar = localStorage.getItem('crimsonsky:activeChar') || 'Cynthia';
+    /* sprite sources keyed by lowercase character id */
+    const CHAR_SPRITES = {
+      'cynthia': { tag:'video', src:'https://www.image2url.com/r2/default/videos/1778749524747-a0548b64-5e5d-4c36-8fb7-b8c077423ca3.webm' },
+      'noah':    { tag:'video', src:'/characters/noah-sprite.webm' },
+    };
+    const activeChar = (localStorage.getItem('crimsonsky:activeChar') || 'cynthia').toLowerCase();
     const stars = CHAR_STARS[activeChar] || 5;
     const starsEl = document.getElementById('rankStars');
     starsEl.innerHTML = Array(stars).fill('<span class="star">★</span>').join('');
+
+    /* update trainer sprite */
+    const trainerVideo = document.getElementById('trainerVideo');
+    const spriteInfo = CHAR_SPRITES[activeChar];
+    if (spriteInfo && trainerVideo && trainerVideo.src !== new URL(spriteInfo.src, location.href).href) {
+      trainerVideo.src = spriteInfo.src;
+      trainerVideo.load();
+    }
   } catch(e) {}
 })();
 

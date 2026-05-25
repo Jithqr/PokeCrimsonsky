@@ -373,34 +373,41 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--dark); f
 /* ── Character selection ── */
 const CHAR_IDS = ['cynthia', 'noah'];
 
-function getCurrentSprite() {
+function getCurrentChar() {
+  /* prefer the dedicated key (most up-to-date) */
+  const stored = localStorage.getItem('crimsonsky:activeChar');
+  if (stored) return stored.toLowerCase();
   try {
     const save = JSON.parse(localStorage.getItem('hexamon:save:v2') || '{}');
-    return save.player?.sprite || 'hilbert';
-  } catch { return 'hilbert'; }
+    return (save.player?.sprite || 'cynthia').toLowerCase();
+  } catch { return 'cynthia'; }
 }
 
 function applyActiveState(id) {
+  const norm = (id || '').toLowerCase();
   CHAR_IDS.forEach(cid => {
-    const ownedCard = document.getElementById('card-owned-' + cid);
-    const allCard   = document.getElementById('card-all-'   + cid);
+    const ownedCard  = document.getElementById('card-owned-' + cid);
+    const allCard    = document.getElementById('card-all-'   + cid);
     const ownedBadge = document.getElementById('badge-owned-' + cid);
     const allBadge   = document.getElementById('badge-all-'   + cid);
-    const isActive = cid === id;
-    if (ownedCard)  { ownedCard.classList.toggle('char-active', isActive); }
-    if (allCard)    { allCard.classList.toggle('char-active',   isActive); }
-    if (ownedBadge) { ownedBadge.textContent = isActive ? 'ACTIVE ✓' : 'OWNED'; }
-    if (allBadge)   { allBadge.textContent   = isActive ? 'ACTIVE ✓' : 'OWNED'; }
+    const isActive   = cid === norm;
+    if (ownedCard)  ownedCard.classList.toggle('char-active', isActive);
+    if (allCard)    allCard.classList.toggle('char-active',   isActive);
+    if (ownedBadge) ownedBadge.textContent = isActive ? 'ACTIVE ✓' : 'OWNED';
+    if (allBadge)   allBadge.textContent   = isActive ? 'ACTIVE ✓' : 'OWNED';
   });
 }
 
 function selectCharacter(id, _el) {
-  applyActiveState(id);
-  window.parent.postMessage({ selectCharacter: id }, '*');
+  const norm = id.toLowerCase();
+  applyActiveState(norm);
+  /* persist so serena.html picks it up on next load */
+  try { localStorage.setItem('crimsonsky:activeChar', norm); } catch {}
+  window.parent.postMessage({ selectCharacter: norm }, '*');
 }
 
-/* initialise active state from current save */
-applyActiveState(getCurrentSprite());
+/* initialise active state */
+applyActiveState(getCurrentChar());
 
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
