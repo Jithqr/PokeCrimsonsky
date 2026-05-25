@@ -1008,7 +1008,7 @@ function sta(name,type,effect,pp=10){return{name,type,power:0,pp,maxPp:pp,acc:90
 // Floor N bonus: 1000 + (N-1)*200
 function mkEnemy(name,sprite,type,baseHp,bonus,moves){
   const maxHp = (2*baseHp+110) + bonus;
-  return {name,sprite,level:100,maxHp,type,moves};
+  return {name,sprite,level:100,maxHp,hp:maxHp,type,moves};
 }
 
 const FLOOR_ENEMIES = {
@@ -2677,7 +2677,7 @@ function proceedAfterHalf() {
       renderEnemy();renderPlayer();renderPartyQueue();renderMoveGrid();
       const enemy=battle.enemies[battle.enemyIdx];
       if(!enemy){ chamberComplete(); return; }
-      setDialogue(`2nd Half begins! Corrupted ${enemy.name} emerges!`,true,()=>{
+      setDialogue(`2nd Half begins! Corrupted ${enemy.name} emerges!`,false,()=>{
         const pl=battle.playerParty[battle.playerIdx];
         setDialogue(`What will ${pl.poke.name} do?`);showActions();
         startHalfTimer();
