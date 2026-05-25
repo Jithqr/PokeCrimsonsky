@@ -2158,7 +2158,7 @@ function updateEnemyStatus(e) {
 function renderPlayer() {
   const pl=battle.playerParty[battle.playerIdx];
   document.getElementById('player-name').textContent=pl.poke.name;
-  document.getElementById('player-name-inline').textContent=pl.poke.name;
+  const _pni=document.getElementById('player-name-inline');if(_pni)_pni.textContent=pl.poke.name;
   document.getElementById('player-level').textContent=`Lv.${pl.poke.level}`;
   const sid=pl.poke.spriteId;
   const clean=String(sid).toLowerCase().replace(/[^a-z0-9-]/g,'');
