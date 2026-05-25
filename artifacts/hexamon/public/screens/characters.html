@@ -207,25 +207,13 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--dark); f
     <button class="tab-btn" id="tabAll" onclick="switchTab('all')">All Characters</button>
   </div>
 
-  <div class="count-label" id="countLabel">2 owned</div>
+  <div class="count-label" id="countLabel">1 owned</div>
 
   <!-- Grid -->
   <div class="grid-wrap">
 
     <!-- OWNED grid -->
     <div class="char-grid" id="gridOwned">
-      <div class="char-card owned" id="card-owned-cynthia" onclick="selectCharacter('cynthia', this)">
-        <span class="owned-badge" id="badge-owned-cynthia">OWNED</span>
-        <div class="portrait">
-          <img src="https://i.ibb.co/1f2xXJkk/IMG-20260521-162735.png" alt="Cynthia" style="width:100%;height:100%;object-fit:cover;" />
-        </div>
-        <div class="char-name">Cynthia</div>
-        <div class="stars">
-          <span class="s g">★</span><span class="s g">★</span><span class="s g">★</span>
-          <span class="s g">★</span><span class="s g">★</span>
-        </div>
-      </div>
-
       <!-- Noah — available to all -->
       <div class="char-card owned" id="card-owned-noah" onclick="selectCharacter('noah', this)">
         <span class="owned-badge" id="badge-owned-noah">OWNED</span>
@@ -243,9 +231,9 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--dark); f
     <!-- ALL CHARACTERS grid -->
     <div class="char-grid" id="gridAll" style="display:none">
 
-      <!-- Cynthia — owned -->
-      <div class="char-card owned" id="card-all-cynthia" onclick="selectCharacter('cynthia', this)">
-        <span class="owned-badge" id="badge-all-cynthia">OWNED</span>
+      <!-- Cynthia — locked -->
+      <div class="char-card">
+        <div class="lock-overlay"><div class="lock-icon">🔒</div></div>
         <div class="portrait">
           <img src="https://i.ibb.co/1f2xXJkk/IMG-20260521-162735.png" alt="Cynthia" style="width:100%;height:100%;object-fit:cover;" />
         </div>
@@ -371,7 +359,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--dark); f
 
 <script>
 /* ── Character selection ── */
-const CHAR_IDS = ['cynthia', 'noah'];
+const CHAR_IDS = ['noah'];
 
 function getCurrentChar() {
   /* prefer the dedicated key (most up-to-date) */
@@ -379,8 +367,8 @@ function getCurrentChar() {
   if (stored) return stored.toLowerCase();
   try {
     const save = JSON.parse(localStorage.getItem('hexamon:save:v2') || '{}');
-    return (save.player?.sprite || 'cynthia').toLowerCase();
-  } catch { return 'cynthia'; }
+    return (save.player?.sprite || 'noah').toLowerCase();
+  } catch { return 'noah'; }
 }
 
 function applyActiveState(id) {
