@@ -159,6 +159,22 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--dark); f
   border-radius:6px; padding:2px 5px;
   font-size:7px; font-weight:700; color:#fff; letter-spacing:0.5px;
 }
+/* active character */
+.char-card.char-active {
+  border-color:rgba(255,215,0,0.85);
+  box-shadow:0 0 0 2px rgba(255,215,0,0.35), 0 8px 28px rgba(0,0,0,0.55), 0 0 22px rgba(255,215,0,0.25);
+}
+.char-card.char-active .owned-badge {
+  background:linear-gradient(135deg,#FFD700,#FFA500);
+  color:#000;
+  content:'ACTIVE';
+}
+.active-badge {
+  position:absolute; top:5px; right:5px;
+  background:linear-gradient(135deg,#FFD700,#FFA500);
+  border-radius:6px; padding:2px 5px;
+  font-size:7px; font-weight:900; color:#000; letter-spacing:0.5px;
+}
 /* lock overlay */
 .lock-overlay {
   position:absolute; inset:0; border-radius:14px;
@@ -198,8 +214,8 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--dark); f
 
     <!-- OWNED grid -->
     <div class="char-grid" id="gridOwned">
-      <div class="char-card owned">
-        <span class="owned-badge">OWNED</span>
+      <div class="char-card owned" id="card-owned-cynthia" onclick="selectCharacter('cynthia', this)">
+        <span class="owned-badge" id="badge-owned-cynthia">OWNED</span>
         <div class="portrait">
           <img src="https://i.ibb.co/1f2xXJkk/IMG-20260521-162735.png" alt="Cynthia" style="width:100%;height:100%;object-fit:cover;" />
         </div>
@@ -211,10 +227,10 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--dark); f
       </div>
 
       <!-- Noah — available to all -->
-      <div class="char-card owned">
-        <span class="owned-badge">OWNED</span>
+      <div class="char-card owned" id="card-owned-noah" onclick="selectCharacter('noah', this)">
+        <span class="owned-badge" id="badge-owned-noah">OWNED</span>
         <div class="portrait">
-          <video src="/characters/noah-sprite.webm" autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;object-position:top;"></video>
+          <img src="/characters/noah-card.png" alt="Noah" style="width:100%;height:100%;object-fit:cover;object-position:top;" />
         </div>
         <div class="char-name">Noah</div>
         <div class="stars">
@@ -228,8 +244,8 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--dark); f
     <div class="char-grid" id="gridAll" style="display:none">
 
       <!-- Cynthia — owned -->
-      <div class="char-card owned">
-        <span class="owned-badge">OWNED</span>
+      <div class="char-card owned" id="card-all-cynthia" onclick="selectCharacter('cynthia', this)">
+        <span class="owned-badge" id="badge-all-cynthia">OWNED</span>
         <div class="portrait">
           <img src="https://i.ibb.co/1f2xXJkk/IMG-20260521-162735.png" alt="Cynthia" style="width:100%;height:100%;object-fit:cover;" />
         </div>
@@ -241,10 +257,10 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--dark); f
       </div>
 
       <!-- Noah — owned by all -->
-      <div class="char-card owned">
-        <span class="owned-badge">OWNED</span>
+      <div class="char-card owned" id="card-all-noah" onclick="selectCharacter('noah', this)">
+        <span class="owned-badge" id="badge-all-noah">OWNED</span>
         <div class="portrait">
-          <video src="/characters/noah-sprite.webm" autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;object-position:top;"></video>
+          <img src="/characters/noah-card.png" alt="Noah" style="width:100%;height:100%;object-fit:cover;object-position:top;" />
         </div>
         <div class="char-name">Noah</div>
         <div class="stars">
@@ -354,6 +370,38 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--dark); f
 </div><!-- app -->
 
 <script>
+/* ── Character selection ── */
+const CHAR_IDS = ['cynthia', 'noah'];
+
+function getCurrentSprite() {
+  try {
+    const save = JSON.parse(localStorage.getItem('hexamon:save:v2') || '{}');
+    return save.player?.sprite || 'hilbert';
+  } catch { return 'hilbert'; }
+}
+
+function applyActiveState(id) {
+  CHAR_IDS.forEach(cid => {
+    const ownedCard = document.getElementById('card-owned-' + cid);
+    const allCard   = document.getElementById('card-all-'   + cid);
+    const ownedBadge = document.getElementById('badge-owned-' + cid);
+    const allBadge   = document.getElementById('badge-all-'   + cid);
+    const isActive = cid === id;
+    if (ownedCard)  { ownedCard.classList.toggle('char-active', isActive); }
+    if (allCard)    { allCard.classList.toggle('char-active',   isActive); }
+    if (ownedBadge) { ownedBadge.textContent = isActive ? 'ACTIVE ✓' : 'OWNED'; }
+    if (allBadge)   { allBadge.textContent   = isActive ? 'ACTIVE ✓' : 'OWNED'; }
+  });
+}
+
+function selectCharacter(id, _el) {
+  applyActiveState(id);
+  window.parent.postMessage({ selectCharacter: id }, '*');
+}
+
+/* initialise active state from current save */
+applyActiveState(getCurrentSprite());
+
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');

@@ -108,7 +108,11 @@ const STONE_TO_SPRITE: Record<string, string> = {
   "Latiosite":"latios","Lucarionite":"lucario","Abomasite":"abomasnow",
   "Lopunnite":"lopunny","Garchompite":"garchomp","Diancite":"diancie",
 };
-const TRAINER_SPRITE = (name: string) => `https://play.pokemonshowdown.com/sprites/trainers/${name}.png`;
+const CUSTOM_TRAINER_SPRITES: Record<string, string> = {
+  noah: "/characters/noah-card.png",
+};
+const TRAINER_SPRITE = (name: string) =>
+  CUSTOM_TRAINER_SPRITES[name] ?? `https://play.pokemonshowdown.com/sprites/trainers/${name}.png`;
 
 
 const GEN_V_TRAINERS = [
@@ -1089,12 +1093,15 @@ export default function App() {
     return () => clearInterval(id);
   }, []);
 
-  // postMessage listener for iframe-based screens (Serena, Gacha, Abyss)
+  // postMessage listener for iframe-based screens (Serena, Gacha, Abyss, Characters)
   useEffect(() => {
     function onMsg(e: MessageEvent) {
       const nav = e.data?.nav as string | undefined;
-      if (!nav) return;
-      setScreen(nav);
+      if (nav) { setScreen(nav); return; }
+      const selectCharacter = e.data?.selectCharacter as string | undefined;
+      if (selectCharacter) {
+        setPlayer((p) => ({ ...p, sprite: selectCharacter }));
+      }
     }
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
@@ -2956,7 +2963,7 @@ export default function App() {
             </div>
             <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
               <div style={{ width: 72, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <img src={TRAINER_SPRITE(player.sprite)} alt="Trainer" style={{ width: "100%", imageRendering: "pixelated" }} />
+                <img src={TRAINER_SPRITE(player.sprite)} alt="Trainer" style={{ width: "100%", imageRendering: CUSTOM_TRAINER_SPRITES[player.sprite] ? "auto" : "pixelated" }} />
               </div>
               <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                 {[
@@ -4789,7 +4796,7 @@ export default function App() {
                 </div>
                 <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
                   <div style={{ width: 80, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <img src={TRAINER_SPRITE(player.sprite)} alt="Trainer" style={{ width: "100%", imageRendering: "pixelated" }} />
+                    <img src={TRAINER_SPRITE(player.sprite)} alt="Trainer" style={{ width: "100%", imageRendering: CUSTOM_TRAINER_SPRITES[player.sprite] ? "auto" : "pixelated" }} />
                   </div>
                   <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                     {[
