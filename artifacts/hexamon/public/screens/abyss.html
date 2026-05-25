@@ -2132,8 +2132,10 @@ function renderEnemy() {
     `https://play.pokemonshowdown.com/sprites/gen5/${e.sprite}.png`,
     `https://img.pokemondb.net/sprites/home/normal/${e.sprite}.png`,
   ];
-  let fi=0; img.src=fallbacks[fi];
+  let fi=0;
+  img.onerror=null; img.src='';
   img.onerror=function(){fi++;if(fi<fallbacks.length)this.src=fallbacks[fi];else this.onerror=null;};
+  img.src=fallbacks[fi];
 }
 function updateEnemyHp(hp, maxHp, animate=true) {
   const pct=Math.max(0,hp/maxHp*100);
@@ -2163,12 +2165,13 @@ function renderPlayer() {
   const backFallbacks=[`https://play.pokemonshowdown.com/sprites/ani-back/${clean}.gif`];
   const frontFallbacks=[`https://play.pokemonshowdown.com/sprites/ani/${clean}.gif`,`https://play.pokemonshowdown.com/sprites/gen5/${clean}.png`,`https://play.pokemonshowdown.com/sprites/dex/${clean}.png`];
   const img=document.getElementById('player-sprite');
-  img.style.transform=''; let backIdx=0,usingFront=false,frontIdx=0;
-  img.src=backFallbacks[backIdx];
+  img.onerror=null; img.src=''; img.style.transform='';
+  let backIdx=0,usingFront=false,frontIdx=0;
   img.onerror=function(){
     if(!usingFront){backIdx++;if(backIdx<backFallbacks.length){this.src=backFallbacks[backIdx];}else{usingFront=true;this.style.transform='scaleX(-1)';this.src=frontFallbacks[frontIdx];}}
     else{frontIdx++;if(frontIdx<frontFallbacks.length)this.src=frontFallbacks[frontIdx];else this.onerror=null;}
   };
+  img.src=backFallbacks[0];
   updatePlayerHp(pl.hp,pl.maxHp,false);
   updatePlayerStatus(pl);
 }
@@ -2570,9 +2573,9 @@ function triggerQuakeEntry() {
   const sw2 = document.getElementById('corrupt-shockwave2');
   const cracks = document.getElementById('quake-crack-layer');
 
-  // Wave 1: heavy quake + enemy rises
+  // Wave 1: heavy quake + enemy materializes (scale 0 → 1 summon effect)
   if(bs){ bs.classList.remove('quake-heavy','quake-light','corruption-pulse'); void bs.offsetWidth; bs.classList.add('quake-heavy','corruption-pulse'); setTimeout(()=>bs.classList.remove('quake-heavy'),800); setTimeout(()=>bs.classList.remove('corruption-pulse'),1000); }
-  if(ei){ ei.classList.remove('rising','materializing'); void ei.offsetWidth; ei.classList.add('rising'); setTimeout(()=>ei.classList.remove('rising'),1050); }
+  if(ei){ ei.classList.remove('rising','materializing'); void ei.offsetWidth; ei.classList.add('materializing'); setTimeout(()=>ei.classList.remove('materializing'),700); }
 
   // Shockwave rings burst out from enemy position
   if(sw1){ sw1.classList.remove('burst'); void sw1.offsetWidth; sw1.classList.add('burst'); setTimeout(()=>sw1.classList.remove('burst'),800); }
