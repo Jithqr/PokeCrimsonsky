@@ -191,7 +191,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--dark); f
     <button class="tab-btn" id="tabAll" onclick="switchTab('all')">All Characters</button>
   </div>
 
-  <div class="count-label" id="countLabel">1 owned</div>
+  <div class="count-label" id="countLabel">2 owned</div>
 
   <!-- Grid -->
   <div class="grid-wrap">
@@ -209,6 +209,19 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--dark); f
           <span class="s g">★</span><span class="s g">★</span>
         </div>
       </div>
+
+      <!-- Noah — available to all -->
+      <div class="char-card owned">
+        <span class="owned-badge">OWNED</span>
+        <div class="portrait">
+          <video src="/characters/noah-sprite.webm" autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;object-position:top;"></video>
+        </div>
+        <div class="char-name">Noah</div>
+        <div class="stars">
+          <span class="s g">★</span><span class="s g">★</span><span class="s g">★</span>
+          <span class="s g">★</span>
+        </div>
+      </div>
     </div>
 
     <!-- ALL CHARACTERS grid -->
@@ -224,6 +237,19 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--dark); f
         <div class="stars">
           <span class="s g">★</span><span class="s g">★</span><span class="s g">★</span>
           <span class="s g">★</span><span class="s g">★</span>
+        </div>
+      </div>
+
+      <!-- Noah — owned by all -->
+      <div class="char-card owned">
+        <span class="owned-badge">OWNED</span>
+        <div class="portrait">
+          <video src="/characters/noah-sprite.webm" autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;object-position:top;"></video>
+        </div>
+        <div class="char-name">Noah</div>
+        <div class="stars">
+          <span class="s g">★</span><span class="s g">★</span><span class="s g">★</span>
+          <span class="s g">★</span>
         </div>
       </div>
 
@@ -333,7 +359,7 @@ function switchTab(tab) {
   document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
   document.getElementById('gridOwned').style.display = tab === 'owned' ? 'grid' : 'none';
   document.getElementById('gridAll').style.display   = tab === 'all'   ? 'grid' : 'none';
-  document.getElementById('countLabel').textContent  = tab === 'owned' ? '1 owned' : '9 characters · 1 owned';
+  document.getElementById('countLabel').textContent  = tab === 'owned' ? '2 owned' : '10 characters · 2 owned';
 }
 
 /* ── Starfield ── */
