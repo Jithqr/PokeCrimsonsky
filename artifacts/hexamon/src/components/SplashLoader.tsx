@@ -5,47 +5,56 @@ import { sfx } from "../sfx";
 
 export function SplashLoader({ onDone }: { onDone: () => void }) {
   const [progress, setProgress] = useState(0);
-  const [phase, setPhase] = useState<"loading" | "fading">("loading");
-  const doneRef = useRef(false);
+  const [phase, setPhase] = useState<"loading" | "ready" | "fading">("loading");
+  const startedRef = useRef(false);
 
   useEffect(() => {
     const start = performance.now();
-    const duration = 2400;
+    const duration = 3200;
     let raf = 0;
     const tick = (t: number) => {
       const p = Math.min(1, (t - start) / duration);
       setProgress(p);
-      if (p < 1) {
-        raf = requestAnimationFrame(tick);
-      } else {
-        if (!doneRef.current) {
-          doneRef.current = true;
-          setPhase("fading");
-          setTimeout(onDone, 600);
-        }
-      }
+      if (p < 1) raf = requestAnimationFrame(tick);
+      else setPhase("ready");
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, []);
 
+  function handleStart() {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    sfx.click();
+    setPhase("fading");
+    setTimeout(onDone, 500);
+  }
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (phase === "ready" && (e.key === "Enter" || e.key === " ")) handleStart();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [phase]);
+
   return (
     <div
+      onClick={phase === "ready" ? handleStart : undefined}
       style={{
         position: "fixed",
         inset: 0,
         background: "#000",
         zIndex: 9999,
         overflow: "hidden",
-        cursor: "default",
+        cursor: phase === "ready" ? "pointer" : "default",
         opacity: phase === "fading" ? 0 : 1,
-        transition: "opacity 0.6s ease-out",
+        transition: "opacity 0.5s ease-out",
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
       }}
     >
       <style>{CSS}</style>
 
-      {/* Background */}
       <div
         style={{
           position: "absolute",
@@ -60,13 +69,12 @@ export function SplashLoader({ onDone }: { onDone: () => void }) {
         style={{
           position: "absolute",
           inset: 0,
-          background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.6) 100%)",
+          background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.55) 100%)",
         }}
       />
 
-      {/* Floating particles */}
-      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-        {Array.from({ length: 18 }).map((_, i) => (
+      <div className="splash-particles" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        {Array.from({ length: 22 }).map((_, i) => (
           <span
             key={i}
             style={{
@@ -85,7 +93,6 @@ export function SplashLoader({ onDone }: { onDone: () => void }) {
         ))}
       </div>
 
-      {/* Content */}
       <div
         style={{
           position: "relative",
@@ -95,89 +102,80 @@ export function SplashLoader({ onDone }: { onDone: () => void }) {
           alignItems: "center",
           justifyContent: "center",
           padding: "40px 24px",
-          gap: 0,
         }}
       >
-        {/* Logo */}
         <img
           src={logoUrl}
           alt="Pokémon Crimson Sky"
           style={{
             maxWidth: "82%",
-            maxHeight: "38%",
+            maxHeight: "46%",
             imageRendering: "pixelated",
             filter: "drop-shadow(0 6px 16px rgba(255,40,80,0.55))",
             animation: "splashLogoIn 1.1s cubic-bezier(0.2, 1.2, 0.4, 1) both, splashLogoBob 3s ease-in-out 1.1s infinite",
           }}
         />
 
-        {/* Spinning Pokéball */}
-        <div
-          style={{
-            marginTop: 32,
-            marginBottom: 20,
-            animation: "splashFadeUp 0.7s 0.5s both",
-          }}
-        >
-          <img
-            src="/pokeball-loading.gif"
-            alt="Loading"
-            style={{
-              width: 72,
-              height: 72,
-              objectFit: "contain",
-              animation: "pokeballSpin 1.1s linear infinite",
-              filter: "drop-shadow(0 0 12px rgba(255,60,80,0.7))",
-            }}
-          />
-        </div>
+        <div style={{ flex: 1 }} />
 
-        {/* Loading label */}
         <div
           style={{
-            color: "rgba(255,255,255,0.7)",
-            fontSize: 11,
+            color: "#fff",
+            fontSize: 14,
             letterSpacing: 4,
-            textTransform: "uppercase",
+            textShadow: "2px 2px 0 #1a0010, 0 0 12px rgba(255,80,100,0.5)",
             marginBottom: 14,
-            animation: "splashFadeUp 0.7s 0.6s both",
+            animation: "splashFadeUp 0.8s 0.4s both",
           }}
         >
-          LOADING<span className="splash-dots" />
+          {phase === "ready" ? (
+            <span className="splash-blink">TAP TO START</span>
+          ) : (
+            <>
+              LOADING<span className="splash-dots">...</span>
+            </>
+          )}
         </div>
 
-        {/* Thin progress bar */}
         <div
           style={{
-            width: "min(240px, 65%)",
-            height: 3,
-            background: "rgba(255,255,255,0.12)",
+            width: "min(320px, 78%)",
+            height: 18,
+            background: "rgba(0,0,0,0.55)",
+            border: "3px solid #fff",
             borderRadius: 2,
+            padding: 2,
+            boxShadow: "0 0 16px rgba(255,80,100,0.4), inset 0 0 0 1px rgba(0,0,0,0.7)",
+            animation: "splashFadeUp 0.8s 0.5s both",
+            position: "relative",
             overflow: "hidden",
-            animation: "splashFadeUp 0.7s 0.7s both",
           }}
         >
           <div
             style={{
               width: `${progress * 100}%`,
               height: "100%",
-              background: "linear-gradient(90deg, #ff3b3b, #ff8c42)",
-              transition: "width 0.12s linear",
-              boxShadow: "0 0 8px rgba(255,80,80,0.8)",
-              borderRadius: 2,
+              background: "repeating-linear-gradient(90deg, #ff3b3b 0 8px, #ff5252 8px 12px)",
+              transition: "width 0.15s linear",
+              boxShadow: "0 0 10px rgba(255,80,80,0.7)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 45%, transparent 55%, rgba(0,0,0,0.25) 100%)",
+              pointerEvents: "none",
             }}
           />
         </div>
+
       </div>
     </div>
   );
 }
 
 const CSS = `
-@keyframes pokeballSpin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
 @keyframes splashLogoIn {
   0%   { opacity: 0; transform: translateY(-30px) scale(0.6); filter: drop-shadow(0 0 0 transparent) blur(4px); }
   60%  { opacity: 1; transform: translateY(8px) scale(1.06); filter: drop-shadow(0 6px 16px rgba(255,40,80,0.55)) blur(0); }
@@ -200,6 +198,8 @@ const CSS = `
   10%  { opacity: 0.9; }
   100% { transform: translateY(-110vh) translateX(30px); opacity: 0; }
 }
+.splash-blink { animation: splashBlink 1s steps(2, end) infinite; }
+@keyframes splashBlink { 50% { opacity: 0.25; } }
 .splash-dots::after {
   content: "";
   display: inline-block;
