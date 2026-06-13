@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Achievements — Crimson Sky</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --gold:#FFD700; --gold2:#FFA500;
+  --accent:#7C4DFF; --accent2:#b39dff;
+  --dark:#04020f;
+  --glass:rgba(255,255,255,0.06);
+  --glass-border:rgba(255,255,255,0.13);
+  --green:#4ade80;
+}
+html, body { width:100%; height:100%; overflow:hidden; background:var(--dark); font-family:'Rajdhani',sans-serif; color:#fff; }
+
+#sky { position:fixed; inset:0; z-index:0; }
+#sky-overlay {
+  position:fixed; inset:0; z-index:1; pointer-events:none;
+  background:
+    radial-gradient(ellipse 55% 35% at 32% 35%, rgba(88,28,135,0.28) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 30% at 68% 38%, rgba(109,40,217,0.22) 0%, transparent 60%),
+    linear-gradient(to bottom, rgba(5,5,15,0.55) 0%, rgba(5,5,15,0.05) 50%, rgba(5,5,15,0.65) 100%);
+}
+.corner { position:fixed; width:24px; height:24px; z-index:80; }
+.corner::before,.corner::after { content:''; position:absolute; background:rgba(255,215,0,0.45); }
+.corner::before { width:100%; height:1.5px; top:0; }
+.corner::after  { width:1.5px; height:100%; left:0; }
+.corner-tl{top:12px;left:12px}
+.corner-tr{top:12px;right:12px;transform:scaleX(-1)}
+.corner-bl{bottom:12px;left:12px;transform:scaleY(-1)}
+.corner-br{bottom:12px;right:12px;transform:scale(-1)}
+
+#app {
+  position:relative; z-index:10;
+  width:100%; height:100vh; height:100dvh;
+  display:flex; flex-direction:column;
+  overflow:hidden;
+}
+
+/* Header */
+.page-header {
+  flex-shrink:0;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:20px 18px 0;
+}
+.back-btn {
+  background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.14);
+  border-radius:10px; padding:7px 16px;
+  font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:700;
+  color:rgba(255,255,255,0.65); cursor:pointer; letter-spacing:1px;
+  transition:all 0.18s;
+}
+.back-btn:hover { background:rgba(255,255,255,0.12); color:#fff; }
+.page-title {
+  font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:4px;
+  color:#fff; text-shadow:0 0 20px rgba(124,77,255,0.6);
+}
+.header-right { width:72px; }
+
+/* Progress summary bar */
+.progress-bar-wrap {
+  flex-shrink:0;
+  padding:12px 18px 0;
+}
+.progress-summary {
+  background:rgba(15,20,55,0.75); border:1px solid rgba(255,255,255,0.1);
+  border-radius:12px; padding:10px 14px;
+  display:flex; align-items:center; gap:12px;
+}
+.progress-icon { font-size:22px; }
+.progress-text-col { flex:1; }
+.progress-label { font-size:9px; font-weight:700; letter-spacing:2px; color:rgba(255,255,255,0.35); text-transform:uppercase; }
+.progress-count { font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--gold); letter-spacing:2px; line-height:1; }
+.progress-track {
+  flex:2; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;
+}
+.progress-fill {
+  height:100%; background:linear-gradient(90deg,#FFD700,#FFA500);
+  border-radius:3px; transition:width 0.5s ease;
+  box-shadow:0 0 6px rgba(255,200,0,0.5);
+}
+
+/* Tabs */
+.tabs-row {
+  flex-shrink:0;
+  display:flex; gap:0;
+  margin:12px 18px 0;
+  background:rgba(15,20,55,0.75); border:1px solid rgba(255,255,255,0.1);
+  border-radius:12px; overflow:hidden;
+}
+.tab-btn {
+  flex:1; padding:10px 0; text-align:center;
+  font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:700; letter-spacing:2px;
+  color:rgba(255,255,255,0.42); text-transform:uppercase;
+  cursor:pointer; border:none; background:transparent; transition:all 0.2s;
+}
+.tab-btn.active { background:rgba(100,80,200,0.42); color:var(--accent2); }
+
+/* Grid */
+.grid-wrap {
+  flex:1; overflow-y:auto; padding:10px 18px 18px;
+  display:flex; flex-direction:column; gap:8px;
+}
+.grid-wrap::-webkit-scrollbar { width:3px; }
+.grid-wrap::-webkit-scrollbar-track { background:transparent; }
+.grid-wrap::-webkit-scrollbar-thumb { background:rgba(124,77,255,0.35); border-radius:3px; }
+
+/* Section header */
+.section-label {
+  font-size:9px; font-weight:700; letter-spacing:3px;
+  color:rgba(255,255,255,0.28); text-transform:uppercase;
+  padding:6px 2px 2px;
+}
+
+/* Achievement card */
+.ach-card {
+  display:flex; align-items:center; gap:12px;
+  background:linear-gradient(135deg,rgba(255,255,255,0.06) 0%,rgba(20,15,50,0.82) 100%);
+  border:1px solid var(--glass-border);
+  border-radius:12px; padding:11px 13px;
+  transition:border-color 0.2s;
+  animation:achIn 0.4s cubic-bezier(.34,1.56,.64,1) both;
+}
+.ach-card.unlocked {
+  border-color:rgba(255,215,0,0.35);
+  background:linear-gradient(135deg,rgba(255,215,0,0.06) 0%,rgba(20,15,50,0.85) 100%);
+}
+.ach-card.locked { opacity:0.55; }
+@keyframes achIn { from{transform:translateY(6px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+.ach-icon-wrap {
+  width:44px; height:44px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px;
+  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+}
+.ach-card.unlocked .ach-icon-wrap {
+  background:rgba(255,215,0,0.1); border-color:rgba(255,215,0,0.3);
+}
+.ach-card.locked .ach-icon-wrap {
+  filter:grayscale(1); background:rgba(255,255,255,0.03);
+}
+
+.ach-body { flex:1; min-width:0; }
+.ach-name {
+  font-size:13px; font-weight:700; color:rgba(255,255,255,0.9);
+  letter-spacing:0.5px; line-height:1.2; margin-bottom:2px;
+}
+.ach-card.locked .ach-name { color:rgba(255,255,255,0.45); }
+.ach-desc {
+  font-size:10px; color:rgba(255,255,255,0.35); line-height:1.4;
+}
+.ach-progress-row {
+  display:flex; align-items:center; gap:6px; margin-top:5px;
+}
+.ach-bar {
+  flex:1; height:3px; background:rgba(255,255,255,0.1); border-radius:2px; overflow:hidden;
+}
+.ach-bar-fill {
+  height:100%; border-radius:2px;
+  background:linear-gradient(90deg,#7C4DFF,#b39dff);
+}
+.ach-card.unlocked .ach-bar-fill { background:linear-gradient(90deg,#FFD700,#FFA500); }
+.ach-prog-label {
+  font-size:9px; font-weight:700; color:rgba(255,255,255,0.3); white-space:nowrap;
+}
+.ach-card.unlocked .ach-prog-label { color:var(--gold); }
+
+.ach-right { flex-shrink:0; text-align:right; }
+.ach-check { font-size:18px; }
+.ach-reward {
+  font-size:9px; font-weight:700; letter-spacing:0.5px;
+  color:rgba(255,200,0,0.6); margin-top:2px;
+}
+</style>
+</head>
+<body>
+
+<canvas id="sky"></canvas>
+<div id="sky-overlay"></div>
+<div class="corner corner-tl"></div>
+<div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div>
+<div class="corner corner-br"></div>
+
+<div id="app">
+  <div class="page-header">
+    <button class="back-btn" onclick="window.parent.postMessage({nav:'serena'},'*')">‹ Back</button>
+    <div class="page-title">Achievements</div>
+    <div class="header-right"></div>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-summary">
+      <div class="progress-icon">🏆</div>
+      <div class="progress-text-col">
+        <div class="progress-label">Completed</div>
+        <div class="progress-count" id="progressCount">0 / 0</div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs-row">
+    <button class="tab-btn active" id="tabAll" onclick="switchTab('all')">All Achievements</button>
+    <button class="tab-btn" id="tabYours" onclick="switchTab('yours')">Your Achievements</button>
+  </div>
+
+  <div class="grid-wrap" id="achGrid"></div>
+</div>
+
+<script>
+/* ── Achievement definitions ── */
+const ACHIEVEMENTS = [
+  /* Collection */
+  { id:'first_catch',    cat:'Collection', icon:'🎯', name:'First Catch',        desc:'Catch your first Pokémon.',           max:1,  key:'catches' },
+  { id:'collector_10',   cat:'Collection', icon:'📦', name:'Collector',           desc:'Catch 10 Pokémon.',                   max:10, key:'catches' },
+  { id:'collector_50',   cat:'Collection', icon:'🗂️', name:'Dex Explorer',        desc:'Catch 50 Pokémon.',                   max:50, key:'catches' },
+  { id:'box_30',         cat:'Collection', icon:'📬', name:'Full Box',            desc:'Have 30+ Pokémon in your PC box.',    max:30, key:'boxCount' },
+  { id:'shiny_first',    cat:'Collection', icon:'✨', name:'Shiny Hunter',        desc:'Catch your first shiny Pokémon.',     max:1,  key:'shinyCatches' },
+
+  /* Battle */
+  { id:'first_win',      cat:'Battle',     icon:'⚔️', name:'First Victory',      desc:'Win your first battle.',              max:1,  key:'wins' },
+  { id:'wins_10',        cat:'Battle',     icon:'🏅', name:'Battle Veteran',      desc:'Win 10 battles.',                     max:10, key:'wins' },
+  { id:'wins_50',        cat:'Battle',     icon:'🎖️', name:'Seasoned Fighter',    desc:'Win 50 battles.',                     max:50, key:'wins' },
+  { id:'gym_1',          cat:'Battle',     icon:'🏟️', name:'Gym Challenger',      desc:'Defeat your first Gym Leader.',       max:1,  key:'gymsBeaten' },
+  { id:'gym_8',          cat:'Battle',     icon:'🥇', name:'Badge Collector',     desc:'Defeat all 8 Gym Leaders.',           max:8,  key:'gymsBeaten' },
+  { id:'elite_1',        cat:'Battle',     icon:'👑', name:'Elite Challenger',    desc:'Defeat an Elite Four member.',        max:1,  key:'eliteBeaten' },
+
+  /* Trainer */
+  { id:'level_5',        cat:'Trainer',    icon:'⬆️', name:'Growing Strong',      desc:'Reach Trainer Level 5.',              max:5,  key:'trainerLevel' },
+  { id:'level_10',       cat:'Trainer',    icon:'🌟', name:'Champion\'s Path',    desc:'Reach Trainer Level 10.',             max:10, key:'trainerLevel' },
+  { id:'level_20',       cat:'Trainer',    icon:'🔥', name:'Legend in the Making',desc:'Reach Trainer Level 20.',             max:20, key:'trainerLevel' },
+
+  /* Social */
+  { id:'trade_1',        cat:'Social',     icon:'🤝', name:'First Trade',         desc:'Complete a Pokémon trade.',           max:1,  key:'trades' },
+  { id:'transfer_1',     cat:'Social',     icon:'💸', name:'Generous Trainer',    desc:'Send money to another player.',       max:1,  key:'transfers' },
+
+  /* Marketplace */
+  { id:'market_list',    cat:'Marketplace',icon:'🛒', name:'Open for Business',   desc:'List a Pokémon on the marketplace.',  max:1,  key:'marketListings' },
+  { id:'market_sell_5',  cat:'Marketplace',icon:'💰', name:'Merchant',            desc:'Complete 5 marketplace sales.',       max:5,  key:'marketSales' },
+
+  /* Characters */
+  { id:'char_select',    cat:'Characters', icon:'🧑', name:'My Style',            desc:'Select a character for your trainer.',max:1,  key:'charSelects' },
+];
+
+/* ── Read progress from save ── */
+function readProgress() {
+  try {
+    const save = JSON.parse(localStorage.getItem('hexamon:save:v2') || '{}');
+    const p = save.player || {};
+    const box = save.box || [];
+    const allMons = [];
+    (save.teams || []).forEach(t => (t.mons || []).forEach(m => allMons.push(m)));
+    box.forEach(m => allMons.push(m));
+
+    const gymsBeaten = Array.isArray(p.gymBadges)
+      ? p.gymBadges.filter(Boolean).length
+      : (typeof p.gymsBeaten === 'number' ? p.gymsBeaten : 0);
+
+    const activeChar = localStorage.getItem('crimsonsky:activeChar');
+
+    return {
+      catches:       typeof p.catches      === 'number' ? p.catches      : allMons.length,
+      shinyCatches:  allMons.filter(m => m.isShiny).length,
+      boxCount:      box.length,
+      wins:          typeof p.wins         === 'number' ? p.wins         : 0,
+      gymsBeaten:    gymsBeaten,
+      eliteBeaten:   typeof p.eliteBeaten  === 'number' ? p.eliteBeaten  : 0,
+      trainerLevel:  typeof p.level        === 'number' ? p.level        : 1,
+      trades:        typeof p.trades       === 'number' ? p.trades       : 0,
+      transfers:     typeof p.transfers    === 'number' ? p.transfers    : 0,
+      marketListings:typeof p.marketListings==='number' ? p.marketListings: 0,
+      marketSales:   typeof p.marketSales  === 'number' ? p.marketSales  : 0,
+      charSelects:   activeChar ? 1 : 0,
+    };
+  } catch(e) { return {}; }
+}
+
+/* ── Render ── */
+let currentTab = 'all';
+
+function buildCard(ach, prog) {
+  const val   = Math.min(prog[ach.key] || 0, ach.max);
+  const done  = val >= ach.max;
+  const pct   = Math.round((val / ach.max) * 100);
+
+  const card = document.createElement('div');
+  card.className = 'ach-card ' + (done ? 'unlocked' : 'locked');
+  card.style.animationDelay = '0ms';
+
+  card.innerHTML = `
+    <div class="ach-icon-wrap">${done ? ach.icon : '🔒'}</div>
+    <div class="ach-body">
+      <div class="ach-name">${ach.name}</div>
+      <div class="ach-desc">${ach.desc}</div>
+      <div class="ach-progress-row">
+        <div class="ach-bar"><div class="ach-bar-fill" style="width:${pct}%"></div></div>
+        <div class="ach-prog-label">${val} / ${ach.max}</div>
+      </div>
+    </div>
+    <div class="ach-right">
+      <div class="ach-check">${done ? '✅' : ''}</div>
+    </div>`;
+  return card;
+}
+
+function render(tab) {
+  const prog    = readProgress();
+  const grid    = document.getElementById('achGrid');
+  grid.innerHTML = '';
+
+  const list = tab === 'yours'
+    ? ACHIEVEMENTS.filter(a => (prog[a.key] || 0) >= a.max)
+    : ACHIEVEMENTS;
+
+  /* group by category */
+  const cats = {};
+  list.forEach(a => { if (!cats[a.cat]) cats[a.cat] = []; cats[a.cat].push(a); });
+
+  let delay = 0;
+  Object.entries(cats).forEach(([cat, achs]) => {
+    const lbl = document.createElement('div');
+    lbl.className = 'section-label';
+    lbl.textContent = cat;
+    grid.appendChild(lbl);
+    achs.forEach(a => {
+      const card = buildCard(a, prog);
+      card.style.animationDelay = delay + 'ms';
+      delay += 40;
+      grid.appendChild(card);
+    });
+  });
+
+  /* empty state for "yours" */
+  if (tab === 'yours' && list.length === 0) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'text-align:center;padding:48px 24px;color:rgba(255,255,255,0.25);font-size:13px;letter-spacing:1px;';
+    empty.innerHTML = '<div style="font-size:40px;margin-bottom:12px">🏆</div>No achievements yet.<br>Keep playing to unlock them!';
+    grid.appendChild(empty);
+  }
+
+  /* update header progress */
+  const total   = ACHIEVEMENTS.length;
+  const done    = ACHIEVEMENTS.filter(a => (prog[a.key] || 0) >= a.max).length;
+  document.getElementById('progressCount').textContent = done + ' / ' + total;
+  document.getElementById('progressFill').style.width  = Math.round((done/total)*100) + '%';
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(tab === 'all' ? 'tabAll' : 'tabYours').classList.add('active');
+  render(tab);
+}
+
+/* init */
+render('all');
+
+/* ── Starfield ── */
+const canvas = document.getElementById('sky');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; initStars(); }
+window.addEventListener('resize', resize);
+
+const N = 260;
+const sx = new Float32Array(N), sy = new Float32Array(N), sr = new Float32Array(N),
+      sa = new Float32Array(N), ss = new Float32Array(N), sp = new Float32Array(N);
+function initStars() {
+  for (let i=0;i<N;i++){sx[i]=Math.random()*W;sy[i]=Math.random()*H;sr[i]=Math.random()*2+0.3;sa[i]=Math.random()*0.5+0.5;ss[i]=Math.random()*2.5+0.6;sp[i]=Math.random()*Math.PI*2;}
+}
+function draw(t){
+  ctx.clearRect(0,0,W,H);
+  for(let i=0;i<N;i++){const pulse=Math.sin(t*ss[i]+sp[i])*0.45+0.55;ctx.globalAlpha=sa[i]*pulse;ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(sx[i],sy[i],sr[i],0,Math.PI*2);ctx.fill();}
+  ctx.globalAlpha=1;
+  requestAnimationFrame(t2 => draw(t2/1000));
+}
+resize();
+requestAnimationFrame(t => draw(t/1000));
+</script>
+</body>
+</html>

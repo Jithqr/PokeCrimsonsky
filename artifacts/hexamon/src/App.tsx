@@ -8441,6 +8441,22 @@ export default function App() {
     );
   }
 
+  if (screen === "achievements") {
+    return (
+      <div style={{ ...S.root }}>
+        <style>{css}</style>
+        <div style={{ ...S.wrap, paddingBottom: 0 }}>
+          <iframe
+            src="/screens/achievements.html"
+            style={{ width: "100%", height: "100dvh", border: "none", display: "block" }}
+            allow="autoplay"
+            title="Achievements"
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (screen === "new-page") {
     return (
       <div style={S.root}><style>{css}</style>
