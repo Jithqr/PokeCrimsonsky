@@ -2206,10 +2206,25 @@ function startChallenge() {
   battle.halfResults = {};
 
   // Build teams with Rift HP boost
+  // Read moves directly from hexamon:save:v2 so we always use the
+  // current moveset, regardless of what the roster entry carries.
+  const _riftUidMoves = {};
+  try {
+    const _rs = JSON.parse(localStorage.getItem('hexamon:save:v2')||'{}');
+    const _allMons = [];
+    if (_rs.teams) _rs.teams.forEach(tg=>{ if(tg.mons) _allMons.push(...tg.mons); });
+    if (_rs.box) _allMons.push(..._rs.box);
+    if (_rs.team) _allMons.push(..._rs.team);
+    _allMons.forEach(m=>{ if(m.uid && m.moves && m.moves.length) _riftUidMoves[m.uid]=m.moves; });
+  } catch(e){}
+
   function buildPartyMon(p) {
     const baseHp = calcMaxHp(p.level);
     const mhp = Math.round(baseHp * RIFT_HP_MULT);
-    return {poke:p, hp:mhp, maxHp:mhp, moves:getMovesForPokemon(p), status:null, fainted:false};
+    // Override poke.moves with the freshly-read save data moves (by UID)
+    const freshMoves = (p.uid && _riftUidMoves[p.uid]) || p.moves || [];
+    const pWithMoves = freshMoves.length > 0 ? {...p, moves: freshMoves} : p;
+    return {poke:pWithMoves, hp:mhp, maxHp:mhp, moves:getMovesForPokemon(pWithMoves), status:null, fainted:false};
   }
   battle.team1Party = party.first.filter(Boolean).map(buildPartyMon);
   battle.team2Party = party.second.filter(Boolean).map(buildPartyMon);
