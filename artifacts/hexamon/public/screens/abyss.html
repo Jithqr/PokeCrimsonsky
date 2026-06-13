@@ -1251,6 +1251,214 @@ const FLOOR_DATA = [
 // ═══════════════════════════════════════════════════
 //  PLAYER MOVES
 // ═══════════════════════════════════════════════════
+// ── Flat name-keyed lookup built at runtime from PLAYER_MOVES_BY_TYPE + extras ──
+// Populated after PLAYER_MOVES_BY_TYPE is defined (see bottom of block).
+const MOVE_LOOKUP = {};
+
+// Common moves from the game's learnsets not already in PLAYER_MOVES_BY_TYPE
+const EXTRA_MOVES = [
+  // Normal
+  {name:'Tackle',type:'normal',power:40,pp:35,maxPp:35,acc:100},
+  {name:'Scratch',type:'normal',power:40,pp:35,maxPp:35,acc:100},
+  {name:'Pound',type:'normal',power:40,pp:35,maxPp:35,acc:100},
+  {name:'Growl',type:'normal',power:0,pp:40,maxPp:40,acc:100},
+  {name:'Tail Whip',type:'normal',power:0,pp:30,maxPp:30,acc:100},
+  {name:'Quick Attack',type:'normal',power:40,pp:30,maxPp:30,acc:100},
+  {name:'Swift',type:'normal',power:60,pp:20,maxPp:20,acc:100},
+  {name:'Slash',type:'normal',power:70,pp:20,maxPp:20,acc:100},
+  {name:'Stomp',type:'normal',power:65,pp:20,maxPp:20,acc:100},
+  {name:'Mega Punch',type:'normal',power:80,pp:20,maxPp:20,acc:85},
+  {name:'Extreme Speed',type:'normal',power:80,pp:5,maxPp:5,acc:100},
+  {name:'Double Edge',type:'normal',power:120,pp:15,maxPp:15,acc:100},
+  {name:'Last Resort',type:'normal',power:140,pp:5,maxPp:5,acc:100},
+  {name:'Giga Impact',type:'normal',power:150,pp:5,maxPp:5,acc:90},
+  {name:'Rapid Spin',type:'normal',power:50,pp:40,maxPp:40,acc:100},
+  {name:'Take Down',type:'normal',power:90,pp:20,maxPp:20,acc:85},
+  {name:'Strength',type:'normal',power:80,pp:15,maxPp:15,acc:100},
+  {name:'Skull Bash',type:'normal',power:130,pp:10,maxPp:10,acc:100},
+  {name:'Facade',type:'normal',power:70,pp:20,maxPp:20,acc:100},
+  {name:'Return',type:'normal',power:70,pp:20,maxPp:20,acc:100},
+  {name:'Hyper Fang',type:'normal',power:80,pp:15,maxPp:15,acc:90},
+  {name:'Fury Swipes',type:'normal',power:18,pp:15,maxPp:15,acc:80},
+  // Fire
+  {name:'Ember',type:'fire',power:40,pp:25,maxPp:25,acc:100},
+  {name:'Flame Wheel',type:'fire',power:60,pp:25,maxPp:25,acc:100},
+  {name:'Fire Fang',type:'fire',power:65,pp:15,maxPp:15,acc:95},
+  {name:'Fire Punch',type:'fire',power:75,pp:15,maxPp:15,acc:100},
+  {name:'Mystical Fire',type:'fire',power:75,pp:10,maxPp:10,acc:100},
+  {name:'Heat Wave',type:'fire',power:95,pp:10,maxPp:10,acc:90},
+  {name:'Inferno',type:'fire',power:100,pp:5,maxPp:5,acc:50},
+  {name:'Sacred Fire',type:'fire',power:100,pp:5,maxPp:5,acc:95},
+  {name:'Flame Charge',type:'fire',power:50,pp:20,maxPp:20,acc:100},
+  {name:'Will-O-Wisp',type:'fire',power:0,pp:15,maxPp:15,acc:85},
+  {name:'Overheat',type:'fire',power:130,pp:5,maxPp:5,acc:90},
+  // Water
+  {name:'Water Gun',type:'water',power:40,pp:25,maxPp:25,acc:100},
+  {name:'Bubble',type:'water',power:40,pp:30,maxPp:30,acc:100},
+  {name:'Bubble Beam',type:'water',power:65,pp:20,maxPp:20,acc:100},
+  {name:'Aqua Jet',type:'water',power:40,pp:20,maxPp:20,acc:100},
+  {name:'Aqua Tail',type:'water',power:90,pp:10,maxPp:10,acc:90},
+  {name:'Wave Crash',type:'water',power:120,pp:10,maxPp:10,acc:100},
+  {name:'Brine',type:'water',power:65,pp:10,maxPp:10,acc:100},
+  {name:'Water Pulse',type:'water',power:60,pp:20,maxPp:20,acc:100},
+  {name:'Rain Dance',type:'water',power:0,pp:5,maxPp:5,acc:100},
+  {name:'Liquidation',type:'water',power:85,pp:10,maxPp:10,acc:100},
+  {name:'Crabhammer',type:'water',power:100,pp:10,maxPp:10,acc:90},
+  {name:'Scald',type:'water',power:80,pp:15,maxPp:15,acc:100},
+  // Grass
+  {name:'Vine Whip',type:'grass',power:45,pp:25,maxPp:25,acc:100},
+  {name:'Razor Leaf',type:'grass',power:55,pp:25,maxPp:25,acc:95},
+  {name:'Mega Drain',type:'grass',power:40,pp:15,maxPp:15,acc:100},
+  {name:'Giga Drain',type:'grass',power:75,pp:10,maxPp:10,acc:100},
+  {name:'Seed Bomb',type:'grass',power:80,pp:15,maxPp:15,acc:100},
+  {name:'Petal Blizzard',type:'grass',power:90,pp:15,maxPp:15,acc:100},
+  {name:'Power Whip',type:'grass',power:120,pp:10,maxPp:10,acc:85},
+  {name:'Petal Dance',type:'grass',power:120,pp:10,maxPp:10,acc:100},
+  {name:'Leech Seed',type:'grass',power:0,pp:10,maxPp:10,acc:90},
+  {name:'Worry Seed',type:'grass',power:0,pp:10,maxPp:10,acc:100},
+  {name:'Synthesis',type:'grass',power:0,pp:5,maxPp:5,acc:100},
+  {name:'Spore',type:'grass',power:0,pp:15,maxPp:15,acc:100},
+  // Electric
+  {name:'Thunder Shock',type:'electric',power:40,pp:30,maxPp:30,acc:100},
+  {name:'Spark',type:'electric',power:65,pp:20,maxPp:20,acc:100},
+  {name:'Thunder Punch',type:'electric',power:75,pp:15,maxPp:15,acc:100},
+  {name:'Wild Charge',type:'electric',power:90,pp:15,maxPp:15,acc:100},
+  {name:'Volt Tackle',type:'electric',power:120,pp:15,maxPp:15,acc:100},
+  {name:'Zap Cannon',type:'electric',power:120,pp:5,maxPp:5,acc:50},
+  {name:'Charge Beam',type:'electric',power:50,pp:10,maxPp:10,acc:90},
+  {name:'Electro Ball',type:'electric',power:80,pp:10,maxPp:10,acc:100},
+  {name:'Bolt Strike',type:'electric',power:130,pp:5,maxPp:5,acc:85},
+  // Psychic
+  {name:'Confusion',type:'psychic',power:50,pp:25,maxPp:25,acc:100},
+  {name:'Psybeam',type:'psychic',power:65,pp:20,maxPp:20,acc:100},
+  {name:'Zen Headbutt',type:'psychic',power:80,pp:15,maxPp:15,acc:90},
+  {name:'Calm Mind',type:'psychic',power:0,pp:20,maxPp:20,acc:100},
+  {name:'Hypnosis',type:'psychic',power:0,pp:20,maxPp:20,acc:60},
+  {name:'Extrasensory',type:'psychic',power:80,pp:20,maxPp:20,acc:100},
+  {name:'Psycho Cut',type:'psychic',power:70,pp:20,maxPp:20,acc:100},
+  {name:'Guard Swap',type:'psychic',power:0,pp:10,maxPp:10,acc:100},
+  // Ghost
+  {name:'Shadow Punch',type:'ghost',power:60,pp:20,maxPp:20,acc:100},
+  {name:'Hex',type:'ghost',power:65,pp:10,maxPp:10,acc:100},
+  {name:'Night Shade',type:'ghost',power:60,pp:15,maxPp:15,acc:100},
+  {name:'Phantom Force',type:'ghost',power:90,pp:10,maxPp:10,acc:100},
+  {name:'Lick',type:'ghost',power:30,pp:30,maxPp:30,acc:100},
+  {name:'Ominous Wind',type:'ghost',power:60,pp:5,maxPp:5,acc:100},
+  {name:'Curse',type:'ghost',power:0,pp:10,maxPp:10,acc:100},
+  // Dragon
+  {name:'Dragon Rage',type:'dragon',power:40,pp:10,maxPp:10,acc:100},
+  {name:'Dragon Breath',type:'dragon',power:60,pp:20,maxPp:20,acc:100},
+  {name:'Dragon Tail',type:'dragon',power:60,pp:10,maxPp:10,acc:90},
+  {name:'Dragon Dance',type:'dragon',power:0,pp:20,maxPp:20,acc:100},
+  {name:'Dragon Pulse',type:'dragon',power:85,pp:10,maxPp:10,acc:100},
+  {name:'Dual Wingbeat',type:'dragon',power:40,pp:10,maxPp:10,acc:90},
+  // Dark
+  {name:'Bite',type:'dark',power:60,pp:25,maxPp:25,acc:100},
+  {name:'Assurance',type:'dark',power:60,pp:10,maxPp:10,acc:100},
+  {name:'Night Slash',type:'dark',power:70,pp:15,maxPp:15,acc:100},
+  {name:'Knock Off',type:'dark',power:65,pp:20,maxPp:20,acc:100},
+  {name:'Pursuit',type:'dark',power:40,pp:20,maxPp:20,acc:100},
+  {name:'Payback',type:'dark',power:50,pp:10,maxPp:10,acc:100},
+  {name:'Snarl',type:'dark',power:55,pp:15,maxPp:15,acc:95},
+  {name:'Brutal Swing',type:'dark',power:60,pp:20,maxPp:20,acc:100},
+  {name:'Throat Chop',type:'dark',power:80,pp:15,maxPp:15,acc:100},
+  {name:'Darkest Lariat',type:'dark',power:85,pp:10,maxPp:10,acc:100},
+  // Ice
+  {name:'Ice Shard',type:'ice',power:40,pp:30,maxPp:30,acc:100},
+  {name:'Powder Snow',type:'ice',power:40,pp:25,maxPp:25,acc:100},
+  {name:'Aurora Beam',type:'ice',power:65,pp:20,maxPp:20,acc:100},
+  {name:'Freeze Dry',type:'ice',power:70,pp:20,maxPp:20,acc:100},
+  {name:'Ice Punch',type:'ice',power:75,pp:15,maxPp:15,acc:100},
+  {name:'Ice Fang',type:'ice',power:65,pp:15,maxPp:15,acc:95},
+  {name:'Triple Axel',type:'ice',power:60,pp:10,maxPp:10,acc:90},
+  // Fighting
+  {name:'Mach Punch',type:'fighting',power:40,pp:30,maxPp:30,acc:100},
+  {name:'Submission',type:'fighting',power:80,pp:20,maxPp:20,acc:80},
+  {name:'Brick Break',type:'fighting',power:75,pp:15,maxPp:15,acc:100},
+  {name:'Drain Punch',type:'fighting',power:75,pp:10,maxPp:10,acc:100},
+  {name:'Cross Chop',type:'fighting',power:100,pp:5,maxPp:5,acc:80},
+  {name:'Dynamic Punch',type:'fighting',power:100,pp:5,maxPp:5,acc:50},
+  {name:'High Jump Kick',type:'fighting',power:130,pp:10,maxPp:10,acc:90},
+  {name:'Jump Kick',type:'fighting',power:85,pp:10,maxPp:10,acc:95},
+  {name:'Circle Throw',type:'fighting',power:60,pp:10,maxPp:10,acc:90},
+  {name:'Focus Punch',type:'fighting',power:150,pp:20,maxPp:20,acc:100},
+  {name:'Force Palm',type:'fighting',power:60,pp:10,maxPp:10,acc:100},
+  {name:'Low Kick',type:'fighting',power:60,pp:20,maxPp:20,acc:100},
+  {name:'Arm Thrust',type:'fighting',power:15,pp:20,maxPp:20,acc:100},
+  // Rock
+  {name:'Rock Throw',type:'rock',power:50,pp:15,maxPp:15,acc:90},
+  {name:'Rock Blast',type:'rock',power:25,pp:10,maxPp:10,acc:90},
+  {name:'Power Gem',type:'rock',power:80,pp:20,maxPp:20,acc:100},
+  {name:'Head Smash',type:'rock',power:150,pp:5,maxPp:5,acc:80},
+  {name:'Rollout',type:'rock',power:30,pp:20,maxPp:20,acc:90},
+  // Ground
+  {name:'Mud Shot',type:'ground',power:55,pp:15,maxPp:15,acc:95},
+  {name:'Bulldoze',type:'ground',power:60,pp:20,maxPp:20,acc:100},
+  {name:'Stomping Tantrum',type:'ground',power:75,pp:10,maxPp:10,acc:100},
+  {name:'High Horsepower',type:'ground',power:95,pp:10,maxPp:10,acc:95},
+  {name:'Bone Rush',type:'ground',power:25,pp:10,maxPp:10,acc:90},
+  {name:'Sand Attack',type:'ground',power:0,pp:15,maxPp:15,acc:100},
+  {name:'Mud Slap',type:'ground',power:20,pp:10,maxPp:10,acc:100},
+  // Steel
+  {name:'Metal Claw',type:'steel',power:50,pp:35,maxPp:35,acc:95},
+  {name:'Bullet Punch',type:'steel',power:40,pp:30,maxPp:30,acc:100},
+  {name:'Steel Wing',type:'steel',power:70,pp:25,maxPp:25,acc:90},
+  {name:'Smart Strike',type:'steel',power:70,pp:10,maxPp:10,acc:100},
+  {name:'Iron Defense',type:'steel',power:0,pp:15,maxPp:15,acc:100},
+  {name:'Gyro Ball',type:'steel',power:80,pp:5,maxPp:5,acc:100},
+  {name:'Sunsteel Strike',type:'steel',power:100,pp:5,maxPp:5,acc:100},
+  // Poison
+  {name:'Acid',type:'poison',power:40,pp:30,maxPp:30,acc:100},
+  {name:'Venoshock',type:'poison',power:65,pp:10,maxPp:10,acc:100},
+  {name:'Cross Poison',type:'poison',power:70,pp:20,maxPp:20,acc:100},
+  {name:'Poison Sting',type:'poison',power:15,pp:35,maxPp:35,acc:100},
+  {name:'Acid Spray',type:'poison',power:40,pp:20,maxPp:20,acc:100},
+  {name:'Toxic',type:'poison',power:0,pp:10,maxPp:10,acc:90},
+  {name:'Poison Powder',type:'poison',power:0,pp:35,maxPp:35,acc:75},
+  // Fairy
+  {name:'Fairy Wind',type:'fairy',power:40,pp:30,maxPp:30,acc:100},
+  {name:'Disarming Voice',type:'fairy',power:40,pp:15,maxPp:15,acc:100},
+  {name:'Draining Kiss',type:'fairy',power:50,pp:10,maxPp:10,acc:100},
+  {name:'Baby-Doll Eyes',type:'fairy',power:0,pp:30,maxPp:30,acc:100},
+  {name:'Sweet Kiss',type:'fairy',power:0,pp:10,maxPp:10,acc:75},
+  {name:'Misty Terrain',type:'fairy',power:0,pp:10,maxPp:10,acc:100},
+  {name:'Geomancy',type:'fairy',power:0,pp:10,maxPp:10,acc:100},
+  {name:'Spirit Break',type:'fairy',power:75,pp:15,maxPp:15,acc:100},
+  // Flying
+  {name:'Gust',type:'flying',power:40,pp:35,maxPp:35,acc:100},
+  {name:'Wing Attack',type:'flying',power:60,pp:35,maxPp:35,acc:100},
+  {name:'Peck',type:'flying',power:35,pp:35,maxPp:35,acc:100},
+  {name:'Aerial Ace',type:'flying',power:60,pp:20,maxPp:20,acc:100},
+  {name:'Pluck',type:'flying',power:60,pp:20,maxPp:20,acc:100},
+  {name:'Fly',type:'flying',power:90,pp:15,maxPp:15,acc:95},
+  {name:'Roost',type:'flying',power:0,pp:10,maxPp:10,acc:100},
+  {name:'Mirror Move',type:'flying',power:0,pp:20,maxPp:20,acc:100},
+  {name:'Feather Dance',type:'flying',power:0,pp:15,maxPp:15,acc:100},
+  {name:'Tailwind',type:'flying',power:0,pp:15,maxPp:15,acc:100},
+  // Bug
+  {name:'Bug Bite',type:'bug',power:60,pp:20,maxPp:20,acc:100},
+  {name:'Signal Beam',type:'bug',power:75,pp:15,maxPp:15,acc:100},
+  {name:'Infestation',type:'bug',power:20,pp:20,maxPp:20,acc:100},
+  {name:'Pin Missile',type:'bug',power:25,pp:20,maxPp:20,acc:95},
+  {name:'Leech Life',type:'bug',power:80,pp:10,maxPp:10,acc:100},
+  {name:'Silver Wind',type:'bug',power:60,pp:5,maxPp:5,acc:100},
+  {name:'String Shot',type:'bug',power:0,pp:40,maxPp:40,acc:95},
+  {name:'Quiver Dance',type:'bug',power:0,pp:20,maxPp:20,acc:100},
+  // + common status/utility
+  {name:'Protect',type:'normal',power:0,pp:10,maxPp:10,acc:100},
+  {name:'Recover',type:'normal',power:0,pp:10,maxPp:10,acc:100},
+  {name:'Swords Dance',type:'normal',power:0,pp:20,maxPp:20,acc:100},
+  {name:'Agility',type:'psychic',power:0,pp:30,maxPp:30,acc:100},
+  {name:'Nasty Plot',type:'dark',power:0,pp:20,maxPp:20,acc:100},
+  {name:'Rain Dance',type:'water',power:0,pp:5,maxPp:5,acc:100},
+  {name:'Sunny Day',type:'fire',power:0,pp:5,maxPp:5,acc:100},
+  {name:'Earthquake',type:'ground',power:100,pp:10,maxPp:10,acc:100},
+  {name:'Thunder Wave',type:'electric',power:0,pp:20,maxPp:20,acc:90},
+  {name:'Focus Energy',type:'normal',power:0,pp:30,maxPp:30,acc:100},
+  {name:'Harden',type:'normal',power:0,pp:30,maxPp:30,acc:100},
+  {name:'Judgment',type:'normal',power:100,pp:10,maxPp:10,acc:100},
+];
+
 const PLAYER_MOVES_BY_TYPE = {
   Fire:    [{name:'Flamethrower',type:'fire',power:90,pp:15,maxPp:15,acc:100},{name:'Fire Blast',type:'fire',power:110,pp:5,maxPp:5,acc:85},{name:'Flare Blitz',type:'fire',power:120,pp:15,maxPp:15,acc:100},{name:'Slash',type:'normal',power:70,pp:20,maxPp:20,acc:100}],
   Water:   [{name:'Hydro Pump',type:'water',power:110,pp:5,maxPp:5,acc:80},{name:'Surf',type:'water',power:90,pp:15,maxPp:15,acc:100},{name:'Waterfall',type:'water',power:80,pp:15,maxPp:15,acc:100},{name:'Bite',type:'dark',power:60,pp:25,maxPp:25,acc:100}],
@@ -1271,7 +1479,43 @@ const PLAYER_MOVES_BY_TYPE = {
   Flying:  [{name:'Hurricane',type:'flying',power:110,pp:10,maxPp:10,acc:70},{name:'Brave Bird',type:'flying',power:120,pp:15,maxPp:15,acc:100},{name:'Air Slash',type:'flying',power:75,pp:15,maxPp:15,acc:95},{name:'Quick Attack',type:'normal',power:40,pp:30,maxPp:30,acc:100}],
   Bug:     [{name:'X-Scissor',type:'bug',power:80,pp:15,maxPp:15,acc:100},{name:'Bug Buzz',type:'bug',power:90,pp:10,maxPp:10,acc:100},{name:'U-turn',type:'bug',power:70,pp:20,maxPp:20,acc:100},{name:'Body Slam',type:'normal',power:85,pp:15,maxPp:15,acc:100}],
 };
+// Build the flat name-keyed lookup (runs once after PLAYER_MOVES_BY_TYPE is defined)
+(function buildMoveLookup() {
+  Object.values(PLAYER_MOVES_BY_TYPE).forEach(moves => {
+    moves.forEach(m => { MOVE_LOOKUP[m.name.toLowerCase()] = m; });
+  });
+  EXTRA_MOVES.forEach(m => {
+    const key = m.name.toLowerCase();
+    if (!MOVE_LOOKUP[key]) MOVE_LOOKUP[key] = m;
+  });
+})();
+
 function getMovesForPokemon(poke) {
+  // Use the Pokémon's actual saved moveset if present
+  const savedMoves = poke.moves;
+  if (Array.isArray(savedMoves) && savedMoves.length > 0) {
+    const resolved = savedMoves.slice(0, 4).map(mv => {
+      // Already a full move object (has name + power)
+      if (mv && typeof mv === 'object' && mv.name) {
+        return {
+          name: mv.name,
+          type: (mv.type || 'normal').toLowerCase(),
+          power: mv.power ?? 60,
+          pp: mv.pp ?? mv.maxPp ?? 15,
+          maxPp: mv.maxPp ?? mv.pp ?? 15,
+          acc: mv.acc ?? mv.accuracy ?? 100,
+        };
+      }
+      // String move name — look up in database
+      const key = String(mv).toLowerCase();
+      const found = MOVE_LOOKUP[key];
+      if (found) return {...found, pp: found.maxPp, acc: found.acc ?? 100};
+      // Unknown move — generic 60-power Normal fallback
+      return {name: String(mv), type:'normal', power:60, pp:20, maxPp:20, acc:100};
+    });
+    if (resolved.length > 0) return resolved;
+  }
+  // No moves saved — fall back to type-based defaults
   const t = (poke.type1||poke.type||'Normal');
   const cap = t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
   return (PLAYER_MOVES_BY_TYPE[cap] || PLAYER_MOVES_BY_TYPE.Normal).map(m=>({...m}));
@@ -1348,7 +1592,7 @@ function loadPlayerRoster() {
       const spriteId = mon.sprite || mon.speciesId || 0;
       const type1 = mon.type1 || 'Normal';
       const typeCap = type1.charAt(0).toUpperCase() + type1.slice(1).toLowerCase();
-      return {uid:mon.uid||(String(spriteId)+'_'+idx), spriteId, name:mon.nickname||mon.name||'Unknown', level:mon.level||1, type:typeCap};
+      return {uid:mon.uid||(String(spriteId)+'_'+idx), spriteId, name:mon.nickname||mon.name||'Unknown', level:mon.level||1, type:typeCap, moves: mon.moves||[]};
     });
   } catch(e) { POKEMON_ROSTER = []; }
 }
