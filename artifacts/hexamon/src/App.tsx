@@ -627,6 +627,53 @@ export default function App() {
   const initial = typeof window !== "undefined" ? loadSave() : null;
   const [splashDone, setSplashDone] = useState(false);
   const [screen, setScreen] = useState<string>(initial ? (initial.screen === "battle" || initial.screen === "hunt" || initial.screen === "title" || initial.screen === "leagueBattle" || initial.screen === "pvpBattle" || initial.screen === "home" ? "world" : (initial.screen === "nameInput" || initial.screen === "starter") ? "story" : initial.screen) : "story");
+
+  // ---------------------------------------------------------------------
+  // Deep-link entry point: `?screen=<key>` in the URL navigates straight to
+  // that screen on load (used by the Telegram bot / external links to jump
+  // into a specific part of the app). Falls back to the normal default/save
+  // screen above when the param is absent or unrecognized. This effect only
+  // *navigates*; it does not change any existing screen/component logic.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const requested = new URLSearchParams(window.location.search).get("screen");
+    if (!requested) return;
+
+    // Map of external deep-link keys -> the same actions the in-app nav
+    // buttons already trigger (so any setup those buttons normally do,
+    // e.g. loading friends/mail/leaderboard data, still happens).
+    const deepLinkScreens: Record<string, () => void> = {
+      hunt: () => openHunt(),
+      bag: () => setScreen("inventory"),
+      dex: () => setScreen("poketalesDex"),
+      teams: () => setScreen("team"),
+      region: () => setScreen("regionSelect"),
+      safari: () => enterSafari(),
+      store: () => setScreen("store"),
+      mons: () => setScreen("mons"),
+      friends: () => { setFriendInput(""); setFriendMsg(null); setFriendSearchResults([]); setFriendTab("list"); loadServerFriends(); setScreen("friends"); },
+      mails: () => { loadMails(); setScreen("mails"); },
+      transfer: () => { loadTransfers(); setScreen("transfer"); },
+      redeem: () => { setRedeemStoreInput(""); setRedeemStoreMsg(null); setScreen("redeem-store"); },
+      league: () => setScreen("league"),
+      leaderboard: () => {
+        setLeaderboardLoading(true);
+        fetchLeaderboard().then((r) => { setLeaderboardData(r); setLeaderboardLoading(false); }).catch(() => setLeaderboardLoading(false));
+        setScreen("leaderboard");
+      },
+      mod: () => { setAdminMsg(null); setScreen("mod"); },
+    };
+
+    const go = deepLinkScreens[requested.toLowerCase()];
+    if (!go) {
+      console.warn(`[deep-link] Unknown ?screen= value: "${requested}"`);
+      return;
+    }
+    go();
+    // Run once on mount only — later in-app navigation should not be
+    // fought by re-applying the URL param.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [player, setPlayer] = useState<Player>(
     initial?.player ? migratePlayerExp(initial.player) : {
       name: "Trainer",
