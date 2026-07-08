@@ -2601,17 +2601,6 @@ export default function App() {
     .m-bnav-ball { width:56px; height:56px; border-radius:50%; background: #101013; border:2px solid #2a2a2e; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-top:-20px; box-shadow: 0 -4px 18px rgba(0,0,0,0.65); transition: transform .15s, box-shadow .15s; flex-shrink:0; }
     .m-bnav-ball:active { transform: scale(0.92); }
     .m-bnav-ball.active { border-color: var(--m-blue); box-shadow: 0 -4px 18px rgba(59,130,246,0.35); }
-
-      /* Smooth screen transitions (home / serena / rift and others) */
-      .screen-transition { animation: screenFadeIn 0.22s ease-out both; }
-      @keyframes screenFadeIn {
-        from { opacity: 0; transform: translateY(6px) scale(0.995); }
-        to   { opacity: 1; transform: translateY(0) scale(1); }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .screen-transition { animation: none; }
-      }
-    
   `;
 
   function BottomNav({ active, go }: { active: "home" | "market" | "hunt" | "gacha" | "profile" | "serena"; go: (s: string) => void }) {
@@ -2764,7 +2753,6 @@ export default function App() {
     );
   }
 
-  const __screenContent = (() => {
   if (screen === "story") {
     return (
       <StoryIntro
@@ -2850,7 +2838,7 @@ export default function App() {
       { id: 25, desc: "Speedy Electric type" },
     ];
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           <div style={{ padding: "20px 16px 10px", textAlign: "center" }}>
             <div style={{ fontSize: 11, color: "#ff6b35" }}>CHOOSE YOUR STARTER</div>
@@ -2924,7 +2912,7 @@ export default function App() {
     ];
     const menuPages = [menuPage1, menuPage2, menuPage3];
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
           {evolving && (
             <div style={{ position: "fixed", inset: 0, background: "#000a", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 99, gap: 16 }}>
@@ -3407,7 +3395,7 @@ export default function App() {
       .tc-s-value { font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; color:#fff; }
     `;
     return (
-      <div style={S.root}><style>{prfCss}</style>
+      <div style={S.root}><style>{css}</style><style>{prfCss}</style>
         <div style={{ ...S.wrap, background: "#03040a", overflowY: "auto", overflowX: "hidden", maxWidth: "100%" }}>
           <div className="tc-bg-circuit" />
           <div className="tc-bg-overlay" />
@@ -3870,7 +3858,7 @@ export default function App() {
     }));
 
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           <div style={S.header}>
             <BackBtn onClick={() => { sfx.menuBack(); setScreen("world"); }} />
@@ -4058,7 +4046,7 @@ export default function App() {
       return t === "drop" || t === "redeem_reward" || t === "trade_reward" || t === "trade_return" || t === "sell_reward" || t === "admin_reset";
     };
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           <div style={S.header}>
             <BackBtn onClick={() => { setSelectedMail(null); setScreen("world"); }} />
@@ -4167,7 +4155,7 @@ export default function App() {
       }
     };
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           <div style={S.header}>
             <BackBtn onClick={() => setScreen("world")} />
@@ -4232,7 +4220,7 @@ export default function App() {
       } finally { setRedeemStoreLoading(false); }
     };
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           <div style={S.header}>
             <BackBtn onClick={() => setScreen("world")} />
@@ -4383,7 +4371,7 @@ export default function App() {
       } catch { /* ignore */ }
     };
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           <div style={S.header}>
             <BackBtn onClick={() => { setTradeMyMon(null); setTradePreviewTrade(null); setScreen("world"); }} />
@@ -4587,7 +4575,7 @@ export default function App() {
       } catch (e: any) { setAdminMsg({ text: e.message, ok: false }); }
     };
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           <div style={S.header}>
             <BackBtn onClick={() => setScreen("world")} />
@@ -4781,7 +4769,7 @@ export default function App() {
   }
 
   if (screen === "card") return (
-    <div style={S.root}>
+    <div style={S.root}><style>{css}</style>
       <div style={S.wrap}>
         <div style={S.header}>
           <BackBtn onClick={() => setScreen("world")} />
@@ -5304,7 +5292,7 @@ export default function App() {
   }
 
   if (screen === "team") return (
-    <div style={S.root}>
+    <div style={S.root}><style>{css}</style>
       <div style={S.wrap}>
         <div style={S.header}>
           <BackBtn onClick={() => setScreen("world")} />
@@ -5715,7 +5703,7 @@ export default function App() {
   );
 
   if (screen === "inventory") return (
-    <div style={S.root}>
+    <div style={S.root}><style>{css}</style>
       <div style={S.wrap}>
         <div style={S.header}>
           <BackBtn onClick={() => setScreen("world")} />
@@ -6039,7 +6027,7 @@ export default function App() {
       random:   { title: "Random Battle",   sub: "Both players get random teams.",             color: "#a855f7", icon: "fa-dice" },
     };
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid var(--m-border)" }}>
             <BackBtn onClick={() => { sfx.menuBack(); if (bbRoom) { setBbRoom(null); setBbMode(null); } else { setScreen("world"); } }} />
@@ -6269,7 +6257,7 @@ export default function App() {
     const totalSpecies = ALL_POKEMON.length;
     const overallPct = Math.round((caught.size / totalSpecies) * 100);
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid var(--m-border)" }}>
             <BackBtn onClick={() => { sfx.menuBack(); setScreen("profile"); }} />
@@ -6431,7 +6419,7 @@ export default function App() {
     const currentSortLabel = SORT_OPTIONS.find((s) => s.key === monsSortKey)?.label ?? "—";
 
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           <div style={S.header}>
             <BackBtn onClick={() => setScreen("world")} />
@@ -6630,7 +6618,7 @@ export default function App() {
     const m = found.mon;
     if (!m) {
       return (
-        <div style={S.root}>
+        <div style={S.root}><style>{css}</style>
           <div style={S.wrap}>
             <div style={S.header}>
               <BackBtn onClick={() => setScreen("mons")} />
@@ -7267,7 +7255,7 @@ export default function App() {
     })();
     const isStardustCat = stardustCats.has(storeCat ?? "");
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <div style={{ ...S.wrap, background: "var(--m-bg)" }} className="m-app">
           <div className="m-mkt-head" style={{ position: "relative" }}>
             <div style={{ position: "absolute", left: 12, top: 14 }}>
@@ -7940,7 +7928,7 @@ export default function App() {
       { icon: "fa-mountain-sun",  color: "var(--m-brown)" },
     ];
     return (
-      <div className="m-app" style={{ ...S.root, background: "var(--m-bg)" }}>
+      <div className="m-app" style={{ ...S.root, background: "var(--m-bg)" }}><style>{css}</style>
         <div style={{ ...S.wrap, background: "var(--m-bg)", fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid var(--m-border)" }}>
             <BackBtn onClick={() => setScreen("world")} />
@@ -8025,7 +8013,7 @@ export default function App() {
     );
 
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           {/* ── header ── */}
           <div style={S.header}>
@@ -8184,7 +8172,7 @@ export default function App() {
   // ======================= TRAINING ZONE =======================
   if (screen === "training") {
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <TrainingZone
           team={team as unknown as Parameters<typeof TrainingZone>[0]["team"]}
           money={player.money}
@@ -8207,7 +8195,7 @@ export default function App() {
   // ======================= LEAGUE LIST =======================
   if (screen === "league") {
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <LeagueScreen
           badges={badges}
           e4Cleared={e4Cleared}
@@ -8227,7 +8215,7 @@ export default function App() {
   if (screen === "leagueBattle" && leagueBattle) {
     const lb = leagueBattle;
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <BattleArena
           state={lb.state}
           mySide={0}
@@ -8259,7 +8247,7 @@ export default function App() {
   if (screen === "pvpBattle" && pvpBattle) {
     const pb = pvpBattle;
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <BattleArena
           state={pb.state}
           mySide={pb.mySide}
@@ -8305,7 +8293,7 @@ export default function App() {
     const rankColors = ["#FFD700", "#C0C0C0", "#CD7F32"];
     const rankIcons = ["🥇", "🥈", "🥉"];
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           <div style={S.header}>
             <BackBtn onClick={() => setScreen("world")} />
@@ -8391,7 +8379,7 @@ export default function App() {
   if (screen === "serena") {
     return (
       <div style={{ ...S.root }}>
-        
+        <style>{css}</style>
         <div style={{ ...S.wrap, paddingBottom: 0 }}>
           <iframe
             src="/screens/serena.html"
@@ -8407,7 +8395,7 @@ export default function App() {
 
   if (screen === "gacha-wish") {
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           <div style={S.header}>
             <BackBtn onClick={() => setScreen("world")} />
@@ -8429,7 +8417,7 @@ export default function App() {
   if (screen === "abyss") {
     return (
       <div style={{ ...S.root }}>
-        
+        <style>{css}</style>
         <div style={{ ...S.wrap, paddingBottom: 0 }}>
           <iframe
             src="/screens/abyss.html"
@@ -8445,7 +8433,7 @@ export default function App() {
   if (screen === "characters") {
     return (
       <div style={{ ...S.root }}>
-        
+        <style>{css}</style>
         <div style={{ ...S.wrap, paddingBottom: 0 }}>
           <iframe
             src="/screens/characters.html"
@@ -8461,7 +8449,7 @@ export default function App() {
   if (screen === "achievements") {
     return (
       <div style={{ ...S.root }}>
-        
+        <style>{css}</style>
         <div style={{ ...S.wrap, paddingBottom: 0 }}>
           <iframe
             src="/screens/achievements.html"
@@ -8476,7 +8464,7 @@ export default function App() {
 
   if (screen === "new-page") {
     return (
-      <div style={S.root}>
+      <div style={S.root}><style>{css}</style>
         <div style={S.wrap}>
           <div style={S.header}>
             <BackBtn onClick={() => setScreen("world")} />
@@ -8498,12 +8486,4 @@ export default function App() {
   // Unknown screen — redirect to world to avoid black screen
   setScreen("world");
   return null;
-  })();
-
-  return (
-    <>
-      <style>{css}</style>
-      <div key={screen} className="screen-transition">{__screenContent}</div>
-    </>
-  );
 }
