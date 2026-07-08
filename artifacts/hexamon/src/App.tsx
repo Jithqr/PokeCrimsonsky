@@ -8395,15 +8395,20 @@ export default function App() {
 
   if (screen === "gacha-wish") {
     return (
-      <div style={{ ...S.root }}>
-        <style>{css}</style>
-        <div style={{ ...S.wrap, paddingBottom: 0 }}>
-          <iframe
-            src="/screens/gacha.html"
-            style={{ width: "100%", height: "100dvh", border: "none", display: "block" }}
-            allow="autoplay"
-            title="Gacha"
-          />
+      <div style={S.root}><style>{css}</style>
+        <div style={S.wrap}>
+          <div style={S.header}>
+            <BackBtn onClick={() => setScreen("world")} />
+            <span className="page-header-title"><i className="fa-solid fa-fire" style={{ marginRight: 6 }} />Ignite Wish</span>
+            <div style={{ width: 60 }} />
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ background: "#111827", border: "1px solid #1f2937", borderRadius: 16, padding: 40, textAlign: "center" }}>
+              <div style={{ fontSize: 56, marginBottom: 16 }}>🔒</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Coming Soon</div>
+              <div style={{ fontSize: 12, color: "#6b7280" }}>The Ignite Wish banner is locked. Check back later!</div>
+            </div>
+          </div>
         </div>
       </div>
     );
