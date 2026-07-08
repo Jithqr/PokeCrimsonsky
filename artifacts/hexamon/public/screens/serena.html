@@ -336,7 +336,7 @@
       <div class="ring"></div><div class="ring"></div><div class="ring"></div>
       <div class="trainer-glow"></div>
       <video class="trainer-img" id="trainerVideo"
-        src="https://www.image2url.com/r2/default/videos/1778749524747-a0548b64-5e5d-4c36-8fb7-b8c077423ca3.webm"
+        src="/characters/noah-sprite.webm"
         autoplay loop muted playsinline draggable="false">
       </video>
     </div>
@@ -482,7 +482,7 @@ function renderCol(colEl, mons) {
       'cynthia': { tag:'video', src:'https://www.image2url.com/r2/default/videos/1778749524747-a0548b64-5e5d-4c36-8fb7-b8c077423ca3.webm' },
       'noah':    { tag:'video', src:'/characters/noah-sprite.webm' },
     };
-    const activeChar = (localStorage.getItem('crimsonsky:activeChar') || 'cynthia').toLowerCase();
+    const activeChar = (localStorage.getItem('crimsonsky:activeChar') || 'noah').toLowerCase();
     const stars = CHAR_STARS[activeChar] || 5;
     const starsEl = document.getElementById('rankStars');
     starsEl.innerHTML = Array(stars).fill('<span class="star">★</span>').join('');
