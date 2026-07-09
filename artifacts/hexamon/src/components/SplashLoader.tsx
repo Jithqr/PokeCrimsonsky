@@ -3,7 +3,7 @@ import logoUrl from "@assets/Adobe_Express_-_file_1777079516654.png";
 import bgUrl from "@assets/43_1777079516677.webp";
 import { sfx } from "../sfx";
 
-export function SplashLoader({ onDone }: { onDone: () => void }) {
+export function SplashLoader({ onDone, autoStart = false }: { onDone: () => void; autoStart?: boolean }) {
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<"loading" | "ready" | "fading">("loading");
   const startedRef = useRef(false);
@@ -29,6 +29,12 @@ export function SplashLoader({ onDone }: { onDone: () => void }) {
     setPhase("fading");
     setTimeout(onDone, 500);
   }
+
+  // When a deep-link ?screen= param is present, skip the tap requirement
+  // and proceed automatically once the loading bar completes.
+  useEffect(() => {
+    if (autoStart && phase === "ready") handleStart();
+  }, [autoStart, phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {

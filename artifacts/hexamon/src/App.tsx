@@ -650,12 +650,12 @@ export default function App() {
       gacha:        () => setScreen("gacha-wish"),
       store:        () => setScreen("store"),
       // ── World menu — page 1 ─────────────────────────────────────────
-      hunt:         () => openHunt(),
+      hunt:         () => setScreen("hunt"),   // navigate directly; screen renders a Scout button when no wild is pre-spawned
       teams:        () => setScreen("team"),
       card:         () => setScreen("card"),
       dex:          () => setScreen("poketalesDex"),
       region:       () => setScreen("regionSelect"),
-      safari:       () => enterSafari(),
+      safari:       () => setScreen("safari"),  // navigate directly; enterSafari() shows a modal instead of navigating
       bag:          () => setScreen("inventory"),
       mons:         () => setScreen("mons"),
       // ── World menu — page 2 ─────────────────────────────────────────
@@ -2791,7 +2791,8 @@ export default function App() {
   }
 
   if (!splashDone) {
-    return <SplashLoader onDone={() => setSplashDone(true)} />;
+    const hasDeepLink = typeof window !== "undefined" && !!new URLSearchParams(window.location.search).get("screen");
+    return <SplashLoader onDone={() => setSplashDone(true)} autoStart={hasDeepLink} />;
   }
 
   // ── Ban overlay — shown immediately after splash, blocks all content ──────
