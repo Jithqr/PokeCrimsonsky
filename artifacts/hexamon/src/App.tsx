@@ -643,25 +643,43 @@ export default function App() {
     // buttons already trigger (so any setup those buttons normally do,
     // e.g. loading friends/mail/leaderboard data, still happens).
     const deepLinkScreens: Record<string, () => void> = {
-      hunt: () => openHunt(),
-      bag: () => setScreen("inventory"),
-      dex: () => setScreen("poketalesDex"),
-      teams: () => setScreen("team"),
-      region: () => setScreen("regionSelect"),
-      safari: () => enterSafari(),
-      store: () => setScreen("store"),
-      mons: () => setScreen("mons"),
-      friends: () => { setFriendInput(""); setFriendMsg(null); setFriendSearchResults([]); setFriendTab("list"); loadServerFriends(); setScreen("friends"); },
-      mails: () => { loadMails(); setScreen("mails"); },
-      transfer: () => { loadTransfers(); setScreen("transfer"); },
-      redeem: () => { setRedeemStoreInput(""); setRedeemStoreMsg(null); setScreen("redeem-store"); },
-      league: () => setScreen("league"),
-      leaderboard: () => {
+      // ── Bottom nav ──────────────────────────────────────────────────
+      home:         () => setScreen("world"),
+      profile:      () => setScreen("profile"),
+      serena:       () => setScreen("serena"),
+      gacha:        () => setScreen("gacha-wish"),
+      store:        () => setScreen("store"),
+      // ── World menu — page 1 ─────────────────────────────────────────
+      hunt:         () => openHunt(),
+      teams:        () => setScreen("team"),
+      card:         () => setScreen("card"),
+      dex:          () => setScreen("poketalesDex"),
+      region:       () => setScreen("regionSelect"),
+      safari:       () => enterSafari(),
+      bag:          () => setScreen("inventory"),
+      mons:         () => setScreen("mons"),
+      // ── World menu — page 2 ─────────────────────────────────────────
+      battlebox:    () => { setBbMode(null); setBbRoom(null); setScreen("battleBox"); },
+      training:     () => setScreen("training"),
+      league:       () => setScreen("league"),
+      friends:      () => { setFriendInput(""); setFriendMsg(null); setFriendSearchResults([]); setFriendTab("list"); loadServerFriends(); setScreen("friends"); },
+      mails:        () => { loadMails(); setScreen("mails"); },
+      transfer:     () => { loadTransfers(); setScreen("transfer"); },
+      trade:        () => { loadTrades(); setScreen("trade"); },
+      redeem:       () => { setRedeemStoreInput(""); setRedeemStoreMsg(null); setScreen("redeem-store"); },
+      mod:          () => { setAdminMsg(null); setScreen("mod"); },
+      // ── Profile sub-screens ──────────────────────────────────────────
+      caught:       () => setScreen("caught"),
+      // ── Leaderboard ─────────────────────────────────────────────────
+      leaderboard:  () => {
         setLeaderboardLoading(true);
         fetchLeaderboard().then((r) => { setLeaderboardData(r); setLeaderboardLoading(false); }).catch(() => setLeaderboardLoading(false));
         setScreen("leaderboard");
       },
-      mod: () => { setAdminMsg(null); setScreen("mod"); },
+      // ── Iframe screens (serena tab row) ─────────────────────────────
+      characters:   () => setScreen("characters"),
+      achievements: () => setScreen("achievements"),
+      abyss:        () => setScreen("abyss"),
     };
 
     const go = deepLinkScreens[requested.toLowerCase()];
